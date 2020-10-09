@@ -2,7 +2,7 @@
 
 This repo will be the future home of all `kubernetes.core` development. This Ansible Content Collection began as `community.kubernetes` and, as of the release of 1.1.0, is in the process of being transitioned to this new name. See [kubernetes.community issue #221](https://github.com/ansible-collections/community.kubernetes/issues/221) for more. 
 
-New issues and PRs should continue to be filed with community.kubernetes.
+**NOTE: New issues and PRs should continue to be filed with community.kubernetes until further notice.**
 
 ```yaml
 ---
