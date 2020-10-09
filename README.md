@@ -1,8 +1,6 @@
 # Kubernetes Collection for Ansible
 
-# [![CI](https://github.com/ansible-collections/kubernetes.core/workflows/CI/badge.svg?event=push)](https://github.com/ansible-collections/kubernetes.core/actions) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://codecov.io/gh/ansible-collections/kubernetes.core)
-
-This repo will be the future home of all `kubernetes.core` development. This Ansible Content Collection began as `community.kubernetes` and, as of the release of 1.1.0, is in the process of being transitioned to this new name. See (kubernetes.community issue #221)[https://github.com/ansible-collections/community.kubernetes/issues/221] for more. 
+This repo will be the future home of all `kubernetes.core` development. This Ansible Content Collection began as `community.kubernetes` and, as of the release of 1.1.0, is in the process of being transitioned to this new name. See [kubernetes.community issue #221](https://github.com/ansible-collections/community.kubernetes/issues/221) for more. 
 
 ```yaml
 ---
