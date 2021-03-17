@@ -8,7 +8,8 @@ authors:
   - willthames (https://github.com/willthames)
   - mmazur (https://github.com/mmazur)
   - jamescassell (https://github.com/jamescassell)
-dependencies: {}
+dependencies:
+  - cloud.common
 description: Kubernetes Collection for Ansible.
 documentation: ''
 homepage: ''
