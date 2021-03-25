@@ -8,6 +8,6 @@ try:
         AnsibleTurboModule as AnsibleModule,
     )  # noqa: F401
     AnsibleModule.collection_name = "community.kubernetes"
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     from ansible.module_utils.basic import AnsibleModule  # noqa: F401
 from ansible.module_utils.basic import AnsibleModule  # noqa: F401
