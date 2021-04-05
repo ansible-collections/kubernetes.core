@@ -133,23 +133,23 @@ DOCUMENTATION = '''
 EXAMPLES = """
 - name: Fetch a list of namespaces
   set_fact:
-    projects: "{{ lookup('community.kubernetes.k8s', api_version='v1', kind='Namespace') }}"
+    projects: "{{ lookup('kubernetes.core.k8s', api_version='v1', kind='Namespace') }}"
 
 - name: Fetch all deployments
   set_fact:
-    deployments: "{{ lookup('community.kubernetes.k8s', kind='Deployment') }}"
+    deployments: "{{ lookup('kubernetes.core.k8s', kind='Deployment') }}"
 
 - name: Fetch all deployments in a namespace
   set_fact:
-    deployments: "{{ lookup('community.kubernetes.k8s', kind='Deployment', namespace='testing') }}"
+    deployments: "{{ lookup('kubernetes.core.k8s', kind='Deployment', namespace='testing') }}"
 
 - name: Fetch a specific deployment by name
   set_fact:
-    deployments: "{{ lookup('community.kubernetes.k8s', kind='Deployment', namespace='testing', resource_name='elastic') }}"
+    deployments: "{{ lookup('kubernetes.core.k8s', kind='Deployment', namespace='testing', resource_name='elastic') }}"
 
 - name: Fetch with label selector
   set_fact:
-    service: "{{ lookup('community.kubernetes.k8s', kind='Service', label_selector='app=galaxy') }}"
+    service: "{{ lookup('kubernetes.core.k8s', kind='Service', label_selector='app=galaxy') }}"
 
 # Use parameters from a YAML config
 
@@ -159,11 +159,11 @@ EXAMPLES = """
 
 - name: Using the config (loaded from a file in prior task), fetch the latest version of the object
   set_fact:
-    service: "{{ lookup('community.kubernetes.k8s', resource_definition=config) }}"
+    service: "{{ lookup('kubernetes.core.k8s', resource_definition=config) }}"
 
 - name: Use a config from the local filesystem
   set_fact:
-    service: "{{ lookup('community.kubernetes.k8s', src='service.yml') }}"
+    service: "{{ lookup('kubernetes.core.k8s', src='service.yml') }}"
 """
 
 RETURN = """
@@ -198,7 +198,7 @@ from ansible.errors import AnsibleError
 from ansible.module_utils.common._collections_compat import KeysView
 from ansible.plugins.lookup import LookupBase
 
-from ansible_collections.community.kubernetes.plugins.module_utils.common import K8sAnsibleMixin, get_api_client
+from ansible_collections.kubernetes.core.plugins.module_utils.common import K8sAnsibleMixin, get_api_client
 
 
 try:

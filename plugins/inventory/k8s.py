@@ -23,7 +23,7 @@ DOCUMENTATION = '''
       plugin:
          description: token that ensures this is a source file for the 'k8s' plugin.
          required: True
-         choices: ['community.kubernetes.k8s', 'k8s']
+         choices: ['kubernetes.core.k8s', 'k8s']
       connections:
           description:
           - Optional list of cluster connection settings. If no connections are provided, the default
@@ -95,20 +95,20 @@ EXAMPLES = '''
 # File must be named k8s.yaml or k8s.yml
 
 # Authenticate with token, and return all pods and services for all namespaces
-plugin: community.kubernetes.k8s
+plugin: kubernetes.core.k8s
 connections:
   - host: https://192.168.64.4:8443
     api_key: xxxxxxxxxxxxxxxx
     validate_certs: false
 
 # Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-plugin: community.kubernetes.k8s
+plugin: kubernetes.core.k8s
 connections:
   - namespaces:
     - testing
 
 # Use a custom config file, and a specific context.
-plugin: community.kubernetes.k8s
+plugin: kubernetes.core.k8s
 connections:
   - kubeconfig: /path/to/config
     context: 'awx/192-168-64-4:8443/developer'
@@ -117,7 +117,7 @@ connections:
 import json
 
 from ansible.errors import AnsibleError
-from ansible_collections.community.kubernetes.plugins.module_utils.common import K8sAnsibleMixin, HAS_K8S_MODULE_HELPER, k8s_import_exception, get_api_client
+from ansible_collections.kubernetes.core.plugins.module_utils.common import K8sAnsibleMixin, HAS_K8S_MODULE_HELPER, k8s_import_exception, get_api_client
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 
 try:
@@ -142,9 +142,9 @@ class K8sInventoryException(Exception):
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleMixin):
-    NAME = 'community.kubernetes.k8s'
+    NAME = 'kubernetes.core.k8s'
 
-    connection_plugin = 'community.kubernetes.kubectl'
+    connection_plugin = 'kubernetes.core.kubectl'
     transport = 'kubectl'
 
     def parse(self, inventory, loader, path, cache=True):

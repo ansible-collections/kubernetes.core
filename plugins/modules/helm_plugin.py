@@ -47,22 +47,22 @@ options:
       - Required only if C(state=present).
     type: str
 extends_documentation_fragment:
-  - community.kubernetes.helm_common_options
+  - kubernetes.core.helm_common_options
 '''
 
 EXAMPLES = r'''
 - name: Install Helm env plugin
-  community.kubernetes.helm_plugin:
+  kubernetes.core.helm_plugin:
     plugin_path: https://github.com/adamreese/helm-env
     state: present
 
 - name: Install Helm plugin from local filesystem
-  community.kubernetes.helm_plugin:
+  kubernetes.core.helm_plugin:
     plugin_path: https://domain/path/to/plugin.tar.gz
     state: present
 
 - name: Remove Helm env plugin
-  community.kubernetes.helm_plugin:
+  kubernetes.core.helm_plugin:
     plugin_name: env
     state: absent
 '''
@@ -96,7 +96,7 @@ rc:
 '''
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.community.kubernetes.plugins.module_utils.helm import run_helm
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
 def main():

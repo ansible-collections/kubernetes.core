@@ -5,7 +5,7 @@ TEST_ARGS ?= ""
 PYTHON_VERSION ?= `python -c 'import platform; print("{0}.{1}".format(platform.python_version_tuple()[0], platform.python_version_tuple()[1]))'`
 
 clean:
-	rm -f community-kubernetes-${VERSION}.tar.gz
+	rm -f kubernetes-core-${VERSION}.tar.gz
 	rm -rf ansible_collections
 	rm -rf tests/output
 
@@ -13,10 +13,10 @@ build: clean
 	ansible-galaxy collection build
 
 release: build
-	ansible-galaxy collection publish community-kubernetes-${VERSION}.tar.gz
+	ansible-galaxy collection publish kubernetes-core-${VERSION}.tar.gz
 
 install: build
-	ansible-galaxy collection install -p ansible_collections community-kubernetes-${VERSION}.tar.gz
+	ansible-galaxy collection install -p ansible_collections kubernetes-core-${VERSION}.tar.gz
 
 test-sanity:
 	ansible-test sanity --docker -v --color --python $(PYTHON_VERSION) $(?TEST_ARGS)
@@ -29,18 +29,3 @@ test-molecule:
 
 test-unit:
 	ansible-test units --docker -v --color --python $(PYTHON_VERSION) $(?TEST_ARGS)
-
-downstream-test-sanity:
-	./utils/downstream.sh -s
-
-downstream-test-integration:
-	./utils/downstream.sh -i
-
-downstream-test-molecule:
-	./utils/downstream.sh -m
-
-downstream-build:
-	./utils/downstream.sh -b
-
-downstream-release:
-	./utils/downstream.sh -r
