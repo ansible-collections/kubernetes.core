@@ -1,0 +1,10 @@
+plugins/modules/k8s.py validate-modules:parameter-type-not-in-doc
+plugins/modules/k8s.py validate-modules:return-syntax-error
+plugins/modules/k8s_scale.py validate-modules:parameter-type-not-in-doc
+plugins/modules/k8s_scale.py validate-modules:return-syntax-error
+plugins/modules/k8s_service.py validate-modules:return-syntax-error
+plugins/modules/k8s_service.py validate-modules:parameter-type-not-in-doc
+molecule/default/roles/helm/files/appversionless-chart-v2/templates/configmap.yaml yamllint!skip
+molecule/default/roles/helm/files/appversionless-chart/templates/configmap.yaml yamllint!skip
+molecule/default/roles/helm/files/test-chart-v2/templates/configmap.yaml yamllint!skip
+molecule/default/roles/helm/files/test-chart/templates/configmap.yaml yamllint!skip
