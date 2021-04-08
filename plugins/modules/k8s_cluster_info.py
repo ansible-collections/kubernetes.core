@@ -192,7 +192,7 @@ def argspec():
 
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.community.kubernetes.plugins.module_utils.common import get_api_client
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import get_api_client
     execute_module(module, client=get_api_client(module=module))
 
 
