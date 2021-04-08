@@ -101,6 +101,7 @@ except ImportError as e:
     k8s_import_exception = e
     K8S_IMP_ERR = traceback.format_exc()
 
+
 class DynamicClient(kubernetes.dynamic.DynamicClient):
     def apply(self, resource, body=None, name=None, namespace=None):
         body = super().serialize_body(body)
