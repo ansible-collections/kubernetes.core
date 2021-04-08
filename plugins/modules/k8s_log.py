@@ -25,8 +25,8 @@ description:
   - Supports check mode.
   - Analogous to `kubectl logs` or `oc logs`
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_name_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_name_options
 options:
   kind:
     description:

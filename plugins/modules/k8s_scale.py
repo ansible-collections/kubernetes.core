@@ -25,10 +25,10 @@ description:
     or Replication Controller, or the parallelism attribute of a Job. Supports check mode.
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_name_options
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_resource_options
-  - community.kubernetes.k8s_scale_options
+  - kubernetes.core.k8s_name_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_resource_options
+  - kubernetes.core.k8s_scale_options
 
 requirements:
     - "python >= 2.7"

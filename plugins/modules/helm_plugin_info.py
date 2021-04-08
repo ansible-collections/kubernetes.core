@@ -32,15 +32,15 @@ options:
       - Name of Helm plugin, to gather particular plugin info.
     type: str
 extends_documentation_fragment:
-  - community.kubernetes.helm_common_options
+  - kubernetes.core.helm_common_options
 '''
 
 EXAMPLES = r'''
 - name: Gather Helm plugin info
-  community.kubernetes.helm_plugin_info:
+  kubernetes.core.helm_plugin_info:
 
 - name: Gather Helm env plugin info
-  community.kubernetes.helm_plugin_info:
+  kubernetes.core.helm_plugin_info:
     plugin_name: env
 '''
 
@@ -77,7 +77,7 @@ rc:
 '''
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.community.kubernetes.plugins.module_utils.helm import run_helm
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
 def main():

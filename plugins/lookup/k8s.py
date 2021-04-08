@@ -25,6 +25,10 @@ DOCUMENTATION = '''
 
     short_description: Query the K8s API
 
+    author:
+      - Chris Houseknecht <@chouseknecht>
+      - Fabian von Feilitzsch <@fabianvf>
+
     description:
       - Uses the OpenShift Python client to fetch a specific object by name, all matching objects within a
         namespace, or all matching objects for all namespaces, as well as information about the cluster.

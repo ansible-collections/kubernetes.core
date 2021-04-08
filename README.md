@@ -1,6 +1,6 @@
 # Kubernetes Collection for Ansible
 
-[![CI](https://github.com/ansible-collections/community.kubernetes/workflows/CI/badge.svg?event=push)](https://github.com/ansible-collections/community.kubernetes/actions) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/community.kubernetes)](https://codecov.io/gh/ansible-collections/community.kubernetes)
+[![CI](https://github.com/ansible-collections/kubernetes.core/workflows/CI/badge.svg?event=push)](https://github.com/ansible-collections/kubernetes.core/actions) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://codecov.io/gh/ansible-collections/kubernetes.core)
 
 This repo hosts the `community.kubernetes` (a.k.a. `kubernetes.core`) Ansible Collection.
 
@@ -10,29 +10,46 @@ The collection includes a variety of Ansible content to help automate the manage
 
 Click on the name of a plugin or module to view that content's documentation:
 
-  - **Connection Plugins**:
-    - [kubectl](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/kubectl_connection.html)
-  - **Filter Plugins**:
-    - [k8s_config_resource_name](https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html#kubernetes-filters)
-  - **Inventory Source**:
-    - [k8s](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_inventory.html)
-    - [openshift](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/openshift_inventory.html)
-  - **Lookup Plugins**:
-    - [k8s](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_lookup.html)
-  - **Modules**:
-    - [k8s](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_module.html)
-    - [k8s_cluster_info](https://github.com/ansible-collections/community.kubernetes/blob/main/plugins/modules/k8s_cluster_info.py)
-    - [k8s_exec](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_exec_module.html)
-    - [k8s_info](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_info_module.html)
-    - [k8s_log](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_log_module.html)
-    - [k8s_scale](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_scale_module.html)
-    - [k8s_service](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/k8s_service_module.html)
-    - [helm](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/helm_module.html)
-    - [helm_info](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/helm_info_module.html)
-    - [helm_plugin](https://github.com/ansible-collections/community.kubernetes/blob/main/plugins/modules/helm_plugin.py)
-    - [helm_plugin_info](https://github.com/ansible-collections/community.kubernetes/blob/main/plugins/modules/helm_plugin_info.py)
-    - [helm_repository](https://docs.ansible.com/ansible/2.10/collections/community/kubernetes/helm_repository_module.html)
-    - [helm_template](https://github.com/ansible-collections/community.kubernetes/blob/main/plugins/modules/helm_template.py)
+<!--start collection content-->
+### Connection plugins
+Name | Description
+--- | ---
+[community.kubernetes.kubectl](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
+
+### Filter plugins
+Name | Description
+--- | ---
+community.kubernetes.k8s_config_resource_name|community.kubernetes k8s_config_resource_name filter plugin
+
+### Lookup plugins
+Name | Description
+--- | ---
+[community.kubernetes.k8s](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_lookup.rst)|Query the K8s API
+
+### Modules
+Name | Description
+--- | ---
+[community.kubernetes.helm](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.helm_module.rst)|Manages Kubernetes packages with the Helm package manager
+[community.kubernetes.helm_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.helm_info_module.rst)|Get information from Helm package deployed inside the cluster
+[community.kubernetes.helm_plugin](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.helm_plugin_module.rst)|Manage Helm plugins
+[community.kubernetes.helm_plugin_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.helm_plugin_info_module.rst)|Gather information about Helm plugins
+[community.kubernetes.helm_repository](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.helm_repository_module.rst)|Manage Helm repositories.
+[community.kubernetes.helm_template](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.helm_template_module.rst)|Render chart templates
+[community.kubernetes.k8s](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_module.rst)|Manage Kubernetes (K8s) objects
+[community.kubernetes.k8s_cluster_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_cluster_info_module.rst)|Describe Kubernetes (K8s) cluster, APIs available and their respective versions
+[community.kubernetes.k8s_exec](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_exec_module.rst)|Execute command in Pod
+[community.kubernetes.k8s_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_info_module.rst)|Describe Kubernetes (K8s) objects
+[community.kubernetes.k8s_log](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_log_module.rst)|Fetch logs from Kubernetes resources
+[community.kubernetes.k8s_rollback](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
+[community.kubernetes.k8s_scale](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
+[community.kubernetes.k8s_service](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_service_module.rst)|Manage Services on Kubernetes
+
+### Inventory plugins
+Name | Description
+--- | ---
+[community.kubernetes.k8s](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/community.kubernetes.k8s_inventory.rst)|Kubernetes (K8s) inventory source
+
+<!--end collection content-->
 
 ## Installation and Usage
 
@@ -40,14 +57,14 @@ Click on the name of a plugin or module to view that content's documentation:
 
 Before using the Kubernetes collection, you need to install it with the Ansible Galaxy CLI:
 
-    ansible-galaxy collection install community.kubernetes
+    ansible-galaxy collection install kubernetes.core
 
 You can also include it in a `requirements.yml` file and install it via `ansible-galaxy collection install -r requirements.yml`, using the format:
 
 ```yaml
 ---
 collections:
-  - name: community.kubernetes
+  - name: kubernetes.core
     version: 1.2.0
 ```
 
@@ -59,7 +76,7 @@ Content in this collection requires the [OpenShift Python client](https://pypi.o
 
 ### Using modules from the Kubernetes Collection in your playbooks
 
-It's preferable to use content in this collection using their Fully Qualified Collection Namespace (FQCN), for example `community.kubernetes.k8s_info`:
+It's preferable to use content in this collection using their Fully Qualified Collection Namespace (FQCN), for example `kubernetes.core.k8s_info`:
 
 ```yaml
 ---
@@ -69,14 +86,14 @@ It's preferable to use content in this collection using their Fully Qualified Co
 
   tasks:
     - name: Ensure the myapp Namespace exists.
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: myapp
         state: present
 
     - name: Ensure the myapp Service exists in the myapp Namespace.
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: v1
@@ -93,7 +110,7 @@ It's preferable to use content in this collection using their Fully Qualified Co
               app: myapp
 
     - name: Get a list of all Services in the myapp namespace.
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         kind: Service
         namespace: myapp
       register: myapp_services
@@ -112,7 +129,7 @@ If upgrading older playbooks which were built prior to Ansible 2.10 and this col
   connection: local
 
   collections:
-    - community.kubernetes
+    - kubernetes.core
 
   tasks:
     - name: Ensure the myapp Namespace exists.
@@ -129,7 +146,7 @@ For documentation on how to use individual modules and other content included in
 
 If you want to develop new content for this collection or improve what's already here, the easiest way to work on the collection is to clone it into one of the configured [`COLLECTIONS_PATHS`](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths), and work on it there.
 
-See [Contributing to community.kubernetes](CONTRIBUTING.md).
+See [Contributing to kubernetes.core](CONTRIBUTING.md).
 
 ### Testing with `ansible-test`
 
@@ -168,8 +185,6 @@ After the version is published, verify it exists on the [Kubernetes Collection G
 
 ### Publishing `kubernetes.core`
 
-Until the contents of repository are moved into a new `kubernetes.core` repository on GitHub, this repository is the source of both the `kubernetes.core` and `community.kubernetes` repositories on Ansible Galaxy.
-
 To publish the `kubernetes.core` collection on Ansible Galaxy, do the following:
 
   1. Run `make downstream-release` (on macOS, add `LC_ALL=C` before the command).
@@ -185,3 +200,4 @@ For more information about Ansible's Kubernetes integration, join the `#ansible-
 GNU General Public License v3.0 or later
 
 See LICENCE to see the full text.
+

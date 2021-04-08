@@ -8,16 +8,18 @@ authors:
   - willthames (https://github.com/willthames)
   - mmazur (https://github.com/mmazur)
   - jamescassell (https://github.com/jamescassell)
+  - akasurde (https://github.com/Akasurde)
+  - gravesm (https://github.com/gravesm)
 dependencies: {}
 description: Kubernetes Collection for Ansible.
 documentation: ''
 homepage: ''
-issues: https://github.com/ansible-collections/community.kubernetes/issues
+issues: https://github.com/ansible-collections/kubernetes.core/issues
 license_file: LICENSE
 name: kubernetes
 namespace: community
 readme: README.md
-repository: https://github.com/ansible-collections/community.kubernetes
+repository: https://github.com/ansible-collections/kubernetes.core
 tags:
   - kubernetes
   - k8s

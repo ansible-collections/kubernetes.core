@@ -44,9 +44,9 @@ options:
     elements: str
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_name_options
-  - community.kubernetes.k8s_wait_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_name_options
+  - kubernetes.core.k8s_wait_options
 
 requirements:
   - "python >= 2.7"

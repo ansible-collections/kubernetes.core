@@ -47,7 +47,7 @@ options:
       - Required only if C(state=present).
     type: str
 extends_documentation_fragment:
-  - community.kubernetes.helm_common_options
+  - kubernetes.core.helm_common_options
 '''
 
 EXAMPLES = r'''
