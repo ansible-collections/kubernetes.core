@@ -12,7 +12,7 @@
             name: "{{ template_namespace }}"
 
     - name: Check if k8s_service does not inherit parameter
-      community.kubernetes.k8s_service:
+      kubernetes.core.k8s_service:
         template: "pod_template_one.j2"
         state: present
       ignore_errors: yes
@@ -25,7 +25,7 @@
           - "'is only supported parameter for' in r.msg"
 
     - name: Specify both definition and template
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         template: "pod_template_one.j2"
         definition:
@@ -52,7 +52,7 @@
           - "'parameters are mutually exclusive' in r.msg"
 
     - name: Specify both src and template
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         src: "../templates/pod_template_one.j2"
         template: "pod_template_one.j2"
@@ -69,7 +69,7 @@
           - "'parameters are mutually exclusive' in r.msg"
 
     - name: Create pod using template (direct specification)
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         template: "pod_template_one.j2"
         wait: yes
       vars:
@@ -83,7 +83,7 @@
           - r is successful
 
     - name: Create pod using template with wrong parameter
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         template:
           - default
         wait: yes
@@ -100,7 +100,7 @@
           - "'Error while reading template file' in r.msg"
 
     - name: Create pod using template (path parameter)
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         template:
           path: "pod_template_one.j2"
         wait: yes
@@ -115,7 +115,7 @@
           - r is successful
 
     - name: Create pod using template (different variable string)
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         template:
           path: "pod_template_two.j2"
           variable_start_string: '[['
@@ -133,7 +133,7 @@
           - r is successful
 
     - name: Create pods using multi-resource template
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         template:
           path: "pod_template_three.j2"
         wait: yes

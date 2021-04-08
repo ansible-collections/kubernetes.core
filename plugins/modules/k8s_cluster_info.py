@@ -30,7 +30,7 @@ options:
     default: True
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
+  - kubernetes.core.k8s_auth_options
 
 requirements:
   - "python >= 2.7"
@@ -40,11 +40,11 @@ requirements:
 
 EXAMPLES = r'''
 - name: Get Cluster information
-  community.kubernetes.k8s_cluster_info:
+  kubernetes.core.k8s_cluster_info:
   register: api_status
 
 - name: Do not invalidate cache before getting information
-  community.kubernetes.k8s_cluster_info:
+  kubernetes.core.k8s_cluster_info:
     invalidate_cache: False
   register: api_status
 '''
@@ -160,9 +160,9 @@ apis:
 
 import copy
 
-from ansible_collections.community.kubernetes.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible_collections.community.kubernetes.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
 
 
 def execute_module(module, client):
@@ -211,7 +211,7 @@ def argspec():
 
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.community.kubernetes.plugins.module_utils.common import get_api_client
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import get_api_client
     execute_module(module, client=get_api_client(module=module))
 
 

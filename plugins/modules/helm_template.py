@@ -83,12 +83,12 @@ options:
 
 EXAMPLES = r'''
 - name: Render templates to specified directory
-  community.kubernetes.helm_template:
+  kubernetes.core.helm_template:
     chart_ref: stable/prometheus
     output_dir: mycharts
 
 - name: Render templates
-  community.kubernetes.helm_template:
+  kubernetes.core.helm_template:
     chart_ref: stable/prometheus
   register: result
 
@@ -127,7 +127,7 @@ except ImportError:
     IMP_YAML = False
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible_collections.community.kubernetes.plugins.module_utils.helm import run_helm
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
 def template(cmd, chart_ref, chart_repo_url=None, chart_version=None, output_dir=None,

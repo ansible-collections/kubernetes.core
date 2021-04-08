@@ -23,7 +23,7 @@ description:
   - Use the Kubernetes Python client to execute command on K8s pods.
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
+  - kubernetes.core.k8s_auth_options
 
 requirements:
   - "python >= 2.7"
@@ -66,13 +66,13 @@ options:
 
 EXAMPLES = r'''
 - name: Execute a command
-  community.kubernetes.k8s_exec:
+  kubernetes.core.k8s_exec:
     namespace: myproject
     pod: zuul-scheduler
     command: zuul-scheduler full-reconfigure
 
 - name: Check RC status of command executed
-  community.kubernetes.k8s_exec:
+  kubernetes.core.k8s_exec:
     namespace: myproject
     pod: busybox-test
     command: cmd_with_non_zero_exit_code
@@ -118,9 +118,9 @@ except ImportError:
     # ImportError are managed by the common module already.
     pass
 
-from ansible_collections.community.kubernetes.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible.module_utils._text import to_native
-from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     AUTH_ARG_SPEC
 )
 
@@ -192,7 +192,7 @@ def main():
         argument_spec=argspec(),
         supports_check_mode=True,
     )
-    from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
         K8sAnsibleMixin, get_api_client)
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)

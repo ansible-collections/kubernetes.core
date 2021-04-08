@@ -28,8 +28,8 @@ options:
     type: list
     elements: str
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_name_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_name_options
 requirements:
   - "python >= 2.7"
   - "openshift >= 0.6"
@@ -38,7 +38,7 @@ requirements:
 
 EXAMPLES = r'''
 - name: Rollback a failed deployment
-  community.kubernetes.k8s_rollback:
+  kubernetes.core.k8s_rollback:
     api_version: apps/v1
     kind: Deployment
     name: web
@@ -78,8 +78,8 @@ rollback_info:
 
 import copy
 
-from ansible_collections.community.kubernetes.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.community.kubernetes.plugins.module_utils.args_common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC, NAME_ARG_SPEC)
 
 
@@ -208,7 +208,7 @@ def get_previous_revision(all_resources, current_revision):
 
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.community.kubernetes.plugins.module_utils.common import (K8sAnsibleMixin, get_api_client)
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import (K8sAnsibleMixin, get_api_client)
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)

@@ -44,9 +44,9 @@ options:
     elements: str
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_name_options
-  - community.kubernetes.k8s_wait_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_name_options
+  - kubernetes.core.k8s_wait_options
 
 requirements:
   - "python >= 2.7"
@@ -56,7 +56,7 @@ requirements:
 
 EXAMPLES = r'''
 - name: Get an existing Service object
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     api_version: v1
     kind: Service
     name: web
@@ -64,26 +64,26 @@ EXAMPLES = r'''
   register: web_service
 
 - name: Get a list of all service objects
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     api_version: v1
     kind: Service
     namespace: testing
   register: service_list
 
 - name: Get a list of all pods from any namespace
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     kind: Pod
   register: pod_list
 
 - name: Search for all Pods labelled app=web
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     kind: Pod
     label_selectors:
       - app = web
       - tier in (dev, test)
 
 - name: Using vars while using label_selectors
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     kind: Pod
     label_selectors:
       - "app = {{ app_label_web }}"
@@ -91,18 +91,18 @@ EXAMPLES = r'''
     app_label_web: web
 
 - name: Search for all running pods
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     kind: Pod
     field_selectors:
       - status.phase=Running
 
 - name: List custom objects created using CRD
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     kind: MyCustomObject
     api_version: "stable.example.com/v1"
 
 - name: Wait till the Object is created
-  community.kubernetes.k8s_info:
+  kubernetes.core.k8s_info:
     kind: Pod
     wait: yes
     name: pod-not-yet-created
@@ -148,8 +148,8 @@ resources:
 
 import copy
 
-from ansible_collections.community.kubernetes.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.community.kubernetes.plugins.module_utils.args_common import (AUTH_ARG_SPEC, WAIT_ARG_SPEC)
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC, WAIT_ARG_SPEC)
 
 
 def execute_module(module, k8s_ansible_mixin):
@@ -186,7 +186,7 @@ def argspec():
 
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
         K8sAnsibleMixin, get_api_client)
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)
