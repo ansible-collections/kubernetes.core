@@ -40,7 +40,7 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
       vars:
-        k8s_pod_name: pod
+        k8s_pod_name_one: pod
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
       ignore_errors: yes
@@ -57,7 +57,7 @@
         src: "../templates/pod_template_one.j2"
         template: "pod_template_one.j2"
       vars:
-        k8s_pod_name: pod
+        k8s_pod_name_one: pod
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
       ignore_errors: yes
@@ -73,7 +73,7 @@
         template: "pod_template_one.j2"
         wait: yes
       vars:
-        k8s_pod_name: pod-1
+        k8s_pod_name_one: pod-1
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
 
@@ -88,7 +88,7 @@
           - default
         wait: yes
       vars:
-        k8s_pod_name: pod-2
+        k8s_pod_name_one: pod-2
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
       ignore_errors: True
@@ -105,7 +105,7 @@
           path: "pod_template_one.j2"
         wait: yes
       vars:
-        k8s_pod_name: pod-3
+        k8s_pod_name_one: pod-3
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
 
@@ -122,7 +122,7 @@
           variable_end_string: ']]'
         wait: yes
       vars:
-        k8s_pod_name: pod-4
+        k8s_pod_name_two: pod-4
         k8s_pod_namespace: "[[ template_namespace ]]"
         ansible_python_interpreter: "[[ ansible_playbook_python ]]"
       register: r
@@ -138,8 +138,8 @@
           path: "pod_template_three.j2"
         wait: yes
       vars:
-        k8s_pod_name_one: pod-5
-        k8s_pod_name_two: pod-6
+        k8s_pod_name_three_one: pod-5
+        k8s_pod_name_three_two: pod-6
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
 
@@ -148,8 +148,113 @@
         that:
           - r is successful
 
+    - name: Create pods using list of template
+      kubernetes.core.k8s:
+        template:
+          - pod_template_one.j2
+          - path: "pod_template_two.j2"
+            variable_start_string: '[['
+            variable_end_string: ']]'
+          - path: "pod_template_three.j2"
+        wait: yes
+      vars:
+        k8s_pod_name_one: pod-7
+        k8s_pod_name_two: pod-8
+        k8s_pod_name_three_one: pod-9
+        k8s_pod_name_three_two: pod-10
+        k8s_pod_namespace: "{{ template_namespace }}"
+      register: r
+
+    - name: Assert that pod creation succeeded using template
+      assert:
+        that:
+          - r is successful
+
+    # continue_on_error
+    - name: define variable for test
+      set_fact:
+        k8s_pod_name_one: pod-11
+        k8s_pod_bad_name: pod-12
+        k8s_pod_namespace: "{{ template_namespace }}"
+        k8s_pod_bad_namespace: "dummy-namespace-012345"
+
+    - name: delete pod if it exists
+      kubernetes.core.k8s:
+        template: pod_template_one.j2
+        wait: true
+        state: absent
+
+    - name: create pod on bad namespace ( continue_on_error set to default(false) )
+      kubernetes.core.k8s:
+        template:
+          - pod_with_bad_namespace.j2
+          - pod_template_one.j2
+      register: resource
+      ignore_errors: true
+
+    - name: validate that creation failed
+      assert:
+        that:
+          - resource is failed
+          - '"Failed to create object" in resource.msg'
+
+    - name: assert pod has not been created
+      kubernetes.core.k8s_info:
+        kind: "{{ item.kind }}"
+        namespace: "{{ item.namespace }}"
+        name: "{{ item.name }}"
+      with_items:
+        - kind: pod
+          namespace: "{{ k8s_pod_bad_namespace }}"
+          name: "{{ k8s_pod_bad_name }}"
+        - kind: pod
+          namespace: "{{ k8s_pod_name_one }}"
+          name: "{{ k8s_pod_namespace }}"
+      register: resource
+
+    - name: check that resources creation failed
+      assert:
+        that:
+          - '{{ resource.results[0].resources | length == 0 }}'
+          - '{{ resource.results[1].resources | length == 0 }}'
+
+    - name: create pod without namespace (continue_on_error = true)
+      kubernetes.core.k8s:
+        template:
+          - pod_with_bad_namespace.j2
+          - pod_template_one.j2
+        continue_on_error: true
+        wait: true
+      register: resource
+      ignore_errors: true
+
+    - name: validate that creation succeeded
+      assert:
+        that:
+          - resource is successful
+
+    - name: assert pod has not been created
+      kubernetes.core.k8s_info:
+        kind: "{{ item.kind }}"
+        namespace: "{{ item.namespace }}"
+        name: "{{ item.name }}"
+      with_items:
+        - kind: pod
+          namespace: "{{ k8s_pod_bad_namespace }}"
+          name: "{{ k8s_pod_bad_name }}"
+        - kind: pod
+          namespace: "{{ k8s_pod_name_one }}"
+          name: "{{ k8s_pod_namespace }}"
+      register: resource
+
+    - name: check that resources creation failed
+      assert:
+        that:
+          - '{{ resource.results[0].resources | length == 0 }}'
+          - '{{ resource.results[1].resources | length > 0 }}'
+
     - name: Remove Pod (Cleanup)
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Pod
         name: "pod-{{ item }}"
@@ -157,11 +262,11 @@
         state: absent
         wait: yes
       ignore_errors: yes
-      loop: "{{ range(1, 7) | list }}"
+      loop: "{{ range(1, 12) | list }}"
 
   always:
     - name: Remove namespace (Cleanup)
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "{{ template_namespace }}"
         state: absent

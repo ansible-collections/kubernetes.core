@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - k8s - Handle list of definition for option `template`. `continue_on_error` option added (whether to continue on creation/deletion errors) (https://github.com/ansible-collections/community.kubernetes/pull/411).

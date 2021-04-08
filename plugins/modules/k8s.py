@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # (c) 2018, Chris Houseknecht <@chouseknecht>
+# (c) 2021, Aubin Bikouo <@abikouo>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -123,6 +124,12 @@ options:
       When set to C(yes) leading spaces and tabs are stripped from the start of a line to a block.
       This functionality requires Jinja 2.7 or newer. Default value is false.'
     type: raw
+  continue_on_error:
+    description:
+    - Whether to continue on creation/deletion errors when multiple resources are defined.
+    - This does not include validation step which is controls with C(validate.fail_on_error).
+    type: bool
+    default: False
 
 requirements:
   - "python >= 2.7"
@@ -276,6 +283,10 @@ result:
        returned: when C(wait) is true
        type: int
        sample: 48
+     error:
+       description: error while trying to create/delete the object.
+       returned: error
+       type: complex
 '''
 
 import copy
@@ -305,6 +316,7 @@ def argspec():
     argument_spec['apply'] = dict(type='bool', default=False)
     argument_spec['template'] = dict(type='raw', default=None)
     argument_spec['delete_options'] = dict(type='dict', default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC))
+    argument_spec['continue_on_error'] = dict(type='bool', default=False)
     return argument_spec
 
 
