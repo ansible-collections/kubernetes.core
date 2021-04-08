@@ -143,6 +143,7 @@ import copy
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible.module_utils.parsing.convert_bool import boolean
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
 from collections import defaultdict
 
 
