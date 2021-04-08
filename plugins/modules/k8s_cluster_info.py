@@ -141,10 +141,9 @@ apis:
 
 import copy
 
-from ansible_collections.community.kubernetes.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible.module_utils.parsing.convert_bool import boolean
 from collections import defaultdict
-from ansible_collections.community.kubernetes.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
 
 
 def execute_module(module, client):
