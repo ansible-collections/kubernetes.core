@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Add probot stale bot configuration to autoclose issues (https://github.com/ansible-collections/community.kubernetes/pull/196).

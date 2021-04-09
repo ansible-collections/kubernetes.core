@@ -1,4 +1,0 @@
----
-minor_changes:
-  - helm - add aliases context for kube_context (https://github.com/ansible-collections/community.kubernetes/pull/152).
-  - helm_info - add aliases context for kube_context (https://github.com/ansible-collections/community.kubernetes/pull/152).

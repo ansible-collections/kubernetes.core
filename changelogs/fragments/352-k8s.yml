@@ -1,2 +1,0 @@
-minor_changes:
-- k8s - add an example for downloading manifest file and applying (https://github.com/ansible-collections/community.kubernetes/issues/352).

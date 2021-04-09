@@ -1,2 +1,0 @@
-minor_changes:
-- k8s_info - add information about api_version while returning facts (https://github.com/ansible-collections/community.kubernetes/pull/308).
