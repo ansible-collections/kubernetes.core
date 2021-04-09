@@ -4,7 +4,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-from ansible_collections.community.kubernetes.plugins.module_utils.hashes import marshal, sorted_dict
+from ansible_collections.kubernetes.core.plugins.module_utils.hashes import marshal, sorted_dict
 
 tests = [
     dict(
