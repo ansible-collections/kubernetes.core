@@ -30,7 +30,7 @@ options:
     default: True
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
+  - kubernetes.core.k8s_auth_options
 
 requirements:
   - "python >= 2.7"
@@ -40,11 +40,11 @@ requirements:
 
 EXAMPLES = r'''
 - name: Get Cluster information
-  community.kubernetes.k8s_cluster_info:
+  kubernetes.core.k8s_cluster_info:
   register: api_status
 
 - name: Do not invalidate cache before getting information
-  community.kubernetes.k8s_cluster_info:
+  kubernetes.core.k8s_cluster_info:
     invalidate_cache: False
   register: api_status
 '''
