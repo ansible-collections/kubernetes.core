@@ -1,2 +1,0 @@
-bugfixes:
-- k8s - handle ValueError when namespace is not provided (https://github.com/ansible-collections/community.kubernetes/pull/330).

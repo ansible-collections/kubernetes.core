@@ -1,2 +1,0 @@
-bugfixes:
-- k8s - fix get_api_client API in k8s inventory plugin (https://github.com/ansible-collections/community.kubernetes/pull/395).

@@ -1,2 +1,0 @@
-minor_changes:
-- k8s_auth - module migrated to community.okd collection (https://github.com/ansible-collections/community.kubernetes/issues/240).

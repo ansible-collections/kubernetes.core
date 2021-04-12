@@ -1,2 +1,0 @@
-bugfixes:
-- k8s_info - add wait functionality (https://github.com/ansible-collections/community.kubernetes/issues/18).

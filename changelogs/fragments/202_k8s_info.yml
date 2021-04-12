@@ -1,2 +1,0 @@
-minor_changes:
-- k8s_info - update custom resource example (https://github.com/ansible-collections/community.kubernetes/issues/202).

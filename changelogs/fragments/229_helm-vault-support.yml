@@ -1,3 +1,0 @@
----
-minor_changes:
-  - helm_* - Support vaulted kubeconfig (https://github.com/ansible-collections/community.kubernetes/pull/229).

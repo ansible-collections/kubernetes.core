@@ -1,2 +1,0 @@
-minor_changes:
-- k8s_exec - return RC for the command executed (https://github.com/ansible-collections/community.kubernetes/issues/122).

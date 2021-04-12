@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s (inventory) - Specify FQCN for k8s inventory plugin to fix use with Ansible 2.9 (https://github.com/ansible-collections/community.kubernetes/pull/250).
