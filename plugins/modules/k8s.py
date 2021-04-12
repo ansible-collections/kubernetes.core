@@ -127,7 +127,7 @@ options:
   continue_on_error:
     description:
     - Whether to continue on creation/deletion errors when multiple resources are defined.
-    - This does not include validation step which is controls with C(validate.fail_on_error).
+    - This has no effect on the validation step which is controlled by the C(validate.fail_on_error) parameter.
     type: bool
     default: False
 
