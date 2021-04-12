@@ -130,6 +130,7 @@ options:
     - This has no effect on the validation step which is controlled by the C(validate.fail_on_error) parameter.
     type: bool
     default: False
+    version_added: 2.0.0
 
 requirements:
   - "python >= 2.7"
