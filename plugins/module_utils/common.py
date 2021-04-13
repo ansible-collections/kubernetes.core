@@ -97,18 +97,15 @@ except ImportError as e:
     K8S_IMP_ERR = traceback.format_exc()
 
 
-class DynamicClient:
-    def __init__(self, k8s_dynamic_client):
-        self.client = k8s_dynamic_client
-
+class DynamicClient(kubernetes.dynamic.DynamicClient):
     def apply(self, resource, body=None, name=None, namespace=None):
-        body = self.client.serialize_body(body)
+        body = super().serialize_body(body)
         body['metadata'] = body.get('metadata', dict())
         name = name or body['metadata'].get('name')
         if not name:
-            raise ValueError("name is required to apply {}.{}".format(resource.group_version, resource.kind))
+            raise ValueError("name is required to apply {0}.{1}".format(resource.group_version, resource.kind))
         if resource.namespaced:
-            body['metadata']['namespace'] = self.client.ensure_namespace(resource, namespace, body)
+            body['metadata']['namespace'] = super().ensure_namespace(resource, namespace, body)
         try:
             return apply(resource, body)
         except ApplyException as e:
@@ -210,6 +207,7 @@ def get_api_client(module=None, **kwargs):
         #client = DynamicClient(kubeclient, cache_file)
         k8s_client = kubernetes.dynamic.DynamicClient(kubernetes.client.ApiClient(configuration))
         client = DynamicClient(k8s_client, cache_file)
+        client = DynamicClient(kubernetes.client.ApiClient(configuration))
     except Exception as err:
         _raise_or_fail(err, 'Failed to get client due to %s')
 
