@@ -75,6 +75,11 @@ options:
     - The URL of an HTTP proxy to use for the connection. Can also be specified via K8S_AUTH_PROXY environment variable.
     - Please note that this module does not pick up typical proxy settings from the environment (e.g. HTTP_PROXY).
     type: str
+  proxy_headers:
+    description:
+    - The login for the HTTP proxy. Can also be specified via K8S_AUTH_PROXY_HEADERS environment variable.
+    type: str
+    version_added: 2.0.0
   persist_config:
     description:
     - Whether or not to save the kube config refresh tokens.

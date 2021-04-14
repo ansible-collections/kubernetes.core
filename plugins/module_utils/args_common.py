@@ -43,6 +43,10 @@ AUTH_ARG_SPEC = {
     'proxy': {
         'type': 'str',
     },
+    'proxy_headers': {
+        'type': 'str',
+        'no_log': True
+    },
     'persist_config': {
         'type': 'bool',
     },
@@ -76,6 +80,7 @@ AUTH_ARG_MAP = {
     'cert_file': 'client_cert',
     'key_file': 'client_key',
     'proxy': 'proxy',
+    'proxy_headers': 'proxy_headers',
     'persist_config': 'persist_config',
 }
 

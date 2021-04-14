@@ -34,7 +34,6 @@ from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible.module_utils.parsing.convert_bool import boolean
 
-
 K8S_IMP_ERR = None
 try:
     import kubernetes
@@ -173,6 +172,9 @@ def get_api_client(module=None, **kwargs):
         if key in AUTH_ARG_MAP.keys() and value is not None:
             if key == 'api_key':
                 setattr(configuration, key, {'authorization': "Bearer {0}".format(value)})
+            elif key == 'proxy_headers':
+                headers = urllib3.make_headers(proxy_basic_auth=value)
+                setattr(configuration, key, headers)
             else:
                 setattr(configuration, key, value)
 
