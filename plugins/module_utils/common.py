@@ -34,6 +34,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_d
 from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply, apply_object
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import ApplyException
 from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
+from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply_object
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
