@@ -33,13 +33,13 @@ from ansible_collections.kubernetes.core.plugins.module_utils.hashes import gene
 from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_default_cache_id
 from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply, apply_object
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import ApplyException
+from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible.module_utils.parsing.convert_bool import boolean
-
 
 K8S_IMP_ERR = None
 try:
@@ -54,6 +54,14 @@ except ImportError as e:
     HAS_K8S_MODULE_HELPER = False
     k8s_import_exception = e
     K8S_IMP_ERR = traceback.format_exc()
+
+IMP_K8S_CLIENT = None
+try:
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
+    IMP_K8S_CLIENT = True
+except ImportError as e:
+    IMP_K8S_CLIENT_ERR = traceback.format_exc()
+    IMP_K8S_CLIENT = False
 
 YAML_IMP_ERR = None
 try:
@@ -95,22 +103,6 @@ except ImportError as e:
     HAS_K8S_INSTANCE_HELPER = False
     k8s_import_exception = e
     K8S_IMP_ERR = traceback.format_exc()
-
-
-class DynamicClient(kubernetes.dynamic.DynamicClient):
-    def apply(self, resource, body=None, name=None, namespace=None):
-        body = super().serialize_body(body)
-        body['metadata'] = body.get('metadata', dict())
-        name = name or body['metadata'].get('name')
-        if not name:
-            raise ValueError("name is required to apply {0}.{1}".format(resource.group_version, resource.kind))
-        if resource.namespaced:
-            body['metadata']['namespace'] = super().ensure_namespace(resource, namespace, body)
-        try:
-            return apply(resource, body)
-        except ApplyException as e:
-            raise ValueError("Could not apply strategic merge to %s/%s: %s" %
-                             (body['kind'], body['metadata']['name'], e))
 
 
 def configuration_digest(configuration):
@@ -204,10 +196,7 @@ def get_api_client(module=None, **kwargs):
     cache_file = generate_cache_file(kubeclient)
 
     try:
-        #client = DynamicClient(kubeclient, cache_file)
-        k8s_client = kubernetes.dynamic.DynamicClient(kubernetes.client.ApiClient(configuration))
-        client = DynamicClient(k8s_client, cache_file)
-        client = DynamicClient(kubernetes.client.ApiClient(configuration))
+        client = K8SDynamicClient(kubeclient, cache_file)
     except Exception as err:
         _raise_or_fail(err, 'Failed to get client due to %s')
 
