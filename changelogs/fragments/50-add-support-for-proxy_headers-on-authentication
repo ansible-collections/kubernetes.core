@@ -1,3 +1,0 @@
----
-minor_changes:
-  - add ``proxy_headers`` option for authentication on k8s_xxx modules (https://github.com/ansible-collections/kubernetes.core/pull/50).
