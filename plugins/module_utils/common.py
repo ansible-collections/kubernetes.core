@@ -49,7 +49,7 @@ try:
     import openshift
     from kubernetes.dynamic.exceptions import (
         NotFoundError, ResourceNotFoundError, ResourceNotUniqueError, DynamicApiError,
-        ConflictError, ForbiddenError, MethodNotAllowedError
+        ConflictError, ForbiddenError, MethodNotAllowedError, BadRequestError
     )
     HAS_K8S_MODULE_HELPER = True
     k8s_import_exception = None
@@ -90,17 +90,12 @@ except ImportError:
     pass
 
 try:
-    from openshift.dynamic.apply import recursive_diff
+    from ansible_collections.kubernetes.core.plugins.module_utils.apply import recursive_diff
 except ImportError:
     from ansible.module_utils.common.dict_transformations import recursive_diff
 
 try:
-    try:
-        # >=0.10
-        from openshift.dynamic.resource import ResourceInstance
-    except ImportError:
-        # <0.10
-        from openshift.dynamic.client import ResourceInstance
+    from kubernetes.dynamic.resource import ResourceInstance
     HAS_K8S_INSTANCE_HELPER = True
     k8s_import_exception = None
 except ImportError as e:
@@ -251,9 +246,9 @@ class K8sAnsibleMixin(object):
             result = resource.get(name=name, namespace=namespace,
                                   label_selector=','.join(label_selectors),
                                   field_selector=','.join(field_selectors))
-        except openshift.dynamic.exceptions.BadRequestError:
+        except BadRequestError:
             return dict(resources=[], api_found=True)
-        except openshift.dynamic.exceptions.NotFoundError:
+        except NotFoundError:
             if not wait or name is None:
                 return dict(resources=[], api_found=True)
 
