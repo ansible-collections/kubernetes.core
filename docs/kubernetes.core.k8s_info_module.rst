@@ -500,10 +500,10 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Get an existing Service object
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         api_version: v1
         kind: Service
         name: web
@@ -511,26 +511,26 @@ Examples
       register: web_service
 
     - name: Get a list of all service objects
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         api_version: v1
         kind: Service
         namespace: testing
       register: service_list
 
     - name: Get a list of all pods from any namespace
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         kind: Pod
       register: pod_list
 
     - name: Search for all Pods labelled app=web
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         kind: Pod
         label_selectors:
           - app = web
           - tier in (dev, test)
 
     - name: Using vars while using label_selectors
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         kind: Pod
         label_selectors:
           - "app = {{ app_label_web }}"
@@ -538,18 +538,18 @@ Examples
         app_label_web: web
 
     - name: Search for all running pods
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         kind: Pod
         field_selectors:
           - status.phase=Running
 
     - name: List custom objects created using CRD
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         kind: MyCustomObject
         api_version: "stable.example.com/v1"
 
     - name: Wait till the Object is created
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         kind: Pod
         wait: yes
         name: pod-not-yet-created

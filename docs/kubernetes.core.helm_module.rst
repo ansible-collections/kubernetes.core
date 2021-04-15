@@ -499,10 +499,10 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Deploy latest version of Prometheus chart inside monitoring namespace (and create it)
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: test
         chart_ref: stable/prometheus
         release_namespace: monitoring
@@ -510,12 +510,12 @@ Examples
 
     # From repository
     - name: Add stable chart repo
-      community.kubernetes.helm_repository:
+      kubernetes.core.helm_repository:
         name: stable
         repo_url: "https://kubernetes.github.io/ingress-nginx"
 
     - name: Deploy latest version of Grafana chart inside monitoring namespace with values
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: test
         chart_ref: stable/grafana
         release_namespace: monitoring
@@ -523,14 +523,14 @@ Examples
           replicas: 2
 
     - name: Deploy Grafana chart on 5.0.12 with values loaded from template
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: test
         chart_ref: stable/grafana
         chart_version: 5.0.12
         values: "{{ lookup('template', 'somefile.yaml') | from_yaml }}"
 
     - name: Deploy Grafana chart using values files on target
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: test
         chart_ref: stable/grafana
         release_namespace: monitoring
@@ -538,7 +538,7 @@ Examples
           - /path/to/values.yaml
 
     - name: Remove test release and waiting suppression ending
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: test
         state: absent
         wait: true
@@ -550,14 +550,14 @@ Examples
         dest: /tmp/helm_repo
 
     - name: Deploy Grafana chart from local path
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: test
         chart_ref: /tmp/helm_repo/stable/grafana
         release_namespace: monitoring
 
     # From url
     - name: Deploy Grafana chart on 5.6.0 from url
-      community.kubernetes.helm:
+      kubernetes.core.helm:
         name: test
         chart_ref: "https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz"
         release_namespace: monitoring

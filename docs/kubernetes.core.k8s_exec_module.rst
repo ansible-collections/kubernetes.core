@@ -323,16 +323,16 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Execute a command
-      community.kubernetes.k8s_exec:
+      kubernetes.core.k8s_exec:
         namespace: myproject
         pod: zuul-scheduler
         command: zuul-scheduler full-reconfigure
 
     - name: Check RC status of command executed
-      community.kubernetes.k8s_exec:
+      kubernetes.core.k8s_exec:
         namespace: myproject
         pod: busybox-test
         command: cmd_with_non_zero_exit_code
