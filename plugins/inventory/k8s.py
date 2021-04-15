@@ -117,8 +117,11 @@ connections:
 import json
 
 from ansible.errors import AnsibleError
-from ansible_collections.community.kubernetes.plugins.module_utils.common import K8sAnsibleMixin, HAS_K8S_MODULE_HELPER, k8s_import_exception
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
+from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+    K8sAnsibleMixin, HAS_K8S_MODULE_HELPER, k8s_import_exception
+)
+from ansible_collections.community.kubernetes.plugins.module_utils.exceptions import K8sInventoryException
 
 try:
     from openshift.dynamic.exceptions import DynamicApiError
@@ -135,10 +138,6 @@ def format_dynamic_api_exc(exc):
         return exc.body
     else:
         return '%s Reason: %s' % (exc.status, exc.reason)
-
-
-class K8sInventoryException(Exception):
-    pass
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleMixin):
