@@ -10,7 +10,6 @@ from ansible.module_utils.six import PY3
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import ApplyException
 
 try:
-    import kubernetes
     from kubernetes.dynamic.exceptions import NotFoundError
 except ImportError:
     pass

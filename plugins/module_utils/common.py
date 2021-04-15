@@ -42,13 +42,15 @@ from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible.module_utils.parsing.convert_bool import boolean
 
+
 K8S_IMP_ERR = None
 try:
     import kubernetes
     import openshift
-    from openshift.dynamic.exceptions import (
-        ResourceNotFoundError, ResourceNotUniqueError, NotFoundError, DynamicApiError,
-        ConflictError, ForbiddenError, MethodNotAllowedError)
+    from kubernetes.dynamic.exceptions import (
+        NotFoundError, ResourceNotFoundError, ResourceNotUniqueError, DynamicApiError,
+        ConflictError, ForbiddenError, MethodNotAllowedError
+    )
     HAS_K8S_MODULE_HELPER = True
     k8s_import_exception = None
 except ImportError as e:
@@ -61,8 +63,9 @@ try:
     from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
     IMP_K8S_CLIENT = True
 except ImportError as e:
-    IMP_K8S_CLIENT_ERR = traceback.format_exc()
     IMP_K8S_CLIENT = False
+    k8s_client_import_exception = e
+    IMP_K8S_CLIENT_ERR = traceback.format_exc()
 
 YAML_IMP_ERR = None
 try:
@@ -74,7 +77,7 @@ except ImportError:
 
 K8S_CONFIG_HASH_IMP_ERR = None
 try:
-    from openshift.dynamic.exceptions import KubernetesValidateMissing
+    from kubernetes.dynamic.exceptions import KubernetesValidateMissing
     HAS_K8S_CONFIG_HASH = True
 except ImportError:
     K8S_CONFIG_HASH_IMP_ERR = traceback.format_exc()
