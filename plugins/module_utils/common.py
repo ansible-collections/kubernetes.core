@@ -498,7 +498,7 @@ class K8sAnsibleMixin(object):
         changed = False
         results = []
         try:
-            self.client = get_api_client()
+            self.client = get_api_client(self.module)
         # Hopefully the kubernetes client will provide its own exception class one day
         except (urllib3.exceptions.RequestError) as e:
             self.fail_json(msg="Couldn't connect to Kubernetes: %s" % str(e))
