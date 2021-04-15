@@ -333,10 +333,6 @@
       register: k8s_info_testing6
       failed_when: not k8s_info_testing6.resources or k8s_info_testing6.resources[0].status.phase != "Active"
 
-    - include_tasks: crd.yml
-    - include_tasks: lists.yml
-    - include_tasks: append_hash.yml
-
   always:
     - name: Delete all namespaces
       k8s:
