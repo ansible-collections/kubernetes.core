@@ -272,7 +272,12 @@ except ImportError:
     IMP_YAML = False
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib, env_fallback
-from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm, get_values
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
+    run_helm,
+    get_values,
+    get_helm_plugin_list,
+    parse_helm_plugin_list
+)
 
 
 def get_release(state, release_name):
@@ -413,13 +418,15 @@ def has_plugin(command, plugin):
     Check if helm plugin is installed.
     """
 
-    cmd = command + " plugin list"
-    rc, out, err = run_helm(module, cmd)
-    for line in out.splitlines():
-        if line.startswith("NAME"):
-            continue
-        name, _rest = line.split(None, 1)
-        if name == plugin:
+    cmd = command + " plugin"
+    rc, output, err = get_helm_plugin_list(module, helm_bin=cmd)
+    out = parse_helm_plugin_list(module, output=output.splitlines())
+
+    if not out:
+        return False
+
+    for line in out:
+        if line[0] == plugin:
             return True
     return False
 

@@ -4,6 +4,7 @@
 # Copyright: (c) 2020, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
@@ -77,7 +78,10 @@ rc:
 '''
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
+    get_helm_plugin_list,
+    parse_helm_plugin_list,
+)
 
 
 def main():
@@ -117,46 +121,38 @@ def main():
     helm_cmd_common += " plugin"
 
     plugin_name = module.params.get('plugin_name')
-    helm_plugin_list = helm_cmd_common + " list"
-    rc, out, err = run_helm(module, helm_plugin_list)
-    if rc != 0 or (out == '' and err == ''):
-        module.fail_json(
-            msg="Failed to get Helm plugin info",
-            command=helm_plugin_list,
-            stdout=out,
-            stderr=err,
-            rc=rc,
-        )
 
     plugin_list = []
-    if out:
-        for line in out.splitlines():
-            if line.startswith("NAME"):
-                continue
-            name, version, description = line.split('\t', 3)
-            name = name.strip()
-            version = version.strip()
-            description = description.strip()
-            if plugin_name is None:
-                plugin_list.append({
-                    'name': name,
-                    'version': version,
-                    'description': description,
-                })
-                continue
 
-            if plugin_name == name:
-                plugin_list.append({
-                    'name': name,
-                    'version': version,
-                    'description': description,
-                })
-                break
+    rc, output, err = get_helm_plugin_list(module, helm_bin=helm_cmd_common)
+
+    out = parse_helm_plugin_list(module, output=output.splitlines())
+
+    for line in out:
+        if plugin_name is None:
+            plugin_list.append(
+                {
+                    "name": line[0],
+                    "version": line[1],
+                    "description": line[2],
+                }
+            )
+            continue
+
+        if plugin_name == line[0]:
+            plugin_list.append(
+                {
+                    "name": line[0],
+                    "version": line[1],
+                    "description": line[2],
+                }
+            )
+            break
 
     module.exit_json(
         changed=True,
-        command=helm_plugin_list,
-        stdout=out,
+        command=helm_cmd_common + " list",
+        stdout=output,
         stderr=err,
         rc=rc,
         plugin_list=plugin_list,

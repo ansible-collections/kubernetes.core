@@ -1,0 +1,11 @@
+name: "sample_plugin"
+version: "0.0.1"
+usage: "Sample Helm Plugin"
+description: |-
+  This plugin provides sample plugin to Helm.
+  usage:
+  This is new line
+  This is another line
+ignoreFlags: false
+useTunnel: false
+command: "$HELM_PLUGIN_DIR/main.sh"

@@ -1,0 +1,2 @@
+bugfixes:
+- helm - handle multiline output of ``helm plugin list`` command (https://github.com/ansible-collections/community.kubernetes/issues/399).
