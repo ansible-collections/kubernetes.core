@@ -460,10 +460,10 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Expose https port with ClusterIP
-      community.kubernetes.k8s_service:
+      kubernetes.core.k8s_service:
         state: present
         name: test-https
         namespace: default
@@ -474,7 +474,7 @@ Examples
           key: special
 
     - name: Expose https port with ClusterIP using spec
-      community.kubernetes.k8s_service:
+      kubernetes.core.k8s_service:
         state: present
         name: test-https
         namespace: default

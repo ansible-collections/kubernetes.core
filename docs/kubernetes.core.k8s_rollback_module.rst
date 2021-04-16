@@ -364,10 +364,10 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Rollback a failed deployment
-      community.kubernetes.k8s_rollback:
+      kubernetes.core.k8s_rollback:
         api_version: apps/v1
         kind: Deployment
         name: web

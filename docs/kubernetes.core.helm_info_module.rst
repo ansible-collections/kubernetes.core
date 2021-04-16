@@ -202,10 +202,10 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Deploy latest version of Grafana chart inside monitoring namespace
-      community.kubernetes.helm_info:
+      kubernetes.core.helm_info:
         name: test
         release_namespace: monitoring
 

@@ -196,15 +196,15 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Render templates to specified directory
-      community.kubernetes.helm_template:
+      kubernetes.core.helm_template:
         chart_ref: stable/prometheus
         output_dir: mycharts
 
     - name: Render templates
-      community.kubernetes.helm_template:
+      kubernetes.core.helm_template:
         chart_ref: stable/prometheus
       register: result
 

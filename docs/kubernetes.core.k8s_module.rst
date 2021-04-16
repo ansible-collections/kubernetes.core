@@ -19,7 +19,7 @@ Synopsis
 - Use the OpenShift Python client to perform CRUD operations on K8s objects.
 - Pass the object definition from a source file or inline. See examples for reading files and using Jinja templates or vault-encrypted files.
 - Access to the full range of K8s APIs.
-- Use the :ref:`community.kubernetes.k8s_info <community.kubernetes.k8s_info_module>` module to obtain a list of items about an object of type ``kind``
+- Use the :ref:`kubernetes.core.k8s_info <kubernetes.core.k8s_info_module>` module to obtain a list of items about an object of type ``kind``
 - Authenticate using either a config file, certificates, password or token.
 - Supports check mode.
 
@@ -821,17 +821,17 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Create a k8s namespace
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         name: testing
         api_version: v1
         kind: Namespace
         state: present
 
     - name: Create a Service object from an inline definition
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: v1
@@ -853,7 +853,7 @@ Examples
               port: 8000
 
     - name: Remove an existing Service object
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: absent
         api_version: v1
         kind: Service
@@ -863,24 +863,24 @@ Examples
     # Passing the object definition from a file
 
     - name: Create a Deployment by reading the definition from a local file
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         src: /testing/deployment.yml
 
     - name: >-
         Read definition file from the Ansible controller file system.
         If the definition file has been encrypted with Ansible Vault it will automatically be decrypted.
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition: "{{ lookup('file', '/testing/deployment.yml') | from_yaml }}"
 
     - name: Read definition template file from the Ansible controller file system
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         template: '/testing/deployment.j2'
 
     - name: Read definition template file from the Ansible controller file system that uses custom start/end strings
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         template:
           path: '/testing/deployment.j2'
@@ -888,14 +888,14 @@ Examples
           variable_end_string: ']]'
 
     - name: fail on validation errors
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition: "{{ lookup('template', '/testing/deployment.yml') | from_yaml }}"
         validate:
           fail_on_error: yes
 
     - name: warn on validation errors, check for unexpected properties
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         definition: "{{ lookup('template', '/testing/deployment.yml') | from_yaml }}"
         validate:
@@ -910,13 +910,13 @@ Examples
         mode: '0664'
 
     - name: Apply metrics-server manifest to the cluster.
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         state: present
         src: ~/metrics-server.yaml
 
     # Wait for a Deployment to pause before continuing
     - name: Pause a Deployment.
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
