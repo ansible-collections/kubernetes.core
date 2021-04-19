@@ -1,0 +1,2 @@
+bugfixes:
+- k8s - handle ``fail_json`` API from inventory plugin (https://github.com/ansible-collections/kubernetes.core/issues/57).

@@ -26,12 +26,12 @@ import sys
 from datetime import datetime
 from distutils.version import LooseVersion
 
-
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible.module_utils.parsing.convert_bool import boolean
+from ansible_collections.community.kubernetes.plugins.module_utils.exceptions import K8sInventoryException
 
 
 K8S_IMP_ERR = None
@@ -425,7 +425,9 @@ class K8sAnsibleMixin(object):
         return True, result
 
     def fail(self, msg=None):
-        self.fail_json(msg=msg)
+        if hasattr(self, 'fail_json'):
+            self.fail_json(msg=msg)
+        raise K8sInventoryException(msg)
 
     def _wait_for(self, resource, name, namespace, predicate, sleep, timeout, state):
         start = datetime.now()
