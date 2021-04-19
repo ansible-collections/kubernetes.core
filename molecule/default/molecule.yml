@@ -12,6 +12,16 @@ lint: |
   flake8
 platforms:
   - name: instance-kind
+    image: sameersbn/squid:3.5.27-2
+    exposed_ports:
+      - 3128/tcp
+    published_ports:
+      - 0.0.0.0:3128:3128/tcp
+    volumes:
+      - squid.passwd:/etc/squid/passwd
+      - squid.conf:/etc/squid/squid.conf
+    privileged: true
+
 provisioner:
   name: ansible
   log: true
