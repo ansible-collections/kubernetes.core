@@ -7,7 +7,7 @@ try:
     from ansible_collections.cloud.common.plugins.module_utils.turbo.module import (
         AnsibleTurboModule as AnsibleModule,
     )  # noqa: F401
-    AnsibleModule.collection_name = "community.kubernetes"
+    AnsibleModule.collection_name = "kubernetes.core"
 except ImportError:
     from ansible.module_utils.basic import AnsibleModule  # noqa: F401
 from ansible.module_utils.basic import AnsibleModule  # noqa: F401
