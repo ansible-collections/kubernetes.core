@@ -2,7 +2,6 @@
 - block:
     - set_fact:
         wait_namespace: wait
-        k8s_pod_name: pod-info-1
         multi_pod_one: multi-pod-1
         multi_pod_two: multi-pod-2
 
@@ -199,6 +198,9 @@
       assert:
         that:
           - "{{ lookup('pipe', 'date +%s') }} - {{ start }} > 30"
+
+  vars:
+    k8s_pod_name: pod-info-1
 
   always:
     - name: Remove namespace
