@@ -88,9 +88,14 @@ jobs:
       - name: Set up a squid proxy
         run: |
           set -eux
-          docker run --name squid -d --restart=always --publish 3128:3128 -v ${GITHUB_WORKSPACE}/molecule/default/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/molecule/default/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
+          stat ${GITHUB_WORKSPACE}/${squid_config}
+          stat ${GITHUB_WORKSPACE}/${squid_pwd}
+          docker run --name squid -d --restart=always --publish 3128:3128 -v ${GITHUB_WORKSPACE}/${squid_pwd}:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/${squid_config}:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
           docker logs squid
           curl -x http://127.0.0.1:3128 --proxy-user ansible:test -I https://github.com
+        with:
+          squid_config: molecule/default/files/squid.conf
+          squid_pwd: molecule/default/files/squid.passwd
 
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
