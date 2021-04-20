@@ -88,8 +88,8 @@ jobs:
         run: |
           set -eux
           find /home/runner -name 'squid.conf'
-          stat /home/runner/ansible_collections/kubernetes/core/molecule/default/files/squid.conf
-          stat /home/runner/ansible_collections/kubernetes/core/molecule/default/files/squid.passwd
+          stat /home/runner/work/kubernetes/kubernetes/core/molecule/default/files/squid.conf
+          stat /home/runner/work/kubernetes/kubernetes/core/molecule/default/files/squid.passwd
 
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
