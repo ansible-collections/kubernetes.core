@@ -97,7 +97,6 @@
       assert:
         that:
           - r is failed
-          - "'Error while reading template file' in r.msg"
 
     - name: Create pod using template (path parameter)
       kubernetes.core.k8s:
