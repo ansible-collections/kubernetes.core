@@ -38,7 +38,7 @@
             replicas: 1
             selector:
               matchLabels:
-                app: "{{ k8s_pod_name }}"
+                app: "{{ k8s_pod_name_one }}"
       vars:
         k8s_pod_name_one: pod
         k8s_pod_namespace: "{{ template_namespace }}"
