@@ -4,6 +4,7 @@
 # Copyright: (c) 2020, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
@@ -96,7 +97,11 @@ rc:
 '''
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
+    run_helm,
+    get_helm_plugin_list,
+    parse_helm_plugin_list
+)
 
 
 def main():
@@ -180,60 +185,58 @@ def main():
             )
     elif state == 'absent':
         plugin_name = module.params.get('plugin_name')
-        helm_plugin_list = helm_cmd_common + " list"
-        rc, out, err = run_helm(module, helm_plugin_list)
-        if rc != 0 or (out == '' and err == ''):
-            module.fail_json(
-                msg="Failed to get Helm plugin info",
-                command=helm_plugin_list,
-                stdout=out,
+        rc, output, err = get_helm_plugin_list(module, helm_bin=helm_cmd_common)
+        out = parse_helm_plugin_list(module, output=output.splitlines())
+
+        if not out:
+            module.exit_json(
+                failed=False,
+                changed=False,
+                msg="Plugin not found or is already uninstalled",
+                command=helm_cmd_common + " list",
+                stdout=output,
                 stderr=err,
-                rc=rc,
+                rc=rc
             )
 
-        if out:
-            found = False
-            for line in out.splitlines():
-                if line.startswith("NAME"):
-                    continue
-                name, dummy, dummy = line.split('\t', 3)
-                name = name.strip()
-                if name == plugin_name:
-                    found = True
-                    break
-            if found:
-                helm_uninstall_cmd = "%s uninstall %s" % (helm_cmd_common, plugin_name)
-                if not module.check_mode:
-                    rc, out, err = run_helm(module, helm_uninstall_cmd, fails_on_error=False)
-                else:
-                    rc, out, err = (0, '', '')
+        found = False
+        for line in out:
+            if line[0] == plugin_name:
+                found = True
+                break
+        if not found:
+            module.exit_json(
+                failed=False,
+                changed=False,
+                msg="Plugin not found or is already uninstalled",
+                command=helm_cmd_common + " list",
+                stdout=output,
+                stderr=err,
+                rc=rc
+            )
 
-                if rc == 0:
-                    module.exit_json(
-                        changed=True,
-                        msg="Plugin uninstalled successfully",
-                        command=helm_uninstall_cmd,
-                        stdout=out,
-                        stderr=err,
-                        rc=rc
-                    )
-                module.fail_json(
-                    msg="Failed to get Helm plugin uninstall",
-                    command=helm_uninstall_cmd,
-                    stdout=out,
-                    stderr=err,
-                    rc=rc,
-                )
-            else:
-                module.exit_json(
-                    failed=False,
-                    changed=False,
-                    msg="Plugin not found or is already uninstalled",
-                    command=helm_plugin_list,
-                    stdout=out,
-                    stderr=err,
-                    rc=rc
-                )
+        helm_uninstall_cmd = "%s uninstall %s" % (helm_cmd_common, plugin_name)
+        if not module.check_mode:
+            rc, out, err = run_helm(module, helm_uninstall_cmd, fails_on_error=False)
+        else:
+            rc, out, err = (0, '', '')
+
+        if rc == 0:
+            module.exit_json(
+                changed=True,
+                msg="Plugin uninstalled successfully",
+                command=helm_uninstall_cmd,
+                stdout=out,
+                stderr=err,
+                rc=rc
+            )
+        module.fail_json(
+            msg="Failed to get Helm plugin uninstall",
+            command=helm_uninstall_cmd,
+            stdout=out,
+            stderr=err,
+            rc=rc,
+        )
 
 
 if __name__ == '__main__':
