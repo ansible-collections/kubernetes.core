@@ -75,3 +75,36 @@
 - assert:
     that:
       - not uninstall_env.changed
+
+# https://github.com/ansible-collections/community.kubernetes/issues/399
+- name: Copy required plugin files
+  copy:
+    src: "files/sample_plugin"
+    dest: "/tmp/helm_plugin_test/"
+
+- name: Install sample_plugin from the directory
+  helm_plugin:
+    binary_path: "{{ helm_binary }}"
+    state: present
+    plugin_path: "/tmp/helm_plugin_test/sample_plugin"
+  register: sample_plugin_output
+
+- name: Assert that sample_plugin is installed or not
+  assert:
+    that:
+      - sample_plugin_output.changed
+
+- name: Gather Helm plugin info
+  helm_plugin_info:
+  register: r
+
+- name: Set sample_plugin version
+  set_fact:
+    plugin_version: "{{ ( r.plugin_list | selectattr('name', 'equalto', plugin_name) | list )[0].version }}"
+  vars:
+    plugin_name: "sample_plugin"
+
+- name: Assert if sample_plugin with multiline comment is installed
+  assert:
+    that:
+      - plugin_version == "0.0.1"

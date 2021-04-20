@@ -1,3 +1,0 @@
----
-minor_changes:
-  - k8s - SelfSubjectAccessReviews supported when 405 response received (https://github.com/ansible-collections/community.kubernetes/pull/237).

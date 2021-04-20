@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Add Makefile and downstream build script for kubernetes.core (https://github.com/ansible-collections/community.kubernetes/pull/197).

@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Replace KubernetesRawModule class with K8sAnsibleMixin (https://github.com/ansible-collections/community.kubernetes/pull/231).

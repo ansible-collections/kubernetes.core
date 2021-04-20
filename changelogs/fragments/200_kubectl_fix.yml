@@ -1,2 +1,0 @@
-minor_changes:
-- kubectl plugin - correct console log (https://github.com/ansible-collections/community.kubernetes/issues/200).

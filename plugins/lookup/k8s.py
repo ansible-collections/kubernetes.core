@@ -25,6 +25,10 @@ DOCUMENTATION = '''
 
     short_description: Query the K8s API
 
+    author:
+      - Chris Houseknecht <@chouseknecht>
+      - Fabian von Feilitzsch <@fabianvf>
+
     description:
       - Uses the OpenShift Python client to fetch a specific object by name, all matching objects within a
         namespace, or all matching objects for all namespaces, as well as information about the cluster.
@@ -82,7 +86,7 @@ DOCUMENTATION = '''
         description:
         - Path to an existing Kubernetes config file. If not provided, and no other connection
           options are provided, the openshift client will attempt to load the default
-          configuration file from I(~/.kube/config.json). Can also be specified via K8S_AUTH_KUBECONFIG environment
+          configuration file from I(~/.kube/config). Can also be specified via K8S_AUTH_KUBECONFIG environment
           variable.
       context:
         description:

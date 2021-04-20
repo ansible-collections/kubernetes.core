@@ -117,3 +117,44 @@ def write_temp_kubeconfig(server, validate_certs=True, ca_cert=None):
     with os.fdopen(_fd, 'w') as fp:
         yaml.dump(content, fp)
     return file_name
+
+
+def get_helm_plugin_list(module, helm_bin=None):
+    """
+    Return `helm plugin list`
+    """
+    if not helm_bin:
+        return []
+    helm_plugin_list = helm_bin + " list"
+    rc, out, err = run_helm(module, helm_plugin_list)
+    if rc != 0 or (out == '' and err == ''):
+        module.fail_json(
+            msg="Failed to get Helm plugin info",
+            command=helm_plugin_list,
+            stdout=out,
+            stderr=err,
+            rc=rc,
+        )
+    return (rc, out, err)
+
+
+def parse_helm_plugin_list(module, output=None):
+    """
+    Parse `helm plugin list`, return list of plugins
+    """
+    ret = []
+    if not output:
+        return ret
+
+    for line in output:
+        if line.startswith("NAME"):
+            continue
+        name, version, description = line.split('\t', 3)
+        name = name.strip()
+        version = version.strip()
+        description = description.strip()
+        if name == '':
+            continue
+        ret.append((name, version, description))
+
+    return ret

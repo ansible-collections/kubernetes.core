@@ -1,2 +1,0 @@
-minor_changes:
-- k8s - add testcase for adding multiple resources using template parameter (https://github.com/ansible-collections/community.kubernetes/issues/243).

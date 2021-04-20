@@ -14,8 +14,8 @@ documentation: ''
 homepage: ''
 issues: https://github.com/ansible-collections/kubernetes.core/issues
 license_file: LICENSE
-name: core
 namespace: kubernetes
+name: core
 readme: README.md
 repository: https://github.com/ansible-collections/kubernetes.core
 tags:
