@@ -124,8 +124,7 @@ def get_api_client(module=None, **kwargs):
     def _raise_or_fail(exc, msg):
         if module:
             module.fail_json(msg % to_native(exc))
-        else:
-            raise exc
+        raise exc
 
     # If authorization variables aren't defined, look for them in environment variables
     for true_name, arg_name in AUTH_ARG_MAP.items():
@@ -142,6 +141,10 @@ def get_api_client(module=None, **kwargs):
 
     def auth_set(*names):
         return all([auth.get(name) for name in names])
+
+    if auth_set('host'):
+        # Removing trailing slashes if any from hostname
+        auth['host'] = auth.get('host').rstrip('/')
 
     if auth_set('username', 'password', 'host') or auth_set('api_key', 'host'):
         # We have enough in the parameters to authenticate, no need to load incluster or kubeconfig
