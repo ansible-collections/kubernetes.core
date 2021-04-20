@@ -12,4 +12,3 @@ changelogs/.plugin-cache.yaml
 # Temporary test files.
 tests/output
 tests/integration/cloud-config-*
-.cache
