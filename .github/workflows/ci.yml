@@ -87,8 +87,10 @@ jobs:
       - name: Set up squid proxy via docker
         run: |
           set -eux
-          stat ${GITHUB_WORKSPACE}/molecule/default/files/squid.conf
-          stat ${GITHUB_WORKSPACE}/molecule/default/files/squid.passwd
+          stat ${main_dir}/molecule/default/files/squid.conf
+          stat ${main_dir}/molecule/default/files/squid.passwd
+        with:
+          main_dir: /home/runner/ansible_collections/kubernetes/core
 
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
