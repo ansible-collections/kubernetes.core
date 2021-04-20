@@ -77,7 +77,7 @@ options:
     type: str
   proxy_headers:
     description:
-    - The login for the HTTP proxy.
+    - The Header used for the HTTP proxy.
     - Documentation can be found here 'https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html?highlight=proxy_headers#urllib3.util.make_headers'
     type: dict
     version_added: 2.0.0
