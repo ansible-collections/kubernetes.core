@@ -1,0 +1,2 @@
+minor_changes:
+- common - removed ``KubernetesAnsibleModule``, use ``K8sAnsibleMixin`` instead.
