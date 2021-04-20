@@ -87,6 +87,7 @@ jobs:
       - name: Set up squid proxy via docker
         run: |
           set -eux
+          find /home/runner -name 'squid.conf'
           stat /home/runner/ansible_collections/kubernetes/core/molecule/default/files/squid.conf
           stat /home/runner/ansible_collections/kubernetes/core/molecule/default/files/squid.passwd
 
