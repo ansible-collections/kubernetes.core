@@ -151,6 +151,7 @@ class ActionModule(ActionBase):
                 # add ansible 'template' vars
                 temp_vars = task_vars.copy()
                 old_vars = self._templar.available_variables
+                old_env = copy.deepcopy(self._templar.environment)
 
                 self._templar.environment.newline_sequence = newline_sequence
                 if template_item['block_start_string'] is not None:
@@ -167,6 +168,7 @@ class ActionModule(ActionBase):
                 result = self._templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
                 result_template.append(result)
                 self._templar.available_variables = old_vars
+                self._templar.environment = copy.deepcopy(old_env)
         resource_definition = self._task.args.get('definition', None)
         if not resource_definition:
             new_module_args.pop('template')
