@@ -24,40 +24,35 @@ Click on the name of a plugin or module to view that content's documentation:
 ### Connection plugins
 Name | Description
 --- | ---
-[kubernetes.core.kubectl](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
-
-### Filter plugins
-Name | Description
---- | ---
-kubernetes.core.k8s_config_resource_name|kubernetes.core k8s_config_resource_name filter plugin
-
-### Lookup plugins
-Name | Description
---- | ---
-[kubernetes.core.k8s](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_lookup.rst)|Query the K8s API
-
-### Modules
-Name | Description
---- | ---
-[kubernetes.core.helm](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.helm_module.rst)|Manages Kubernetes packages with the Helm package manager
-[kubernetes.core.helm_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.helm_info_module.rst)|Get information from Helm package deployed inside the cluster
-[kubernetes.core.helm_plugin](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.helm_plugin_module.rst)|Manage Helm plugins
-[kubernetes.core.helm_plugin_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.helm_plugin_info_module.rst)|Gather information about Helm plugins
-[kubernetes.core.helm_repository](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.helm_repository_module.rst)|Manage Helm repositories.
-[kubernetes.core.helm_template](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.helm_template_module.rst)|Render chart templates
-[kubernetes.core.k8s](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_module.rst)|Manage Kubernetes (K8s) objects
-[kubernetes.core.k8s_cluster_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_cluster_info_module.rst)|Describe Kubernetes (K8s) cluster, APIs available and their respective versions
-[kubernetes.core.k8s_exec](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_exec_module.rst)|Execute command in Pod
-[kubernetes.core.k8s_info](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_info_module.rst)|Describe Kubernetes (K8s) objects
-[kubernetes.core.k8s_log](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_log_module.rst)|Fetch logs from Kubernetes resources
-[kubernetes.core.k8s_rollback](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
-[kubernetes.core.k8s_scale](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
-[kubernetes.core.k8s_service](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_service_module.rst)|Manage Services on Kubernetes
+[kubernetes.core.kubectl](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
 
 ### Inventory plugins
 Name | Description
 --- | ---
-[kubernetes.core.k8s](https://github.com/ansible-collections/community.kubernetes/blob/main/docs/kubernetes.core.k8s_inventory.rst)|Kubernetes (K8s) inventory source
+[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_inventory.rst)|Kubernetes (K8s) inventory source
+
+### Lookup plugins
+Name | Description
+--- | ---
+[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_lookup.rst)|Query the K8s API
+
+### Modules
+Name | Description
+--- | ---
+[kubernetes.core.helm](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_module.rst)|Manages Kubernetes packages with the Helm package manager
+[kubernetes.core.helm_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_info_module.rst)|Get information from Helm package deployed inside the cluster
+[kubernetes.core.helm_plugin](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_module.rst)|Manage Helm plugins
+[kubernetes.core.helm_plugin_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_info_module.rst)|Gather information about Helm plugins
+[kubernetes.core.helm_repository](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_repository_module.rst)|Manage Helm repositories.
+[kubernetes.core.helm_template](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_template_module.rst)|Render chart templates
+[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_module.rst)|Manage Kubernetes (K8s) objects
+[kubernetes.core.k8s_cluster_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_cluster_info_module.rst)|Describe Kubernetes (K8s) cluster, APIs available and their respective versions
+[kubernetes.core.k8s_exec](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_exec_module.rst)|Execute command in Pod
+[kubernetes.core.k8s_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_info_module.rst)|Describe Kubernetes (K8s) objects
+[kubernetes.core.k8s_log](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_log_module.rst)|Fetch logs from Kubernetes resources
+[kubernetes.core.k8s_rollback](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
+[kubernetes.core.k8s_scale](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
+[kubernetes.core.k8s_service](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_service_module.rst)|Manage Services on Kubernetes
 
 <!--end collection content-->
 

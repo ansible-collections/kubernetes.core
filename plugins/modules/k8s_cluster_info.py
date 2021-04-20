@@ -107,26 +107,15 @@ version:
       type: str
 apis:
   description:
-  - The API(s) that exists in dictionary
+  - dictionary of group + version of resource found from cluster
   returned: success
   type: dict
+  elements: dict
   contains:
-    api_version:
-      description: API version
-      returned: success
-      type: str
     categories:
       description: API categories
       returned: success
       type: list
-    group_version:
-      description: Resource Group version
-      returned: success
-      type: str
-    kind:
-      description: Resource kind
-      returned: success
-      type: str
     name:
       description: Resource short name
       returned: success
@@ -147,14 +136,6 @@ apis:
       description: Resource singular name
       returned: success
       type: str
-    available_api_version:
-      description: All available versions of the given API
-      returned: success
-      type: list
-    preferred_api_version:
-      description: Preferred version of the given API
-      returned: success
-      type: str
 '''
 
 
@@ -163,22 +144,22 @@ import copy
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
+from collections import defaultdict
 
 
 def execute_module(module, client):
     invalidate_cache = boolean(module.params.get('invalidate_cache', True), strict=False)
     if invalidate_cache:
         client.resources.invalidate_cache()
-    results = {}
+    results = defaultdict(dict)
     from openshift.dynamic.resource import ResourceList
     for resource in list(client.resources):
         resource = resource[0]
         if isinstance(resource, ResourceList):
             continue
-        results[resource.group] = {
-            'api_version': resource.group_version,
+        key = resource.group_version if resource.group == '' else '/'.join([resource.group, resource.group_version.split('/')[-1]])
+        results[key][resource.kind] = {
             'categories': resource.categories if resource.categories else [],
-            'kind': resource.kind,
             'name': resource.name,
             'namespaced': resource.namespaced,
             'preferred': resource.preferred,

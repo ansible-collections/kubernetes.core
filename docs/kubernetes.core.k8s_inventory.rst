@@ -187,7 +187,7 @@ Parameters
                     <td>
                     </td>
                 <td>
-                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the OpenShift client will attempt to load the default configuration file from <em>~/.kube/config.json</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the OpenShift client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                 </td>
             </tr>
             <tr>
@@ -298,7 +298,7 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>community.kubernetes.k8s</li>
+                                    <li>kubernetes.core.k8s</li>
                                     <li>k8s</li>
                         </ul>
                 </td>
@@ -317,25 +317,25 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     # File must be named k8s.yaml or k8s.yml
 
     # Authenticate with token, and return all pods and services for all namespaces
-    plugin: community.kubernetes.k8s
+    plugin: kubernetes.core.k8s
     connections:
       - host: https://192.168.64.4:8443
         api_key: xxxxxxxxxxxxxxxx
         validate_certs: false
 
     # Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-    plugin: community.kubernetes.k8s
+    plugin: kubernetes.core.k8s
     connections:
       - namespaces:
         - testing
 
     # Use a custom config file, and a specific context.
-    plugin: community.kubernetes.k8s
+    plugin: kubernetes.core.k8s
     connections:
       - kubeconfig: /path/to/config
         context: 'awx/192-168-64-4:8443/developer'

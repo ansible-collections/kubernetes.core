@@ -167,7 +167,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config.json</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                 </td>
             </tr>
             <tr>
@@ -277,14 +277,14 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Get Cluster information
-      community.kubernetes.k8s_cluster_info:
+      kubernetes.core.k8s_cluster_info:
       register: api_status
 
     - name: Do not invalidate cache before getting information
-      community.kubernetes.k8s_cluster_info:
+      kubernetes.core.k8s_cluster_info:
         invalidate_cache: False
       register: api_status
 

@@ -9,7 +9,7 @@
 
 - name: Get core API version
   set_fact:
-    crd: "{{ api_details.apis['apiextensions.k8s.io'] }}"
+    crd: "{{ api_details.apis['apiextensions.k8s.io/v1'] }}"
     host: "{{ api_details.connection['host'] }}"
     client_version: "{{ api_details.version['client'] }}"
 
@@ -17,6 +17,8 @@
   assert:
     that:
       - api_details.apis is defined
+      - api_details.apis.v1.Secret is defined
+      - api_details.apis.v1.Service is defined
       - crd is defined
       - host is defined
       - client_version is defined

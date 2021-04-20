@@ -20,21 +20,130 @@
       assert:
         that: (pod_list.resources | count) > 5
 
-    - include_tasks: tasks/delete.yml
-    - include_tasks: tasks/scale.yml
-    - include_tasks: tasks/apply.yml
-    - include_tasks: tasks/waiter.yml
-    - include_tasks: tasks/full.yml
-    - include_tasks: tasks/exec.yml
-    - include_tasks: tasks/log.yml
-    - include_tasks: tasks/cluster_info.yml
-    - include_tasks: tasks/access_review.yml
-    - include_tasks: tasks/rollback.yml
-    - include_tasks: tasks/gc.yml
-    - include_tasks: tasks/proxy.yml
+    - name: Include access_review.yml
+      include_tasks:
+        file: tasks/access_review.yml
+        apply:
+          tags: [ access_review, k8s ]
+      tags:
+        - always
+    - name: Include append_hash.yml
+      include_tasks:
+        file: tasks/append_hash.yml
+        apply:
+          tags: [ append_hash, k8s ]
+      tags:
+        - always
+    - name: Include apply.yml
+      include_tasks:
+        file: tasks/apply.yml
+        apply:
+          tags: [ apply, k8s ]
+      tags:
+        - always
+    - name: Include cluster_info.yml
+      include_tasks:
+        file: tasks/cluster_info.yml
+        apply:
+          tags: [ cluster_info, k8s ]
+      tags:
+        - always
+    - name: Include crd.yml
+      include_tasks:
+        file: tasks/crd.yml
+        apply:
+          tags: [ crd, k8s ]
+      tags:
+        - always
+    - name: Include delete.yml
+      include_tasks:
+        file: tasks/delete.yml
+        apply:
+          tags: [ delete, k8s ]
+      tags:
+        - always
+    - name: Include exec.yml
+      include_tasks:
+        file: tasks/exec.yml
+        apply:
+          tags: [ exec, k8s ]
+      tags:
+        - always
+    - name: Include full.yml
+      include_tasks:
+        file: tasks/full.yml
+        apply:
+          tags: [ full, k8s ]
+      tags:
+        - always
+    - name: Include gc.yml
+      include_tasks:
+        file: tasks/gc.yml
+        apply:
+          tags: [ gc, k8s ]
+      tags:
+        - always
+    - name: Include info.yml
+      include_tasks:
+        file: tasks/info.yml
+        apply:
+          tags: [ info, k8s ]
+      tags:
+        - always
+    - name: Include lists.yml
+      include_tasks:
+        file: tasks/lists.yml
+        apply:
+          tags: [ lists, k8s ]
+      tags:
+        - always
+    - name: Include log.yml
+      include_tasks:
+        file: tasks/log.yml
+        apply:
+          tags: [ log, k8s ]
+      tags:
+        - always
+    - name: Include rollback.yml
+      include_tasks:
+        file: tasks/rollback.yml
+        apply:
+          tags: [ rollback, k8s ]
+      tags:
+        - always
+    - name: Include scale.yml
+      include_tasks:
+        file: tasks/scale.yml
+        apply:
+          tags: [ scale, k8s ]
+      tags:
+        - always
+    - name: Include template.yml
+      include_tasks:
+        file: tasks/template.yml
+        apply:
+          tags: [ template, k8s ]
+      tags:
+        - always
+    - name: Include waiter.yml
+      include_tasks:
+        file: tasks/waiter.yml
+        apply:
+          tags: [ waiter, k8s ]
+      tags:
+        - always
+    - name: Include proxy.yml
+      include_tasks:
+        file: tasks/proxy.yml
+        apply:
+          tags: [ proxy, k8s ]
+      tags:
+        - always
 
   roles:
-    - helm
+    - role: helm
+      tags:
+        - helm
 
   post_tasks:
     - name: Ensure namespace exists

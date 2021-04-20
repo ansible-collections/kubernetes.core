@@ -198,7 +198,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config.json</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                 </td>
             </tr>
             <tr>
@@ -444,10 +444,10 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Scale deployment up, and extend timeout
-      community.kubernetes.k8s_scale:
+      kubernetes.core.k8s_scale:
         api_version: v1
         kind: Deployment
         name: elastic
@@ -456,7 +456,7 @@ Examples
         wait_timeout: 60
 
     - name: Scale deployment down when current replicas match
-      community.kubernetes.k8s_scale:
+      kubernetes.core.k8s_scale:
         api_version: v1
         kind: Deployment
         name: elastic
@@ -465,7 +465,7 @@ Examples
         replicas: 2
 
     - name: Increase job parallelism
-      community.kubernetes.k8s_scale:
+      kubernetes.core.k8s_scale:
         api_version: batch/v1
         kind: job
         name: pi-with-timeout
@@ -475,19 +475,19 @@ Examples
     # Match object using local file or inline definition
 
     - name: Scale deployment based on a file from the local filesystem
-      community.kubernetes.k8s_scale:
+      kubernetes.core.k8s_scale:
         src: /myproject/elastic_deployment.yml
         replicas: 3
         wait: no
 
     - name: Scale deployment based on a template output
-      community.kubernetes.k8s_scale:
+      kubernetes.core.k8s_scale:
         resource_definition: "{{ lookup('template', '/myproject/elastic_deployment.yml') | from_yaml }}"
         replicas: 3
         wait: no
 
     - name: Scale deployment based on a file from the Ansible controller filesystem
-      community.kubernetes.k8s_scale:
+      kubernetes.core.k8s_scale:
         resource_definition: "{{ lookup('file', '/myproject/elastic_deployment.yml') | from_yaml }}"
         replicas: 3
         wait: no

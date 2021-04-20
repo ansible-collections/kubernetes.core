@@ -178,7 +178,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config.json</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                 </td>
             </tr>
             <tr>
@@ -323,16 +323,16 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Execute a command
-      community.kubernetes.k8s_exec:
+      kubernetes.core.k8s_exec:
         namespace: myproject
         pod: zuul-scheduler
         command: zuul-scheduler full-reconfigure
 
     - name: Check RC status of command executed
-      community.kubernetes.k8s_exec:
+      kubernetes.core.k8s_exec:
         namespace: myproject
         pod: busybox-test
         command: cmd_with_non_zero_exit_code

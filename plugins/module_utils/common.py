@@ -27,6 +27,7 @@ from datetime import datetime
 from distutils.version import LooseVersion
 
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC, AUTH_PROXY_HEADERS_SPEC)
+from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
@@ -59,7 +60,6 @@ except ImportError:
 
 K8S_CONFIG_HASH_IMP_ERR = None
 try:
-    from openshift.helper.hashes import generate_hash
     from openshift.dynamic.exceptions import KubernetesValidateMissing
     HAS_K8S_CONFIG_HASH = True
 except ImportError:
@@ -123,8 +123,7 @@ def get_api_client(module=None, **kwargs):
     def _raise_or_fail(exc, msg):
         if module:
             module.fail_json(msg % to_native(exc))
-        else:
-            raise exc
+        raise exc
 
     # If authorization variables aren't defined, look for them in environment variables
     for true_name, arg_name in AUTH_ARG_MAP.items():
@@ -152,6 +151,10 @@ def get_api_client(module=None, **kwargs):
 
     def auth_set(*names):
         return all([auth.get(name) for name in names])
+
+    if auth_set('host'):
+        # Removing trailing slashes if any from hostname
+        auth['host'] = auth.get('host').rstrip('/')
 
     if auth_set('username', 'password', 'host') or auth_set('api_key', 'host'):
         # We have enough in the parameters to authenticate, no need to load incluster or kubeconfig

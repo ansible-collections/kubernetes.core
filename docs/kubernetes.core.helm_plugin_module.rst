@@ -236,20 +236,20 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Install Helm env plugin
-      community.kubernetes.helm_plugin:
+      kubernetes.core.helm_plugin:
         plugin_path: https://github.com/adamreese/helm-env
         state: present
 
     - name: Install Helm plugin from local filesystem
-      community.kubernetes.helm_plugin:
+      kubernetes.core.helm_plugin:
         plugin_path: https://domain/path/to/plugin.tar.gz
         state: present
 
     - name: Remove Helm env plugin
-      community.kubernetes.helm_plugin:
+      kubernetes.core.helm_plugin:
         plugin_name: env
         state: absent
 

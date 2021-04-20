@@ -151,15 +151,15 @@ Parameters
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Add a repository
-      community.kubernetes.helm_repository:
+      kubernetes.core.helm_repository:
         name: stable
         repo_url: https://kubernetes.github.io/ingress-nginx
 
     - name: Add Red Hat Helm charts repository
-      community.kubernetes.helm_repository:
+      kubernetes.core.helm_repository:
         name: redhat-charts
         repo_url: https://redhat-developer.github.com/redhat-helm-charts
 

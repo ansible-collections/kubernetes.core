@@ -204,7 +204,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config.json</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                 </td>
             </tr>
             <tr>
@@ -366,17 +366,17 @@ Notes
 Examples
 --------
 
-.. code-block:: yaml+jinja
+.. code-block:: yaml
 
     - name: Get a log from a Pod
-      community.kubernetes.k8s_log:
+      kubernetes.core.k8s_log:
         name: example-1
         namespace: testing
       register: log
 
     # This will get the log from the first Pod found matching the selector
     - name: Log a Pod matching a label selector
-      community.kubernetes.k8s_log:
+      kubernetes.core.k8s_log:
         namespace: testing
         label_selectors:
         - app=example
@@ -384,7 +384,7 @@ Examples
 
     # This will get the log from a single Pod managed by this Deployment
     - name: Get a log from a Deployment
-      community.kubernetes.k8s_log:
+      kubernetes.core.k8s_log:
         api_version: apps/v1
         kind: Deployment
         namespace: testing
@@ -393,7 +393,7 @@ Examples
 
     # This will get the log from a single Pod managed by this DeploymentConfig
     - name: Get a log from a DeploymentConfig
-      community.kubernetes.k8s_log:
+      kubernetes.core.k8s_log:
         api_version: apps.openshift.io/v1
         kind: DeploymentConfig
         namespace: testing
