@@ -29,7 +29,7 @@ from distutils.version import LooseVersion
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
@@ -784,20 +784,6 @@ class K8sAnsibleMixin(object):
         result['changed'] = True
         result['method'] = 'create'
         return result
-
-
-class KubernetesAnsibleModule(AnsibleModule, K8sAnsibleMixin):
-    # NOTE: This class KubernetesAnsibleModule is deprecated in favor of
-    #       class K8sAnsibleMixin and will be removed 2.0.0 release.
-    #       Please use K8sAnsibleMixin instead.
-
-    def __init__(self, *args, **kwargs):
-        kwargs['argument_spec'] = self.argspec
-        AnsibleModule.__init__(self, *args, **kwargs)
-        K8sAnsibleMixin.__init__(self, *args, **kwargs)
-
-        self.warn("class KubernetesAnsibleModule is deprecated"
-                  " and will be removed in 2.0.0. Please use K8sAnsibleMixin instead.")
 
 
 def _encode_stringdata(definition):
