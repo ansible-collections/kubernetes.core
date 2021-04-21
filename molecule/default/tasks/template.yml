@@ -161,7 +161,7 @@
         k8s_pod_name_two: pod-8
         k8s_pod_name_three_one: pod-9
         k8s_pod_name_three_two: pod-10
-        k8s_pod_namespace: "{{ template_namespace }}"
+        k8s_pod_namespace: "template-test"
       register: r
 
     - name: Assert that pod creation succeeded using template
@@ -232,25 +232,15 @@
         that:
           - resource is successful
 
-    - name: assert pod has not been created
-      kubernetes.core.k8s_info:
-        kind: "{{ item.kind }}"
-        namespace: "{{ item.namespace }}"
-        name: "{{ item.name }}"
-      with_items:
-        - kind: pod
-          namespace: "{{ k8s_pod_bad_namespace }}"
-          name: "{{ k8s_pod_bad_name }}"
-        - kind: pod
-          namespace: "{{ k8s_pod_name_one }}"
-          name: "{{ k8s_pod_namespace }}"
-      register: resource
-
-    - name: check that resources creation failed
+    - name: validate resource creation succeeded for some and failed for others
       assert:
         that:
-          - '{{ resource.results[0].resources | length == 0 }}'
-          - '{{ resource.results[1].resources | length > 0 }}'
+          - resource is successful
+          - resource_changed | length > 0
+          - resource_failed | length > 0
+      vars:
+        resource_changed: "{{ resource.result.results | json_query('[?changed==`true`]') }}"
+        resource_failed: "{{ resource.result.results | json_query('[?error]') }}"
 
     - name: Remove Pod (Cleanup)
       kubernetes.core.k8s:
