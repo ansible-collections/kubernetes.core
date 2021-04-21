@@ -65,15 +65,15 @@ class ActionModule(ActionBase):
             self._loader.cleanup_tmp_file(b_tmp_source)
 
     def get_template_args(self, template):
-        template_param = dict(
-            newline_sequence=self.DEFAULT_NEWLINE_SEQUENCE,
-            variable_start_string=None,
-            variable_end_string=None,
-            block_start_string=None,
-            block_end_string=None,
-            trim_blocks=True,
-            lstrip_blocks=False
-        )
+        template_param = {
+            "newline_sequence": self.DEFAULT_NEWLINE_SEQUENCE,
+            "variable_start_string": None,
+            "variable_end_string": None,
+            "block_start_string": None,
+            "block_end_string": None,
+            "trim_blocks": True,
+            "lstrip_blocks": False
+        }
         if isinstance(template, string_types):
             # treat this as raw_params
             template_param['path'] = template
@@ -92,20 +92,37 @@ class ActionModule(ActionBase):
                     if value is not None and not isinstance(value, string_types):
                         raise AnsibleActionFail("%s is expected to be a string, but got %s instead" % (s_type, type(value)))
             try:
-                template_param.update(dict(trim_blocks=boolean(template_args.get('trim_blocks', True), strict=False)))
-                template_param.update(dict(lstrip_blocks=boolean(template_args.get('lstrip_blocks', False), strict=False)))
+                template_param.update({
+                    "trim_blocks": boolean(template_args.get('trim_blocks', True), strict=False),
+                    "lstrip_blocks": boolean(template_args.get('lstrip_blocks', False), strict=False)
+                })
             except TypeError as e:
                 raise AnsibleActionFail(to_native(e))
 
-            template_param.update(dict(newline_sequence=template_args.get('newline_sequence', self.DEFAULT_NEWLINE_SEQUENCE)))
-            template_param.update(dict(variable_start_string=template_args.get('variable_start_string', None)))
-            template_param.update(dict(variable_end_string=template_args.get('variable_end_string', None)))
-            template_param.update(dict(block_start_string=template_args.get('block_start_string', None)))
-            template_param.update(dict(block_end_string=template_args.get('block_end_string', None)))
+            template_param.update({
+                "newline_sequence": template_args.get('newline_sequence', self.DEFAULT_NEWLINE_SEQUENCE),
+                "variable_start_string": template_args.get('variable_start_string', None),
+                "variable_end_string": template_args.get('variable_end_string', None),
+                "block_start_string": template_args.get('block_start_string', None),
+                "block_end_string": template_args.get('block_end_string', None)
+            })
         else:
             raise AnsibleActionFail("Error while reading template file - "
                                     "a string or dict for template expected, but got %s instead" % type(template))
         return template_param
+
+    def import_jinja2_lstrip(self, templates):
+        # Option `lstrip_blocks' was added in Jinja2 version 2.7.
+        if any([tmp['lstrip_blocks'] for tmp in templates]):
+            try:
+                import jinja2.defaults
+            except ImportError:
+                raise AnsibleError('Unable to import Jinja2 defaults for determining Jinja2 features.')
+
+            try:
+                jinja2.defaults.LSTRIP_BLOCKS
+            except AttributeError:
+                raise AnsibleError("Option `lstrip_blocks' is only available in Jinja2 versions >=2.7")
 
     def load_template(self, template, new_module_args, task_vars):
         # template is only supported by k8s module.
@@ -122,17 +139,7 @@ class ActionModule(ActionBase):
             raise AnsibleActionFail("Error while reading template file - "
                                     "a string or dict for template expected, but got %s instead" % type(template))
 
-        # Option `lstrip_blocks' was added in Jinja2 version 2.7.
-        if any([tmp['lstrip_blocks'] for tmp in template_params]):
-            try:
-                import jinja2.defaults
-            except ImportError:
-                raise AnsibleError('Unable to import Jinja2 defaults for determining Jinja2 features.')
-
-            try:
-                jinja2.defaults.LSTRIP_BLOCKS
-            except AttributeError:
-                raise AnsibleError("Option `lstrip_blocks' is only available in Jinja2 versions >=2.7")
+        self.import_jinja2_lstrip(template_params)
 
         wrong_sequences = ["\\n", "\\r", "\\r\\n"]
         allowed_sequences = ["\n", "\r", "\r\n"]
@@ -151,24 +158,23 @@ class ActionModule(ActionBase):
                 # add ansible 'template' vars
                 temp_vars = task_vars.copy()
                 old_vars = self._templar.available_variables
-                old_env = copy.deepcopy(self._templar.environment)
+                old_context = self._templar.cur_context
 
-                self._templar.environment.newline_sequence = newline_sequence
+                templar = copy.deepcopy(self._templar)
+                templar.environment.newline_sequence = newline_sequence
                 if template_item['block_start_string'] is not None:
-                    self._templar.environment.block_start_string = template_item['block_start_string']
+                    templar.environment.block_start_string = template_item['block_start_string']
                 if template_item['block_end_string'] is not None:
-                    self._templar.environment.block_end_string = template_item['block_end_string']
+                    templar.environment.block_end_string = template_item['block_end_string']
                 if template_item['variable_start_string'] is not None:
-                    self._templar.environment.variable_start_string = template_item['variable_start_string']
+                    templar.environment.variable_start_string = template_item['variable_start_string']
                 if template_item['variable_end_string'] is not None:
-                    self._templar.environment.variable_end_string = template_item['variable_end_string']
-                self._templar.environment.trim_blocks = template_item['trim_blocks']
-                self._templar.environment.lstrip_blocks = template_item['lstrip_blocks']
-                self._templar.available_variables = temp_vars
-                result = self._templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
+                    templar.environment.variable_end_string = template_item['variable_end_string']
+                templar.environment.trim_blocks = template_item['trim_blocks']
+                templar.environment.lstrip_blocks = template_item['lstrip_blocks']
+                templar.available_variables = temp_vars
+                result = templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
                 result_template.append(result)
-                self._templar.available_variables = old_vars
-                self._templar.environment = copy.deepcopy(old_env)
         resource_definition = self._task.args.get('definition', None)
         if not resource_definition:
             new_module_args.pop('template')
