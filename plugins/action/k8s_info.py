@@ -177,7 +177,6 @@ class ActionModule(ActionBase):
         if not resource_definition:
             new_module_args.pop('template')
         new_module_args['definition'] = result_template
-        # new_module_args['definition'] = result_template[0] if len(result_template) == 1 else result_template
 
     def run(self, tmp=None, task_vars=None):
         ''' handler for k8s options '''
