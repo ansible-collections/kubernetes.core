@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from ansible.config.manager import ensure_type
 from ansible.errors import AnsibleError, AnsibleFileNotFound, AnsibleAction, AnsibleActionFail
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible.module_utils.six import string_types
+from ansible.module_utils.six import string_types, iteritems
 from ansible.module_utils._text import to_text, to_bytes, to_native
 from ansible.plugins.action import ActionBase
 
@@ -145,34 +145,35 @@ class ActionModule(ActionBase):
         allowed_sequences = ["\n", "\r", "\r\n"]
 
         result_template = []
+        old_vars = self._templar.available_variables
+
+        default_environment = {}
+        for key in ("newline_sequence", "variable_start_string", "variable_end_string",
+                    "block_start_string", "block_end_string", "trim_blocks", "lstrip_blocks"):
+            if hasattr(self._templar.environment, key):
+                default_environment[key] = getattr(self._templar.environment, key)
         for template_item in template_params:
             # We need to convert unescaped sequences to proper escaped sequences for Jinja2
             newline_sequence = template_item['newline_sequence']
             if newline_sequence in wrong_sequences:
-                newline_sequence = allowed_sequences[wrong_sequences.index(newline_sequence)]
+                template_item['newline_sequence'] = allowed_sequences[wrong_sequences.index(newline_sequence)]
             elif newline_sequence not in allowed_sequences:
                 raise AnsibleActionFail("newline_sequence needs to be one of: \n, \r or \r\n")
 
             # template the source data locally & get ready to transfer
             with self.get_template_data(template_item['path']) as template_data:
                 # add ansible 'template' vars
-                temp_vars = task_vars.copy()
-
-                templar = copy.deepcopy(self._templar)
-                templar.environment.newline_sequence = newline_sequence
-                if template_item['block_start_string'] is not None:
-                    templar.environment.block_start_string = template_item['block_start_string']
-                if template_item['block_end_string'] is not None:
-                    templar.environment.block_end_string = template_item['block_end_string']
-                if template_item['variable_start_string'] is not None:
-                    templar.environment.variable_start_string = template_item['variable_start_string']
-                if template_item['variable_end_string'] is not None:
-                    templar.environment.variable_end_string = template_item['variable_end_string']
-                templar.environment.trim_blocks = template_item['trim_blocks']
-                templar.environment.lstrip_blocks = template_item['lstrip_blocks']
-                templar.available_variables = temp_vars
-                result = templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
+                temp_vars = copy.deepcopy(task_vars)
+                for key, value in iteritems(template_item):
+                    if hasattr(self._templar.environment, key):
+                        if value is not None:
+                            setattr(self._templar.environment, key, value)
+                        else:
+                            setattr(self._templar.environment, key, default_environment.get(key))
+                self._templar.available_variables = temp_vars
+                result = self._templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
                 result_template.append(result)
+        self._templar.available_variables = old_vars
         resource_definition = self._task.args.get('definition', None)
         if not resource_definition:
             new_module_args.pop('template')
