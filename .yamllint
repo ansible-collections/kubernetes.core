@@ -14,3 +14,5 @@ rules:
   indentation:
     spaces: 2
     indent-sequences: consistent
+ignore: |
+  .cache
