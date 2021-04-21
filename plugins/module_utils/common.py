@@ -23,11 +23,14 @@ import time
 import os
 import traceback
 import sys
+import tempfile
+import hashlib
 from datetime import datetime
 from distutils.version import LooseVersion
 
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
+from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_default_cache_id
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
@@ -101,7 +104,6 @@ except ImportError as e:
 
 
 def configuration_digest(configuration):
-    import hashlib
     m = hashlib.sha256()
     for k in AUTH_ARG_MAP:
         if not hasattr(configuration, k):
@@ -184,8 +186,15 @@ def get_api_client(module=None, **kwargs):
         client = get_api_client._pool[digest]
         return client
 
+    def generate_cache_file(kubeclient):
+        cache_file_name = 'k8srcp-{0}.json'.format(hashlib.sha256(get_default_cache_id(kubeclient)).hexdigest())
+        return os.path.join(tempfile.gettempdir(), cache_file_name)
+
+    kubeclient = kubernetes.client.ApiClient(configuration)
+    cache_file = generate_cache_file(kubeclient)
+
     try:
-        client = DynamicClient(kubernetes.client.ApiClient(configuration))
+        client = DynamicClient(kubeclient, cache_file)
     except Exception as err:
         _raise_or_fail(err, 'Failed to get client due to %s')
 
