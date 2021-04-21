@@ -519,9 +519,7 @@ def main():
         ],
         mutually_exclusive=[
             ("context", "ca_cert"),
-            ("context", "validate_certs"),
             ("kubeconfig", "ca_cert"),
-            ("kubeconfig", "validate_certs")
         ],
         supports_check_mode=True,
     )
