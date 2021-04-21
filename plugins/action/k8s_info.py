@@ -157,8 +157,6 @@ class ActionModule(ActionBase):
             with self.get_template_data(template_item['path']) as template_data:
                 # add ansible 'template' vars
                 temp_vars = task_vars.copy()
-                old_vars = self._templar.available_variables
-                old_context = self._templar.cur_context
 
                 templar = copy.deepcopy(self._templar)
                 templar.environment.newline_sequence = newline_sequence
