@@ -31,10 +31,6 @@ from distutils.version import LooseVersion
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
 from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_default_cache_id
-from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply, apply_object
-from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import ApplyException
-from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
-from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply_object
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
@@ -82,6 +78,13 @@ try:
 except ImportError:
     K8S_CONFIG_HASH_IMP_ERR = traceback.format_exc()
     HAS_K8S_CONFIG_HASH = False
+
+HAS_K8S_APPLY = None
+try:
+    from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply_object
+    HAS_K8S_APPLY = True
+except ImportError:
+    HAS_K8S_APPLY = False
 
 try:
     import urllib3
@@ -480,6 +483,8 @@ class K8sAnsibleMixin(object):
         if self.params['merge_type'] and LooseVersion(self.openshift_version) < LooseVersion("0.6.2"):
             self.fail_json(msg=missing_required_lib("openshift >= 0.6.2", reason="for merge_type"))
         self.apply = self.params.get('apply', False)
+        if self.apply and not HAS_K8S_APPLY:
+            self.fail_json(msg=missing_required_lib("openshift >= 0.9.2", reason="for apply"))
         wait = self.params.get('wait', False)
         if wait and not HAS_K8S_INSTANCE_HELPER:
             self.fail_json(msg=missing_required_lib("openshift >= 0.4.0", reason="for wait"))
