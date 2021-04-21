@@ -88,7 +88,8 @@ jobs:
         run: |
           set -eux
           docker run --name squid -d --restart=always --publish 3128:3128 -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/default/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/default/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
-          docker logs squid
+          docker ps
+          docker port squid
 
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
