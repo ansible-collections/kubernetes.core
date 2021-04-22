@@ -144,7 +144,7 @@ def argspec():
 def execute_module(module, k8s_ansible_mixin):
 
     # Load kubernetes.client.Configuration
-    api = core_v1_api.CoreV1Api()
+    api = core_v1_api.CoreV1Api(k8s_ansible_mixin.client.client)
 
     # hack because passing the container as None breaks things
     optional_kwargs = {}
