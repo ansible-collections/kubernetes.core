@@ -438,7 +438,6 @@ class K8sAnsibleMixin(object):
         resource_definition = module.params.get('resource_definition')
 
         self.resource_definitions = []
-
         if resource_definition:
             if isinstance(resource_definition, string_types):
                 try:
@@ -446,7 +445,14 @@ class K8sAnsibleMixin(object):
                 except (IOError, yaml.YAMLError) as exc:
                     self.fail(msg="Error loading resource_definition: {0}".format(exc))
             elif isinstance(resource_definition, list):
-                self.resource_definitions = resource_definition
+                for resource in resource_definition:
+                    if isinstance(resource, string_types):
+                        yaml_data = yaml.safe_load_all(resource)
+                        for item in yaml_data:
+                            if item is not None:
+                                self.resource_definitions.append(item)
+                    else:
+                        self.resource_definitions.append(resource)
             else:
                 self.resource_definitions = [resource_definition]
 
@@ -569,14 +575,19 @@ class K8sAnsibleMixin(object):
         state = self.params.get('state', None)
         force = self.params.get('force', False)
         name = definition['metadata'].get('name')
+        origin_name = definition['metadata'].get('name')
         namespace = definition['metadata'].get('namespace')
         existing = None
         wait = self.params.get('wait')
         wait_sleep = self.params.get('wait_sleep')
         wait_timeout = self.params.get('wait_timeout')
         wait_condition = None
+        continue_on_error = self.params.get('continue_on_error')
         if self.params.get('wait_condition') and self.params['wait_condition'].get('type'):
             wait_condition = self.params['wait_condition']
+
+        def build_error_msg(kind, name, msg):
+            return "%s %s: %s" % (kind, name, msg)
 
         self.remove_aliases()
 
@@ -599,14 +610,26 @@ class K8sAnsibleMixin(object):
         except ForbiddenError as exc:
             if definition['kind'] in ['Project', 'ProjectRequest'] and state != 'absent':
                 return self.create_project_request(definition)
-            self.fail_json(msg='Failed to retrieve requested object: {0}'.format(exc.body),
-                           error=exc.status, status=exc.status, reason=exc.reason)
+            msg = 'Failed to retrieve requested object: {0}'.format(exc.body)
+            if continue_on_error:
+                result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+                return result
+            else:
+                self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
         except DynamicApiError as exc:
-            self.fail_json(msg='Failed to retrieve requested object: {0}'.format(exc.body),
-                           error=exc.status, status=exc.status, reason=exc.reason)
+            msg = 'Failed to retrieve requested object: {0}'.format(exc.body)
+            if continue_on_error:
+                result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+                return result
+            else:
+                self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
         except ValueError as value_exc:
-            self.fail_json(msg='Failed to retrieve requested object: {0}'.format(to_native(value_exc)),
-                           error='', status='', reason='')
+            msg = 'Failed to retrieve requested object: {0}'.format(to_native(value_exc))
+            if continue_on_error:
+                result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), error='', status='', reason='')
+                return result
+            else:
+                self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error='', status='', reason='')
 
         if state == 'absent':
             result['method'] = "delete"
@@ -628,13 +651,23 @@ class K8sAnsibleMixin(object):
                         k8s_obj = resource.delete(**params)
                         result['result'] = k8s_obj.to_dict()
                     except DynamicApiError as exc:
-                        self.fail_json(msg="Failed to delete object: {0}".format(exc.body),
-                                       error=exc.status, status=exc.status, reason=exc.reason)
+                        msg = "Failed to delete object: {0}".format(exc.body)
+                        if continue_on_error:
+                            result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg),
+                                                   error=exc.status, status=exc.status, reason=exc.reason)
+                            return result
+                        else:
+                            self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
                     if wait:
                         success, resource, duration = self.wait(resource, definition, wait_sleep, wait_timeout, 'absent')
                         result['duration'] = duration
                         if not success:
-                            self.fail_json(msg="Resource deletion timed out", **result)
+                            msg = "Resource deletion timed out"
+                            if continue_on_error:
+                                result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
+                                return result
+                            else:
+                                self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
                 return result
         else:
             if self.apply:
@@ -651,7 +684,12 @@ class K8sAnsibleMixin(object):
                         msg = "Failed to apply object: {0}".format(exc.body)
                         if self.warnings:
                             msg += "\n" + "\n    ".join(self.warnings)
-                        self.fail_json(msg=msg, error=exc.status, status=exc.status, reason=exc.reason)
+                        if continue_on_error:
+                            result['error'] = dict(msg=build_error_msg(definition['kind'],
+                                                   origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+                            return result
+                        else:
+                            self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
                 success = True
                 result['result'] = k8s_obj
                 if wait and not self.check_mode:
@@ -665,7 +703,12 @@ class K8sAnsibleMixin(object):
                 result['diff'] = diffs
                 result['method'] = 'apply'
                 if not success:
-                    self.fail_json(msg="Resource apply timed out", **result)
+                    msg = "Resource apply timed out"
+                    if continue_on_error:
+                        result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
+                        return result
+                    else:
+                        self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
                 return result
 
             if not existing:
@@ -685,12 +728,21 @@ class K8sAnsibleMixin(object):
                         msg = "Failed to create object: {0}".format(exc.body)
                         if self.warnings:
                             msg += "\n" + "\n    ".join(self.warnings)
-                        self.fail_json(msg=msg, error=exc.status, status=exc.status, reason=exc.reason)
+                        if continue_on_error:
+                            result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg),
+                                                   error=exc.status, status=exc.status, reason=exc.reason)
+                            return result
+                        else:
+                            self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
                     except Exception as exc:
                         msg = "Failed to create object: {0}".format(exc)
                         if self.warnings:
                             msg += "\n" + "\n    ".join(self.warnings)
-                        self.fail_json(msg=msg, error='', status='', reason='')
+                        if continue_on_error:
+                            result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), error='', status='', reason='')
+                            return result
+                        else:
+                            self.fail_json(msg=msg, error='', status='', reason='')
                 success = True
                 result['result'] = k8s_obj
                 if wait and not self.check_mode:
@@ -698,7 +750,12 @@ class K8sAnsibleMixin(object):
                 result['changed'] = True
                 result['method'] = 'create'
                 if not success:
-                    self.fail_json(msg="Resource creation timed out", **result)
+                    msg = "Resource creation timed out"
+                    if continue_on_error:
+                        result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
+                        return result
+                    else:
+                        self.fail_json(msg=msg, **result)
                 return result
 
             match = False
@@ -714,7 +771,12 @@ class K8sAnsibleMixin(object):
                         msg = "Failed to replace object: {0}".format(exc.body)
                         if self.warnings:
                             msg += "\n" + "\n    ".join(self.warnings)
-                        self.fail_json(msg=msg, error=exc.status, status=exc.status, reason=exc.reason)
+                        if continue_on_error:
+                            result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg),
+                                                   error=exc.status, status=exc.status, reason=exc.reason)
+                            return result
+                        else:
+                            self.fail_json(msg=msg, error=exc.status, status=exc.status, reason=exc.reason)
                 match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
                 success = True
                 result['result'] = k8s_obj
@@ -725,7 +787,12 @@ class K8sAnsibleMixin(object):
                 result['method'] = 'replace'
                 result['diff'] = diffs
                 if not success:
-                    self.fail_json(msg="Resource replacement timed out", **result)
+                    msg = "Resource replacement timed out"
+                    if continue_on_error:
+                        result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
+                        return result
+                    else:
+                        self.fail_json(msg=msg, **result)
                 return result
 
             # Differences exist between the existing obj and requested params
@@ -742,7 +809,12 @@ class K8sAnsibleMixin(object):
                         if not error:
                             break
                 if error:
-                    self.fail_json(**error)
+                    if continue_on_error:
+                        result['error'] = error
+                        result['error']['msg'] = build_error_msg(definition['kind'], origin_name, result['error'].get('msg'))
+                        return result
+                    else:
+                        self.fail_json(**error)
 
             success = True
             result['result'] = k8s_obj
@@ -754,7 +826,12 @@ class K8sAnsibleMixin(object):
             result['diff'] = diffs
 
             if not success:
-                self.fail_json(msg="Resource update timed out", **result)
+                msg = "Resource update timed out"
+                if continue_on_error:
+                    result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
+                    return result
+                else:
+                    self.fail_json(msg=msg, **result)
             return result
 
     def patch_resource(self, resource, definition, existing, name, namespace, merge_type=None):
