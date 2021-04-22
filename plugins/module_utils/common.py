@@ -43,16 +43,25 @@ K8S_IMP_ERR = None
 try:
     import kubernetes
     import openshift
-    from openshift.dynamic import DynamicClient
-    from openshift.dynamic.exceptions import (
-        ResourceNotFoundError, ResourceNotUniqueError, NotFoundError, DynamicApiError,
-        ConflictError, ForbiddenError, MethodNotAllowedError)
+    from kubernetes.dynamic.exceptions import (
+        NotFoundError, ResourceNotFoundError, ResourceNotUniqueError, DynamicApiError,
+        ConflictError, ForbiddenError, MethodNotAllowedError, BadRequestError
+    )
     HAS_K8S_MODULE_HELPER = True
     k8s_import_exception = None
 except ImportError as e:
     HAS_K8S_MODULE_HELPER = False
     k8s_import_exception = e
     K8S_IMP_ERR = traceback.format_exc()
+
+IMP_K8S_CLIENT = None
+try:
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
+    IMP_K8S_CLIENT = True
+except ImportError as e:
+    IMP_K8S_CLIENT = False
+    k8s_client_import_exception = e
+    IMP_K8S_CLIENT_ERR = traceback.format_exc()
 
 YAML_IMP_ERR = None
 try:
@@ -64,7 +73,7 @@ except ImportError:
 
 K8S_CONFIG_HASH_IMP_ERR = None
 try:
-    from openshift.dynamic.exceptions import KubernetesValidateMissing
+    from kubernetes.dynamic.exceptions import KubernetesValidateMissing
     HAS_K8S_CONFIG_HASH = True
 except ImportError:
     K8S_CONFIG_HASH_IMP_ERR = traceback.format_exc()
@@ -72,7 +81,7 @@ except ImportError:
 
 HAS_K8S_APPLY = None
 try:
-    from openshift.dynamic.apply import apply_object
+    from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply_object
     HAS_K8S_APPLY = True
 except ImportError:
     HAS_K8S_APPLY = False
@@ -84,17 +93,12 @@ except ImportError:
     pass
 
 try:
-    from openshift.dynamic.apply import recursive_diff
+    from ansible_collections.kubernetes.core.plugins.module_utils.apply import recursive_diff
 except ImportError:
     from ansible.module_utils.common.dict_transformations import recursive_diff
 
 try:
-    try:
-        # >=0.10
-        from openshift.dynamic.resource import ResourceInstance
-    except ImportError:
-        # <0.10
-        from openshift.dynamic.client import ResourceInstance
+    from kubernetes.dynamic.resource import ResourceInstance
     HAS_K8S_INSTANCE_HELPER = True
     k8s_import_exception = None
 except ImportError as e:
@@ -194,7 +198,7 @@ def get_api_client(module=None, **kwargs):
     cache_file = generate_cache_file(kubeclient)
 
     try:
-        client = DynamicClient(kubeclient, cache_file)
+        client = K8SDynamicClient(kubeclient, cache_file)
     except Exception as err:
         _raise_or_fail(err, 'Failed to get client due to %s')
 
@@ -245,9 +249,9 @@ class K8sAnsibleMixin(object):
             result = resource.get(name=name, namespace=namespace,
                                   label_selector=','.join(label_selectors),
                                   field_selector=','.join(field_selectors))
-        except openshift.dynamic.exceptions.BadRequestError:
+        except BadRequestError:
             return dict(resources=[], api_found=True)
-        except openshift.dynamic.exceptions.NotFoundError:
+        except NotFoundError:
             if not wait or name is None:
                 return dict(resources=[], api_found=True)
 
