@@ -236,11 +236,8 @@
       assert:
         that:
           - resource is successful
-          - resource_changed | length > 0
-          - resource_failed | length > 0
-      vars:
-        resource_changed: "{{ resource.result.results | json_query('[?changed==`true`]') }}"
-        resource_failed: "{{ resource.result.results | json_query('[?error]') }}"
+          - resource.result.results | selectattr('changed') | length == 1
+          - resource.result.results | selectattr('error', 'defined') | length == 1
 
     - name: Remove Pod (Cleanup)
       kubernetes.core.k8s:
