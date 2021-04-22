@@ -32,7 +32,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
 from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_default_cache_id
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
