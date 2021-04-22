@@ -24,6 +24,38 @@
         that:
           - output is failed
 
+    - block:
+        - name: Copy default kubeconfig
+          copy:
+            remote_src: yes
+            src: ~/.kube/config
+            dest: ~/.kube/customconfig
+
+        - name: Delete default kubeconfig
+          file:
+            path: ~/.kube/config
+            state: absent
+
+        - name: Using custom config location should succeed
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+            kubeconfig: ~/.kube/customconfig
+
+      always:
+        - name: Return kubeconfig
+          copy:
+            remote_src: yes
+            src: ~/.kube/customconfig
+            dest: ~/.kube/config
+          ignore_errors: yes
+
+        - name: Delete custom config
+          file:
+            path: ~/.kube/customconfig
+            state: absent
+          ignore_errors: yes
+
     - name: Ensure k8s_info works with empty resources
       k8s_info:
         kind: Deployment
