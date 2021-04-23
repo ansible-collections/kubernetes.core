@@ -107,6 +107,17 @@ except ImportError as e:
     K8S_IMP_ERR = traceback.format_exc()
 
 
+JSON_PATCH_IMP_ERR = None
+try:
+    import jsonpatch
+    HAS_JSON_PATCH = True
+    jsonpatch_import_exception = None
+except ImportError as e:
+    HAS_JSON_PATCH = False
+    jsonpatch_import_exception = e
+    JSON_PATCH_IMP_ERR = traceback.format_exc()
+
+
 def configuration_digest(configuration):
     m = hashlib.sha256()
     for k in AUTH_ARG_MAP:
@@ -838,12 +849,40 @@ class K8sAnsibleMixin(object):
                     self.fail_json(msg=msg, **result)
             return result
 
+    def json_patch(self, existing, definition, merge_type):
+        if merge_type == "json":
+            if not HAS_JSON_PATCH:
+                error = {
+                    "msg": missing_required_lib('jsonpatch'),
+                    "exception": JSON_PATCH_IMP_ERR,
+                    "error": to_native(jsonpatch_import_exception)
+                }
+                return None, error
+            try:
+                patch = jsonpatch.JsonPatch([definition])
+                result_patch = patch.apply(existing.to_dict())
+                return result_patch, {}
+            except jsonpatch.InvalidJsonPatch as e:
+                error = {
+                    "msg": "invalid json patch",
+                    "error": to_native(e)
+                }
+                return None, error
+            except jsonpatch.JsonPatchConflict as e:
+                error = {
+                    "msg": "patch could not be applied due to conflict situation",
+                    "error": to_native(e)
+                }
+                return None, error
+        return definition, {}
+
     def patch_resource(self, resource, definition, existing, name, namespace, merge_type=None):
         try:
             params = dict(name=name, namespace=namespace)
             if merge_type:
                 params['content_type'] = 'application/{0}-patch+json'.format(merge_type)
-            k8s_obj = resource.patch(definition, **params).to_dict()
+            patch_data, error = self.json_patch(existing, definition, merge_type)
+            k8s_obj = resource.patch(patch_data, **params).to_dict()
             match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
             error = {}
             return k8s_obj, {}

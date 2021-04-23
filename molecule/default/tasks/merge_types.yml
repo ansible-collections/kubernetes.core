@@ -1,0 +1,175 @@
+- name: Define common facts
+  set_fact:
+    k8s_merge_namespace: "merge-types"
+    k8s_merge_svc: "svc-merge"
+    k8s_merge_pod: "pod-merge"
+    k8s_merge_deployment: "deployment-merge"
+
+- name: Ensure the namespace exist
+  kubernetes.core.k8s:
+    kind: namespace
+    name: "{{ k8s_merge_namespace }}"
+
+- name: strategic merge on a service
+  block:
+  - name: create simple nginx service
+    kubernetes.core.k8s:
+      namespace: "{{ k8s_merge_namespace }}"
+      definition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          labels:
+            name: "{{ k8s_merge_svc }}"
+          name: "{{ k8s_merge_svc }}"
+        spec:
+          ports:
+          - name: "tcp80"
+            port: 80
+            protocol: TCP
+            targetPort: 80
+          selector:
+            name: "{{ k8s_merge_svc }}"
+
+  - name: patch service using strategic merge
+    kubernetes.core.k8s:
+      kind: Service
+      namespace: "{{ k8s_merge_namespace }}"
+      name: "{{ k8s_merge_svc }}"
+      definition:
+        spec:
+          ports:
+          - name: "tcp8080"
+            port: 8080
+            protocol: TCP
+            targetPort: 8080
+    register: svc_patch
+
+  - name: assert that service was patched
+    assert:
+      that:
+      - svc_patch.changed
+
+  - name: describe "{{ k8s_merge_svc }}" service
+    kubernetes.core.k8s_info:
+      kind: Service
+      name: "{{ k8s_merge_svc }}"
+      namespace: "{{ k8s_merge_namespace }}"
+    register: svc
+
+  - name: check service property
+    assert:
+      that:
+      - svc.resources[0].spec.ports | selectattr('name') | map(attribute='name') | list | length == 2
+
+- name: json merge 'replace'
+  block:
+  - name: create simple pod
+    kubernetes.core.k8s:
+      namespace: "{{ k8s_merge_namespace }}"
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: "{{ k8s_merge_pod }}"
+          labels:
+            name: "{{ k8s_merge_pod }}"
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - while true; do echo $(date); sleep 10; done
+            image: python:3.7-alpine
+            imagePullPolicy: Always
+            name: alpine
+
+  - name: Patch pod - update container image
+    kubernetes.core.k8s:
+      kind: Pod
+      namespace: "{{ k8s_merge_namespace }}"
+      name: "{{ k8s_merge_pod }}"
+      merge_type:
+      - json
+      definition:
+      - op: replace
+        path: /spec/containers/0/image
+        value: python:3.8-alpine
+    register: pod_patch
+
+  - name: assert that patch was performed
+    assert:
+      that:
+      - pod_patch.changed
+
+  - name: describe Pod after patching
+    kubernetes.core.k8s_info:
+      kind: Pod
+      name: "{{ k8s_merge_pod }}"
+      namespace: "{{ k8s_merge_namespace }}"
+    register: describe_pod
+
+  - name: assert that image name has changed
+    assert:
+      that:
+      - describe_pod.resources[0].spec.containers[0].image == 'python:3.8-alpine'
+
+- name: json merge 'add'
+  block:
+  - name: create simple nginx deployment
+    kubernetes.core.k8s:
+      namespace: "{{ k8s_merge_namespace }}"
+      definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: "{{ k8s_merge_deployment }}"
+          labels:
+            name: "{{ k8s_merge_deployment }}"
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: nginx
+          template:
+            metadata:
+              labels:
+                app: nginx
+            spec:
+              containers:
+              - name: nginx-container
+                image: nginx
+                args:
+                - /bin/sh
+                - -c
+                - while true; do echo $(date); sleep 10; done
+
+  - name: Patch Nginx deployment to support ssl-passthough
+    kubernetes.core.k8s:
+      kind: Deployment
+      namespace: "{{ k8s_merge_namespace }}"
+      name: "{{ k8s_merge_deployment }}"
+      merge_type:
+      - json
+      definition:
+      - op: add
+        path: '/spec/template/spec/containers/0/args/-'
+        value: 'touch /var/log'
+    register: patch_out
+
+  - name: assert that patch succeed
+    assert:
+      that:
+      - patch_out.changed
+
+  - name: describe deployment after patching
+    kubernetes.core.k8s_info:
+      kind: Deployment
+      name: "{{ k8s_merge_deployment }}"
+      namespace: "{{ k8s_merge_namespace }}"
+    register: describe_depl
+
+  - name: assert that args changed on deployment
+    assert:
+      that:
+      - describe_depl.resources[0].spec.template.spec.containers[0].args | length == 4

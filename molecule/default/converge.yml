@@ -133,6 +133,14 @@
       tags:
         - always
 
+    - name: Include merge_types.yml
+      include_tasks:
+        file: tasks/merge_types.yml
+        apply:
+          tags: [ merge_type, k8s ]
+      tags:
+        - always
+
   roles:
     - role: helm
       tags:
