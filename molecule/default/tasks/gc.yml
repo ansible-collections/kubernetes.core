@@ -191,6 +191,8 @@
         delete_options:
           preconditions:
             uid: "{{ job.result.metadata.uid }}"
+        wait: yes
+        wait_timeout: 100
 
     - name: Check that job is deleted
       k8s_info:

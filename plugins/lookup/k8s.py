@@ -239,7 +239,7 @@ class KubernetesLookup(K8sAnsibleMixin):
 
     def run(self, terms, variables=None, **kwargs):
         self.params = kwargs
-        self.client = get_api_client()
+        self.client = get_api_client(**kwargs)
 
         cluster_info = kwargs.get('cluster_info')
         if cluster_info == 'version':

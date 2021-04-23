@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from ansible.config.manager import ensure_type
 from ansible.errors import AnsibleError, AnsibleFileNotFound, AnsibleAction, AnsibleActionFail
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible.module_utils.six import string_types
+from ansible.module_utils.six import string_types, iteritems
 from ansible.module_utils._text import to_text, to_bytes, to_native
 from ansible.plugins.action import ActionBase
 
@@ -64,25 +64,25 @@ class ActionModule(ActionBase):
         finally:
             self._loader.cleanup_tmp_file(b_tmp_source)
 
-    def load_template(self, template, new_module_args, task_vars):
-        # template is only supported by k8s module.
-        if self._task.action not in ('k8s', 'kubernetes.core.k8s', 'community.okd.k8s'):
-            raise AnsibleActionFail("'template' is only supported parameter for 'k8s' module.")
+    def get_template_args(self, template):
+        template_param = {
+            "newline_sequence": self.DEFAULT_NEWLINE_SEQUENCE,
+            "variable_start_string": None,
+            "variable_end_string": None,
+            "block_start_string": None,
+            "block_end_string": None,
+            "trim_blocks": True,
+            "lstrip_blocks": False
+        }
         if isinstance(template, string_types):
             # treat this as raw_params
-            template_path = template
-            newline_sequence = self.DEFAULT_NEWLINE_SEQUENCE
-            variable_start_string = None
-            variable_end_string = None
-            block_start_string = None
-            block_end_string = None
-            trim_blocks = True
-            lstrip_blocks = False
+            template_param['path'] = template
         elif isinstance(template, dict):
             template_args = template
             template_path = template_args.get('path', None)
-            if not template:
+            if not template_path:
                 raise AnsibleActionFail("Please specify path for template.")
+            template_param['path'] = template_path
 
             # Options type validation strings
             for s_type in ('newline_sequence', 'variable_start_string', 'variable_end_string', 'block_start_string',
@@ -92,22 +92,28 @@ class ActionModule(ActionBase):
                     if value is not None and not isinstance(value, string_types):
                         raise AnsibleActionFail("%s is expected to be a string, but got %s instead" % (s_type, type(value)))
             try:
-                trim_blocks = boolean(template_args.get('trim_blocks', True), strict=False)
-                lstrip_blocks = boolean(template_args.get('lstrip_blocks', False), strict=False)
+                template_param.update({
+                    "trim_blocks": boolean(template_args.get('trim_blocks', True), strict=False),
+                    "lstrip_blocks": boolean(template_args.get('lstrip_blocks', False), strict=False)
+                })
             except TypeError as e:
                 raise AnsibleActionFail(to_native(e))
 
-            newline_sequence = template_args.get('newline_sequence', self.DEFAULT_NEWLINE_SEQUENCE)
-            variable_start_string = template_args.get('variable_start_string', None)
-            variable_end_string = template_args.get('variable_end_string', None)
-            block_start_string = template_args.get('block_start_string', None)
-            block_end_string = template_args.get('block_end_string', None)
+            template_param.update({
+                "newline_sequence": template_args.get('newline_sequence', self.DEFAULT_NEWLINE_SEQUENCE),
+                "variable_start_string": template_args.get('variable_start_string', None),
+                "variable_end_string": template_args.get('variable_end_string', None),
+                "block_start_string": template_args.get('block_start_string', None),
+                "block_end_string": template_args.get('block_end_string', None)
+            })
         else:
             raise AnsibleActionFail("Error while reading template file - "
                                     "a string or dict for template expected, but got %s instead" % type(template))
+        return template_param
 
+    def import_jinja2_lstrip(self, templates):
         # Option `lstrip_blocks' was added in Jinja2 version 2.7.
-        if lstrip_blocks:
+        if any([tmp['lstrip_blocks'] for tmp in templates]):
             try:
                 import jinja2.defaults
             except ImportError:
@@ -118,39 +124,60 @@ class ActionModule(ActionBase):
             except AttributeError:
                 raise AnsibleError("Option `lstrip_blocks' is only available in Jinja2 versions >=2.7")
 
+    def load_template(self, template, new_module_args, task_vars):
+        # template is only supported by k8s module.
+        if self._task.action not in ('k8s', 'kubernetes.core.k8s', 'community.okd.k8s'):
+            raise AnsibleActionFail("'template' is only supported parameter for 'k8s' module.")
+
+        template_params = []
+        if isinstance(template, string_types) or isinstance(template, dict):
+            template_params.append(self.get_template_args(template))
+        elif isinstance(template, list):
+            for element in template:
+                template_params.append(self.get_template_args(element))
+        else:
+            raise AnsibleActionFail("Error while reading template file - "
+                                    "a string or dict for template expected, but got %s instead" % type(template))
+
+        self.import_jinja2_lstrip(template_params)
+
         wrong_sequences = ["\\n", "\\r", "\\r\\n"]
         allowed_sequences = ["\n", "\r", "\r\n"]
 
-        # We need to convert unescaped sequences to proper escaped sequences for Jinja2
-        if newline_sequence in wrong_sequences:
-            newline_sequence = allowed_sequences[wrong_sequences.index(newline_sequence)]
-        elif newline_sequence not in allowed_sequences:
-            raise AnsibleActionFail("newline_sequence needs to be one of: \n, \r or \r\n")
+        result_template = []
+        old_vars = self._templar.available_variables
 
-        # template the source data locally & get ready to transfer
-        with self.get_template_data(template_path) as template_data:
-            # add ansible 'template' vars
-            temp_vars = task_vars.copy()
-            old_vars = self._templar.available_variables
+        default_environment = {}
+        for key in ("newline_sequence", "variable_start_string", "variable_end_string",
+                    "block_start_string", "block_end_string", "trim_blocks", "lstrip_blocks"):
+            if hasattr(self._templar.environment, key):
+                default_environment[key] = getattr(self._templar.environment, key)
+        for template_item in template_params:
+            # We need to convert unescaped sequences to proper escaped sequences for Jinja2
+            newline_sequence = template_item['newline_sequence']
+            if newline_sequence in wrong_sequences:
+                template_item['newline_sequence'] = allowed_sequences[wrong_sequences.index(newline_sequence)]
+            elif newline_sequence not in allowed_sequences:
+                raise AnsibleActionFail("newline_sequence needs to be one of: \n, \r or \r\n")
 
-            self._templar.environment.newline_sequence = newline_sequence
-            if block_start_string is not None:
-                self._templar.environment.block_start_string = block_start_string
-            if block_end_string is not None:
-                self._templar.environment.block_end_string = block_end_string
-            if variable_start_string is not None:
-                self._templar.environment.variable_start_string = variable_start_string
-            if variable_end_string is not None:
-                self._templar.environment.variable_end_string = variable_end_string
-            self._templar.environment.trim_blocks = trim_blocks
-            self._templar.environment.lstrip_blocks = lstrip_blocks
-            self._templar.available_variables = temp_vars
-            resultant = self._templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
-            self._templar.available_variables = old_vars
-            resource_definition = self._task.args.get('definition', None)
-            if not resource_definition:
-                new_module_args.pop('template')
-            new_module_args['definition'] = resultant
+            # template the source data locally & get ready to transfer
+            with self.get_template_data(template_item['path']) as template_data:
+                # add ansible 'template' vars
+                temp_vars = copy.deepcopy(task_vars)
+                for key, value in iteritems(template_item):
+                    if hasattr(self._templar.environment, key):
+                        if value is not None:
+                            setattr(self._templar.environment, key, value)
+                        else:
+                            setattr(self._templar.environment, key, default_environment.get(key))
+                self._templar.available_variables = temp_vars
+                result = self._templar.do_template(template_data, preserve_trailing_newlines=True, escape_backslashes=False)
+                result_template.append(result)
+        self._templar.available_variables = old_vars
+        resource_definition = self._task.args.get('definition', None)
+        if not resource_definition:
+            new_module_args.pop('template')
+        new_module_args['definition'] = result_template
 
     def run(self, tmp=None, task_vars=None):
         ''' handler for k8s options '''
