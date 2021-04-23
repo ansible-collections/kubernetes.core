@@ -861,7 +861,7 @@ class K8sAnsibleMixin(object):
             try:
                 patch = jsonpatch.JsonPatch([definition])
                 result_patch = patch.apply(existing.to_dict())
-                return result_patch, {}
+                return result_patch, None
             except jsonpatch.InvalidJsonPatch as e:
                 error = {
                     "msg": "invalid json patch",
@@ -874,7 +874,7 @@ class K8sAnsibleMixin(object):
                     "error": to_native(e)
                 }
                 return None, error
-        return definition, {}
+        return definition, None
 
     def patch_resource(self, resource, definition, existing, name, namespace, merge_type=None):
         try:
@@ -882,6 +882,8 @@ class K8sAnsibleMixin(object):
             if merge_type:
                 params['content_type'] = 'application/{0}-patch+json'.format(merge_type)
             patch_data, error = self.json_patch(existing, definition, merge_type)
+            if error is not None:
+                return None, error
             k8s_obj = resource.patch(patch_data, **params).to_dict()
             match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
             error = {}
