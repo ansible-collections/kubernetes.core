@@ -133,9 +133,9 @@
       tags:
         - always
 
-    - name: Include merge_types.yml
+    - name: Include merge_type.yml
       include_tasks:
-        file: tasks/merge_types.yml
+        file: tasks/merge_type.yml
         apply:
           tags: [ merge_type, k8s ]
       tags:
