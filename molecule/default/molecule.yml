@@ -32,7 +32,12 @@ provisioner:
 scenario:
   name: default
   test_sequence:
+    - dependency
     - lint
     - syntax
     - converge
     - verify
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
