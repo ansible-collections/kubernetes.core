@@ -27,5 +27,8 @@ test-integration:
 test-molecule:
 	molecule test
 
+test-molecule-proxy:
+	molecule test -s proxy
+
 test-unit:
 	ansible-test units --docker -v --color --python $(PYTHON_VERSION) $(?TEST_ARGS)

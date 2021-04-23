@@ -84,13 +84,6 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      - name: Set up squid proxy via docker
-        run: |
-          set -eux
-          docker run --name squid -d --restart=always -p 127.0.0.1:3128:3128/tcp -p 127.0.0.1:3128:3128/udp -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/default/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/default/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
-          docker port squid
-          curl -x http://127.0.0.1:3128 --proxy-user ansible:test -I https://github.com
-
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
       - name: Install molecule and openshift dependencies
@@ -117,6 +110,46 @@ jobs:
 
       - name: Run molecule default test scenario
         run: make test-molecule
+        working-directory: ./ansible_collections/kubernetes/core
+
+  proxy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ['3.7']
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/kubernetes/core
+
+      - name: Set up KinD cluster
+        uses: engineerd/setup-kind@v0.5.0
+
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: Set up squid proxy via docker
+        run: |
+          set -eux
+          docker run --name squid -d --restart=always -p 127.0.0.1:3128:3128/tcp -p 127.0.0.1:3128:3128/udp -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
+          docker port squid
+          curl -x http://127.0.0.1:3128 --proxy-user ansible:test -I https://github.com
+
+      # The 3.3.0 release of molecule introduced a breaking change. See
+      # https://github.com/ansible-community/molecule/issues/3083
+      - name: Install molecule and openshift dependencies
+        run: pip install ansible "molecule<3.3.0" yamllint openshift flake8
+
+      - name: Create default collection path symlink
+        run: |
+          mkdir -p /home/runner/.ansible
+          ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
+
+      - name: Run molecule default test scenario
+        run: make test-molecule-proxy
         working-directory: ./ansible_collections/kubernetes/core
 
   unit:
