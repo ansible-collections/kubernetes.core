@@ -193,7 +193,7 @@ def get_api_client(module=None, **kwargs):
             if key == 'api_key':
                 setattr(configuration, key, {'authorization': "Bearer {0}".format(value)})
             elif key == 'proxy_headers':
-                headers = urllib3.make_headers(**value)
+                headers = urllib3.util.make_headers(**value)
                 setattr(configuration, key, headers)
             else:
                 setattr(configuration, key, value)
