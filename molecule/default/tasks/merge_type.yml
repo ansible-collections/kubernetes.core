@@ -249,4 +249,4 @@
       kind: namespace
       name: "{{ k8s_patch_namespace }}"
       state: absent
-      wait: yes
+    ignore_errors: yes
