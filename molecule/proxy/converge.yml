@@ -19,7 +19,7 @@
 
     - name: test curl using command
       command: curl -x http://127.0.0.1:3128 --proxy-user ansible:test -I https://github.com
-      
+
     - name: cluster info
       k8s_cluster_info:
         proxy: http://127.0.0.1:3128
