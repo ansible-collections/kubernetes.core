@@ -8,7 +8,7 @@
 
   tasks:
     - name: Verify cluster is working.
-      k8s_info:
+      kubernetes.core.k8s_info:
         namespace: kube-system
         kind: Pod
       register: pod_list
@@ -18,13 +18,13 @@
         that: (pod_list.resources | count) > 5
 
     - name: cluster info
-      k8s_cluster_info:
+      kubernetes.core.k8s_cluster_info:
         proxy: http://127.0.0.1:3128
         proxy_headers:
           proxy_basic_auth: ansible:test
 
     - name: bad credentials
-      k8s_cluster_info:
+      kubernetes.core.k8s_cluster_info:
         proxy: http://127.0.0.1:3128
         proxy_headers:
           proxy_basic_auth: ansible:uuuu
@@ -37,7 +37,7 @@
           - bad_cred is failed
 
     - name: create namespace
-      k8s:
+      kubernetes.core.k8s:
         definition:
           kind: namespace
           metadata:
