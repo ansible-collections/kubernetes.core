@@ -142,15 +142,16 @@ jobs:
           docker run --name squid -d -p 3128:3128 -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
           docker port squid
           python ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/plugins/module_utils/test_proxy_headers.py
+          ansible-playbook ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/converge.yml -v
 
-      - name: Create default collection path symlink
-        run: |
-          mkdir -p /home/runner/.ansible
-          ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
+      # - name: Create default collection path symlink
+      #   run: |
+      #     mkdir -p /home/runner/.ansible
+      #     ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
 
-      - name: Run molecule default test scenario
-        run: make test-molecule-proxy
-        working-directory: ./ansible_collections/kubernetes/core
+      # - name: Run molecule default test scenario
+      #   run: make test-molecule-proxy
+      #   working-directory: ./ansible_collections/kubernetes/core
 
   unit:
     runs-on: ubuntu-latest
