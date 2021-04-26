@@ -1,0 +1,50 @@
+---
+- name: Verify cluster is working.
+  kubernetes.core.k8s_info:
+    namespace: kube-system
+    kind: Pod
+  register: pod_list
+
+- name: Verify cluster has more than 5 pods running.
+  assert:
+    that: (pod_list.resources | count) > 5
+
+- name: cluster info
+  kubernetes.core.k8s_cluster_info:
+    proxy: http://127.0.0.1:3128
+    proxy_headers:
+      proxy_basic_auth: ansible:test
+
+- name: bad credentials
+  kubernetes.core.k8s_cluster_info:
+    proxy: http://127.0.0.1:3128
+    proxy_headers:
+      proxy_basic_auth: ansible:uuuu
+  ignore_errors: true
+  register: bad_cred
+
+- name: ensure connection failed
+  assert:
+    that:
+      - bad_cred is failed
+
+- name: create namespace
+  kubernetes.core.k8s:
+    definition:
+      kind: namespace
+      metadata:
+        name: squid
+    proxy: http://127.0.0.1:3128
+    proxy_headers:
+      proxy_basic_auth: ansible:test
+
+- name: delete namespace
+  kubernetes.core.k8s:
+    definition:
+      kind: namespace
+      metadata:
+        name: squid
+    proxy: http://127.0.0.1:3128
+    proxy_headers:
+      proxy_basic_auth: ansible:test
+    state: absent

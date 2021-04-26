@@ -1,0 +1,9 @@
+- name: Integration testing for kubernetes access api via proxy
+  hosts: localhost
+  gather_facts: no
+
+  collections:
+    - kubernetes.core
+
+  tasks:
+    - include_tasks: tasks/test_proxy.yaml
