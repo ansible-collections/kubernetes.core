@@ -136,12 +136,12 @@ jobs:
       - name: Install molecule and openshift dependencies
         run: pip install ansible "molecule<3.3.0" yamllint openshift flake8 urllib3
 
-      # - name: Set up squid proxy via docker
-      #   run: |
-      #     set -eux
-      #     docker run --name squid -d -p 3128:3128 -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
-      #     docker port squid
-      #     python ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/plugins/module_utils/test_proxy_headers.py
+      - name: Set up squid proxy via docker
+        run: |
+          set -eux
+          docker run --name squid -d -p 3128:3128 -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
+          docker port squid
+          python ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/plugins/module_utils/test_proxy_headers.py
 
       - name: Create default collection path symlink
         run: |
