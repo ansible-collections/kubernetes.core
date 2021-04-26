@@ -149,8 +149,8 @@ jobs:
           ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
 
       - name: Create default collection path symlink
-        run: |
-          ansible-playbook ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/converge.yml -v
+        run: ansible-playbook ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/converge.yml -v
+        working-directory: ./ansible_collections/kubernetes/core
 
       # - name: Run molecule default test scenario
       #   run: make test-molecule-proxy
