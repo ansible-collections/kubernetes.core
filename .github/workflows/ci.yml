@@ -136,9 +136,7 @@ jobs:
           set -eux
           docker run --name squid -d -p 3128:3128 -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
           docker port squid
-          sleep 20
-          iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
-          netstat -vatn
+          python ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/plugins/module_utils/test_proxy_headers.py
 
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
