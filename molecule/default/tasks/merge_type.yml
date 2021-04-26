@@ -1,79 +1,150 @@
-- name: Define common facts
-  set_fact:
-    k8s_merge_namespace: "merge-types"
-    k8s_merge_svc: "svc-merge"
-    k8s_merge_pod: "pod-merge"
-    k8s_merge_deployment: "deployment-merge"
+- block:
+  - name: Define common facts
+    set_fact:
+      k8s_patch_namespace: "patch"
+      k8s_strategic_merge: "strategic-merge"
+      k8s_merge: "json-merge"
+      k8s_json: "json-patch"
 
-- name: Ensure the namespace exist
-  kubernetes.core.k8s:
-    kind: namespace
-    name: "{{ k8s_merge_namespace }}"
-
-- name: strategic merge on a service
-  block:
-  - name: create simple nginx service
+  - name: Ensure the namespace exist
     kubernetes.core.k8s:
-      namespace: "{{ k8s_merge_namespace }}"
+      kind: namespace
+      name: "{{ k8s_patch_namespace }}"
+
+
+  # Strategic merge
+  - name: create a simple nginx deployment
+    kubernetes.core.k8s:
+      namespace: "{{ k8s_patch_namespace }}"
       definition:
-        apiVersion: v1
-        kind: Service
+        apiVersion: apps/v1
+        kind: Deployment
         metadata:
-          labels:
-            name: "{{ k8s_merge_svc }}"
-          name: "{{ k8s_merge_svc }}"
+          name: "{{ k8s_strategic_merge }}"
         spec:
-          ports:
-          - name: "tcp80"
-            port: 80
-            protocol: TCP
-            targetPort: 80
+          replicas: 2
           selector:
-            name: "{{ k8s_merge_svc }}"
+            matchLabels:
+              app: nginx
+          template:
+            metadata:
+              labels:
+                app: nginx
+            spec:
+              containers:
+              - name: "{{ k8s_strategic_merge }}-ctr"
+                image: nginx
+              tolerations:
+              - effect: NoSchedule
+                key: dedicated
+                value: "test-strategic-merge"
+
 
   - name: patch service using strategic merge
     kubernetes.core.k8s:
-      kind: Service
-      namespace: "{{ k8s_merge_namespace }}"
-      name: "{{ k8s_merge_svc }}"
+      kind: Deployment
+      namespace: "{{ k8s_patch_namespace }}"
+      name: "{{ k8s_strategic_merge }}"
       definition:
         spec:
-          ports:
-          - name: "tcp8080"
-            port: 8080
-            protocol: TCP
-            targetPort: 8080
-    register: svc_patch
+          template:
+            spec:
+              containers:
+              - name: "{{ k8s_strategic_merge }}-ctr-2"
+                image: redis
+    register: depl_patch
 
-  - name: assert that service was patched
+  - name: validate that resource was patched
     assert:
       that:
-      - svc_patch.changed
+      - depl_patch.changed
 
-  - name: describe "{{ k8s_merge_svc }}" service
+  - name: describe "{{ k8s_strategic_merge }}" deployment
     kubernetes.core.k8s_info:
-      kind: Service
-      name: "{{ k8s_merge_svc }}"
-      namespace: "{{ k8s_merge_namespace }}"
-    register: svc
+      kind: Deployment
+      name: "{{ k8s_strategic_merge }}"
+      namespace: "{{ k8s_patch_namespace }}"
+    register: deployment_out
 
-  - name: check service property
+  - name: assert that deployment contains expected images
     assert:
       that:
-      - svc.resources[0].spec.ports | selectattr('name') | map(attribute='name') | list | length == 2
+      - deployment_out.resources[0].spec.template.spec.containers | selectattr('image','equalto','nginx') | list | length == 1
+      - deployment_out.resources[0].spec.template.spec.containers | selectattr('image','equalto','redis') | list | length == 1
 
-- name: json merge 'replace'
-  block:
+  # Json merge
+  - name: create a simple nginx deployment (testing merge patch)
+    kubernetes.core.k8s:
+      namespace: "{{ k8s_patch_namespace }}"
+      definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: "{{ k8s_merge }}"
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: nginx
+          template:
+            metadata:
+              labels:
+                app: nginx
+            spec:
+              containers:
+              - name: "{{ k8s_merge }}-ctr"
+                image: nginx
+              tolerations:
+              - effect: NoSchedule
+                key: dedicated
+                value: "test-strategic-merge"
+
+
+  - name: patch service using json merge patch
+    kubernetes.core.k8s:
+      kind: Deployment
+      namespace: "{{ k8s_patch_namespace }}"
+      name: "{{ k8s_merge }}"
+      merge_type:
+      - merge
+      definition:
+        spec:
+          template:
+            spec:
+              containers:
+              - name: "{{ k8s_merge }}-ctr-2"
+                image: python
+    register: merge_patch
+
+  - name: validate that resource was patched
+    assert:
+      that:
+      - merge_patch.changed
+
+  - name: describe "{{ k8s_merge }}" deployment
+    kubernetes.core.k8s_info:
+      kind: Deployment
+      name: "{{ k8s_merge }}"
+      namespace: "{{ k8s_patch_namespace }}"
+    register: merge_out
+
+  - name: assert that deployment contains expected images
+    assert:
+      that:
+      - merge_out.resources[0].spec.template.spec.containers | list | length == 1
+      - merge_out.resources[0].spec.template.spec.containers[0].image == 'python'
+
+  # Json
   - name: create simple pod
     kubernetes.core.k8s:
-      namespace: "{{ k8s_merge_namespace }}"
+      namespace: "{{ k8s_patch_namespace }}"
       definition:
         apiVersion: v1
         kind: Pod
         metadata:
-          name: "{{ k8s_merge_pod }}"
+          name: "{{ k8s_json }}-pod"
           labels:
-            name: "{{ k8s_merge_pod }}"
+            name: "{{ k8s_json }}-pod"
         spec:
           containers:
           - args:
@@ -87,8 +158,8 @@
   - name: Patch pod - update container image
     kubernetes.core.k8s:
       kind: Pod
-      namespace: "{{ k8s_merge_namespace }}"
-      name: "{{ k8s_merge_pod }}"
+      namespace: "{{ k8s_patch_namespace }}"
+      name: "{{ k8s_json }}-pod"
       merge_type:
       - json
       definition:
@@ -105,8 +176,8 @@
   - name: describe Pod after patching
     kubernetes.core.k8s_info:
       kind: Pod
-      name: "{{ k8s_merge_pod }}"
-      namespace: "{{ k8s_merge_namespace }}"
+      name: "{{ k8s_json }}-pod"
+      namespace: "{{ k8s_patch_namespace }}"
     register: describe_pod
 
   - name: assert that image name has changed
@@ -114,18 +185,16 @@
       that:
       - describe_pod.resources[0].spec.containers[0].image == 'python:3.8-alpine'
 
-- name: json merge 'add'
-  block:
-  - name: create simple nginx deployment
+  - name: create a simple nginx deployment
     kubernetes.core.k8s:
-      namespace: "{{ k8s_merge_namespace }}"
+      namespace: "{{ k8s_patch_namespace }}"
       definition:
         apiVersion: apps/v1
         kind: Deployment
         metadata:
-          name: "{{ k8s_merge_deployment }}"
+          name: "{{ k8s_json }}-depl"
           labels:
-            name: "{{ k8s_merge_deployment }}"
+            name: "{{ k8s_json }}-depl"
         spec:
           replicas: 2
           selector:
@@ -144,11 +213,11 @@
                 - -c
                 - while true; do echo $(date); sleep 10; done
 
-  - name: Patch Nginx deployment to support ssl-passthough
+  - name: Patch Nginx deployment command
     kubernetes.core.k8s:
       kind: Deployment
-      namespace: "{{ k8s_merge_namespace }}"
-      name: "{{ k8s_merge_deployment }}"
+      namespace: "{{ k8s_patch_namespace }}"
+      name: "{{ k8s_json }}-depl"
       merge_type:
       - json
       definition:
@@ -165,11 +234,19 @@
   - name: describe deployment after patching
     kubernetes.core.k8s_info:
       kind: Deployment
-      name: "{{ k8s_merge_deployment }}"
-      namespace: "{{ k8s_merge_namespace }}"
+      name: "{{ k8s_json }}-depl"
+      namespace: "{{ k8s_patch_namespace }}"
     register: describe_depl
 
   - name: assert that args changed on deployment
     assert:
       that:
       - describe_depl.resources[0].spec.template.spec.containers[0].args | length == 4
+
+  always:
+  - name: Ensure namespace has been deleted
+    kubernetes.core.k8s:
+      kind: namespace
+      name: "{{ k8s_patch_namespace }}"
+      state: absent
+      wait: yes
