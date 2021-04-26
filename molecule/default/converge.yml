@@ -132,13 +132,6 @@
           tags: [ waiter, k8s ]
       tags:
         - always
-    - name: Include proxy.yml
-      include_tasks:
-        file: tasks/proxy.yml
-        apply:
-          tags: [ proxy, k8s ]
-      tags:
-        - always
 
   roles:
     - role: helm
