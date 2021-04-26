@@ -114,14 +114,6 @@ jobs:
 
   proxy:
     runs-on: ubuntu-latest
-    services:
-      squid:
-        image: sameersbn/squid:3.5.27-2
-        volumes:
-          - ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd
-          - ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf
-        ports:
-          - 3128:3128
     strategy:
       matrix:
         python_version: ['3.7']
@@ -143,11 +135,13 @@ jobs:
         run: |
           curl -x http://127.0.0.1:3128 --proxy-user ansible:test -I https://github.com
 
-      # - name: Set up squid proxy via docker
-      #   run: |
-      #     set -eux
-      #     docker run --name squid -d -p 127.0.0.1:3128:3128/tcp -p 127.0.0.1:3128:3128/udp -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
-      #     docker port squid
+      - name: Set up squid proxy via docker
+        run: |
+          set -eux
+          docker run --name squid -d -p 127.0.0.1:3128:3128/tcp -p 127.0.0.1:3128:3128/udp -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.passwd:/etc/squid/passwd -v ${GITHUB_WORKSPACE}/ansible_collections/kubernetes/core/molecule/proxy/files/squid.conf:/etc/squid/squid.conf sameersbn/squid:3.5.27-2
+          docker port squid
+          sleep 20
+          netstat -vatn
 
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
