@@ -1,0 +1,3 @@
+minor_changes:
+- helm_plugin - remove unused ``release_namespace`` parameter.
+- helm_plugin_info - remove unused ``release_namespace`` parameter.
