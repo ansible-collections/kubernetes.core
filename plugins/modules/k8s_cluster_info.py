@@ -33,7 +33,7 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
 
 requirements:
-  - "python >= 2.7"
+  - "python >= 3.6"
   - "openshift >= 0.6"
   - "PyYAML >= 3.11"
 '''
