@@ -20,13 +20,6 @@ requirements:
 description:
   -  Manages Helm plugins.
 options:
-  # TODO: (akasurde) Remove this in version 2.0
-  release_namespace:
-    description:
-      - Kubernetes namespace where the helm plugin should be installed.
-    type: str
-    aliases: [ namespace ]
-
 #Helm options
   state:
     description:
@@ -108,7 +101,6 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             binary_path=dict(type='path'),
-            release_namespace=dict(type='str', aliases=['namespace']),
             state=dict(type='str', default='present', choices=['present', 'absent']),
             plugin_path=dict(type='str',),
             plugin_name=dict(type='str',),
