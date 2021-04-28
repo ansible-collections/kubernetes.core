@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s - fix merge_type option when set to json (https://github.com/ansible-collections/kubernetes.core/issues/54).
