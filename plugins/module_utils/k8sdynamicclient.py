@@ -21,9 +21,13 @@ from kubernetes.dynamic import DynamicClient
 
 from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import ApplyException
+from ansible_collections.kubernetes.core.plugins.module_utils.client.discovery import LazyDiscoverer
 
 
 class K8SDynamicClient(DynamicClient):
+    def __init__(self, client, cache_file=None, discoverer=None):
+        super().__init__(client, cache_file, discoverer=LazyDiscoverer)
+
     def apply(self, resource, body=None, name=None, namespace=None):
         body = super().serialize_body(body)
         body['metadata'] = body.get('metadata', dict())
