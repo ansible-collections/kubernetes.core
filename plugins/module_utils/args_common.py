@@ -11,6 +11,12 @@ def list_dict_str(value):
     raise TypeError
 
 
+AUTH_PROXY_HEADERS_SPEC = dict(
+    proxy_basic_auth=dict(type='str', no_log=True),
+    basic_auth=dict(type='str', no_log=True),
+    user_agent=dict(type='str')
+)
+
 AUTH_ARG_SPEC = {
     'kubeconfig': {
         'type': 'path',
@@ -42,6 +48,10 @@ AUTH_ARG_SPEC = {
     },
     'proxy': {
         'type': 'str',
+    },
+    'proxy_headers': {
+        'type': 'dict',
+        'options': AUTH_PROXY_HEADERS_SPEC
     },
     'persist_config': {
         'type': 'bool',
@@ -76,6 +86,7 @@ AUTH_ARG_MAP = {
     'cert_file': 'client_cert',
     'key_file': 'client_key',
     'proxy': 'proxy',
+    'proxy_headers': 'proxy_headers',
     'persist_config': 'persist_config',
 }
 

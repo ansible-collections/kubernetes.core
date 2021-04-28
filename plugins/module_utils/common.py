@@ -28,7 +28,7 @@ import hashlib
 from datetime import datetime
 from distutils.version import LooseVersion
 
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC, AUTH_PROXY_HEADERS_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
 from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_default_cache_id
 
@@ -37,7 +37,6 @@ from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible.module_utils.parsing.convert_bool import boolean
-
 
 K8S_IMP_ERR = None
 try:
@@ -138,6 +137,17 @@ def get_api_client(module=None, **kwargs):
             auth[true_name] = module.params.get(arg_name)
         elif arg_name in kwargs and kwargs.get(arg_name) is not None:
             auth[true_name] = kwargs.get(arg_name)
+        elif arg_name == "proxy_headers":
+            # specific case for 'proxy_headers' which is a dictionary
+            proxy_headers = {}
+            for key in AUTH_PROXY_HEADERS_SPEC.keys():
+                env_value = os.getenv('K8S_AUTH_PROXY_HEADERS_{0}'.format(key.upper()), None)
+                if env_value is not None:
+                    if AUTH_PROXY_HEADERS_SPEC[key].get('type') == 'bool':
+                        env_value = env_value.lower() not in ['0', 'false', 'no']
+                    proxy_headers[key] = env_value
+            if proxy_headers is not {}:
+                auth[true_name] = proxy_headers
         else:
             env_value = os.getenv('K8S_AUTH_{0}'.format(arg_name.upper()), None) or os.getenv('K8S_AUTH_{0}'.format(true_name.upper()), None)
             if env_value is not None:
@@ -182,6 +192,9 @@ def get_api_client(module=None, **kwargs):
         if key in AUTH_ARG_MAP.keys() and value is not None:
             if key == 'api_key':
                 setattr(configuration, key, {'authorization': "Bearer {0}".format(value)})
+            elif key == 'proxy_headers':
+                headers = urllib3.util.make_headers(**value)
+                setattr(configuration, key, headers)
             else:
                 setattr(configuration, key, value)
 

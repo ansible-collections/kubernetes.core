@@ -75,6 +75,28 @@ options:
     - The URL of an HTTP proxy to use for the connection. Can also be specified via K8S_AUTH_PROXY environment variable.
     - Please note that this module does not pick up typical proxy settings from the environment (e.g. HTTP_PROXY).
     type: str
+  proxy_headers:
+    description:
+    - The Header used for the HTTP proxy.
+    - Documentation can be found here U(https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html?highlight=proxy_headers#urllib3.util.make_headers).
+    type: dict
+    version_added: 2.0.0
+    suboptions:
+      proxy_basic_auth:
+        type: str
+        description:
+        - Colon-separated username:password for proxy basic authentication header.
+        - Can also be specified via K8S_AUTH_PROXY_HEADERS_PROXY_BASIC_AUTH environment.
+      basic_auth:
+        type: str
+        description:
+        - Colon-separated username:password for basic authentication header.
+        - Can also be specified via K8S_AUTH_PROXY_HEADERS_BASIC_AUTH environment.
+      user_agent:
+        type: str
+        description:
+        - String representing the user-agent you want, such as foo/1.0.
+        - Can also be specified via K8S_AUTH_PROXY_HEADERS_USER_AGENT environment.
   persist_config:
     description:
     - Whether or not to save the kube config refresh tokens.
