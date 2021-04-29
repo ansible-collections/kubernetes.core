@@ -18,7 +18,7 @@ author:
     - Abhijeet Kasurde (@Akasurde)
 
 description:
-  - Use the OpenShift Python client to perform read operations on K8s objects.
+  - Use the Kubernetes Python client to perform read operations on K8s objects.
   - Authenticate using either a config file, certificates, password or token.
   - Supports check mode.
 
@@ -34,7 +34,7 @@ extends_documentation_fragment:
 
 requirements:
   - "python >= 3.6"
-  - "openshift >= 0.6"
+  - "kubernetes >= 11.0.0"
   - "PyYAML >= 3.11"
 '''
 
@@ -186,7 +186,7 @@ def execute_module(module, client):
         'username': configuration.username,
         'verify_ssl': configuration.verify_ssl,
     }
-    from openshift import __version__ as version
+    from kubernetes import __version__ as version
     version_info = {
         'client': version,
         'server': client.version,

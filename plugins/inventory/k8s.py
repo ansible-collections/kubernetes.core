@@ -37,7 +37,7 @@ DOCUMENTATION = '''
               kubeconfig:
                   description:
                   - Path to an existing Kubernetes config file. If not provided, and no other connection
-                    options are provided, the OpenShift client will attempt to load the default
+                    options are provided, the Kubernetes client will attempt to load the default
                     configuration file from I(~/.kube/config). Can also be specified via K8S_AUTH_KUBECONFIG
                     environment variable.
               context:
@@ -87,7 +87,7 @@ DOCUMENTATION = '''
 
     requirements:
     - "python >= 3.6"
-    - "openshift >= 0.6"
+    - "kubernetes >= 11.0.0"
     - "PyYAML >= 3.11"
 '''
 
@@ -121,7 +121,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.common import K8sA
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 
 try:
-    from openshift.dynamic.exceptions import DynamicApiError
+    from kubernetes.dynamic.exceptions import DynamicApiError
 except ImportError:
     pass
 
@@ -158,7 +158,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
 
         if not HAS_K8S_MODULE_HELPER:
             raise K8sInventoryException(
-                "This module requires the OpenShift Python client. Try `pip install openshift`. Detail: {0}".format(k8s_import_exception)
+                "This module requires the Kubernetes Python client. Try `pip install kubernetes`. Detail: {0}".format(k8s_import_exception)
             )
 
         source_data = None

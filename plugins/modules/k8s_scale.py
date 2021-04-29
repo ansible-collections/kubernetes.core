@@ -32,7 +32,7 @@ extends_documentation_fragment:
 
 requirements:
     - "python >= 3.6"
-    - "openshift >= 0.6"
+    - "kubernetes >= 11.0.0"
     - "PyYAML >= 3.11"
 '''
 

@@ -20,7 +20,7 @@ author:
     - "Fabian von Feilitzsch (@fabianvf)"
 
 description:
-  - Use the OpenShift Python client to perform read operations on K8s log endpoints.
+  - Use the Kubernetes Python client to perform read operations on K8s log endpoints.
   - Authenticate using either a config file, certificates, password or token.
   - Supports check mode.
   - Analogous to `kubectl logs` or `oc logs`
@@ -57,7 +57,7 @@ options:
 
 requirements:
   - "python >= 3.6"
-  - "openshift >= 0.6"
+  - "kubernetes >= 11.0.0"
   - "PyYAML >= 3.11"
 '''
 

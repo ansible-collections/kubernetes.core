@@ -15,7 +15,7 @@ version_added: "1.0.0"
 author:
     - "Julien Huon (@julienhuon)"
 description:
-  - Use the OpenShift Python client to perform the Rollback.
+  - Use the Kubernetes Python client to perform the Rollback.
   - Authenticate using either a config file, certificates, password or token.
   - Similar to the C(kubectl rollout undo) command.
 options:
@@ -32,7 +32,7 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_name_options
 requirements:
   - "python >= 3.6"
-  - "openshift >= 0.6"
+  - "kubernetes >= 11.0.0"
   - "PyYAML >= 3.11"
 '''
 
