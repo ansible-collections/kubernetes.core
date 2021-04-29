@@ -547,7 +547,8 @@ class K8sAnsibleMixin(object):
             if self.params['validate'] is not None:
                 self.warnings = self.validate(definition)
             result = self.perform_action(resource, definition)
-            result['warnings'] = self.warnings
+            if self.warnings:
+                result['warnings'] = self.warnings
             changed = changed or result['changed']
             results.append(result)
 
@@ -600,6 +601,7 @@ class K8sAnsibleMixin(object):
         wait_timeout = self.params.get('wait_timeout')
         wait_condition = None
         continue_on_error = self.params.get('continue_on_error')
+        patch_only = self.params.get('patch_only')
         if self.params.get('wait_condition') and self.params['wait_condition'].get('type'):
             wait_condition = self.params['wait_condition']
 
@@ -731,6 +733,12 @@ class K8sAnsibleMixin(object):
             if not existing:
                 if self.check_mode:
                     k8s_obj = _encode_stringdata(definition)
+                elif patch_only:
+                    # Silently skip this resource (do not raise an error) as 'patch_only' is set to true
+                    result['changed'] = False
+                    result['warning'] = "resource 'kind={kind},name={name}' was not found but will not be created as 'patch_only' has been set to true".format(
+                                        kind=definition['kind'], name=origin_name)
+                    return result
                 else:
                     try:
                         k8s_obj = resource.create(definition, namespace=namespace).to_dict()

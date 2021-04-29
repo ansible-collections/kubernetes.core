@@ -131,6 +131,13 @@ options:
     type: bool
     default: False
     version_added: 2.0.0
+  patch_only:
+    description:
+    - When set to C(yes) do not create the resource if it doesn't exist - silently skip that resource (do not raise an error).
+    - mutually exclusive with C(apply)
+    type: bool
+    default: False
+    version_added: 2.0.0
 
 requirements:
   - "python >= 2.7"
@@ -246,6 +253,18 @@ EXAMPLES = r'''
       type: Progressing
       status: Unknown
       reason: DeploymentPaused
+
+# Patch only : add label to namespace only if they exist
+- name: add label to namespace only if it exists
+  kubernetes.core.k8s:
+    state: present
+    patch_only: yes
+    kind: namespace
+    name: patch_namespace
+    definition:
+      metadata:
+        labels:
+          support: patch
 '''
 
 RETURN = r'''
@@ -318,6 +337,7 @@ def argspec():
     argument_spec['template'] = dict(type='raw', default=None)
     argument_spec['delete_options'] = dict(type='dict', default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC))
     argument_spec['continue_on_error'] = dict(type='bool', default=False)
+    argument_spec['patch_only'] = dict(type='bool', default=False)
     return argument_spec
 
 
@@ -329,6 +349,7 @@ def execute_module(module, k8s_ansible_mixin):
     k8s_ansible_mixin.fail_json = k8s_ansible_mixin.module.fail_json
     k8s_ansible_mixin.fail = k8s_ansible_mixin.module.fail_json
     k8s_ansible_mixin.exit_json = k8s_ansible_mixin.module.exit_json
+    k8s_ansible_mixin.warn = k8s_ansible_mixin.module.warn
     k8s_ansible_mixin.warnings = []
 
     k8s_ansible_mixin.kind = k8s_ansible_mixin.params.get('kind')
@@ -347,6 +368,7 @@ def main():
         ('merge_type', 'apply'),
         ('template', 'resource_definition'),
         ('template', 'src'),
+        ('patch_only', 'apply'),
     ]
     module = AnsibleModule(argument_spec=argspec(), mutually_exclusive=mutually_exclusive, supports_check_mode=True)
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
