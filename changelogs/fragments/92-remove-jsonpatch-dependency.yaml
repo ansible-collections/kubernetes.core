@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s - remove dependency on third party jsonpatch (https://github.com/ansible-collections/kubernetes.core/pull/92).
