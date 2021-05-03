@@ -185,6 +185,24 @@
       that:
       - describe_pod.resources[0].spec.containers[0].image == 'python:3.8-alpine'
 
+  - name: Apply the same json patch to pod
+    kubernetes.core.k8s:
+      kind: Pod
+      namespace: "{{ k8s_patch_namespace }}"
+      name: "{{ k8s_json }}-pod"
+      merge_type:
+      - json
+      definition:
+      - op: replace
+        path: /spec/containers/0/image
+        value: python:3.8-alpine
+    register: pod_patch
+
+  - name: assert that nothing changed
+    assert:
+      that:
+      - not pod_patch.changed
+
   - name: create a simple nginx deployment
     kubernetes.core.k8s:
       namespace: "{{ k8s_patch_namespace }}"
@@ -224,6 +242,9 @@
       - op: add
         path: '/spec/template/spec/containers/0/args/-'
         value: 'touch /var/log'
+      - op: add
+        path: '/metadata/labels/foo'
+        value: 'bar'
     register: patch_out
 
   - name: assert that patch succeed
@@ -238,10 +259,11 @@
       namespace: "{{ k8s_patch_namespace }}"
     register: describe_depl
 
-  - name: assert that args changed on deployment
+  - name: assert that all patch operations modified the deployment
     assert:
       that:
       - describe_depl.resources[0].spec.template.spec.containers[0].args | length == 4
+      - describe_depl.resources[0].metadata.labels.foo == "bar"
 
   always:
   - name: Ensure namespace has been deleted

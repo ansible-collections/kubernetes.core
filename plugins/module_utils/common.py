@@ -106,17 +106,6 @@ except ImportError as e:
     K8S_IMP_ERR = traceback.format_exc()
 
 
-JSON_PATCH_IMP_ERR = None
-try:
-    import jsonpatch
-    HAS_JSON_PATCH = True
-    jsonpatch_import_exception = None
-except ImportError as e:
-    HAS_JSON_PATCH = False
-    jsonpatch_import_exception = e
-    JSON_PATCH_IMP_ERR = traceback.format_exc()
-
-
 def configuration_digest(configuration):
     m = hashlib.sha256()
     for k in AUTH_ARG_MAP:
@@ -537,30 +526,37 @@ class K8sAnsibleMixin(object):
         except (urllib3.exceptions.RequestError) as e:
             self.fail_json(msg="Couldn't connect to Kubernetes: %s" % str(e))
 
-        flattened_definitions = []
-        for definition in self.resource_definitions:
-            if definition is None:
-                continue
-            kind = definition.get('kind', self.kind)
-            api_version = definition.get('apiVersion', self.api_version)
-            if kind and kind.endswith('List'):
-                resource = self.find_resource(kind, api_version, fail=False)
-                flattened_definitions.extend(self.flatten_list_kind(resource, definition))
-            else:
-                resource = self.find_resource(kind, api_version, fail=True)
-                flattened_definitions.append((resource, definition))
-
-        for (resource, definition) in flattened_definitions:
-            kind = definition.get('kind', self.kind)
-            api_version = definition.get('apiVersion', self.api_version)
-            definition = self.set_defaults(resource, definition)
-            self.warnings = []
-            if self.params['validate'] is not None:
-                self.warnings = self.validate(definition)
-            result = self.perform_action(resource, definition)
+        if self.params["merge_type"] and self.params["merge_type"][0] == "json":
+            resource = self.find_resource(self.kind, self.api_version, fail=True)
+            result = self.perform_action(resource, self.resource_definitions, json_patch=True)
             result['warnings'] = self.warnings
             changed = changed or result['changed']
             results.append(result)
+        else:
+            flattened_definitions = []
+            for definition in self.resource_definitions:
+                if definition is None:
+                    continue
+                kind = definition.get('kind', self.kind)
+                api_version = definition.get('apiVersion', self.api_version)
+                if kind and kind.endswith('List'):
+                    resource = self.find_resource(kind, api_version, fail=False)
+                    flattened_definitions.extend(self.flatten_list_kind(resource, definition))
+                else:
+                    resource = self.find_resource(kind, api_version, fail=True)
+                    flattened_definitions.append((resource, definition))
+
+            for (resource, definition) in flattened_definitions:
+                kind = definition.get('kind', self.kind)
+                api_version = definition.get('apiVersion', self.api_version)
+                definition = self.set_defaults(resource, definition)
+                self.warnings = []
+                if self.params['validate'] is not None:
+                    self.warnings = self.validate(definition)
+                result = self.perform_action(resource, definition)
+                result['warnings'] = self.warnings
+                changed = changed or result['changed']
+                results.append(result)
 
         if len(results) == 1:
             self.exit_json(**results[0])
@@ -597,14 +593,21 @@ class K8sAnsibleMixin(object):
         definition['metadata'] = metadata
         return definition
 
-    def perform_action(self, resource, definition):
+    def perform_action(self, resource, definition, json_patch=False):
         delete_options = self.params.get('delete_options')
         result = {'changed': False, 'result': {}}
         state = self.params.get('state', None)
         force = self.params.get('force', False)
-        name = definition['metadata'].get('name')
-        origin_name = definition['metadata'].get('name')
-        namespace = definition['metadata'].get('namespace')
+        if json_patch:
+            name = self.name
+            origin_name = name
+            namespace = self.namespace
+            kind = self.kind
+        else:
+            name = definition['metadata'].get('name')
+            origin_name = definition['metadata'].get('name')
+            namespace = definition['metadata'].get('namespace')
+            kind = definition['kind']
         existing = None
         wait = self.params.get('wait')
         wait_sleep = self.params.get('wait_sleep')
@@ -621,7 +624,7 @@ class K8sAnsibleMixin(object):
 
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
-            if self.append_hash and definition['kind'] in ['ConfigMap', 'Secret']:
+            if self.append_hash and kind in ['ConfigMap', 'Secret']:
                 name = '%s-%s' % (name, generate_hash(definition))
                 definition['metadata']['name'] = name
             params = dict(name=name)
@@ -636,28 +639,28 @@ class K8sAnsibleMixin(object):
                 # no sys.exc_clear on python3
                 pass
         except ForbiddenError as exc:
-            if definition['kind'] in ['Project', 'ProjectRequest'] and state != 'absent':
+            if kind in ['Project', 'ProjectRequest'] and state != 'absent':
                 return self.create_project_request(definition)
             msg = 'Failed to retrieve requested object: {0}'.format(exc.body)
             if continue_on_error:
-                result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+                result['error'] = dict(msg=build_error_msg(kind, origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
                 return result
             else:
-                self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+                self.fail_json(msg=build_error_msg(kind, origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
         except DynamicApiError as exc:
             msg = 'Failed to retrieve requested object: {0}'.format(exc.body)
             if continue_on_error:
-                result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+                result['error'] = dict(msg=build_error_msg(kind, origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
                 return result
             else:
-                self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+                self.fail_json(msg=build_error_msg(kind, origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
         except ValueError as value_exc:
             msg = 'Failed to retrieve requested object: {0}'.format(to_native(value_exc))
             if continue_on_error:
-                result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), error='', status='', reason='')
+                result['error'] = dict(msg=build_error_msg(kind, origin_name, msg), error='', status='', reason='')
                 return result
             else:
-                self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error='', status='', reason='')
+                self.fail_json(msg=build_error_msg(kind, origin_name, msg), error='', status='', reason='')
 
         if state == 'absent':
             result['method'] = "delete"
@@ -839,7 +842,7 @@ class K8sAnsibleMixin(object):
                 if error:
                     if continue_on_error:
                         result['error'] = error
-                        result['error']['msg'] = build_error_msg(definition['kind'], origin_name, result['error'].get('msg'))
+                        result['error']['msg'] = build_error_msg(kind, origin_name, result['error'].get('msg'))
                         return result
                     else:
                         self.fail_json(**error)
@@ -856,48 +859,18 @@ class K8sAnsibleMixin(object):
             if not success:
                 msg = "Resource update timed out"
                 if continue_on_error:
-                    result['error'] = dict(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
+                    result['error'] = dict(msg=build_error_msg(kind, origin_name, msg), **result)
                     return result
                 else:
                     self.fail_json(msg=msg, **result)
             return result
-
-    def json_patch(self, existing, definition, merge_type):
-        if merge_type == "json":
-            if not HAS_JSON_PATCH:
-                error = {
-                    "msg": missing_required_lib('jsonpatch'),
-                    "exception": JSON_PATCH_IMP_ERR,
-                    "error": to_native(jsonpatch_import_exception)
-                }
-                return None, error
-            try:
-                patch = jsonpatch.JsonPatch([definition])
-                result_patch = patch.apply(existing.to_dict())
-                return result_patch, None
-            except jsonpatch.InvalidJsonPatch as e:
-                error = {
-                    "msg": "invalid json patch",
-                    "error": to_native(e)
-                }
-                return None, error
-            except jsonpatch.JsonPatchConflict as e:
-                error = {
-                    "msg": "patch could not be applied due to conflict situation",
-                    "error": to_native(e)
-                }
-                return None, error
-        return definition, None
 
     def patch_resource(self, resource, definition, existing, name, namespace, merge_type=None):
         try:
             params = dict(name=name, namespace=namespace)
             if merge_type:
                 params['content_type'] = 'application/{0}-patch+json'.format(merge_type)
-            patch_data, error = self.json_patch(existing, definition, merge_type)
-            if error is not None:
-                return None, error
-            k8s_obj = resource.patch(patch_data, **params).to_dict()
+            k8s_obj = resource.patch(definition, **params).to_dict()
             match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
             error = {}
             return k8s_obj, {}
