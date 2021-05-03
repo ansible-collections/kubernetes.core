@@ -136,6 +136,7 @@ requirements:
   - "python >= 2.7"
   - "openshift >= 0.6"
   - "PyYAML >= 3.11"
+  - "jsonpath-rw"
 '''
 
 EXAMPLES = r'''
@@ -246,6 +247,13 @@ EXAMPLES = r'''
       type: Progressing
       status: Unknown
       reason: DeploymentPaused
+
+# Wait for this service to have acquired an External IP
+- name: Deploy the dashboard service (lb)
+  kubernetes.core.k8s:
+    template: dash-service.yaml
+    wait: yes
+    wait_for: .status.loadBalancer.ingress[*].ip
 '''
 
 RETURN = r'''

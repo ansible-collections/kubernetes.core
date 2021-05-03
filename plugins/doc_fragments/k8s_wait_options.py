@@ -64,4 +64,10 @@ options:
         - The possible reasons in a condition are specific to each resource type in Kubernetes.
         - See the API documentation of the status field for a given resource to see possible choices.
     type: dict
+  wait_for:
+    description:
+    - Specifies a property on the resource to wait for.
+    - Ignored if C(wait) is not set or is set to False.
+    default: 120
+    type: int
 '''
