@@ -13,10 +13,6 @@
 # limitations under the License.
 
 
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
-
 import json
 import os
 from collections import defaultdict
@@ -28,7 +24,6 @@ import kubernetes.dynamic.discovery
 from kubernetes import __version__
 from kubernetes.dynamic.exceptions import ServiceUnavailableError
 
-from ansible.module_utils import six
 from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import ResourceList
 
 
@@ -45,10 +40,7 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
             cache_id = "{0}-{1}".format(self.client.configuration.host, user)
         else:
             cache_id = self.client.configuration.host
-
-        if six.PY3:
-            return cache_id.encode('utf-8')
-        return cache_id
+        return cache_id.encode('utf-8')
 
     def __get_user(self):
         if hasattr(os, 'getlogin'):
@@ -92,7 +84,7 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
         """ returns a dictionary of resources associated with provided (prefix, group, version)"""
 
         resources = defaultdict(list)
-        subresources = {}
+        subresources = defaultdict(dict)
 
         path = '/'.join(filter(None, [prefix, group, version]))
         try:
@@ -104,8 +96,6 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
         subresources_raw = list(filter(lambda resource: '/' in resource['name'], resources_response))
         for subresource in subresources_raw:
             resource, name = subresource['name'].split('/')
-            if not subresources.get(resource):
-                subresources[resource] = {}
             subresources[resource][name] = subresource
 
         for resource in resources_raw:

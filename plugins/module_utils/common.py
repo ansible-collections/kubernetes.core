@@ -23,7 +23,6 @@ import time
 import os
 import traceback
 import sys
-import tempfile
 import hashlib
 from datetime import datetime
 from distutils.version import LooseVersion
