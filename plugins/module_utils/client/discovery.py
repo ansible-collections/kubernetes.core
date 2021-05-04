@@ -20,20 +20,55 @@ __metaclass__ = type
 import json
 import os
 from collections import defaultdict
+import hashlib
+import tempfile
 
 import kubernetes.dynamic
 import kubernetes.dynamic.discovery
 from kubernetes import __version__
 from kubernetes.dynamic.exceptions import ServiceUnavailableError
 
+from ansible.module_utils import six
 from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import ResourceList
 
 
 class Discoverer(kubernetes.dynamic.discovery.Discoverer):
     def __init__(self, client, cache_file):
         self.client = client
-        self.__cache_file = cache_file
+        default_cache_file_name = 'k8srcp-{0}.json'.format(hashlib.sha256(self.__get_default_cache_id()).hexdigest())
+        self.__cache_file = cache_file or os.path.join(tempfile.gettempdir(), default_cache_file_name)
         self.__init_cache()
+
+    def __get_default_cache_id(self):
+        user = self.__get_user()
+        if user:
+            cache_id = "{0}-{1}".format(self.client.configuration.host, user)
+        else:
+            cache_id = self.client.configuration.host
+
+        if six.PY3:
+            return cache_id.encode('utf-8')
+        return cache_id
+
+    def __get_user(self):
+        if hasattr(os, 'getlogin'):
+            try:
+                user = os.getlogin()
+                if user:
+                    return str(user)
+            except OSError:
+                pass
+        if hasattr(os, 'getuid'):
+            try:
+                user = os.getuid()
+                if user:
+                    return str(user)
+            except OSError:
+                pass
+        user = os.environ.get("USERNAME")
+        if user:
+            return str(user)
+        return None
 
     def __init_cache(self, refresh=False):
         if refresh or not os.path.exists(self.__cache_file):

@@ -30,7 +30,6 @@ from distutils.version import LooseVersion
 
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC, AUTH_PROXY_HEADERS_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
-from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_default_cache_id
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
@@ -56,6 +55,7 @@ except ImportError as e:
 IMP_K8S_CLIENT = None
 try:
     from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
+    from ansible_collections.kubernetes.core.plugins.module_utils.client.discovery import LazyDiscoverer
     IMP_K8S_CLIENT = True
 except ImportError as e:
     IMP_K8S_CLIENT = False
@@ -214,15 +214,8 @@ def get_api_client(module=None, **kwargs):
         client = get_api_client._pool[digest]
         return client
 
-    def generate_cache_file(kubeclient):
-        cache_file_name = 'k8srcp-{0}.json'.format(hashlib.sha256(get_default_cache_id(kubeclient)).hexdigest())
-        return os.path.join(tempfile.gettempdir(), cache_file_name)
-
-    kubeclient = kubernetes.client.ApiClient(configuration)
-    cache_file = generate_cache_file(kubeclient)
-
     try:
-        client = K8SDynamicClient(kubeclient, cache_file)
+        client = K8SDynamicClient(kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer)
     except Exception as err:
         _raise_or_fail(err, 'Failed to get client due to %s')
 
