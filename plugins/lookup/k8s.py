@@ -124,7 +124,7 @@ DOCUMENTATION = '''
         aliases: [ verify_ssl ]
 
     requirements:
-      - "python >= 2.7"
+      - "python >= 3.6"
       - "openshift >= 0.6"
       - "PyYAML >= 3.11"
 
