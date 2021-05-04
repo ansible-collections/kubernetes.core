@@ -6,7 +6,6 @@
   block:
     - name: Install helm diff
       helm_plugin:
-        namespace: "{{ helm_namespace }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
 
@@ -137,7 +136,6 @@
 
     - name: Uninstall helm diff
       helm_plugin:
-        namespace: "{{ helm_namespace }}"
         state: absent
         plugin_name: diff
       ignore_errors: yes
