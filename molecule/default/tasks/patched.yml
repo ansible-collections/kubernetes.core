@@ -2,26 +2,8 @@
 - block:
     - set_fact:
         patch_only_namespace:
-          first: patch-only-1
-          second: patch-only-2
-
-    - name: assert that parameters are mutually exclusive
-      kubernetes.core.k8s:
-        apply: yes
-        patch_only: yes
-        definition:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: "{{ patch_only_namespace.first }}"
-      register: mutually_exclusive
-      ignore_errors: yes
-
-    - name: assert mutually exclusive
-      assert:
-        that:
-          - mutually_exclusive is failed
-          - '"parameters are mutually exclusive" in mutually_exclusive.msg'
+          first: patched-namespace-1
+          second: patched-namespace-2
 
     - name: Ensure namespace {{ patch_only_namespace.first }} exist
       kubernetes.core.k8s:
@@ -43,9 +25,9 @@
         that:
           - second_namespace.resources | length == 0
 
-    - name: patch only existing resources
+    - name: apply patch on existing resource
       kubernetes.core.k8s:
-        patch_only: yes
+        state: patched
         wait: yes
         definition: |
           ---
@@ -54,14 +36,14 @@
           metadata:
             name: "{{ patch_only_namespace.first }}"
             labels:
-              patch: ansible
+              ansible: patched
           ---
           apiVersion: v1
           kind: Namespace
           metadata:
             name: "{{ patch_only_namespace.second }}"
             labels:
-              patch: ansible
+              ansible: patched
       register: patch_resource
 
     - name: assert that patch succeed
@@ -83,6 +65,7 @@
 
     - name: patch all resources (create if does not exist)
       kubernetes.core.k8s:
+        state: present
         definition: |
           ---
           apiVersion: v1

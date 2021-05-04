@@ -612,7 +612,6 @@ class K8sAnsibleMixin(object):
         wait_timeout = self.params.get('wait_timeout')
         wait_condition = None
         continue_on_error = self.params.get('continue_on_error')
-        patch_only = self.params.get('patch_only')
         if self.params.get('wait_condition') and self.params['wait_condition'].get('type'):
             wait_condition = self.params['wait_condition']
 
@@ -699,6 +698,7 @@ class K8sAnsibleMixin(object):
                             else:
                                 self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
                 return result
+
         else:
             if self.apply:
                 if self.check_mode:
@@ -742,14 +742,15 @@ class K8sAnsibleMixin(object):
                 return result
 
             if not existing:
-                if self.check_mode:
-                    k8s_obj = _encode_stringdata(definition)
-                elif patch_only:
+                if state == 'patched':
                     # Silently skip this resource (do not raise an error) as 'patch_only' is set to true
                     result['changed'] = False
-                    result['warning'] = "resource 'kind={kind},name={name}' was not found but will not be created as 'patch_only' has been set to true".format(
-                                        kind=definition['kind'], name=origin_name)
+                    result['warning'] = "resource 'kind={kind},name={name}' was not found but will not be created as 'state'\
+                                        parameter has been set to '{state}'".format(
+                                        kind=definition['kind'], name=origin_name, state=state)
                     return result
+                elif self.check_mode:
+                    k8s_obj = _encode_stringdata(definition)
                 else:
                     try:
                         k8s_obj = resource.create(definition, namespace=namespace).to_dict()
@@ -797,7 +798,7 @@ class K8sAnsibleMixin(object):
             match = False
             diffs = []
 
-            if existing and force:
+            if state == 'present' and existing and force:
                 if self.check_mode:
                     k8s_obj = _encode_stringdata(definition)
                 else:

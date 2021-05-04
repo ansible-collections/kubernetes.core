@@ -30,7 +30,6 @@ description:
   - Supports check mode.
 
 extends_documentation_fragment:
-  - kubernetes.core.k8s_state_options
   - kubernetes.core.k8s_name_options
   - kubernetes.core.k8s_resource_options
   - kubernetes.core.k8s_auth_options
@@ -45,6 +44,21 @@ notes:
     remove it from openshift or kubernetes.
 
 options:
+  state:
+    description:
+    - Determines if an object should be created, patched, or deleted. When set to C(present), an object will be
+      created, if it does not already exist. If set to C(absent), an existing object will be deleted. If set to
+      C(present), an existing object will be patched, if its attributes differ from those specified using
+      I(resource_definition) or I(src).
+    - C(patched) state is an existing resource that has a given patch applied. If the resource doesn't exist, silently skip it (do not raise an error).
+    type: str
+    default: present
+    choices: [ absent, present, patched ]
+  force:
+    description:
+    - If set to C(yes), and I(state) is C(present), an existing object will be replaced.
+    type: bool
+    default: no
   merge_type:
     description:
     - Whether to override the default patch merge approach with a specific type. By default, the strategic
@@ -128,13 +142,6 @@ options:
     description:
     - Whether to continue on creation/deletion errors when multiple resources are defined.
     - This has no effect on the validation step which is controlled by the C(validate.fail_on_error) parameter.
-    type: bool
-    default: False
-    version_added: 2.0.0
-  patch_only:
-    description:
-    - When set to C(yes) do not create the resource if it doesn't exist - silently skip that resource (do not raise an error).
-    - mutually exclusive with C(apply)
     type: bool
     default: False
     version_added: 2.0.0
@@ -255,11 +262,10 @@ EXAMPLES = r'''
       status: Unknown
       reason: DeploymentPaused
 
-# Patch only : add label to namespace only if they exist
-- name: add label to namespace only if it exists
+# Patch existing namespace : add label
+- name: add label to existing namespace
   kubernetes.core.k8s:
-    state: present
-    patch_only: yes
+    state: patched
     kind: namespace
     name: patch_namespace
     definition:
@@ -314,7 +320,7 @@ import copy
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, WAIT_ARG_SPEC, NAME_ARG_SPEC, COMMON_ARG_SPEC, RESOURCE_ARG_SPEC, DELETE_OPTS_ARG_SPEC)
+    AUTH_ARG_SPEC, WAIT_ARG_SPEC, NAME_ARG_SPEC, RESOURCE_ARG_SPEC, DELETE_OPTS_ARG_SPEC)
 
 
 def validate_spec():
@@ -326,8 +332,7 @@ def validate_spec():
 
 
 def argspec():
-    argument_spec = copy.deepcopy(COMMON_ARG_SPEC)
-    argument_spec.update(copy.deepcopy(NAME_ARG_SPEC))
+    argument_spec = copy.deepcopy(NAME_ARG_SPEC)
     argument_spec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
     argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
     argument_spec.update(copy.deepcopy(WAIT_ARG_SPEC))
@@ -338,7 +343,9 @@ def argspec():
     argument_spec['template'] = dict(type='raw', default=None)
     argument_spec['delete_options'] = dict(type='dict', default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC))
     argument_spec['continue_on_error'] = dict(type='bool', default=False)
-    argument_spec['patch_only'] = dict(type='bool', default=False)
+    argument_spec['state'] = dict(default='present', choices=['present', 'absent', 'patched'])
+    argument_spec['force'] = dict(type='bool', default=False)
+
     return argument_spec
 
 
@@ -369,7 +376,6 @@ def main():
         ('merge_type', 'apply'),
         ('template', 'resource_definition'),
         ('template', 'src'),
-        ('patch_only', 'apply'),
     ]
     module = AnsibleModule(argument_spec=argspec(), mutually_exclusive=mutually_exclusive, supports_check_mode=True)
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
