@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - replicate base resource for lists functionality (https://github.com/ansible-collections/kubernetes.core/pull/89).

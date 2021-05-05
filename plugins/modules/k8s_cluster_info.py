@@ -140,11 +140,22 @@ apis:
 
 
 import copy
-
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible.module_utils.parsing.convert_bool import boolean
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
+import traceback
 from collections import defaultdict
+
+HAS_K8S = False
+try:
+    from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import ResourceList
+    HAS_K8S = True
+except ImportError as e:
+    K8S_IMP_ERR = e
+    K8S_IMP_EXC = traceback.format_exc()
+
+from ansible.module_utils._text import to_native
+from ansible.module_utils.basic import missing_required_lib
+from ansible.module_utils.parsing.convert_bool import boolean
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
 
 
 def execute_module(module, client):
@@ -152,7 +163,6 @@ def execute_module(module, client):
     if invalidate_cache:
         client.resources.invalidate_cache()
     results = defaultdict(dict)
-    from openshift.dynamic.resource import ResourceList
     for resource in list(client.resources):
         resource = resource[0]
         if isinstance(resource, ResourceList):
@@ -192,6 +202,9 @@ def argspec():
 
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
+    if not HAS_K8S:
+        module.fail_json(msg=missing_required_lib('kubernetes'), exception=K8S_IMP_EXC,
+                         error=to_native(K8S_IMP_ERR))
     from ansible_collections.kubernetes.core.plugins.module_utils.common import get_api_client
     execute_module(module, client=get_api_client(module=module))
 
