@@ -43,6 +43,10 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
         return cache_id.encode('utf-8')
 
     def __get_user(self):
+        # This is intended to provide a portable method for getting a username.
+        # It could, and maybe should, be replaced by getpass.getuser() but, due
+        # to a lack of portability testing the original code is being left in
+        # place.
         if hasattr(os, 'getlogin'):
             try:
                 user = os.getlogin()
