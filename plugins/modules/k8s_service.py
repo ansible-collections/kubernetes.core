@@ -85,7 +85,7 @@ options:
     type: bool
 
 requirements:
-  - python >= 2.7
+  - python >= 3.6
   - openshift >= 0.6.2
 '''
 

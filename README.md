@@ -16,6 +16,12 @@ A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
 <!--end requires_ansible-->
 
+## Python Support
+
+* Collection supports 3.6+
+
+Note: Python2 is deprecated from [1st January 2020](https://www.python.org/doc/sunset-python-2/). Please switch to Python3.
+
 ## Included content
 
 Click on the name of a plugin or module to view that content's documentation:
@@ -185,7 +191,7 @@ Releases are automatically built and pushed to Ansible Galaxy for any new tag. B
   3. Commit the changes and create a PR with the changes. Wait for tests to pass, then merge it once they have.
   4. Tag the version in Git and push to GitHub.
 
-After the version is published, verify it exists on the [Kubernetes Collection Galaxy page](https://galaxy.ansible.com/community/kubernetes).
+After the version is published, verify it exists on the [Kubernetes Collection Galaxy page](https://galaxy.ansible.com/kubernetes/core).
 
 The process for uploading a supported release to Automation Hub is documented separately.
 
