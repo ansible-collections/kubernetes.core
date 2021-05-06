@@ -123,7 +123,7 @@ options:
 
 requirements:
   - "python >= 3.6"
-  - "kubernetes >= 11.0.0"
+  - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
 '''

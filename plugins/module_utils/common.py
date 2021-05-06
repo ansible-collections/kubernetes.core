@@ -487,8 +487,8 @@ class K8sAnsibleMixin(object):
             self.resource_definitions = [implicit_definition]
 
     def check_library_version(self):
-        if LooseVersion(self.kubernetes_version) < LooseVersion("11.0.0"):
-            self.fail_json(msg="kubernetes >= 11.0.0 is required")
+        if LooseVersion(self.kubernetes_version) < LooseVersion("12.0.0"):
+            self.fail_json(msg="kubernetes >= 12.0.0 is required")
 
     def flatten_list_kind(self, list_resource, definitions):
         flattened = []
