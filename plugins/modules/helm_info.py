@@ -55,7 +55,7 @@ status:
   description: A dictionary of status output
   returned: only when release exists
   contains:
-    appversion:
+    app_version:
       type: str
       returned: always
       description: Version of app deployed
