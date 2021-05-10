@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - k8s_json_patch - split JSON patch functionality out into a separate module (https://github.com/ansible-collections/kubernetes.core/pull/99).
