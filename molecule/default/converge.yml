@@ -90,6 +90,13 @@
           tags: [ info, k8s ]
       tags:
         - always
+    - name: Include json_patch.yml
+      include_tasks:
+        file: tasks/json_patch.yml
+        apply:
+          tags: [ json_patch, k8s ]
+      tags:
+        - always
     - name: Include lists.yml
       include_tasks:
         file: tasks/lists.yml
