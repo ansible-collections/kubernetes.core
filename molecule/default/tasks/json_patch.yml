@@ -81,7 +81,7 @@
     - name: Assert patch was made
       assert:
         that:
-        - result.changed
+          - result.changed
 
     - name: Describe pod
       kubernetes.core.k8s_info:
@@ -137,12 +137,12 @@
                   app: busybox
               spec:
                 containers:
-                - name: busybox
-                  image: busybox
-                  command:
-                    - sh
-                    - -c
-                    - while true; do echo $(date); sleep 10; done
+                  - name: busybox
+                    image: busybox
+                    command:
+                      - sh
+                      - -c
+                      - while true; do echo $(date); sleep 10; done
 
     - name: Apply patch and wait for deployment to be ready
       kubernetes.core.k8s_json_patch:
