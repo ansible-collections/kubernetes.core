@@ -831,6 +831,10 @@ class K8sAnsibleMixin(object):
             return result
 
     def patch_resource(self, resource, definition, existing, name, namespace, merge_type=None):
+        if merge_type == "json":
+            self.module.deprecate(
+                msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
+                version="3.0.0", collection_name="kubernetes.core")
         try:
             params = dict(name=name, namespace=namespace)
             if merge_type:
