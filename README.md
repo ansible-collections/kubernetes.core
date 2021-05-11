@@ -32,6 +32,11 @@ Name | Description
 --- | ---
 [kubernetes.core.kubectl](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
 
+### K8s filter plugins
+Name | Description
+--- | ---
+kubernetes.core.k8s_config_resource_name|Generate resource name for the given resource of type ConfigMap, Secret
+
 ### Inventory plugins
 Name | Description
 --- | ---

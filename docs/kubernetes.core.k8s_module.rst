@@ -16,7 +16,7 @@ kubernetes.core.k8s
 
 Synopsis
 --------
-- Use the OpenShift Python client to perform CRUD operations on K8s objects.
+- Use the Kubernetes Python client to perform CRUD operations on K8s objects.
 - Pass the object definition from a source file or inline. See examples for reading files and using Jinja templates or vault-encrypted files.
 - Access to the full range of K8s APIs.
 - Use the :ref:`kubernetes.core.k8s_info <kubernetes.core.k8s_info_module>` module to obtain a list of items about an object of type ``kind``
@@ -29,9 +29,10 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- python >= 2.7
-- openshift >= 0.6
+- python >= 3.6
+- kubernetes >= 12.0.0
 - PyYAML >= 3.11
+- jsonpatch
 
 
 Parameters
@@ -100,7 +101,6 @@ Parameters
                         <div>Applies only to ConfigMap and Secret resources</div>
                         <div>The parameter will be silently ignored for other resource kinds</div>
                         <div>The full definition of an object is needed to generate the hash - this means that deleting an object created with append_hash will only work if the same object is passed with state=absent (alternatively, just use state=absent with the name including the generated hash and append_hash=no)</div>
-                        <div>Requires openshift &gt;= 0.7.2</div>
                 </td>
             </tr>
             <tr>
@@ -121,7 +121,6 @@ Parameters
                 <td>
                         <div><code>apply</code> compares the desired resource definition with the previously supplied resource definition, ignoring properties that are automatically generated</div>
                         <div><code>apply</code> works better with Services than &#x27;force=yes&#x27;</div>
-                        <div>Requires openshift &gt;= 0.9.2</div>
                         <div>mutually exclusive with <code>merge_type</code></div>
                 </td>
             </tr>
@@ -186,6 +185,27 @@ Parameters
                 </td>
                 <td>
                         <div>The name of a context found in the config file. Can also be specified via K8S_AUTH_CONTEXT environment variable.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>continue_on_error</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.0.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Whether to continue on creation/deletion errors when multiple resources are defined.</div>
+                        <div>This has no effect on the validation step which is controlled by the <code>validate.fail_on_error</code> parameter.</div>
                 </td>
             </tr>
             <tr>
@@ -361,7 +381,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                 </td>
             </tr>
             <tr>
@@ -385,9 +405,7 @@ Parameters
                         <div>Whether to override the default patch merge approach with a specific type. By default, the strategic merge will typically be used.</div>
                         <div>For example, Custom Resource Definitions typically aren&#x27;t updatable by the usual strategic merge. You may want to use <code>merge</code> if you see &quot;strategic merge patch format is not supported&quot;</div>
                         <div>See <a href='https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment'>https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment</a></div>
-                        <div>Requires openshift &gt;= 0.6.2</div>
-                        <div>If more than one merge_type is given, the merge_types will be tried in order</div>
-                        <div>If openshift &gt;= 0.6.2, this defaults to <code>[&#x27;strategic-merge&#x27;, &#x27;merge&#x27;]</code>, which is ideal for using the same parameters on resource kinds that combine Custom Resources and built-in resources. For openshift &lt; 0.6.2, the default is simply <code>strategic-merge</code>.</div>
+                        <div>If more than one <code>merge_type</code> is given, the merge_types will be tried in order. This defaults to <code>[&#x27;strategic-merge&#x27;, &#x27;merge&#x27;]</code>, which is ideal for using the same parameters on resource kinds that combine Custom Resources and built-in resources.</div>
                         <div>mutually exclusive with <code>apply</code></div>
                 </td>
             </tr>
@@ -482,6 +500,75 @@ Parameters
                         <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. HTTP_PROXY).</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>proxy_headers</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.0.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The Header used for the HTTP proxy.</div>
+                        <div>Documentation can be found here <a href='https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html?highlight=proxy_headers#urllib3.util.make_headers'>https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html?highlight=proxy_headers#urllib3.util.make_headers</a>.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>basic_auth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Colon-separated username:password for basic authentication header.</div>
+                        <div>Can also be specified via K8S_AUTH_PROXY_HEADERS_BASIC_AUTH environment.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>proxy_basic_auth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Colon-separated username:password for proxy basic authentication header.</div>
+                        <div>Can also be specified via K8S_AUTH_PROXY_HEADERS_PROXY_BASIC_AUTH environment.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>user_agent</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>String representing the user-agent you want, such as foo/1.0.</div>
+                        <div>Can also be specified via K8S_AUTH_PROXY_HEADERS_USER_AGENT environment.</div>
+                </td>
+            </tr>
+
             <tr>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
@@ -590,7 +677,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>how (if at all) to validate the resource definition against the kubernetes schema. Requires the kubernetes-validate python module and openshift &gt;= 0.8.0</div>
+                        <div>how (if at all) to validate the resource definition against the kubernetes schema. Requires the kubernetes-validate python module.</div>
                 </td>
             </tr>
                                 <tr>
@@ -812,8 +899,6 @@ Notes
 -----
 
 .. note::
-   - If your OpenShift Python library is not 0.9.0 or newer and you are trying to remove an item from an associative array/dictionary, for example a label or an annotation, you will need to explicitly set the value of the item to be removed to `null`. Simply deleting the entry in the dictionary will not remove it from openshift or kubernetes.
-   - The OpenShift Python client wraps the K8s Python client, providing full access to all of the APIS and models available on both platforms. For API version details and additional information visit https://github.com/openshift/openshift-restclient-python
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
 
@@ -992,6 +1077,22 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">48</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder">&nbsp;</td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>error</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">complex</span>
+                    </div>
+                </td>
+                <td>error</td>
+                <td>
+                            <div>error while trying to create/delete the object.</div>
+                    <br/>
                 </td>
             </tr>
             <tr>

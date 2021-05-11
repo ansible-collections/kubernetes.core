@@ -11,6 +11,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.hashes import gene
 
 
 def k8s_config_resource_name(resource):
+    """
+    Generate resource name for the given resource of type ConfigMap, Secret
+    """
     try:
         return resource['metadata']['name'] + '-' + generate_hash(resource)
     except KeyError:
@@ -19,6 +22,9 @@ def k8s_config_resource_name(resource):
 
 # ---- Ansible filters ----
 class FilterModule(object):
+    """
+
+    """
 
     def filters(self):
         return {
