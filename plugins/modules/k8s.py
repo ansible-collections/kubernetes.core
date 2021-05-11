@@ -266,7 +266,7 @@ EXAMPLES = r'''
 - name: add label to existing namespace
   kubernetes.core.k8s:
     state: patched
-    kind: namespace
+    kind: Namespace
     name: patch_namespace
     definition:
       metadata:
