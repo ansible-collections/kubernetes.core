@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         python_version: ['3.7']
+        ansible_version: ['stable-2.11', 'stable-2.9', 'devel']
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -26,11 +27,14 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      - name: Install ansible base (devel branch)
-        run: pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+      - name: Check ansible version
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.ansible_version }}
+          path: ansible_collections/kubernetes/core/ansible
 
       - name: Run sanity tests on Python ${{ matrix.python_version }}
-        run: make test-sanity PYTHON_VERSION=${{ matrix.python_version }}
+        run: source ./ansible/hacking/env-setup && make test-sanity PYTHON_VERSION=${{ matrix.python_version }}
         working-directory: ./ansible_collections/kubernetes/core
 
   integration:
