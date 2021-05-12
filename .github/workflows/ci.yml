@@ -30,7 +30,7 @@ jobs:
       - name: Check ansible version
         uses: actions/checkout@v2
         with:
-          repository: https://github.com/ansible/ansible
+          repository: ansible/ansible
           ref: ${{ matrix.ansible_version }}
           path: ansible_collections/kubernetes/core/ansible
 
