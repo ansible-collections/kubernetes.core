@@ -21,7 +21,7 @@ author:
     - "Fabian von Feilitzsch (@fabianvf)"
 
 description:
-  - Use the OpenShift Python client to perform CRUD operations on K8s objects.
+  - Use the Kubernetes Python client to perform CRUD operations on K8s objects.
   - Pass the object definition from a source file or inline. See examples for reading
     files and using Jinja templates or vault-encrypted files.
   - Access to the full range of K8s APIs.
@@ -35,13 +35,6 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_wait_options
   - kubernetes.core.k8s_delete_options
-
-notes:
-  - If your OpenShift Python library is not 0.9.0 or newer and you are trying to
-    remove an item from an associative array/dictionary, for example a label or
-    an annotation, you will need to explicitly set the value of the item to be
-    removed to `null`. Simply deleting the entry in the dictionary will not
-    remove it from openshift or kubernetes.
 
 options:
   state:
@@ -66,11 +59,9 @@ options:
     - For example, Custom Resource Definitions typically aren't updatable by the usual strategic merge. You may
       want to use C(merge) if you see "strategic merge patch format is not supported"
     - See U(https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment)
-    - Requires openshift >= 0.6.2
-    - If more than one merge_type is given, the merge_types will be tried in order
-    - If openshift >= 0.6.2, this defaults to C(['strategic-merge', 'merge']), which is ideal for using the same parameters
-      on resource kinds that combine Custom Resources and built-in resources. For openshift < 0.6.2, the default
-      is simply C(strategic-merge).
+    - If more than one C(merge_type) is given, the merge_types will be tried in order. This defaults to
+      C(['strategic-merge', 'merge']), which is ideal for using the same parameters on resource kinds that
+      combine Custom Resources and built-in resources.
     - mutually exclusive with C(apply)
     choices:
     - json
@@ -81,7 +72,7 @@ options:
   validate:
     description:
       - how (if at all) to validate the resource definition against the kubernetes schema.
-        Requires the kubernetes-validate python module and openshift >= 0.8.0
+        Requires the kubernetes-validate python module.
     suboptions:
       fail_on_error:
         description: whether to fail on validation errors.
@@ -102,7 +93,6 @@ options:
     - The full definition of an object is needed to generate the hash - this means that deleting an object created with append_hash
       will only work if the same object is passed with state=absent (alternatively, just use state=absent with the name including
       the generated hash and append_hash=no)
-    - Requires openshift >= 0.7.2
     default: False
     type: bool
   apply:
@@ -110,7 +100,6 @@ options:
     - C(apply) compares the desired resource definition with the previously supplied resource definition,
       ignoring properties that are automatically generated
     - C(apply) works better with Services than 'force=yes'
-    - Requires openshift >= 0.9.2
     - mutually exclusive with C(merge_type)
     default: False
     type: bool
@@ -148,7 +137,7 @@ options:
 
 requirements:
   - "python >= 3.6"
-  - "openshift >= 0.6"
+  - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
 '''

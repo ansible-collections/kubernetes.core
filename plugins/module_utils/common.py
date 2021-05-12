@@ -23,14 +23,12 @@ import time
 import os
 import traceback
 import sys
-import tempfile
 import hashlib
 from datetime import datetime
 from distutils.version import LooseVersion
 
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC, AUTH_PROXY_HEADERS_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
-from ansible_collections.kubernetes.core.plugins.module_utils.cache import get_default_cache_id
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
@@ -41,10 +39,10 @@ from ansible.module_utils.parsing.convert_bool import boolean
 K8S_IMP_ERR = None
 try:
     import kubernetes
-    import openshift
     from kubernetes.dynamic.exceptions import (
         NotFoundError, ResourceNotFoundError, ResourceNotUniqueError, DynamicApiError,
-        ConflictError, ForbiddenError, MethodNotAllowedError, BadRequestError
+        ConflictError, ForbiddenError, MethodNotAllowedError, BadRequestError,
+        KubernetesValidateMissing
     )
     HAS_K8S_MODULE_HELPER = True
     k8s_import_exception = None
@@ -56,6 +54,7 @@ except ImportError as e:
 IMP_K8S_CLIENT = None
 try:
     from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
+    from ansible_collections.kubernetes.core.plugins.module_utils.client.discovery import LazyDiscoverer
     IMP_K8S_CLIENT = True
 except ImportError as e:
     IMP_K8S_CLIENT = False
@@ -69,14 +68,6 @@ try:
 except ImportError:
     YAML_IMP_ERR = traceback.format_exc()
     HAS_YAML = False
-
-K8S_CONFIG_HASH_IMP_ERR = None
-try:
-    from kubernetes.dynamic.exceptions import KubernetesValidateMissing
-    HAS_K8S_CONFIG_HASH = True
-except ImportError:
-    K8S_CONFIG_HASH_IMP_ERR = traceback.format_exc()
-    HAS_K8S_CONFIG_HASH = False
 
 HAS_K8S_APPLY = None
 try:
@@ -214,15 +205,8 @@ def get_api_client(module=None, **kwargs):
         client = get_api_client._pool[digest]
         return client
 
-    def generate_cache_file(kubeclient):
-        cache_file_name = 'k8srcp-{0}.json'.format(hashlib.sha256(get_default_cache_id(kubeclient)).hexdigest())
-        return os.path.join(tempfile.gettempdir(), cache_file_name)
-
-    kubeclient = kubernetes.client.ApiClient(configuration)
-    cache_file = generate_cache_file(kubeclient)
-
     try:
-        client = K8SDynamicClient(kubeclient, cache_file)
+        client = K8SDynamicClient(kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer)
     except Exception as err:
         _raise_or_fail(err, 'Failed to get client due to %s')
 
@@ -237,9 +221,9 @@ class K8sAnsibleMixin(object):
 
     def __init__(self, module, *args, **kwargs):
         if not HAS_K8S_MODULE_HELPER:
-            module.fail_json(msg=missing_required_lib('openshift'), exception=K8S_IMP_ERR,
+            module.fail_json(msg=missing_required_lib('kubernetes'), exception=K8S_IMP_ERR,
                              error=to_native(k8s_import_exception))
-        self.openshift_version = openshift.__version__
+        self.kubernetes_version = kubernetes.__version__
 
         if not HAS_YAML:
             module.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
@@ -503,21 +487,8 @@ class K8sAnsibleMixin(object):
             self.resource_definitions = [implicit_definition]
 
     def check_library_version(self):
-        validate = self.params.get('validate')
-        if validate and LooseVersion(self.openshift_version) < LooseVersion("0.8.0"):
-            self.fail_json(msg="openshift >= 0.8.0 is required for validate")
-        self.append_hash = self.params.get('append_hash')
-        if self.append_hash and not HAS_K8S_CONFIG_HASH:
-            self.fail_json(msg=missing_required_lib("openshift >= 0.7.2", reason="for append_hash"),
-                           exception=K8S_CONFIG_HASH_IMP_ERR)
-        if self.params['merge_type'] and LooseVersion(self.openshift_version) < LooseVersion("0.6.2"):
-            self.fail_json(msg=missing_required_lib("openshift >= 0.6.2", reason="for merge_type"))
-        self.apply = self.params.get('apply', False)
-        if self.apply and not HAS_K8S_APPLY:
-            self.fail_json(msg=missing_required_lib("openshift >= 0.9.2", reason="for apply"))
-        wait = self.params.get('wait', False)
-        if wait and not HAS_K8S_INSTANCE_HELPER:
-            self.fail_json(msg=missing_required_lib("openshift >= 0.4.0", reason="for wait"))
+        if LooseVersion(self.kubernetes_version) < LooseVersion("12.0.0"):
+            self.fail_json(msg="kubernetes >= 12.0.0 is required")
 
     def flatten_list_kind(self, list_resource, definitions):
         flattened = []
@@ -599,6 +570,8 @@ class K8sAnsibleMixin(object):
         return definition
 
     def perform_action(self, resource, definition):
+        append_hash = self.params.get('append_hash', False)
+        apply = self.params.get('apply', False)
         delete_options = self.params.get('delete_options')
         result = {'changed': False, 'result': {}}
         state = self.params.get('state', None)
@@ -622,7 +595,7 @@ class K8sAnsibleMixin(object):
 
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
-            if self.append_hash and definition['kind'] in ['ConfigMap', 'Secret']:
+            if append_hash and definition['kind'] in ['ConfigMap', 'Secret']:
                 name = '%s-%s' % (name, generate_hash(definition))
                 definition['metadata']['name'] = name
             params = dict(name=name)
@@ -700,7 +673,7 @@ class K8sAnsibleMixin(object):
                 return result
 
         else:
-            if self.apply:
+            if apply:
                 if self.check_mode:
                     ignored, patch = apply_object(resource, _encode_stringdata(definition))
                     if existing:
@@ -803,7 +776,7 @@ class K8sAnsibleMixin(object):
                     k8s_obj = _encode_stringdata(definition)
                 else:
                     try:
-                        k8s_obj = resource.replace(definition, name=name, namespace=namespace, append_hash=self.append_hash).to_dict()
+                        k8s_obj = resource.replace(definition, name=name, namespace=namespace, append_hash=append_hash).to_dict()
                     except DynamicApiError as exc:
                         msg = "Failed to replace object: {0}".format(exc.body)
                         if self.warnings:
@@ -836,15 +809,11 @@ class K8sAnsibleMixin(object):
             if self.check_mode:
                 k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
             else:
-                if LooseVersion(self.openshift_version) < LooseVersion("0.6.2"):
+                for merge_type in self.params['merge_type'] or ['strategic-merge', 'merge']:
                     k8s_obj, error = self.patch_resource(resource, definition, existing, name,
-                                                         namespace)
-                else:
-                    for merge_type in self.params['merge_type'] or ['strategic-merge', 'merge']:
-                        k8s_obj, error = self.patch_resource(resource, definition, existing, name,
-                                                             namespace, merge_type=merge_type)
-                        if not error:
-                            break
+                                                         namespace, merge_type=merge_type)
+                    if not error:
+                        break
                 if error:
                     if continue_on_error:
                         result['error'] = error
