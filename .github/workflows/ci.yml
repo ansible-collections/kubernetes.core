@@ -27,6 +27,10 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
+      - name: Install collection requirements
+        run: pip install -r requirements.txt
+        working-directory: ansible_collections/kubernetes/core
+
       - name: Check ansible version
         uses: actions/checkout@v2
         with:
