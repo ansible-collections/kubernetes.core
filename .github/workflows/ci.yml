@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         python_version: ['3.7']
-        ansible_version: ['stable-2.11', 'stable-2.9', 'devel']
+        ansible_version: ['stable-2.11', 'stable-2.10', 'stable-2.9', 'devel']
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -26,10 +26,6 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python_version }}
-
-      - name: Install collection requirements
-        run: pip install -r requirements.txt
-        working-directory: ansible_collections/kubernetes/core
 
       - name: Check ansible version
         uses: actions/checkout@v2
