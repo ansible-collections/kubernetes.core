@@ -27,6 +27,10 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
+      - name: Install collection requirements
+        run: pip install -r requirements.txt
+        working-directory: ansible_collections/kubernetes/core
+
       - name: Check ansible version
         uses: actions/checkout@v2
         with:
@@ -75,6 +79,7 @@ jobs:
     strategy:
       matrix:
         python_version: ['3.7']
+        ansible_version: ['stable-2.11', 'stable-2.10', 'stable-2.9', 'devel']
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -92,7 +97,7 @@ jobs:
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
       - name: Install molecule and openshift dependencies
-        run: pip install ansible "molecule<3.3.0" yamllint openshift flake8 jsonpatch
+        run: pip install "molecule<3.3.0" yamllint openshift flake8 jsonpatch
 
       # The latest release doesn't work with Molecule currently.
       # See: https://github.com/ansible-community/molecule/issues/2757
@@ -107,6 +112,12 @@ jobs:
       #   run: |
       #     pip uninstall -y ansible
       #     pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+      - name: Check ansible version
+        uses: actions/checkout@v2
+        with:
+          repository: ansible/ansible
+          ref: ${{ matrix.ansible_version }}
+          path: ansible_collections/kubernetes/core/ansible
 
       - name: Create default collection path symlink
         run: |
@@ -114,7 +125,7 @@ jobs:
           ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
 
       - name: Run molecule default test scenario
-        run: make test-molecule
+        run: source ./ansible/hacking/env-setup && make test-molecule
         working-directory: ./ansible_collections/kubernetes/core
 
   unit:
