@@ -56,6 +56,18 @@
           - patch_resource.changed
           - patch_resource.result.results | selectattr('warning', 'defined') | list | length == 1
 
+    - name: Ensure namespace {{ patch_only_namespace.first }} was patched correctly
+      kubernetes.core.k8s_info:
+        kind: namespace
+        name: "{{ patch_only_namespace.first }}"
+      register: first_namespace
+
+    - name: assert labels are as expected
+      assert:
+        that:
+          - first_namespace.resources[0].metadata.labels.ansible == "patched"
+          - first_namespace.resources[0].metadata.labels.existingLabel == "labelValue"
+          - first_namespace.resources[0].metadata.annotations.existingAnnotation == "annotationValue"
     - name: Ensure namespace {{ patch_only_namespace.second }} was not created
       kubernetes.core.k8s_info:
         kind: namespace
