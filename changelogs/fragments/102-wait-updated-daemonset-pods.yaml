@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - k8s - wait for all pods to update when rolling out daemonset changes (https://github.com/ansible-collections/kubernetes.core/pull/102).
