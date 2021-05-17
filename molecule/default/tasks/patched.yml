@@ -12,6 +12,10 @@
           kind: Namespace
           metadata:
             name: "{{ patch_only_namespace.first }}"
+            labels:
+              existingLabel: "labelValue"
+            annotations:
+              existingAnnotation: "annotationValue"
         wait: yes
 
     - name: Ensure namespace {{ patch_only_namespace.second }} does not exist
