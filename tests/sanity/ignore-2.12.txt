@@ -8,5 +8,8 @@ molecule/default/roles/helm/files/appversionless-chart-v2/templates/configmap.ya
 molecule/default/roles/helm/files/appversionless-chart/templates/configmap.yaml yamllint!skip
 molecule/default/roles/helm/files/test-chart-v2/templates/configmap.yaml yamllint!skip
 molecule/default/roles/helm/files/test-chart/templates/configmap.yaml yamllint!skip
-plugins/module_utils/k8sdynamicclient.py import-2.7!skip
 plugins/module_utils/k8sdynamicclient.py import-3.7!skip
+plugins/module_utils/client/discovery.py import-3.7!skip
+plugins/module_utils/client/resource.py import-3.7!skip
+plugins/module_utils/client/discovery.py future-import-boilerplate!skip
+plugins/module_utils/client/discovery.py metaclass-boilerplate!skip

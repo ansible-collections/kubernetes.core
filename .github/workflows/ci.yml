@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ['2.7', '3.7']
+        python_version: ['3.7']
+        ansible_version: ['stable-2.11', 'stable-2.10', 'stable-2.9', 'devel']
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -26,11 +27,15 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      - name: Install ansible base (devel branch)
-        run: pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+      - name: Check ansible version
+        uses: actions/checkout@v2
+        with:
+          repository: ansible/ansible
+          ref: ${{ matrix.ansible_version }}
+          path: ansible_collections/kubernetes/core/ansible
 
       - name: Run sanity tests on Python ${{ matrix.python_version }}
-        run: make test-sanity PYTHON_VERSION=${{ matrix.python_version }}
+        run: source ./ansible/hacking/env-setup && make test-sanity PYTHON_VERSION=${{ matrix.python_version }}
         working-directory: ./ansible_collections/kubernetes/core
 
   integration:
@@ -87,7 +92,7 @@ jobs:
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
       - name: Install molecule and openshift dependencies
-        run: pip install ansible "molecule<3.3.0" yamllint openshift flake8
+        run: pip install ansible "molecule<3.3.0" yamllint openshift flake8 jsonpatch
 
       # The latest release doesn't work with Molecule currently.
       # See: https://github.com/ansible-community/molecule/issues/2757
@@ -102,7 +107,6 @@ jobs:
       #   run: |
       #     pip uninstall -y ansible
       #     pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
-
       - name: Create default collection path symlink
         run: |
           mkdir -p /home/runner/.ansible
@@ -116,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ['2.7', '3.7']
+        python_version: ['3.7']
     steps:
       - name: Check out code
         uses: actions/checkout@v2

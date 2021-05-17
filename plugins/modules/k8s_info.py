@@ -18,7 +18,7 @@ author:
     - "Will Thames (@willthames)"
 
 description:
-  - Use the OpenShift Python client to perform read operations on K8s objects.
+  - Use the Kubernetes Python client to perform read operations on K8s objects.
   - Access to the full range of K8s APIs.
   - Authenticate using either a config file, certificates, password or token.
   - Supports check mode.
@@ -49,8 +49,8 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_wait_options
 
 requirements:
-  - "python >= 2.7"
-  - "openshift >= 0.6"
+  - "python >= 3.6"
+  - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
   - "jsonpath-rw"
 '''

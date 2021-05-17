@@ -1,0 +1,3 @@
+---
+major_changes:
+  - replaces the openshift client with the official kubernetes client (https://github.com/ansible-collections/kubernetes.core/issues/34).

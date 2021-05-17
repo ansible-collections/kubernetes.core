@@ -16,6 +16,12 @@ A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
 <!--end requires_ansible-->
 
+## Python Support
+
+* Collection supports 3.6+
+
+Note: Python2 is deprecated from [1st January 2020](https://www.python.org/doc/sunset-python-2/). Please switch to Python3.
+
 ## Included content
 
 Click on the name of a plugin or module to view that content's documentation:
@@ -25,6 +31,11 @@ Click on the name of a plugin or module to view that content's documentation:
 Name | Description
 --- | ---
 [kubernetes.core.kubectl](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
+
+### K8s filter plugins
+Name | Description
+--- | ---
+kubernetes.core.k8s_config_resource_name|Generate resource name for the given resource of type ConfigMap, Secret
 
 ### Inventory plugins
 Name | Description
@@ -73,11 +84,11 @@ collections:
     version: 1.2.0
 ```
 
-### Installing the OpenShift Python Library
+### Installing the Kubernetes Python Library
 
-Content in this collection requires the [OpenShift Python client](https://pypi.org/project/openshift/) to interact with Kubernetes' APIs. You can install it with:
+Content in this collection requires the [Kubernetes Python client](https://pypi.org/project/kubernetes/) to interact with Kubernetes' APIs. You can install it with:
 
-    pip3 install openshift
+    pip3 install kubernetes
 
 ### Using modules from the Kubernetes Collection in your playbooks
 
@@ -185,7 +196,7 @@ Releases are automatically built and pushed to Ansible Galaxy for any new tag. B
   3. Commit the changes and create a PR with the changes. Wait for tests to pass, then merge it once they have.
   4. Tag the version in Git and push to GitHub.
 
-After the version is published, verify it exists on the [Kubernetes Collection Galaxy page](https://galaxy.ansible.com/community/kubernetes).
+After the version is published, verify it exists on the [Kubernetes Collection Galaxy page](https://galaxy.ansible.com/kubernetes/core).
 
 The process for uploading a supported release to Automation Hub is documented separately.
 

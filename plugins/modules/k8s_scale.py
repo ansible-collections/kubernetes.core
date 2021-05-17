@@ -31,8 +31,8 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_scale_options
 
 requirements:
-    - "python >= 2.7"
-    - "openshift >= 0.6"
+    - "python >= 3.6"
+    - "kubernetes >= 12.0.0"
     - "PyYAML >= 3.11"
 '''
 

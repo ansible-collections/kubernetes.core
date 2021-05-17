@@ -24,7 +24,7 @@ options:
   kubeconfig:
     description:
     - Path to an existing Kubernetes config file. If not provided, and no other connection
-      options are provided, the openshift client will attempt to load the default
+      options are provided, the Kubernetes client will attempt to load the default
       configuration file from I(~/.kube/config). Can also be specified via K8S_AUTH_KUBECONFIG environment
       variable.
     type: path
@@ -110,9 +110,6 @@ options:
     - "The fix for this k8s python library is here: https://github.com/kubernetes-client/python-base/pull/169"
     type: bool
 notes:
-  - "The OpenShift Python client wraps the K8s Python client, providing full access to
-    all of the APIS and models available on both platforms. For API version details and
-    additional information visit https://github.com/openshift/openshift-restclient-python"
   - "To avoid SSL certificate validation errors when C(validate_certs) is I(True), the full
     certificate chain for the API server must be provided via C(ca_cert) or in the
     kubeconfig file."

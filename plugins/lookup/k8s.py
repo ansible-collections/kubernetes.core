@@ -30,7 +30,7 @@ DOCUMENTATION = '''
       - Fabian von Feilitzsch <@fabianvf>
 
     description:
-      - Uses the OpenShift Python client to fetch a specific object by name, all matching objects within a
+      - Uses the Kubernetes Python client to fetch a specific object by name, all matching objects within a
         namespace, or all matching objects for all namespaces, as well as information about the cluster.
       - Provides access the full range of K8s APIs.
       - Enables authentication via config file, certificates, password or token.
@@ -85,7 +85,7 @@ DOCUMENTATION = '''
       kubeconfig:
         description:
         - Path to an existing Kubernetes config file. If not provided, and no other connection
-          options are provided, the openshift client will attempt to load the default
+          options are provided, the Kubernetes client will attempt to load the default
           configuration file from I(~/.kube/config). Can also be specified via K8S_AUTH_KUBECONFIG environment
           variable.
       context:
@@ -124,14 +124,9 @@ DOCUMENTATION = '''
         aliases: [ verify_ssl ]
 
     requirements:
-      - "python >= 2.7"
-      - "openshift >= 0.6"
+      - "python >= 3.6"
+      - "kubernetes >= 12.0.0"
       - "PyYAML >= 3.11"
-
-    notes:
-      - "The OpenShift Python client wraps the K8s Python client, providing full access to
-        all of the APIS and models available on both platforms. For API version details and
-        additional information visit https://github.com/openshift/openshift-restclient-python"
 '''
 
 EXAMPLES = """
@@ -206,7 +201,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.common import K8sA
 
 
 try:
-    from openshift.dynamic.exceptions import NotFoundError
+    from kubernetes.dynamic.exceptions import NotFoundError
     HAS_K8S_MODULE_HELPER = True
     k8s_import_exception = None
 except ImportError as e:
@@ -220,7 +215,7 @@ class KubernetesLookup(K8sAnsibleMixin):
 
         if not HAS_K8S_MODULE_HELPER:
             raise Exception(
-                "Requires the OpenShift Python client. Try `pip install openshift`. Detail: {0}".format(k8s_import_exception)
+                "Requires the Kubernetes Python client. Try `pip install kubernetes`. Detail: {0}".format(k8s_import_exception)
             )
 
         self.kind = None
