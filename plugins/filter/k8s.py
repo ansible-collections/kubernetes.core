@@ -22,9 +22,6 @@ def k8s_config_resource_name(resource):
 
 # ---- Ansible filters ----
 class FilterModule(object):
-    """
-
-    """
 
     def filters(self):
         return {
