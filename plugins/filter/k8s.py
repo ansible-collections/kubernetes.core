@@ -23,7 +23,7 @@ def k8s_config_resource_name(resource):
 # ---- Ansible filters ----
 class FilterModule(object):
     """
-
+    Kubernetes filter Module
     """
 
     def filters(self):
