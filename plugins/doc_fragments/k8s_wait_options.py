@@ -68,4 +68,5 @@ options:
     description:
     - Specifies a property on the resource to wait for.
     - Ignored if C(wait) is not set or is set to I(False).
+    type: str
 '''
