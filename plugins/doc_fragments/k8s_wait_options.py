@@ -67,7 +67,5 @@ options:
   wait_for:
     description:
     - Specifies a property on the resource to wait for.
-    - Ignored if C(wait) is not set or is set to False.
-    default: 120
-    type: int
+    - Ignored if C(wait) is not set or is set to I(False).
 '''

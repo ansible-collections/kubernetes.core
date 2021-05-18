@@ -373,7 +373,7 @@ class K8sAnsibleMixin(object):
 
         def _wait_for_elapsed():
             return (datetime.now() - start).seconds
-
+        
         response = None
         while _wait_for_elapsed() < timeout:
             try:
@@ -438,7 +438,7 @@ class K8sAnsibleMixin(object):
             return False
 
         def _wait_for_property(resource):
-            return all([ jsonpath.match("$.{}".format(item),json_data) for item in wait_for ])
+            return all([ jsonpath.match("$.{}".format(item),resource) for item in wait_for ])
 
         def _resource_absent(resource):
             return not resource
@@ -457,13 +457,15 @@ class K8sAnsibleMixin(object):
         kind = definition['kind']
         predicates = []
         if state == 'present':
-            if condition:
-                predicates.append(_custom_condition)
-            if wait_for:
-                # json path predicate
-                predicates.append(_wait_for_property)
             if condition is None and wait_for is None:
                 predicates.append(waiter.get(kind, lambda x: x))
+            else:
+                if condition:
+                    # add waiter on custom condition
+                    predicates.append(_custom_condition)
+                if wait_for:
+                    # json path predicate
+                    predicates.append(_wait_for_property)
         else:
             predicates.append(_resource_absent)
         return self._wait_for(resource, definition['metadata']['name'], definition['metadata'].get('namespace'), predicates, sleep, timeout, state)
