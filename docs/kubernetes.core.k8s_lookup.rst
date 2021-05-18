@@ -16,7 +16,7 @@ kubernetes.core.k8s
 
 Synopsis
 --------
-- Uses the OpenShift Python client to fetch a specific object by name, all matching objects within a namespace, or all matching objects for all namespaces, as well as information about the cluster.
+- Uses the Kubernetes Python client to fetch a specific object by name, all matching objects within a namespace, or all matching objects for all namespaces, as well as information about the cluster.
 - Provides access the full range of K8s APIs.
 - Enables authentication via config file, certificates, password or token.
 
@@ -26,8 +26,8 @@ Requirements
 ------------
 The below requirements are needed on the local Ansible controller node that executes this lookup.
 
-- python >= 2.7
-- openshift >= 0.6
+- python >= 3.6
+- kubernetes >= 12.0.0
 - PyYAML >= 3.11
 
 
@@ -232,7 +232,7 @@ Parameters
                     <td>
                     </td>
                 <td>
-                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the openshift client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                 </td>
             </tr>
             <tr>
@@ -380,12 +380,6 @@ Parameters
     </table>
     <br/>
 
-
-Notes
------
-
-.. note::
-   - The OpenShift Python client wraps the K8s Python client, providing full access to all of the APIS and models available on both platforms. For API version details and additional information visit https://github.com/openshift/openshift-restclient-python
 
 
 
