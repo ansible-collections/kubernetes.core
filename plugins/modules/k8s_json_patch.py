@@ -20,7 +20,8 @@ description:
 
 version_added: 2.0.0
 
-author: Mike Graves (@gravesm)
+author: 
+- Mike Graves (@gravesm)
 
 options:
   api_version:
