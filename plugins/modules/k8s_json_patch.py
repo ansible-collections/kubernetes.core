@@ -47,7 +47,7 @@ options:
   name:
     description:
       - Use to specify an object name.
-      - Use in conjunction with I(api_version), I(kind) and I(namespace) to identify a specific object.
+      - Use in conjunction with I(api_version), I(kind), and I(namespace) to identify a specific object.
     type: str
     required: yes
   patch:
