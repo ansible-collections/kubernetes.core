@@ -48,8 +48,8 @@
       assert:
         that:
           - result.changed
-          - result.result.metadata.labels.label2 == "bar"
-          - result.result.spec.containers[0].image == "busybox:glibc"
+          - result.patched_output.metadata.labels.label2 == "bar"
+          - result.patched_output.spec.containers[0].image == "busybox:glibc"
 
     - name: Describe pod
       kubernetes.core.k8s_info:
@@ -159,7 +159,7 @@
     - name: Assert all replicas are available
       assert:
         that:
-          - result.result.status.availableReplicas == 3
+          - result.patched_output.status.availableReplicas == 3
 
   always:
     - name: Ensure namespace has been deleted

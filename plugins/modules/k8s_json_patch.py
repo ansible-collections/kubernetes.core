@@ -20,7 +20,7 @@ description:
 
 version_added: 2.0.0
 
-author: 
+author:
 - Mike Graves (@gravesm)
 
 options:
@@ -84,7 +84,7 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
-result:
+patched_output:
   description: The modified object.
   returned: success
   type: dict
@@ -249,9 +249,9 @@ def execute_module(k8s_module, module):
             module.fail_json(msg=msg, error=to_native(exc), status='', reason='')
 
     success = True
-    result = {"result": obj}
+    result = {"patched_output": obj}
     if wait and not module.check_mode:
-        success, result['result'], result['duration'] = k8s_module.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
+        success, result['patched_output'], result['duration'] = k8s_module.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
     match, diffs = k8s_module.diff_objects(existing.to_dict(), obj)
     result["changed"] = not match
     result["diff"] = diffs
