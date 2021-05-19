@@ -238,11 +238,19 @@ EXAMPLES = r'''
       reason: DeploymentPaused
 
 # Wait for this service to have acquired an External IP
-- name: Deploy the dashboard service (lb)
+- name: Create ingress and wait for ip to be assigned
   kubernetes.core.k8s:
     template: dash-service.yaml
     wait: yes
-    wait_for: .status.loadBalancer.ingress[*].ip
+    wait_property:
+      property: status.loadBalancer.ingress[*].ip
+
+- name: Create Pod and wait for containers for be running
+  kubernetes.core.k8s:
+    template: pod.yaml
+    wait: yes
+    wait_property:
+      property: status.containerStatuses[*].state.running
 '''
 
 RETURN = r'''

@@ -71,7 +71,14 @@ WAIT_ARG_SPEC = dict(
             reason=dict()
         )
     ),
-    wait_for=dict()
+    wait_property=dict(
+        type='dict',
+        default=None,
+        options=dict(
+            property=dict(),
+            value=dict()
+        )
+    )
 )
 
 # Map kubernetes-client parameters to ansible parameters

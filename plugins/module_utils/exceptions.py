@@ -19,7 +19,3 @@ __metaclass__ = type
 
 class ApplyException(Exception):
     """ Could not apply patch """
-
-
-class WaitException(Exception):
-    """ Bad parameters for Wait operation """

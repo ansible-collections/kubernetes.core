@@ -64,9 +64,21 @@ options:
         - The possible reasons in a condition are specific to each resource type in Kubernetes.
         - See the API documentation of the status field for a given resource to see possible choices.
     type: dict
-  wait_for:
+  wait_property:
     description:
     - Specifies a property on the resource to wait for.
     - Ignored if C(wait) is not set or is set to I(False).
-    type: str
+    type: dict
+    suboptions:
+      property:
+        type: str
+        required: True
+        description:
+        - The property name to wait for.
+        - This value must be jmespath valid expression, see details here U(http://jmespath.org).
+      value:
+        type: str
+        description:
+        - The expected value of the C(property).
+        - If this is missing, we will check only that the attribute C(property) is present.
 '''
