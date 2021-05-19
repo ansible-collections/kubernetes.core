@@ -141,6 +141,14 @@
       tags:
         - always
 
+    - name: Include patched.yml
+      include_tasks:
+        file: tasks/patched.yml
+        apply:
+          tags: [ patched, k8s ]
+      tags:
+        - always
+
   roles:
     - role: helm
       tags:
