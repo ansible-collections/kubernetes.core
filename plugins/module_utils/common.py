@@ -403,6 +403,7 @@ class K8sAnsibleMixin(object):
 
         def _daemonset_ready(daemonset):
             return (daemonset.status and daemonset.status.desiredNumberScheduled is not None
+                    and daemonset.status.updatedNumberScheduled == daemonset.status.desiredNumberScheduled
                     and daemonset.status.numberReady == daemonset.status.desiredNumberScheduled
                     and daemonset.status.observedGeneration == daemonset.metadata.generation
                     and not daemonset.status.unavailableReplicas)

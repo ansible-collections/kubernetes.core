@@ -54,6 +54,9 @@
       vars:
         k8s_pod_name: wait-ds
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_command:
+          - sleep
+          - "600"
       register: ds
 
     - name: Check that daemonset wait worked
@@ -82,6 +85,9 @@
       vars:
         k8s_pod_name: wait-ds
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
+        k8s_pod_command:
+          - sleep
+          - "600"
       register: update_ds_check_mode
       check_mode: yes
 
@@ -112,6 +118,9 @@
       vars:
         k8s_pod_name: wait-ds
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:3
+        k8s_pod_command:
+          - sleep
+          - "600"
       register: ds
 
     - name: Get updated pods
