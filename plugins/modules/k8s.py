@@ -30,7 +30,6 @@ description:
   - Supports check mode.
 
 extends_documentation_fragment:
-  - kubernetes.core.k8s_state_options
   - kubernetes.core.k8s_name_options
   - kubernetes.core.k8s_resource_options
   - kubernetes.core.k8s_auth_options
@@ -38,6 +37,21 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_delete_options
 
 options:
+  state:
+    description:
+    - Determines if an object should be created, patched, or deleted. When set to C(present), an object will be
+      created, if it does not already exist. If set to C(absent), an existing object will be deleted. If set to
+      C(present), an existing object will be patched, if its attributes differ from those specified using
+      I(resource_definition) or I(src).
+    - C(patched) state is an existing resource that has a given patch applied. If the resource doesn't exist, silently skip it (do not raise an error).
+    type: str
+    default: present
+    choices: [ absent, present, patched ]
+  force:
+    description:
+    - If set to C(yes), and I(state) is C(present), an existing object will be replaced.
+    type: bool
+    default: no
   merge_type:
     description:
     - Whether to override the default patch merge approach with a specific type. By default, the strategic
@@ -235,7 +249,6 @@ EXAMPLES = r'''
     wait_condition:
       type: Progressing
       status: Unknown
-      reason: DeploymentPaused
 
 # Wait for this service to have acquired an External IP
 - name: Create ingress and wait for ip to be assigned
@@ -245,12 +258,24 @@ EXAMPLES = r'''
     wait_property:
       property: status.loadBalancer.ingress[*].ip
 
+# Wait for containers inside pod to be running
 - name: Create Pod and wait for containers for be running
   kubernetes.core.k8s:
     template: pod.yaml
     wait: yes
     wait_property:
       property: status.containerStatuses[*].state.running
+
+# Patch existing namespace : add label
+- name: add label to existing namespace
+  kubernetes.core.k8s:
+    state: patched
+    kind: Namespace
+    name: patch_namespace
+    definition:
+      metadata:
+        labels:
+          support: patch
 '''
 
 RETURN = r'''
@@ -299,7 +324,7 @@ import copy
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, WAIT_ARG_SPEC, NAME_ARG_SPEC, COMMON_ARG_SPEC, RESOURCE_ARG_SPEC, DELETE_OPTS_ARG_SPEC)
+    AUTH_ARG_SPEC, WAIT_ARG_SPEC, NAME_ARG_SPEC, RESOURCE_ARG_SPEC, DELETE_OPTS_ARG_SPEC)
 
 
 def validate_spec():
@@ -311,8 +336,7 @@ def validate_spec():
 
 
 def argspec():
-    argument_spec = copy.deepcopy(COMMON_ARG_SPEC)
-    argument_spec.update(copy.deepcopy(NAME_ARG_SPEC))
+    argument_spec = copy.deepcopy(NAME_ARG_SPEC)
     argument_spec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
     argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
     argument_spec.update(copy.deepcopy(WAIT_ARG_SPEC))
@@ -323,6 +347,9 @@ def argspec():
     argument_spec['template'] = dict(type='raw', default=None)
     argument_spec['delete_options'] = dict(type='dict', default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC))
     argument_spec['continue_on_error'] = dict(type='bool', default=False)
+    argument_spec['state'] = dict(default='present', choices=['present', 'absent', 'patched'])
+    argument_spec['force'] = dict(type='bool', default=False)
+
     return argument_spec
 
 
@@ -334,6 +361,7 @@ def execute_module(module, k8s_ansible_mixin):
     k8s_ansible_mixin.fail_json = k8s_ansible_mixin.module.fail_json
     k8s_ansible_mixin.fail = k8s_ansible_mixin.module.fail_json
     k8s_ansible_mixin.exit_json = k8s_ansible_mixin.module.exit_json
+    k8s_ansible_mixin.warn = k8s_ansible_mixin.module.warn
     k8s_ansible_mixin.warnings = []
 
     k8s_ansible_mixin.kind = k8s_ansible_mixin.params.get('kind')

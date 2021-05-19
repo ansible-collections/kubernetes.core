@@ -404,6 +404,7 @@ class K8sAnsibleMixin(object):
 
         def _daemonset_ready(daemonset):
             return (daemonset.status and daemonset.status.desiredNumberScheduled is not None
+                    and daemonset.status.updatedNumberScheduled == daemonset.status.desiredNumberScheduled
                     and daemonset.status.numberReady == daemonset.status.desiredNumberScheduled
                     and daemonset.status.observedGeneration == daemonset.metadata.generation
                     and not daemonset.status.unavailableReplicas)
@@ -548,7 +549,8 @@ class K8sAnsibleMixin(object):
             if self.params['validate'] is not None:
                 self.warnings = self.validate(definition)
             result = self.perform_action(resource, definition)
-            result['warnings'] = self.warnings
+            if self.warnings:
+                result['warnings'] = self.warnings
             changed = changed or result['changed']
             results.append(result)
 
@@ -690,6 +692,7 @@ class K8sAnsibleMixin(object):
                             else:
                                 self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), **result)
                 return result
+
         else:
             if apply:
                 if self.check_mode:
@@ -734,7 +737,14 @@ class K8sAnsibleMixin(object):
                 return result
 
             if not existing:
-                if self.check_mode:
+                if state == 'patched':
+                    # Silently skip this resource (do not raise an error) as 'patch_only' is set to true
+                    result['changed'] = False
+                    result['warning'] = "resource 'kind={kind},name={name}' was not found but will not be created as 'state'\
+                                        parameter has been set to '{state}'".format(
+                                        kind=definition['kind'], name=origin_name, state=state)
+                    return result
+                elif self.check_mode:
                     k8s_obj = _encode_stringdata(definition)
                 else:
                     try:
@@ -784,7 +794,7 @@ class K8sAnsibleMixin(object):
             match = False
             diffs = []
 
-            if existing and force:
+            if state == 'present' and existing and force:
                 if self.check_mode:
                     k8s_obj = _encode_stringdata(definition)
                 else:

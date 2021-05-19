@@ -1,0 +1,123 @@
+---
+- block:
+    - set_fact:
+        patch_only_namespace:
+          first: patched-namespace-1
+          second: patched-namespace-2
+
+    - name: Ensure namespace {{ patch_only_namespace.first }} exist
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ patch_only_namespace.first }}"
+            labels:
+              existingLabel: "labelValue"
+            annotations:
+              existingAnnotation: "annotationValue"
+        wait: yes
+
+    - name: Ensure namespace {{ patch_only_namespace.second }} does not exist
+      kubernetes.core.k8s_info:
+        kind: namespace
+        name: "{{ patch_only_namespace.second }}"
+      register: second_namespace
+
+    - name: assert that second namespace does not exist
+      assert:
+        that:
+          - second_namespace.resources | length == 0
+
+    - name: apply patch on existing resource
+      kubernetes.core.k8s:
+        state: patched
+        wait: yes
+        definition: |
+          ---
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ patch_only_namespace.first }}"
+            labels:
+              ansible: patched
+          ---
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ patch_only_namespace.second }}"
+            labels:
+              ansible: patched
+      register: patch_resource
+
+    - name: assert that patch succeed
+      assert:
+        that:
+          - patch_resource.changed
+          - patch_resource.result.results | selectattr('warning', 'defined') | list | length == 1
+
+    - name: Ensure namespace {{ patch_only_namespace.first }} was patched correctly
+      kubernetes.core.k8s_info:
+        kind: namespace
+        name: "{{ patch_only_namespace.first }}"
+      register: first_namespace
+
+    - name: assert labels are as expected
+      assert:
+        that:
+          - first_namespace.resources[0].metadata.labels.ansible == "patched"
+          - first_namespace.resources[0].metadata.labels.existingLabel == "labelValue"
+          - first_namespace.resources[0].metadata.annotations.existingAnnotation == "annotationValue"
+    - name: Ensure namespace {{ patch_only_namespace.second }} was not created
+      kubernetes.core.k8s_info:
+        kind: namespace
+        name: "{{ patch_only_namespace.second }}"
+      register: second_namespace
+
+    - name: assert that second namespace does not exist
+      assert:
+        that:
+          - second_namespace.resources | length == 0
+
+    - name: patch all resources (create if does not exist)
+      kubernetes.core.k8s:
+        state: present
+        definition: |
+          ---
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ patch_only_namespace.first }}"
+            labels:
+              patch: ansible
+          ---
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ patch_only_namespace.second }}"
+            labels:
+              patch: ansible
+        wait: yes
+      register: patch_resource
+
+    - name: Ensure namespace {{ patch_only_namespace.second }} was created
+      kubernetes.core.k8s_info:
+        kind: namespace
+        name: "{{ patch_only_namespace.second }}"
+      register: second_namespace
+
+    - name: assert that second namespace exist
+      assert:
+        that:
+          - second_namespace.resources | length == 1
+
+  always:
+    - name: Remove namespace
+      kubernetes.core.k8s:
+        kind: Namespace
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ patch_only_namespace.first }}"
+        - "{{ patch_only_namespace.second }}"
+      ignore_errors: true
