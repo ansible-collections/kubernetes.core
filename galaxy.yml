@@ -9,7 +9,7 @@ authors:
   - mmazur (https://github.com/mmazur)
   - jamescassell (https://github.com/jamescassell)
 dependencies:
-  - cloud.common
+  cloud.common: '>=2.0.1'
 description: Kubernetes Collection for Ansible.
 documentation: ''
 homepage: ''
