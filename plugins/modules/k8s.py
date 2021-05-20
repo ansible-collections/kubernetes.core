@@ -24,17 +24,17 @@ description:
   - Pass the object definition from a source file or inline. See examples for reading
     files and using Jinja templates or vault-encrypted files.
   - Access to the full range of K8s APIs.
-  - Use the M(community.kubernetes.k8s_info) module to obtain a list of items about an object of type C(kind)
+  - Use the M(kubernetes.core.k8s_info) module to obtain a list of items about an object of type C(kind)
   - Authenticate using either a config file, certificates, password or token.
   - Supports check mode.
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_state_options
-  - community.kubernetes.k8s_name_options
-  - community.kubernetes.k8s_resource_options
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_wait_options
-  - community.kubernetes.k8s_delete_options
+  - kubernetes.core.k8s_state_options
+  - kubernetes.core.k8s_name_options
+  - kubernetes.core.k8s_resource_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_wait_options
+  - kubernetes.core.k8s_delete_options
 
 notes:
   - If your OpenShift Python library is not 0.9.0 or newer and you are trying to
@@ -132,14 +132,14 @@ requirements:
 
 EXAMPLES = r'''
 - name: Create a k8s namespace
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     name: testing
     api_version: v1
     kind: Namespace
     state: present
 
 - name: Create a Service object from an inline definition
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     definition:
       apiVersion: v1
@@ -161,7 +161,7 @@ EXAMPLES = r'''
           port: 8000
 
 - name: Remove an existing Service object
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: absent
     api_version: v1
     kind: Service
@@ -171,24 +171,24 @@ EXAMPLES = r'''
 # Passing the object definition from a file
 
 - name: Create a Deployment by reading the definition from a local file
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     src: /testing/deployment.yml
 
 - name: >-
     Read definition file from the Ansible controller file system.
     If the definition file has been encrypted with Ansible Vault it will automatically be decrypted.
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('file', '/testing/deployment.yml') | from_yaml }}"
 
 - name: Read definition template file from the Ansible controller file system
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     template: '/testing/deployment.j2'
 
 - name: Read definition template file from the Ansible controller file system that uses custom start/end strings
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     template:
       path: '/testing/deployment.j2'
@@ -196,14 +196,14 @@ EXAMPLES = r'''
       variable_end_string: ']]'
 
 - name: fail on validation errors
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', '/testing/deployment.yml') | from_yaml }}"
     validate:
       fail_on_error: yes
 
 - name: warn on validation errors, check for unexpected properties
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', '/testing/deployment.yml') | from_yaml }}"
     validate:
@@ -218,7 +218,7 @@ EXAMPLES = r'''
     mode: '0664'
 
 - name: Apply metrics-server manifest to the cluster.
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     src: ~/metrics-server.yaml
 '''
@@ -264,7 +264,7 @@ result:
 import copy
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     K8sAnsibleMixin, COMMON_ARG_SPEC, NAME_ARG_SPEC, RESOURCE_ARG_SPEC, AUTH_ARG_SPEC,
     WAIT_ARG_SPEC, DELETE_OPTS_ARG_SPEC)
 

@@ -22,7 +22,7 @@ __metaclass__ = type
 import copy
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     AUTH_ARG_SPEC, RESOURCE_ARG_SPEC, NAME_ARG_SPEC, K8sAnsibleMixin)
 
 try:

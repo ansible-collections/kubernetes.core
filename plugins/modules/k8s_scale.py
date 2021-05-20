@@ -25,10 +25,10 @@ description:
     or Replication Controller, or the parallelism attribute of a Job. Supports check mode.
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_name_options
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_resource_options
-  - community.kubernetes.k8s_scale_options
+  - kubernetes.core.k8s_name_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_resource_options
+  - kubernetes.core.k8s_scale_options
 
 requirements:
     - "python >= 2.7"
@@ -38,7 +38,7 @@ requirements:
 
 EXAMPLES = r'''
 - name: Scale deployment up, and extend timeout
-  community.kubernetes.k8s_scale:
+  kubernetes.core.k8s_scale:
     api_version: v1
     kind: Deployment
     name: elastic
@@ -47,7 +47,7 @@ EXAMPLES = r'''
     wait_timeout: 60
 
 - name: Scale deployment down when current replicas match
-  community.kubernetes.k8s_scale:
+  kubernetes.core.k8s_scale:
     api_version: v1
     kind: Deployment
     name: elastic
@@ -56,7 +56,7 @@ EXAMPLES = r'''
     replicas: 2
 
 - name: Increase job parallelism
-  community.kubernetes.k8s_scale:
+  kubernetes.core.k8s_scale:
     api_version: batch/v1
     kind: job
     name: pi-with-timeout
@@ -66,19 +66,19 @@ EXAMPLES = r'''
 # Match object using local file or inline definition
 
 - name: Scale deployment based on a file from the local filesystem
-  community.kubernetes.k8s_scale:
+  kubernetes.core.k8s_scale:
     src: /myproject/elastic_deployment.yml
     replicas: 3
     wait: no
 
 - name: Scale deployment based on a template output
-  community.kubernetes.k8s_scale:
+  kubernetes.core.k8s_scale:
     resource_definition: "{{ lookup('template', '/myproject/elastic_deployment.yml') | from_yaml }}"
     replicas: 3
     wait: no
 
 - name: Scale deployment based on a file from the Ansible controller filesystem
-  community.kubernetes.k8s_scale:
+  kubernetes.core.k8s_scale:
     resource_definition: "{{ lookup('file', '/myproject/elastic_deployment.yml') | from_yaml }}"
     replicas: 3
     wait: no
@@ -118,7 +118,7 @@ result:
        sample: 48
 '''
 
-from ansible_collections.community.kubernetes.plugins.module_utils.scale import KubernetesAnsibleScaleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.scale import KubernetesAnsibleScaleModule
 
 
 def main():

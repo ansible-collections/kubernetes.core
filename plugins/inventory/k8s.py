@@ -95,20 +95,20 @@ EXAMPLES = '''
 # File must be named k8s.yaml or k8s.yml
 
 # Authenticate with token, and return all pods and services for all namespaces
-plugin: community.kubernetes.k8s
+plugin: kubernetes.core.k8s
 connections:
   - host: https://192.168.64.4:8443
     api_key: xxxxxxxxxxxxxxxx
     validate_certs: false
 
 # Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-plugin: community.kubernetes.k8s
+plugin: kubernetes.core.k8s
 connections:
   - namespaces:
     - testing
 
 # Use a custom config file, and a specific context.
-plugin: community.kubernetes.k8s
+plugin: kubernetes.core.k8s
 connections:
   - kubeconfig: /path/to/config
     context: 'awx/192-168-64-4:8443/developer'
@@ -118,10 +118,10 @@ import json
 
 from ansible.errors import AnsibleError
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
-from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     K8sAnsibleMixin, HAS_K8S_MODULE_HELPER, k8s_import_exception
 )
-from ansible_collections.community.kubernetes.plugins.module_utils.exceptions import K8sInventoryException
+from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import K8sInventoryException
 
 try:
     from openshift.dynamic.exceptions import DynamicApiError
@@ -141,9 +141,9 @@ def format_dynamic_api_exc(exc):
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleMixin):
-    NAME = 'community.kubernetes.k8s'
+    NAME = 'kubernetes.core.k8s'
 
-    connection_plugin = 'community.kubernetes.kubectl'
+    connection_plugin = 'kubernetes.core.kubectl'
     transport = 'kubectl'
 
     def parse(self, inventory, loader, path, cache=True):

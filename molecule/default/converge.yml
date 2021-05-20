@@ -4,7 +4,7 @@
   connection: local
 
   collections:
-    - community.kubernetes
+    - kubernetes.core
 
   vars_files:
     - vars/main.yml

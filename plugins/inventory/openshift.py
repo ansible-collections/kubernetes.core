@@ -94,26 +94,26 @@ EXAMPLES = '''
 # File must be named openshift.yaml or openshift.yml
 
 # Authenticate with token, and return all pods and services for all namespaces
-plugin: community.kubernetes.openshift
+plugin: kubernetes.core.openshift
 connections:
   - host: https://192.168.64.4:8443
     api_key: xxxxxxxxxxxxxxxx
     verify_ssl: false
 
 # Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-plugin: community.kubernetes.openshift
+plugin: kubernetes.core.openshift
 connections:
   - namespaces:
     - testing
 
 # Use a custom config file, and a specific context.
-plugin: community.kubernetes.openshift
+plugin: kubernetes.core.openshift
 connections:
   - kubeconfig: /path/to/config
     context: 'awx/192-168-64-4:8443/developer'
 '''
 
-from ansible_collections.community.kubernetes.plugins.inventory.k8s import K8sInventoryException, InventoryModule as K8sInventoryModule, format_dynamic_api_exc
+from ansible_collections.kubernetes.core.plugins.inventory.k8s import K8sInventoryException, InventoryModule as K8sInventoryModule, format_dynamic_api_exc
 
 try:
     from openshift.dynamic.exceptions import DynamicApiError
@@ -122,7 +122,7 @@ except ImportError:
 
 
 class InventoryModule(K8sInventoryModule):
-    NAME = 'community.kubernetes.openshift'
+    NAME = 'kubernetes.core.openshift'
 
     transport = 'oc'
 
