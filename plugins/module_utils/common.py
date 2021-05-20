@@ -434,16 +434,8 @@ class K8sAnsibleMixin(object):
         def _resource_absent(resource):
             return not resource
 
-        with open("/tmp/resource.txt", "w+") as f:
-            import json
-            f.write("------- Property -------\n{}".format(json.dumps(property, indent=2)))
-
         def _wait_for_property(resource):
-            test = match_json_property(self, resource.to_dict(), property.get('property'), property.get('value', None))
-            with open("/tmp/resource.txt", "w+") as f:
-                import json
-                f.write("------- test = {}\n{}".format(test, json.dumps(resource.to_dict(), indent=2)))
-            return test
+            return match_json_property(self, resource.to_dict(), property.get('property'), property.get('value', None))
 
         waiter = dict(
             Deployment=_deployment_ready,

@@ -69,6 +69,7 @@ options:
     - Specifies a property on the resource to wait for.
     - Ignored if C(wait) is not set or is set to I(False).
     type: dict
+    version_added: '2.0.0'
     suboptions:
       property:
         type: str
@@ -80,5 +81,6 @@ options:
         type: str
         description:
         - The expected value of the C(property).
+        - The value is not case-sensitive.
         - If this is missing, we will check only that the attribute C(property) is present.
 '''

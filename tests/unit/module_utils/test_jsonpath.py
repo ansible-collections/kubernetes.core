@@ -24,7 +24,6 @@ jmespath = pytest.importorskip("jmespath")
 
 def test_property_present():
     data = {
-        "Kind": "Pod",
         "containers": [
             {"name": "t0", "image": "nginx"},
             {"name": "t1", "image": "python"},
@@ -37,7 +36,6 @@ def test_property_present():
 
 def test_property_value():
     data = {
-        "Kind": "Pod",
         "containers": [
             {"name": "t0", "image": "nginx"},
             {"name": "t1", "image": "python"},
@@ -52,7 +50,7 @@ def test_property_value():
 def test_boolean_value():
     data = {
         "containers": [
-            {"image": "nginx"},
+            {"image": "nginx", "poweron": False},
             {"image": "python"},
             {"image": "mongo", "connected": True}
         ]
@@ -60,6 +58,7 @@ def test_boolean_value():
     assert match_json_property(None, data, "containers[*].connected", "true")
     assert match_json_property(None, data, "containers[*].connected", "True")
     assert match_json_property(None, data, "containers[*].connected", "TRUE")
+    assert match_json_property(None, data, "containers[0].poweron", "false")
 
 
 def test_valid_expression():

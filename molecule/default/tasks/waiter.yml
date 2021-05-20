@@ -364,6 +364,93 @@
         that:
           - short_wait_remove_pod is failed
 
+    - name: add a simple crashing pod and wait until container is running
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: pod-crash-0
+            namespace: "{{ wait_namespace }}"
+          spec:
+            containers:
+            - name: crashing-container
+              image: busybox
+              command: ['/dummy/dummy-shell', '-c', 'sleep 2000']
+        wait: yes
+        wait_timeout: 10
+        wait_property:
+          property: status.containerStatuses[*].state.running
+      ignore_errors: true
+      register: crash_pod
+
+    - name: assert that task failed
+      assert:
+        that:
+          - crash_pod is failed
+          - crash_pod.changed
+          - '"Resource creation timed out" in crash_pod.msg'
+    
+    - name: add a valid pod and wait until container is running
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: pod-valid-0
+            namespace: "{{ wait_namespace }}"
+          spec:
+            containers:
+            - name: crashing-container
+              image: busybox
+              command: ['/bin/sh', '-c', 'sleep 10000']
+        wait: yes
+        wait_timeout: 10
+        wait_property:
+          property: status.containerStatuses[*].state.running
+      ignore_errors: true
+      register: valid_pod
+
+    - name: assert that task failed
+      assert:
+        that:
+          - valid_pod is successful
+          - valid_pod.changed
+          - valid_pod.result.status.containerStatuses[0].state.running is defined
+
+    - name: create pod (waiting for container.ready set to false)
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: redis-pod
+            namespace: "{{ wait_namespace }}"
+          spec:
+            containers:
+            - name: redis-container
+              image: redis
+              volumeMounts:
+              - name: test
+                mountPath: "/etc/test"
+                readOnly: true
+            volumes:
+            - name: test
+              configMap:
+                name: redis-config
+        wait: yes
+        wait_timeout: 10
+        wait_property:
+          property: status.containerStatuses[0].ready
+          value: "false"
+      register: wait_boolean
+
+    - name: assert that pod was created but not running
+      assert:
+        that:
+          - wait_boolean.changed
+          - wait_boolean.result.status.phase == 'Pending'
+
   always:
     - name: Remove namespace
       k8s:

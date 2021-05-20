@@ -23,11 +23,10 @@ from ansible.module_utils._text import to_native
 try:
     import jmespath
     HAS_JMESPATH_LIB = True
-    jmespath_import_exception = None
+    JMESPATH_IMP_ERR = None
 except ImportError as e:
     HAS_JMESPATH_LIB = False
-    jmespath_import_exception = e
-    JMESPATH_IMP_ERR = traceback.format_exc()
+    JMESPATH_IMP_ERR = e
 
 
 def match_json_property(module, data, expr, value=None):
@@ -44,18 +43,29 @@ def match_json_property(module, data, expr, value=None):
         raise err
 
     def _match_value(buf, v):
-        # convert all values from bool to str and lowercase them
-        return v.lower() in [str(i).lower() for i in buf]
+        if isinstance(buf, list):
+            # convert all values from bool to str and lowercase them
+            return v.lower() in [str(i).lower() for i in buf]
+        elif isinstance(buf, str):
+            return v.lower() == content.lower()
+        elif isinstance(buf, bool):
+            return v.lower() == str(content).lower()
+        else:
+            # unable to test single value against dict
+            return False
 
     if not HAS_JMESPATH_LIB:
-        _raise_or_fail(jmespath_import_exception, msg=missing_required_lib('jmespath'), exception=JMESPATH_IMP_ERR)
+        _raise_or_fail(JMESPATH_IMP_ERR, msg=missing_required_lib('jmespath'))
 
     jmespath.functions.REVERSE_TYPES_MAP['string'] = jmespath.functions.REVERSE_TYPES_MAP['string'] + ('AnsibleUnicode', 'AnsibleUnsafeText', )
     try:
         content = jmespath.search(expr, data)
-        if not content:
+        with open("/tmp/play.cont", "w") as f:
+            f.write("{}".format(content))
+        if content is None or content == []:
             return False
-        if not value or _match_value(content, value):
+        if value is None or _match_value(content, value):
+            # looking for state present
             return True
         return False
     except Exception as err:
