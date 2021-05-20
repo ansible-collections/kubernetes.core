@@ -374,9 +374,9 @@
             namespace: "{{ wait_namespace }}"
           spec:
             containers:
-            - name: crashing-container
-              image: busybox
-              command: ['/dummy/dummy-shell', '-c', 'sleep 2000']
+              - name: crashing-container
+                image: busybox
+                command: ['/dummy/dummy-shell', '-c', 'sleep 2000']
         wait: yes
         wait_timeout: 10
         wait_property:
@@ -390,7 +390,7 @@
           - crash_pod is failed
           - crash_pod.changed
           - '"Resource creation timed out" in crash_pod.msg'
-    
+
     - name: add a valid pod and wait until container is running
       k8s:
         definition:
@@ -401,9 +401,9 @@
             namespace: "{{ wait_namespace }}"
           spec:
             containers:
-            - name: crashing-container
-              image: busybox
-              command: ['/bin/sh', '-c', 'sleep 10000']
+              - name: crashing-container
+                image: busybox
+                command: ['/bin/sh', '-c', 'sleep 10000']
         wait: yes
         wait_timeout: 10
         wait_property:
@@ -428,16 +428,16 @@
             namespace: "{{ wait_namespace }}"
           spec:
             containers:
-            - name: redis-container
-              image: redis
-              volumeMounts:
-              - name: test
-                mountPath: "/etc/test"
-                readOnly: true
+              - name: redis-container
+                image: redis
+                volumeMounts:
+                  - name: test
+                    mountPath: "/etc/test"
+                    readOnly: true
             volumes:
-            - name: test
-              configMap:
-                name: redis-config
+              - name: test
+                configMap:
+                  name: redis-config
         wait: yes
         wait_timeout: 10
         wait_property:

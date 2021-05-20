@@ -16,7 +16,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-import traceback
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils._text import to_native
 
@@ -60,8 +59,6 @@ def match_json_property(module, data, expr, value=None):
     jmespath.functions.REVERSE_TYPES_MAP['string'] = jmespath.functions.REVERSE_TYPES_MAP['string'] + ('AnsibleUnicode', 'AnsibleUnsafeText', )
     try:
         content = jmespath.search(expr, data)
-        with open("/tmp/play.cont", "w") as f:
-            f.write("{}".format(content))
         if content is None or content == []:
             return False
         if value is None or _match_value(content, value):
@@ -69,4 +66,4 @@ def match_json_property(module, data, expr, value=None):
             return True
         return False
     except Exception as err:
-        _raise_or_fail(err, msg="JMESPathError failed to extract from JSON document using expr: {}".format(expr))
+        _raise_or_fail(err, msg="JMESPathError failed to extract from JSON document using expr: {0}".format(expr))
