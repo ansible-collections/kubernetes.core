@@ -44,7 +44,7 @@ def match_json_property(module, data, expr, value=None):
     def _match_value(buf, v):
         if isinstance(buf, list):
             # convert all values from bool to str and lowercase them
-            return v.lower() in [str(i).lower() for i in buf]
+            return all([str(i).lower() == v.lower() for i in buf])
         elif isinstance(buf, str):
             return v.lower() == content.lower()
         elif isinstance(buf, bool):

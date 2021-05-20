@@ -60,6 +60,24 @@ def test_boolean_value():
     assert match_json_property(None, data, "containers[*].connected", "TRUE")
     assert match_json_property(None, data, "containers[0].poweron", "false")
 
+    data = {
+        "containers": [
+            {"image": "nginx", "ready": False},
+            {"image": "python", "ready": False},
+            {"image": "mongo", "ready": True}
+        ]
+    }
+    assert not match_json_property(None, data, "containers[*].ready", "true")
+
+    data = {
+        "containers": [
+            {"image": "nginx", "ready": True},
+            {"image": "python", "ready": True},
+            {"image": "mongo", "ready": True}
+        ]
+    }
+    assert match_json_property(None, data, "containers[*].ready", "true")
+
 
 def test_valid_expression():
     data = dict(key="ansible", value="unit-test")
