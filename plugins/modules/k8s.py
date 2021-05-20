@@ -260,13 +260,14 @@ EXAMPLES = r'''
     wait_property:
       property: status.loadBalancer.ingress[*].ip
 
-# Wait for containers inside pod to be running
-- name: Create Pod and wait for containers for be running
+# Wait for container inside a pod to be ready
+- name: Create Pod and wait for containers to be ready
   kubernetes.core.k8s:
     template: pod.yaml
     wait: yes
     wait_property:
-      property: status.containerStatuses[*].state.running
+      property: status.containerStatuses[*].ready
+      value: "true"
 
 # Patch existing namespace : add label
 - name: add label to existing namespace
