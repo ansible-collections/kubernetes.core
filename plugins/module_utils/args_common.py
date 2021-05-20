@@ -75,7 +75,7 @@ WAIT_ARG_SPEC = dict(
         type='dict',
         default=None,
         options=dict(
-            property=dict(),
+            property=dict(required=True),
             value=dict()
         )
     )
