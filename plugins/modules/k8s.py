@@ -140,6 +140,7 @@ requirements:
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
+  - "jmespath"
 '''
 
 EXAMPLES = r'''
@@ -249,6 +250,7 @@ EXAMPLES = r'''
     wait_condition:
       type: Progressing
       status: Unknown
+      reason: DeploymentPaused
 
 # Wait for this service to have acquired an External IP
 - name: Create ingress and wait for ip to be assigned

@@ -242,7 +242,7 @@ class K8sAnsibleMixin(object):
                 self.fail(msg='Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]'.format(api_version, kind))
 
     def kubernetes_facts(self, kind, api_version, name=None, namespace=None, label_selectors=None, field_selectors=None,
-                         wait=False, wait_sleep=5, wait_timeout=120, state='present', condition=None, wait_property=None):
+                         wait=False, wait_sleep=5, wait_timeout=120, state='present', condition=None, property=None):
         resource = self.find_resource(kind, api_version)
         api_found = bool(resource)
         if not api_found:
@@ -298,7 +298,7 @@ class K8sAnsibleMixin(object):
             for resource_instance in resource_list:
                 success, res, duration = self.wait(resource, resource_instance,
                                                    sleep=wait_sleep, timeout=wait_timeout,
-                                                   state=state, condition=condition, wait_property=wait_property)
+                                                   state=state, condition=condition, property=property)
                 if not success:
                     self.fail(msg="Failed to gather information about %s(s) even"
                                   " after waiting for %s seconds" % (res.get('kind'), duration))

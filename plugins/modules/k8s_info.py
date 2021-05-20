@@ -52,7 +52,7 @@ requirements:
   - "python >= 3.6"
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
-  - "jsonpath-rw"
+  - "jmespath"
 '''
 
 EXAMPLES = r'''
@@ -165,7 +165,7 @@ def execute_module(module, k8s_ansible_mixin):
         wait_sleep=module.params["wait_sleep"],
         wait_timeout=module.params["wait_timeout"],
         condition=module.params["wait_condition"],
-        wait_for=module.params["wait_for"]
+        property=module.params["wait_property"]
     )
     module.exit_json(changed=False, **facts)
 

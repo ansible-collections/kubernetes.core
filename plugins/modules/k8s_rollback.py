@@ -34,7 +34,6 @@ requirements:
   - "python >= 3.6"
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
-  - "jsonpath-rw"
 '''
 
 EXAMPLES = r'''
