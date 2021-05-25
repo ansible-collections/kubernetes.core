@@ -15,3 +15,4 @@ plugins/module_utils/client/discovery.py future-import-boilerplate!skip
 plugins/module_utils/client/discovery.py metaclass-boilerplate!skip
 tests/unit/module_utils/test_discoverer.py future-import-boilerplate!skip
 tests/unit/module_utils/test_discoverer.py metaclass-boilerplate!skip
+molecule/default/files/deployment.yaml yamllint!skip
