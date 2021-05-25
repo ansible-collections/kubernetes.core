@@ -201,6 +201,69 @@
           - scale_down_no_wait is changed
           - scale_down_no_wait.diff
           - scale_down_no_wait_pods.resources | length == 1
+    
+    # scale multiple resource using label selectors
+    - name: create deployment
+      kubernetes.core.k8s:
+        namespace: "{{ scale_namespace }}"
+        src: files/deployment.yaml
+
+    - name: list deployment
+      kubernetes.core.k8s_info:
+        kind: Deployment
+        namespace: "{{ scale_namespace }}"
+        label_selectors:
+          - app=nginx
+      register: resource
+
+    - assert:
+        that:
+          - resource.resources | list | length == 2
+
+    - name: scale deployment using resource version
+      kubernetes.core.k8s_scale:
+        replicas: 2
+        kind: Deployment
+        namespace: "{{ scale_namespace }}"
+        resource_version: 0
+        label_selectors:
+          - app=nginx
+      register: scale_out
+
+    - assert:
+        that:
+          - not scale_out.changed
+          - scale_out.results | selectattr('warning', 'defined') | list | length == 2
+
+    - name: scale deployment using current replicas (wrong value)
+      kubernetes.core.k8s_scale:
+        replicas: 2
+        current_replicas: 4
+        kind: Deployment
+        namespace: "{{ scale_namespace }}"
+        label_selectors:
+          - app=nginx
+      register: scale_out
+
+    - assert:
+        that:
+          - not scale_out.changed
+          - scale_out.results | selectattr('warning', 'defined') | list | length == 2
+    
+    - name: scale deployment using current replicas (right value)
+      kubernetes.core.k8s_scale:
+        replicas: 2
+        current_replicas: 3
+        kind: Deployment
+        namespace: "{{ scale_namespace }}"
+        label_selectors:
+          - app=nginx
+      register: scale_out
+
+    - assert:
+        that:
+          - scale_out.changed
+          - scale_out.results | map(attribute='result.status.replicas') | list | unique == [2]
 
   always:
     - name: Remove namespace

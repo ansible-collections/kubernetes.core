@@ -23,12 +23,26 @@ author:
 description:
   - Similar to the kubectl scale command. Use to set the number of replicas for a Deployment, ReplicaSet,
     or Replication Controller, or the parallelism attribute of a Job. Supports check mode.
+  - C(wait) parameter is not supported for Jobs.
 
 extends_documentation_fragment:
   - kubernetes.core.k8s_name_options
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_resource_options
   - kubernetes.core.k8s_scale_options
+
+options:
+  label_selectors:
+    description: List of label selectors to use to filter results
+    type: list
+    elements: str
+    version_added: 2.0.0
+  continue_on_error:
+    description:
+    - Whether to continue on errors when multiple resources are defined.
+    type: bool
+    default: False
+    version_added: 2.0.0
 
 requirements:
     - "python >= 3.6"
@@ -82,6 +96,15 @@ EXAMPLES = r'''
     resource_definition: "{{ lookup('file', '/myproject/elastic_deployment.yml') | from_yaml }}"
     replicas: 3
     wait: no
+
+- name: Scale deployment using label selectors (continue operation in case error occured on one resource)
+  kubernetes.core.k8s_scale:
+    replicas: 3
+    kind: Deployment
+    namespace: test
+    label_selectors:
+      - app = test
+    continue_on_error: true
 '''
 
 RETURN = r'''
@@ -131,6 +154,7 @@ SCALE_ARG_SPEC = {
     'resource_version': {},
     'wait': {'type': 'bool', 'default': True},
     'wait_timeout': {'type': 'int', 'default': 20},
+    'wait_sleep': {'type': 'int', 'default': 5},
 }
 
 
@@ -147,11 +171,17 @@ def execute_module(module, k8s_ansible_mixin,):
     replicas = module.params.get('replicas')
     resource_version = module.params.get('resource_version')
 
+    label_selectors = module.params.get('label_selectors')
+    if not label_selectors:
+        label_selectors = []
+    continue_on_error = module.params.get('continue_on_error')
+
     wait = module.params.get('wait')
     wait_time = module.params.get('wait_timeout')
+    wait_sleep = module.params.get('wait_sleep')
     existing = None
     existing_count = None
-    return_attributes = dict(changed=False, result=dict(), diff=dict())
+    return_attributes = dict(result=dict(), diff=dict())
     if wait:
         return_attributes['duration'] = 0
 
@@ -159,37 +189,82 @@ def execute_module(module, k8s_ansible_mixin,):
 
     from ansible_collections.kubernetes.core.plugins.module_utils.common import NotFoundError
 
+    multiple_scale = False
     try:
-        existing = resource.get(name=name, namespace=namespace)
-        return_attributes['result'] = existing.to_dict()
+        existing = resource.get(name=name, namespace=namespace, label_selector=','.join(label_selectors))
+        if existing.kind.endswith('List'):
+            existing_items = existing.items
+            multiple_scale = len(existing_items) > 1
+        else:
+            existing_items = [existing]
     except NotFoundError as exc:
         module.fail_json(msg='Failed to retrieve requested object: {0}'.format(exc),
                          error=exc.value.get('status'))
 
-    if module.params['kind'] == 'job':
-        existing_count = existing.spec.parallelism
-    elif hasattr(existing.spec, 'replicas'):
-        existing_count = existing.spec.replicas
+    if multiple_scale:
+        # when scaling multiple resource, the 'result' is changed to 'results' and is a list
+        return_attributes = {'results': []}
+    changed = False
 
-    if existing_count is None:
-        module.fail_json(msg='Failed to retrieve the available count for the requested object.')
+    def _continue_or_fail(error):
+        if multiple_scale and continue_on_error:
+            if "errors" not in return_attributes:
+                return_attributes['errors'] = []
+            return_attributes['errors'].append({'error': error, 'failed': True})
+        else:
+            module.fail_json(msg=error, **return_attributes)
 
-    if resource_version and resource_version != existing.metadata.resourceVersion:
-        module.exit_json(**return_attributes)
+    def _continue_or_exit(warn):
+        if multiple_scale:
+            return_attributes['results'].append({'warning': warn, 'changed': False})
+        else:
+            module.exit_json(warning=warn, **return_attributes)
 
-    if current_replicas is not None and existing_count != current_replicas:
-        module.exit_json(**return_attributes)
+    for existing in existing_items:
+        if module.params['kind'] == 'job':
+            existing_count = existing.spec.parallelism
+        elif hasattr(existing.spec, 'replicas'):
+            existing_count = existing.spec.replicas
 
-    if existing_count != replicas:
-        return_attributes['changed'] = True
-        if not module.check_mode:
-            if module.params['kind'] == 'job':
-                existing.spec.parallelism = replicas
-                return_attributes['result'] = resource.patch(existing.to_dict()).to_dict()
-            else:
-                return_attributes = scale(module, k8s_ansible_mixin, resource, existing, replicas, wait, wait_time)
+        if existing_count is None:
+            error = 'Failed to retrieve the available count for object kind={0} name={1} namespace={2}.'.format(
+                    existing.kind, existing.metadata.name, existing.metadata.namespace)
+            _continue_or_fail(error)
+            continue
 
-    module.exit_json(**return_attributes)
+        if resource_version and resource_version != existing.metadata.resourceVersion:
+            warn = 'expected resource version {0} does not match with actual {1} for object kind={2} name={3} namespace={4}.'.format(
+                   resource_version, existing.metadata.resourceVersion, existing.kind, existing.metadata.name, existing.metadata.namespace)
+            _continue_or_exit(warn)
+            continue
+
+        if current_replicas is not None and existing_count != current_replicas:
+            warn = 'current replicas {0} does not match with actual {1} for object kind={2} name={3} namespace={4}.'.format(
+                   current_replicas, existing_count, existing.kind, existing.metadata.name, existing.metadata.namespace)
+            _continue_or_exit(warn)
+            continue
+
+        if existing_count != replicas:
+            if not module.check_mode:
+                if module.params['kind'] == 'job':
+                    existing.spec.parallelism = replicas
+                    result = resource.patch(existing.to_dict()).to_dict()
+                else:
+                    result = scale(module, k8s_ansible_mixin, resource, existing, replicas, wait, wait_time, wait_sleep)
+                    changed = changed or result['changed']
+        else:
+            name = existing.metadata.name
+            namespace = existing.metadata.namespace
+            existing = resource.get(name=name, namespace=namespace)
+            result = {'changed': False, 'result': existing.to_dict()}
+        # append result to the return attribute
+        if multiple_scale:
+            return_attributes['results'].append(result)
+        else:
+            del result['changed']
+            return_attributes = result
+
+    module.exit_json(changed=changed, **return_attributes)
 
 
 def argspec():
@@ -197,10 +272,12 @@ def argspec():
     args.update(RESOURCE_ARG_SPEC)
     args.update(NAME_ARG_SPEC)
     args.update(AUTH_ARG_SPEC)
+    args.update({'label_selectors': {'type': 'list', 'elements': 'str', 'default': []}})
+    args.update(({'continue_on_error': {'type': 'bool', 'default': False}}))
     return args
 
 
-def scale(module, k8s_ansible_mixin, resource, existing_object, replicas, wait, wait_time):
+def scale(module, k8s_ansible_mixin, resource, existing_object, replicas, wait, wait_time, wait_sleep):
     name = existing_object.metadata.name
     namespace = existing_object.metadata.namespace
     kind = existing_object.kind
@@ -227,17 +304,19 @@ def scale(module, k8s_ansible_mixin, resource, existing_object, replicas, wait, 
     result['diff'] = diffs
 
     if wait:
-        success, result['result'], result['duration'] = k8s_ansible_mixin.wait(resource, scale_obj, 5, wait_time)
+        success, result['result'], result['duration'] = k8s_ansible_mixin.wait(resource, scale_obj, wait_sleep, wait_time)
         if not success:
             module.fail_json(msg="Resource scaling timed out", **result)
     return result
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
+    mutually_exclusive = [
+        ('resource_definition', 'src'),
+    ]
+    module = AnsibleModule(argument_spec=argspec(), mutually_exclusive=mutually_exclusive, supports_check_mode=True)
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
         K8sAnsibleMixin, get_api_client)
-
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)
     execute_module(module, k8s_ansible_mixin)
