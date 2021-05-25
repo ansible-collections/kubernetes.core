@@ -201,7 +201,7 @@
           - scale_down_no_wait is changed
           - scale_down_no_wait.diff
           - scale_down_no_wait_pods.resources | length == 1
-    
+
     # scale multiple resource using label selectors
     - name: create deployment
       kubernetes.core.k8s:
@@ -249,7 +249,7 @@
         that:
           - not scale_out.changed
           - scale_out.results | selectattr('warning', 'defined') | list | length == 2
-    
+
     - name: scale deployment using current replicas (right value)
       kubernetes.core.k8s_scale:
         replicas: 2
