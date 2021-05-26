@@ -257,6 +257,8 @@ def execute_module(module, k8s_ansible_mixin,):
             namespace = existing.metadata.namespace
             existing = resource.get(name=name, namespace=namespace)
             result = {'changed': False, 'result': existing.to_dict()}
+            if wait:
+                result['duration'] = 0
         # append result to the return attribute
         if multiple_scale:
             return_attributes['results'].append(result)
