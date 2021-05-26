@@ -256,15 +256,14 @@ def execute_module(module, k8s_ansible_mixin,):
             name = existing.metadata.name
             namespace = existing.metadata.namespace
             existing = resource.get(name=name, namespace=namespace)
-            result = {'changed': False, 'result': existing.to_dict()}
+            result = {'changed': False, 'result': existing.to_dict(), 'diff': {}}
             if wait:
                 result['duration'] = 0
         # append result to the return attribute
         if multiple_scale:
             return_attributes['results'].append(result)
         else:
-            del result['changed']
-            return_attributes = result
+            module.exit_json(**result)
 
     module.exit_json(changed=changed, **return_attributes)
 
