@@ -18,8 +18,6 @@ __metaclass__ = type
 
 from ansible_collections.kubernetes.core.plugins.module_utils.jsonpath_extractor import validate_with_jsonpath
 
-import pytest
-
 
 def test_property_present():
     data = {

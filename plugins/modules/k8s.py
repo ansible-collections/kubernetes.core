@@ -269,6 +269,15 @@ EXAMPLES = r'''
       property: status.containerStatuses[*].ready
       value: "true"
 
+# Wait for first container inside a pod to be ready
+- name: Create Pod and wait for first containers to be ready
+  kubernetes.core.k8s:
+    template: pod.yaml
+    wait: yes
+    wait_property:
+      property: status.containerStatuses[0].ready
+      value: "true"
+
 # Patch existing namespace : add label
 - name: add label to existing namespace
   kubernetes.core.k8s:
