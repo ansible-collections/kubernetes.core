@@ -92,7 +92,7 @@ jobs:
       # The 3.3.0 release of molecule introduced a breaking change. See
       # https://github.com/ansible-community/molecule/issues/3083
       - name: Install molecule and openshift dependencies
-        run: pip install ansible "molecule<3.3.0" yamllint openshift flake8 jsonpatch jmespath
+        run: pip install ansible "molecule<3.3.0" yamllint openshift flake8 jsonpatch
 
       # The latest release doesn't work with Molecule currently.
       # See: https://github.com/ansible-community/molecule/issues/2757

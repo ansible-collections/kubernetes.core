@@ -16,10 +16,9 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-from ansible_collections.kubernetes.core.plugins.module_utils.jsonpath import match_json_property
+from ansible_collections.kubernetes.core.plugins.module_utils.jsonpath_extractor import validate_with_jsonpath
 
 import pytest
-jmespath = pytest.importorskip("jmespath")
 
 
 def test_property_present():
@@ -30,8 +29,8 @@ def test_property_present():
             {"name": "t2", "image": "mongo", "state": "running"}
         ]
     }
-    assert match_json_property(None, data, "containers[*].state")
-    assert not match_json_property(None, data, "containers[*].status")
+    assert validate_with_jsonpath(None, data, "containers[*].state")
+    assert not validate_with_jsonpath(None, data, "containers[*].status")
 
 
 def test_property_value():
@@ -42,9 +41,9 @@ def test_property_value():
             {"name": "t2", "image": "mongo", "state": "running"}
         ]
     }
-    assert match_json_property(None, data, "containers[*].state", "running")
-    assert match_json_property(None, data, "containers[*].state", "Running")
-    assert not match_json_property(None, data, "containers[*].state", "off")
+    assert validate_with_jsonpath(None, data, "containers[*].state", "running")
+    assert validate_with_jsonpath(None, data, "containers[*].state", "Running")
+    assert not validate_with_jsonpath(None, data, "containers[*].state", "off")
 
 
 def test_boolean_value():
@@ -55,10 +54,10 @@ def test_boolean_value():
             {"image": "mongo", "connected": True}
         ]
     }
-    assert match_json_property(None, data, "containers[*].connected", "true")
-    assert match_json_property(None, data, "containers[*].connected", "True")
-    assert match_json_property(None, data, "containers[*].connected", "TRUE")
-    assert match_json_property(None, data, "containers[0].poweron", "false")
+    assert validate_with_jsonpath(None, data, "containers[*].connected", "true")
+    assert validate_with_jsonpath(None, data, "containers[*].connected", "True")
+    assert validate_with_jsonpath(None, data, "containers[*].connected", "TRUE")
+    assert validate_with_jsonpath(None, data, "containers[0].poweron", "false")
 
     data = {
         "containers": [
@@ -67,7 +66,7 @@ def test_boolean_value():
             {"image": "mongo", "ready": True}
         ]
     }
-    assert not match_json_property(None, data, "containers[*].ready", "true")
+    assert not validate_with_jsonpath(None, data, "containers[*].ready", "true")
 
     data = {
         "containers": [
@@ -76,11 +75,4 @@ def test_boolean_value():
             {"image": "mongo", "ready": True}
         ]
     }
-    assert match_json_property(None, data, "containers[*].ready", "true")
-
-
-def test_valid_expression():
-    data = dict(key="ansible", value="unit-test")
-    with pytest.raises(jmespath.exceptions.ParseError) as parsing_err:
-        match_json_property(None, data, ".ansible")
-    assert "Parse error" in str(parsing_err.value)
+    assert validate_with_jsonpath(None, data, "containers[*].ready", "true")

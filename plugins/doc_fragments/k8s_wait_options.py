@@ -76,7 +76,7 @@ options:
         required: True
         description:
         - The property name to wait for.
-        - This value must be jmespath valid expression, see details here U(http://jmespath.org).
+        - This value must be valid json path expression. example: C(containers[*].state.phase), C(spec.containers[0].state)
       value:
         type: str
         description:

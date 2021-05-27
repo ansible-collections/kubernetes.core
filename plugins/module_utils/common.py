@@ -29,7 +29,7 @@ from distutils.version import LooseVersion
 
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC, AUTH_PROXY_HEADERS_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
-from ansible_collections.kubernetes.core.plugins.module_utils.jsonpath import match_json_property
+from ansible_collections.kubernetes.core.plugins.module_utils.jsonpath_extractor import validate_with_jsonpath
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
@@ -97,16 +97,6 @@ except ImportError as e:
     HAS_K8S_INSTANCE_HELPER = False
     k8s_import_exception = e
     K8S_IMP_ERR = traceback.format_exc()
-
-JSON_PATCH_IMP_ERR = None
-try:
-    import jsonpatch
-    HAS_JSON_PATCH = True
-    jsonpatch_import_exception = None
-except ImportError as e:
-    HAS_JSON_PATCH = False
-    jsonpatch_import_exception = e
-    JSON_PATCH_IMP_ERR = traceback.format_exc()
 
 
 def configuration_digest(configuration):
@@ -435,7 +425,7 @@ class K8sAnsibleMixin(object):
             return not resource
 
         def _wait_for_property(resource):
-            return match_json_property(self, resource.to_dict(), property.get('property'), property.get('value', None))
+            return validate_with_jsonpath(self, resource.to_dict(), property.get('property'), property.get('value', None))
 
         waiter = dict(
             Deployment=_deployment_ready,
@@ -857,42 +847,16 @@ class K8sAnsibleMixin(object):
                     self.fail_json(msg=msg, **result)
             return result
 
-    def json_patch(self, existing, definition, merge_type):
-        if merge_type == "json":
-            if not HAS_JSON_PATCH:
-                error = {
-                    "msg": missing_required_lib('jsonpatch'),
-                    "exception": JSON_PATCH_IMP_ERR,
-                    "error": to_native(jsonpatch_import_exception)
-                }
-                return None, error
-            try:
-                patch = jsonpatch.JsonPatch([definition])
-                result_patch = patch.apply(existing.to_dict())
-                return result_patch, None
-            except jsonpatch.InvalidJsonPatch as e:
-                error = {
-                    "msg": "invalid json patch",
-                    "error": to_native(e)
-                }
-                return None, error
-            except jsonpatch.JsonPatchConflict as e:
-                error = {
-                    "msg": "patch could not be applied due to conflict situation",
-                    "error": to_native(e)
-                }
-                return None, error
-        return definition, None
-
     def patch_resource(self, resource, definition, existing, name, namespace, merge_type=None):
+        if merge_type == "json":
+            self.module.deprecate(
+                msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
+                version="3.0.0", collection_name="kubernetes.core")
         try:
             params = dict(name=name, namespace=namespace)
             if merge_type:
                 params['content_type'] = 'application/{0}-patch+json'.format(merge_type)
-            patch_data, error = self.json_patch(existing, definition, merge_type)
-            if error is not None:
-                return None, error
-            k8s_obj = resource.patch(patch_data, **params).to_dict()
+            k8s_obj = resource.patch(definition, **params).to_dict()
             match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
             error = {}
             return k8s_obj, {}

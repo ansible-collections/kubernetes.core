@@ -63,6 +63,7 @@ options:
       C(['strategic-merge', 'merge']), which is ideal for using the same parameters on resource kinds that
       combine Custom Resources and built-in resources.
     - mutually exclusive with C(apply)
+    - I(merge_type=json) is deprecated and will be removed in version 3.0.0. Please use M(kubernetes.core.k8s_json_patch) instead.
     choices:
     - json
     - merge
@@ -140,7 +141,6 @@ requirements:
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
-  - "jmespath"
 '''
 
 EXAMPLES = r'''
