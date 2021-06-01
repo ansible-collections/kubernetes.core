@@ -388,7 +388,7 @@
       assert:
         that:
           - crash_pod is failed
-          - crash_pod.changed
+          - crash_pod is changed
           - '"Resource creation timed out" in crash_pod.msg'
 
     - name: add a valid pod and wait until container is running
