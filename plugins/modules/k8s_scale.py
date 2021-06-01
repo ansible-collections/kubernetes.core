@@ -103,7 +103,7 @@ EXAMPLES = r'''
     kind: Deployment
     namespace: test
     label_selectors:
-      - app = test
+      - app=test
     continue_on_error: true
 '''
 
