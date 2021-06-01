@@ -33,7 +33,7 @@ extends_documentation_fragment:
 
 options:
   label_selectors:
-    description: List of label selectors to use to filter results
+    description: List of label selectors to use to filter results.
     type: list
     elements: str
     version_added: 2.0.0
