@@ -1,0 +1,54 @@
+---
+- block:
+    # https://github.com/ansible-collections/kubernetes.core/issues/9
+    - name: Create a namespace with label
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "app-development-one"
+            labels:
+              namespace_label: "app_development"
+
+    - set_fact:
+        namespace_info: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+
+    - name: Check if the returned value is list with a single element
+      assert:
+        that:
+          - namespace_info is iterable
+          - not namespace_info is string
+          - not namespace_info is mapping
+          - namespace_info | length == 1
+
+    - name: Create another namespace with label
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "app-development-two"
+            labels:
+              namespace_label: "app_development"
+
+    - set_fact:
+        namespace_info: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+
+    - name: Check if the returned value is list with 2 elements
+      assert:
+        that:
+          - namespace_info is iterable
+          - not namespace_info is string
+          - not namespace_info is mapping
+          - namespace_info | length == 2
+
+  always:
+    - name: Ensure that namespace is removed
+      k8s:
+        kind: Namespace
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - app-development-one
+        - app-development-two

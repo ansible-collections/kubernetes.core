@@ -156,6 +156,14 @@
       tags:
         - always
 
+    - name: Include lookup_k8s.yml
+      include_tasks:
+        file: tasks/lookup_k8s.yml
+        apply:
+          tags: [ lookup, k8s ]
+      tags:
+        - always
+
   roles:
     - role: helm
       tags:

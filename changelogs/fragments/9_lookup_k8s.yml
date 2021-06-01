@@ -1,0 +1,3 @@
+---
+bugfixes:
+- k8s - lookup should return list even if single item is found (https://github.com/ansible-collections/kubernetes.core/issues/9).
