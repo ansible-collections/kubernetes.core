@@ -88,7 +88,7 @@ EXAMPLES = r'''
     - include_vars: k8s_passwords.yml
 
     - name: Log in (obtain access token)
-      community.kubernetes.k8s_auth:
+      kubernetes.core.k8s_auth:
         username: admin
         password: "{{ k8s_admin_password }}"
       register: k8s_auth_results
@@ -96,7 +96,7 @@ EXAMPLES = r'''
     # Previous task provides the token/api_key, while all other parameters
     # are taken from module_defaults
     - name: Get a list of all pods from any namespace
-      community.kubernetes.k8s_info:
+      kubernetes.core.k8s_info:
         api_key: "{{ k8s_auth_results.k8s_auth.api_key }}"
         kind: Pod
       register: pod_list
@@ -104,7 +104,7 @@ EXAMPLES = r'''
     always:
     - name: If login succeeded, try to log out (revoke access token)
       when: k8s_auth_results.k8s_auth.api_key is defined
-      community.kubernetes.k8s_auth:
+      kubernetes.core.k8s_auth:
         state: absent
         api_key: "{{ k8s_auth_results.k8s_auth.api_key }}"
 '''

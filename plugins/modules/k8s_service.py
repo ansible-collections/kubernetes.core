@@ -21,9 +21,9 @@ description:
   - Use Openshift Python SDK to manage Services on Kubernetes
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_resource_options
-  - community.kubernetes.k8s_state_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_resource_options
+  - kubernetes.core.k8s_state_options
 
 options:
   merge_type:
@@ -91,7 +91,7 @@ requirements:
 
 EXAMPLES = r'''
 - name: Expose https port with ClusterIP
-  community.kubernetes.k8s_service:
+  kubernetes.core.k8s_service:
     state: present
     name: test-https
     namespace: default
@@ -102,7 +102,7 @@ EXAMPLES = r'''
       key: special
 
 - name: Expose https port with ClusterIP using spec
-  community.kubernetes.k8s_service:
+  kubernetes.core.k8s_service:
     state: present
     name: test-https
     namespace: default
@@ -150,7 +150,7 @@ import traceback
 from collections import defaultdict
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     K8sAnsibleMixin, AUTH_ARG_SPEC, COMMON_ARG_SPEC, RESOURCE_ARG_SPEC)
 
 

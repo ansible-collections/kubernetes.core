@@ -19,7 +19,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          path: ansible_collections/community/kubernetes
+          path: ansible_collections/kubernetes/core
 
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
@@ -31,7 +31,7 @@ jobs:
 
       - name: Run sanity tests on Python ${{ matrix.python_version }}
         run: make test-sanity PYTHON_VERSION=${{ matrix.python_version }}
-        working-directory: ./ansible_collections/community/kubernetes
+        working-directory: ./ansible_collections/kubernetes/core
 
   integration:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          path: ansible_collections/community/kubernetes
+          path: ansible_collections/kubernetes/core
 
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1
@@ -55,11 +55,11 @@ jobs:
 
       - name: Run integration tests on Python ${{ matrix.python_version }}
         run: make test-integration PYTHON_VERSION=${{ matrix.python_version }}
-        working-directory: ./ansible_collections/community/kubernetes
+        working-directory: ./ansible_collections/kubernetes/core
 
       - name: Generate coverage report.
         run: ansible-test coverage xml -v --requirements --group-by command --group-by version
-        working-directory: ./ansible_collections/community/kubernetes
+        working-directory: ./ansible_collections/kubernetes/core
 
       - uses: codecov/codecov-action@v1
         with:
@@ -74,7 +74,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          path: ansible_collections/community/kubernetes
+          path: ansible_collections/kubernetes/core
 
       - name: Set up KinD cluster
         uses: engineerd/setup-kind@v0.5.0
@@ -110,82 +110,4 @@ jobs:
 
       - name: Run molecule default test scenario
         run: make test-molecule
-        working-directory: ./ansible_collections/community/kubernetes
-
-  downstream-sanity-29:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python_version: ['3.7']
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          path: ansible_collections/community/kubernetes
-
-      - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v1
-        with:
-          python-version: ${{ matrix.python_version }}
-
-      - name: Install ansible base (devel branch)
-        run: pip install "ansible>=2.9.0,<2.10.0"
-
-      - name: Run sanity tests on Python ${{ matrix.python_version }}
-        run: make downstream-test-sanity
-        working-directory: ./ansible_collections/community/kubernetes
-
-  downstream-integration-29:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # Our old integration tests fail under newer Python versions.
-        python_version: ['3.6']
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          path: ansible_collections/community/kubernetes
-
-      - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v1
-        with:
-          python-version: ${{ matrix.python_version }}
-
-      - name: Install ansible base (devel branch)
-        run: pip install "ansible>=2.9.0,<2.10.0" pip==20.3.1
-
-      - name: Run integration tests on Python ${{ matrix.python_version }}
-        run: make downstream-test-integration
-        working-directory: ./ansible_collections/community/kubernetes
-
-  downstream-molecule-29:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python_version: ['3.7']
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          path: ansible_collections/community/kubernetes
-
-      - name: Set up KinD cluster
-        uses: engineerd/setup-kind@v0.5.0
-
-      - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v1
-        with:
-          python-version: ${{ matrix.python_version }}
-
-      - name: Install molecule and openshift dependencies
-        run: pip install "ansible>=2.9.0,<2.10.0" "molecule<3.3.0" yamllint openshift flake8
-
-      - name: Create default collection path symlink
-        run: |
-          mkdir -p /home/runner/.ansible
-          ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
-
-      - name: Run molecule default test scenario
-        run: make downstream-test-molecule
-        working-directory: ./ansible_collections/community/kubernetes
+        working-directory: ./ansible_collections/kubernetes/core

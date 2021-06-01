@@ -11,7 +11,7 @@ import os.path
 import yaml
 
 
-from ansible_collections.community.kubernetes.plugins.module_utils.helm import (
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     run_helm,
     write_temp_kubeconfig,
 )

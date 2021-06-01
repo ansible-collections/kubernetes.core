@@ -140,12 +140,12 @@ options:
     default: False
     version_added: "1.2.0"
 extends_documentation_fragment:
-  - community.kubernetes.helm_common_options
+  - kubernetes.core.helm_common_options
 '''
 
 EXAMPLES = r'''
 - name: Deploy latest version of Prometheus chart inside monitoring namespace (and create it)
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: test
     chart_ref: stable/prometheus
     release_namespace: monitoring
@@ -153,12 +153,12 @@ EXAMPLES = r'''
 
 # From repository
 - name: Add stable chart repo
-  community.kubernetes.helm_repository:
+  kubernetes.core.helm_repository:
     name: stable
     repo_url: "https://kubernetes.github.io/ingress-nginx"
 
 - name: Deploy latest version of Grafana chart inside monitoring namespace with values
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: test
     chart_ref: stable/grafana
     release_namespace: monitoring
@@ -166,14 +166,14 @@ EXAMPLES = r'''
       replicas: 2
 
 - name: Deploy Grafana chart on 5.0.12 with values loaded from template
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: test
     chart_ref: stable/grafana
     chart_version: 5.0.12
     values: "{{ lookup('template', 'somefile.yaml') | from_yaml }}"
 
 - name: Deploy Grafana chart using values files on target
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: test
     chart_ref: stable/grafana
     release_namespace: monitoring
@@ -181,7 +181,7 @@ EXAMPLES = r'''
       - /path/to/values.yaml
 
 - name: Remove test release and waiting suppression ending
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: test
     state: absent
     wait: true
@@ -193,14 +193,14 @@ EXAMPLES = r'''
     dest: /tmp/helm_repo
 
 - name: Deploy Grafana chart from local path
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: test
     chart_ref: /tmp/helm_repo/stable/grafana
     release_namespace: monitoring
 
 # From url
 - name: Deploy Grafana chart on 5.6.0 from url
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: test
     chart_ref: "https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz"
     release_namespace: monitoring
@@ -272,7 +272,7 @@ except ImportError:
     IMP_YAML = False
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib, env_fallback
-from ansible_collections.community.kubernetes.plugins.module_utils.helm import run_helm, get_values
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm, get_values
 
 
 def get_release(state, release_name):

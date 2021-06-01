@@ -68,12 +68,12 @@ options:
 
 EXAMPLES = r'''
 - name: Add a repository
-  community.kubernetes.helm_repository:
+  kubernetes.core.helm_repository:
     name: stable
     repo_url: https://kubernetes.github.io/ingress-nginx
 
 - name: Add Red Hat Helm charts repository
-  community.kubernetes.helm_repository:
+  kubernetes.core.helm_repository:
     name: redhat-charts
     repo_url: https://redhat-developer.github.com/redhat-helm-charts
 '''
@@ -121,7 +121,7 @@ except ImportError:
     IMP_YAML = False
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible_collections.community.kubernetes.plugins.module_utils.helm import run_helm
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
 # Get repository from all repositories added

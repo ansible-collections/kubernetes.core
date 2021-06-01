@@ -39,12 +39,12 @@ options:
     type: str
     aliases: [ namespace ]
 extends_documentation_fragment:
-  - community.kubernetes.helm_common_options
+  - kubernetes.core.helm_common_options
 '''
 
 EXAMPLES = r'''
 - name: Deploy latest version of Grafana chart inside monitoring namespace
-  community.kubernetes.helm_info:
+  kubernetes.core.helm_info:
     name: test
     release_namespace: monitoring
 '''
@@ -99,7 +99,7 @@ except ImportError:
     IMP_YAML = False
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib, env_fallback
-from ansible_collections.community.kubernetes.plugins.module_utils.helm import run_helm, get_values
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm, get_values
 
 
 # Get Release from all deployed releases

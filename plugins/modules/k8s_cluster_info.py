@@ -30,7 +30,7 @@ options:
     default: True
 
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
+  - kubernetes.core.k8s_auth_options
 
 requirements:
   - "python >= 2.7"
@@ -40,11 +40,11 @@ requirements:
 
 EXAMPLES = r'''
 - name: Get Cluster information
-  community.kubernetes.k8s_cluster_info:
+  kubernetes.core.k8s_cluster_info:
   register: api_status
 
 - name: Do not invalidate cache before getting information
-  community.kubernetes.k8s_cluster_info:
+  kubernetes.core.k8s_cluster_info:
     invalidate_cache: False
   register: api_status
 '''
@@ -163,7 +163,7 @@ import traceback
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible_collections.community.kubernetes.plugins.module_utils.common import K8sAnsibleMixin, AUTH_ARG_SPEC
+from ansible_collections.kubernetes.core.plugins.module_utils.common import K8sAnsibleMixin, AUTH_ARG_SPEC
 
 try:
     try:

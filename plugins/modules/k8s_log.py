@@ -25,8 +25,8 @@ description:
   - Supports check mode.
   - Analogous to `kubectl logs` or `oc logs`
 extends_documentation_fragment:
-  - community.kubernetes.k8s_auth_options
-  - community.kubernetes.k8s_name_options
+  - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_name_options
 options:
   kind:
     description:
@@ -63,14 +63,14 @@ requirements:
 
 EXAMPLES = r'''
 - name: Get a log from a Pod
-  community.kubernetes.k8s_log:
+  kubernetes.core.k8s_log:
     name: example-1
     namespace: testing
   register: log
 
 # This will get the log from the first Pod found matching the selector
 - name: Log a Pod matching a label selector
-  community.kubernetes.k8s_log:
+  kubernetes.core.k8s_log:
     namespace: testing
     label_selectors:
     - app=example
@@ -78,7 +78,7 @@ EXAMPLES = r'''
 
 # This will get the log from a single Pod managed by this Deployment
 - name: Get a log from a Deployment
-  community.kubernetes.k8s_log:
+  kubernetes.core.k8s_log:
     api_version: apps/v1
     kind: Deployment
     namespace: testing
@@ -87,7 +87,7 @@ EXAMPLES = r'''
 
 # This will get the log from a single Pod managed by this DeploymentConfig
 - name: Get a log from a DeploymentConfig
-  community.kubernetes.k8s_log:
+  kubernetes.core.k8s_log:
     api_version: apps.openshift.io/v1
     kind: DeploymentConfig
     namespace: testing
@@ -114,7 +114,7 @@ import copy
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.six import PY2
 
-from ansible_collections.community.kubernetes.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     K8sAnsibleMixin, AUTH_ARG_SPEC, NAME_ARG_SPEC)
 
 
