@@ -219,6 +219,7 @@
     - assert:
         that:
           - resource.resources | list | length == 2
+          - resource is changed
 
     - name: scale deployment using resource version
       kubernetes.core.k8s_scale:
