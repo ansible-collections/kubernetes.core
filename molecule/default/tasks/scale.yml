@@ -215,7 +215,6 @@
         label_selectors:
           - app=nginx
       register: resource
-
     - assert:
         that:
           - resource.resources | list | length == 2
