@@ -358,7 +358,7 @@ def fetch_chart_info(module, command, chart_ref):
 
 def deploy(command, release_name, release_values, chart_name, wait,
            wait_timeout, disable_hook, force, values_files, atomic=False,
-           create_namespace=False, replace=False, skip_crds=False):
+           create_namespace=False, replace=False, skip_crds=False, release_namespace=None):
     """
     Install/upgrade/rollback release chart
     """
@@ -391,6 +391,9 @@ def deploy(command, release_name, release_values, chart_name, wait,
     if create_namespace:
         deploy_command += " --create-namespace"
 
+    if release_namespace:
+        deploy_command += " --namespace=" + release_namespace
+
     if values_files:
         for value_file in values_files:
             deploy_command += " --values=" + value_file
@@ -409,7 +412,7 @@ def deploy(command, release_name, release_values, chart_name, wait,
     return deploy_command
 
 
-def delete(command, release_name, purge, disable_hook):
+def delete(command, release_name, purge, disable_hook, release_namespace=None):
     """
     Delete release chart
     """
@@ -421,6 +424,9 @@ def delete(command, release_name, purge, disable_hook):
 
     if disable_hook:
         delete_command += " --no-hooks"
+
+    if release_namespace:
+        delete_command += " --namespace=" + release_namespace
 
     delete_command += " " + release_name
 
@@ -573,6 +579,7 @@ def main():
     wait_timeout = module.params.get('wait_timeout')
     atomic = module.params.get('atomic')
     create_namespace = module.params.get('create_namespace')
+    release_namespace = module.params.get('release_namespace')
     replace = module.params.get('replace')
     skip_crds = module.params.get('skip_crds')
 
@@ -593,7 +600,7 @@ def main():
         if replace:
             module.fail_json(msg="replace is not applicable when state is absent")
 
-        helm_cmd = delete(helm_cmd, release_name, purge, disable_hook)
+        helm_cmd = delete(helm_cmd, release_name, purge, disable_hook, release_namespace=release_namespace)
         changed = True
     elif release_state == "present":
 
@@ -610,7 +617,7 @@ def main():
             helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
                               disable_hook, False, values_files=values_files, atomic=atomic,
                               create_namespace=create_namespace, replace=replace,
-                              skip_crds=skip_crds)
+                              skip_crds=skip_crds, release_namespace=release_namespace)
             changed = True
 
         else:
@@ -627,7 +634,7 @@ def main():
                 helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
                                   disable_hook, force, values_files=values_files, atomic=atomic,
                                   create_namespace=create_namespace, replace=replace,
-                                  skip_crds=skip_crds)
+                                  skip_crds=skip_crds, release_namespace=release_namespace)
                 changed = True
 
     if module.check_mode:

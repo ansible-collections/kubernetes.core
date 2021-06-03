@@ -1,0 +1,2 @@
+bugfixes:
+  - helm - ensure release_namespace is passed to helm command (https://github.com/ansible-collections/community.kubernetes/issues/435)
