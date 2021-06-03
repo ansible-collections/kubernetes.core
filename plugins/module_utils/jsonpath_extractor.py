@@ -122,10 +122,10 @@ def validate_with_jsonpath(module, data, expr, value=None):
         if isinstance(buf, list):
             # convert all values from bool to str and lowercase them
             return all([str(i).lower() == v.lower() for i in buf])
-        elif isinstance(buf, str):
-            return v.lower() == content.lower()
+        elif isinstance(buf, str) or isinstance(buf, int) or isinstance(buf, float):
+            return v.lower() == str(buf).lower()
         elif isinstance(buf, bool):
-            return v.lower() == str(content).lower()
+            return v.lower() == str(buf).lower()
         else:
             # unable to test single value against dict
             return False
