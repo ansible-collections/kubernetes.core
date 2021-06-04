@@ -22,7 +22,8 @@ import tempfile
 import kubernetes.dynamic
 import kubernetes.dynamic.discovery
 from kubernetes import __version__
-from kubernetes.dynamic.exceptions import ServiceUnavailableError
+from kubernetes.dynamic.exceptions import (ResourceNotFoundError, ResourceNotUniqueError,
+                                           ServiceUnavailableError)
 
 from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import ResourceList
 
@@ -128,6 +129,32 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
             resource_list = ResourceList(self.client, group=group, api_version=version, base_kind=resource['kind'], base_resource_lookup=resource_lookup)
             resources[resource_list.kind].append(resource_list)
         return resources
+
+    def get(self, **kwargs):
+        """
+        Same as search, but will throw an error if there are multiple or no
+        results. If there are multiple results and only one is an exact match
+        on api_version, that resource will be returned.
+        """
+        results = self.search(**kwargs)
+        # If there are multiple matches, prefer exact matches on api_version
+        if len(results) > 1 and kwargs.get('api_version'):
+            results = [
+                result for result in results if result.group_version == kwargs['api_version']
+            ]
+        # If there are multiple matches, prefer non-List kinds
+        if len(results) > 1 and not all([isinstance(x, ResourceList) for x in results]):
+            results = [result for result in results if not isinstance(result, ResourceList)]
+        # if multiple resources are found that share a GVK, prefer the one with the most supported verbs
+        if len(results) > 1 and len(set((x.group_version, x.kind) for x in results)) == 1:
+            if len(set(len(x.verbs) for x in results)) != 1:
+                results = [max(results, key=lambda x: len(x.verbs))]
+        if len(results) == 1:
+            return results[0]
+        elif not results:
+            raise ResourceNotFoundError('No matches found for {0}'.format(kwargs))
+        else:
+            raise ResourceNotUniqueError('Multiple matches found for {0}: {1}'.format(kwargs, results))
 
 
 class LazyDiscoverer(Discoverer, kubernetes.dynamic.LazyDiscoverer):
