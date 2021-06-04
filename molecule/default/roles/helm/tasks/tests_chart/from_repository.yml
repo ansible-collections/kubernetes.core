@@ -1,6 +1,7 @@
 ---
 - name: Add chart repo
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm
     repo_url: "{{ chart_test_repo }}"
 
@@ -14,6 +15,7 @@
 
 - name: Add chart repo
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm
     repo_url: "{{ chart_test_repo }}"
     state: absent
