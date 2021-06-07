@@ -13,3 +13,4 @@ plugins/module_utils/client/discovery.py import-3.7!skip
 plugins/module_utils/client/resource.py import-3.7!skip
 plugins/module_utils/client/discovery.py future-import-boilerplate!skip
 plugins/module_utils/client/discovery.py metaclass-boilerplate!skip
+molecule/default/files/deployment.yaml yamllint!skip
