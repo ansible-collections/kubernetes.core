@@ -1,2 +1,0 @@
-minor_changes:
-  - helm - add optional support for helm diff (https://github.com/ansible-collections/community.kubernetes/issues/248).

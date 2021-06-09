@@ -1,3 +1,0 @@
----
-bugfixes:
-  - kubectl - Fix documentation in kubectl connection plugin (https://github.com/ansible-collections/community.kubernetes/pull/52).

@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Remove deprecated ANSIBLE_METADATA field (https://github.com/ansible-collections/community.kubernetes/pull/95).

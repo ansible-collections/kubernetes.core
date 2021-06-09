@@ -562,6 +562,32 @@ Examples
         chart_ref: "https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz"
         release_namespace: monitoring
 
+    # Using complex Values
+    - name: Deploy new-relic client chart
+      kubernetes.core.helm:
+        name: newrelic-bundle
+        chart_ref: newrelic/nri-bundle
+        release_namespace: default
+        force: True
+        wait: True
+        replace: True
+        update_repo_cache: True
+        disable_hook: True
+        values:
+          global:
+            licenseKey: "{{ nr_license_key }}"
+            cluster: "{{ site_name }}"
+          newrelic-infrastructure:
+            privileged: True
+          ksm:
+            enabled: True
+          prometheus:
+            enabled: True
+          kubeEvents:
+            enabled: True
+          logging:
+            enabled: True
+
 
 
 Return Values

@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Don't require project coverage check on PRs (https://github.com/ansible-collections/community.kubernetes/pull/102).

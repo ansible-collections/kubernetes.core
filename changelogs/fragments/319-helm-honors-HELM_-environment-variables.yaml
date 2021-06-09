@@ -1,4 +1,0 @@
----
-minor_changes:
-- The Helm modules (``helm``, ``helm_info``, ``helm_plugin``, ``helm_plugin_info``, ``helm_plugin_repository``) accept
-  the K8S environment variables like the other modules of the collections.
