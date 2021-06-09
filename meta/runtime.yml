@@ -49,10 +49,8 @@ plugin_routing:
   modules:
     k8s_auth:
       redirect: community.okd.k8s_auth
-    # k8s_facts was originally slated for removal in Ansible 2.13.
     k8s_facts:
-      redirect: kubernetes.core.k8s_info
-      deprecation:
+      tombstone:
         removal_version: 2.0.0
         warning_text: Use kubernetes.core.k8s_info instead.
     k8s_raw:
