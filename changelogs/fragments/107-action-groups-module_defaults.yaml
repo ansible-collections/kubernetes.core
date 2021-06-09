@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Add action groups for playbooks with module_defaults (https://github.com/ansible-collections/community.kubernetes/pull/107).

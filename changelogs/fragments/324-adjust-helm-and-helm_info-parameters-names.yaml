@@ -1,3 +1,0 @@
----
-minor_changes:
-- Adjust the name of parameters of ``helm`` and ``helm_info`` to match the documentation. No playbook change required.

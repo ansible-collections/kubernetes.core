@@ -1,3 +1,0 @@
----
-bugfixes:
-- "helm - Accept ``validate_certs`` with a ``context`` (https://github.com/ansible-collections/kubernetes.core/pull/74)."

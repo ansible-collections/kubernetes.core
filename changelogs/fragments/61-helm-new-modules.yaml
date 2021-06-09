@@ -1,5 +1,0 @@
----
-major_changes:
-  - helm - New module for managing Helm charts (https://github.com/ansible-collections/community.kubernetes/pull/61).
-  - helm_info - New module for retrieving Helm chart information (https://github.com/ansible-collections/community.kubernetes/pull/61).
-  - helm_repository - New module for managing Helm repositories (https://github.com/ansible-collections/community.kubernetes/pull/61).

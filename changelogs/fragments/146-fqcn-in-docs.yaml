@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Use FQCN in module docs and plugin examples (https://github.com/ansible-collections/community.kubernetes/pull/146).

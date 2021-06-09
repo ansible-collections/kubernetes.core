@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Improve k8s Deployment and Daemonset wait conditions (https://github.com/ansible-collections/community.kubernetes/pull/35).

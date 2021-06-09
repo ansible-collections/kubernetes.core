@@ -1,3 +1,0 @@
----
-minor_changes:
-  - k8s - support ``patched`` value for ``state`` option. patched state is an existing resource that has a given patch applied (https://github.com/ansible-collections/kubernetes.core/pull/90).

@@ -1,2 +1,0 @@
-minor_changes:
-- common - removed ``KubernetesAnsibleModule``, use ``K8sAnsibleMixin`` instead (https://github.com/ansible-collections/kubernetes.core/pull/70).

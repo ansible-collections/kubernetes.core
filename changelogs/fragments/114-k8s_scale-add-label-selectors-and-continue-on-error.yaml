@@ -1,4 +1,0 @@
----
-minor_changes:
-  - k8s_scale - ability to scale multiple resource using ``label_selectors`` (https://github.com/ansible-collections/community.kubernetes/pull/114).
-  - k8s_scale - new parameter to determine whether to continue or not on error when scaling multiple resources (https://github.com/ansible-collections/community.kubernetes/pull/114).

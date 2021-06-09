@@ -1,3 +1,0 @@
----
-major_changes:
-  - k8s_log - New module for retrieving pod logs (https://github.com/ansible-collections/community.kubernetes/pull/16).

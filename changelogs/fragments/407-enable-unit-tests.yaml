@@ -1,2 +1,0 @@
-bugfixes:
-  - enable unit tests in CI (https://github.com/ansible-collections/community.kubernetes/pull/407).

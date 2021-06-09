@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s_service - Fix argspec (https://github.com/ansible-collections/community.kubernetes/issues/33).

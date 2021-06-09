@@ -1,3 +1,0 @@
----
-minor_changes:
-- Adjust the documentation to clarify the fact ``wait_condition.status`` is a string.

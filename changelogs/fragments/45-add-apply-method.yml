@@ -1,3 +1,0 @@
----
-minor_changes:
-- Replicate apply method in the DynamicClient (https://github.com/ansible-collections/kubernetes.core/pull/45).

@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s_exec - add a note about required permissions for the module (https://github.com/ansible-collections/community.kubernetes/issues/339).

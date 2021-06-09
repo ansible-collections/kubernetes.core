@@ -60,6 +60,7 @@ Name | Description
 [kubernetes.core.k8s_cluster_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_cluster_info_module.rst)|Describe Kubernetes (K8s) cluster, APIs available and their respective versions
 [kubernetes.core.k8s_exec](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_exec_module.rst)|Execute command in Pod
 [kubernetes.core.k8s_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_info_module.rst)|Describe Kubernetes (K8s) objects
+[kubernetes.core.k8s_json_patch](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_json_patch_module.rst)|Apply JSON patch operations to existing objects
 [kubernetes.core.k8s_log](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_log_module.rst)|Fetch logs from Kubernetes resources
 [kubernetes.core.k8s_rollback](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
 [kubernetes.core.k8s_scale](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
@@ -81,7 +82,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 1.2.0
+    version: 2.0.0
 ```
 
 ### Installing the Kubernetes Python Library
