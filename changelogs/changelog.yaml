@@ -320,6 +320,7 @@ releases:
       - helm_plugin_info - remove unused ``release_namespace`` parameter (https://github.com/ansible-collections/kubernetes.core/pull/85).
       - k8s_cluster_info - returned apis as list to avoid being overwritten in case
         of multiple version (https://github.com/ansible-collections/kubernetes.core/pull/41).
+      - k8s_facts - remove the deprecated alias from k8s_facts to k8s_info (https://github.com/ansible-collections/kubernetes.core/pull/125).
       bugfixes:
       - enable unit tests in CI (https://github.com/ansible-collections/community.kubernetes/pull/407).
       - helm - Accept ``validate_certs`` with a ``context`` (https://github.com/ansible-collections/kubernetes.core/pull/74).
@@ -362,6 +363,7 @@ releases:
     fragments:
     - 102-wait-updated-daemonset-pods.yaml
     - 114-k8s_scale-add-label-selectors-and-continue-on-error.yaml
+    - 125-remove-k8s-facts-alias.yaml
     - 379-remove-kubernetesrawmodule.yaml
     - 387-fix-helm-ignoring-context.yaml
     - 399-helm_multiline.yml

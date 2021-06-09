@@ -1,3 +1,0 @@
----
-breaking_changes:
-  - k8s_facts - remove the deprecated alias from k8s_facts to k8s_info (https://github.com/ansible-collections/kubernetes.core/pull/125).
