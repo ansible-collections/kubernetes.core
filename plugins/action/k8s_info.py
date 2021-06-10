@@ -8,6 +8,7 @@ __metaclass__ = type
 
 import copy
 import traceback
+import os
 from contextlib import contextmanager
 
 
@@ -179,6 +180,21 @@ class ActionModule(ActionBase):
             new_module_args.pop('template')
         new_module_args['definition'] = result_template
 
+    def get_file_realpath(self, local_path):
+        # local_path is only supported by k8s_cp module.
+        if self._task.action not in ('k8s_cp', 'kubernetes.core.k8s_cp', 'community.okd.k8s_cp'):
+            raise AnsibleActionFail("'local_path' is only supported parameter for 'k8s_cp' module.")
+
+        if os.path.exists(local_path):
+            return local_path
+        else:
+            try:
+                # find in expected paths
+                source = self._find_needle('files', local_path)
+                return source
+            except AnsibleError:
+                raise AnsibleActionFail("%s does not exist in local filesystem" % local_path)
+
     def run(self, tmp=None, task_vars=None):
         ''' handler for k8s options '''
         if task_vars is None:
@@ -237,6 +253,11 @@ class ActionModule(ActionBase):
         template = self._task.args.get('template', None)
         if template:
             self.load_template(template, new_module_args, task_vars)
+
+        local_path = self._task.args.get('local_path', None)
+        state = self._task.args.get('state', None)
+        if local_path and state == 'to_pod':
+            new_module_args['local_path'] = self.get_file_realpath(local_path)
 
         # Execute the k8s_* module.
         module_return = self._execute_module(module_name=self._task.action, module_args=new_module_args, task_vars=task_vars)

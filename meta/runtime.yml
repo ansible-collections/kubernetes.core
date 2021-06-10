@@ -43,6 +43,8 @@ plugin_routing:
       redirect: kubernetes.core.k8s_info
     k8s_service:
       redirect: kubernetes.core.k8s_info
+    k8s_cp:
+      redirect: kubernetes.core.k8s_info
   inventory:
     openshift:
       redirect: community.okd.openshift

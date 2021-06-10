@@ -1,0 +1,244 @@
+---
+- block:
+    - set_fact:
+        copy_namespace: copy
+        pod_with_one_container:
+          name: pod01
+          containers:
+            - c0
+        pod_with_two_containers:
+          name: pod02
+          containers:
+            - c01
+            - c02
+        pod_container: &container
+          image: busybox
+          command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+
+    - name: Ensure namespace {{ copy_namespace }} exists
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ copy_namespace }}"
+
+    - name: Create pod with one container {{ pod_with_one_container.name }}
+      k8s:
+        namespace: '{{ copy_namespace }}'
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: '{{ pod_with_one_container.name }}'
+          spec:
+            containers:
+              - <<: *container
+                name: '{{ pod_with_one_container.containers[0] }}'
+
+    - name: Create pod with two container {{ pod_with_two_containers.name }}
+      k8s:
+        namespace: '{{ copy_namespace }}'
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: '{{ pod_with_two_containers.name }}'
+          spec:
+            containers:
+              - <<: *container
+                name: '{{ pod_with_two_containers.containers[0] }}'
+              - <<: *container
+                name: '{{ pod_with_two_containers.containers[1] }}'
+
+    - name: copy of non-existent local file should fail
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp
+        local_path: this_file_does_not_exist
+        state: to_pod
+      ignore_errors: true
+      register: copy_non_existent
+
+    - assert:
+        that:
+          - copy_non_existent is failed
+          - copy_non_existent.msg == "this_file_does_not_exist does not exist in local filesystem"
+
+    - name: copy of non-existent file from remote pod should fail
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /this_file_does_not_exist
+        local_path: /tmp
+        state: from_pod
+      ignore_errors: true
+      register: copy_non_existent
+
+    - assert:
+        that:
+          - copy_non_existent is failed
+          - copy_non_existent.msg == "/this_file_does_not_exist does not exist in remote pod filesystem"
+
+    # copy file/directory to pod
+    - name: copy file to remote pod
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp
+        local_path: files/file.txt
+        state: to_pod
+
+    - name: compare file local with pod version
+      k8s_compare:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/file.txt
+        local_path: files/file.txt
+
+    - name: copy directory to remote pod (existing directory)
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp
+        local_path: files/data
+        state: to_pod
+
+    - name: compare directories
+      k8s_compare:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp
+        local_path: files/data
+
+    - name: copy directory to remote pod (remote path is non-existent directory)
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/dest_dir
+        local_path: files/data
+        state: to_pod
+
+    - name: compare local directory with remote create in copy
+      k8s_compare:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/dest_dir
+        local_path: files/data
+
+    # copy file/directory from remote pod into local filesystem
+    - name: copy file from remote pod
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/file.txt
+        local_path: /tmp
+        state: from_pod
+
+    - name: compare file local with pod version
+      k8s_compare:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/file.txt
+        local_path: /tmp/file.txt
+
+    - name: Remove directory
+      ansible.builtin.file:
+        path: /tmp/dump
+        state: absent
+
+    - name: copy directory from remote pod (local target does not exist)
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/dest_dir
+        local_path: /tmp/dump
+        state: from_pod
+      ignore_errors: true
+      register: copy_dir
+
+    - assert:
+        that:
+          - copy_dir is failed
+          - '"/tmp/dump does not exist in local filesystem" in copy_dir.msg'
+
+    - name: create destination directory
+      ansible.builtin.file:
+        state: directory
+        path: /tmp/dump
+
+    - name: copy directory from remote pod
+      k8s_cp:
+        namespace: copy
+        pod: pod01
+        remote_path: /tmp/dest_dir
+        local_path: /tmp/dump
+        state: from_pod
+
+    - name: compare directories
+      k8s_compare:
+        namespace: copy
+        pod: pod01
+        remote_path: /tmp/dest_dir
+        local_path: /tmp/dump/dest_dir
+
+    # create file into pod using content option
+    - name: assert that at least content or local_path is required
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/content.txt
+        state: to_pod
+      ignore_errors: true
+
+    - assert:
+        that:
+          - copy_dir is failed
+
+    - name: assert that content file was created
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/content.txt
+        content: "this is the file content"
+        state: to_pod
+
+    - name: create content file for validation
+      ansible.builtin.copy:
+        content: "this is the file content"
+        dest: /tmp/local_content.txt
+
+    - name: compare file local with pod version
+      k8s_compare:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_one_container.name }}'
+        remote_path: /tmp/content.txt
+        local_path: /tmp/local_content.txt
+
+    # assert that error is raised when pod contains more than 1 container
+    - name: copy file to remote pod
+      k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_with_two_containers.name }}'
+        remote_path: /tmp
+        local_path: files/file.txt
+        state: to_pod
+      ignore_errors: true
+      register: pod2_copy
+
+    - assert:
+        that:
+          - pod2_copy is failed
+          - pod2_copy.msg == "Pod contains more than 1 container, option 'container' should be set."
+
+
+  always:
+    - name: Remove namespace
+      k8s:
+        kind: Namespace
+        name: "{{ copy_namespace }}"
+        state: absent

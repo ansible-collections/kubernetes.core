@@ -214,7 +214,7 @@ class K8sAnsibleMixin(object):
                              error=to_native(k8s_import_exception))
         self.kubernetes_version = kubernetes.__version__
 
-        if not HAS_YAML:
+        if kwargs.get('pyyaml_not_required', True) and not HAS_YAML:
             module.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
 
     def find_resource(self, kind, api_version, fail=False):
