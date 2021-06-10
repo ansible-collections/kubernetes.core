@@ -1,2 +1,0 @@
-minor_changes:
-  - helm - add a ``skip_crds`` option to skip the installation of CRDs when installing or upgrading a chart (https://github.com/ansible-collections/community.kubernetes/issues/296).

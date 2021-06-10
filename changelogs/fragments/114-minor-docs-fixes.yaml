@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Minor documentation fixes and use of FQCN in some examples (https://github.com/ansible-collections/community.kubernetes/pull/114).

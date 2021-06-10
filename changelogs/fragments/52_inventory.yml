@@ -1,2 +1,0 @@
-bugfixes:
-- k8s inventory - remove extra trailing slashes from the hostname (https://github.com/ansible-collections/kubernetes.core/issues/52).

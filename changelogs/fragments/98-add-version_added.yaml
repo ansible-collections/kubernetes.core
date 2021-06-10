@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Add version_added to each new collection module (https://github.com/ansible-collections/community.kubernetes/pull/98).

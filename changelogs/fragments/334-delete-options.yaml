@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s - add a ``delete_options`` parameter to control garbage collection behavior when deleting a resource (https://github.com/ansible-collections/community.kubernetes/issues/253).

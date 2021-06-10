@@ -1,13 +1,14 @@
-.. _kubernetes.core.k8s_scale_module:
+.. _kubernetes.core.k8s_json_patch_module:
 
 
-*************************
-kubernetes.core.k8s_scale
-*************************
+******************************
+kubernetes.core.k8s_json_patch
+******************************
 
-**Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.**
+**Apply JSON patch operations to existing objects**
 
 
+Version added: 2.0.0
 
 .. contents::
    :local:
@@ -16,8 +17,9 @@ kubernetes.core.k8s_scale
 
 Synopsis
 --------
-- Similar to the kubectl scale command. Use to set the number of replicas for a Deployment, ReplicaSet, or Replication Controller, or the parallelism attribute of a Job. Supports check mode.
-- ``wait`` parameter is not supported for Jobs.
+- This module is used to apply RFC 6902 JSON patch operations only.
+- Use the :ref:`k8s <k8s_module>` module for strategic merge or JSON merge operations.
+- The jsonpatch library is required for check mode.
 
 
 
@@ -28,6 +30,7 @@ The below requirements are needed on the host that executes this module.
 - python >= 3.6
 - kubernetes >= 12.0.0
 - PyYAML >= 3.11
+- jsonpatch
 
 
 Parameters
@@ -70,9 +73,7 @@ Parameters
                 </td>
                 <td>
                         <div>Use to specify the API version.</div>
-                        <div>Use to create, delete, or discover an object without providing a full resource definition.</div>
                         <div>Use in conjunction with <em>kind</em>, <em>name</em>, and <em>namespace</em> to identify a specific object.</div>
-                        <div>If <em>resource definition</em> is provided, the <em>apiVersion</em> value from the <em>resource_definition</em> will override this option.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: api, version</div>
                 </td>
             </tr>
@@ -142,41 +143,6 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>continue_on_error</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">boolean</span>
-                    </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.0.0</div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
-                                    <li>yes</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>Whether to continue on errors when multiple resources are defined.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>current_replicas</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">integer</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>For Deployment, ReplicaSet, Replication Controller, only scale, if the number of existing replicas matches. In the case of a Job, update parallelism only if the current parallelism value matches.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>host</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -196,15 +162,14 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
                         <div>Use to specify an object model.</div>
-                        <div>Use to create, delete, or discover an object without providing a full resource definition.</div>
                         <div>Use in conjunction with <em>api_version</em>, <em>name</em>, and <em>namespace</em> to identify a specific object.</div>
-                        <div>If <em>resource definition</em> is provided, the <em>kind</em> value from the <em>resource_definition</em> will override this option.</div>
                 </td>
             </tr>
             <tr>
@@ -225,36 +190,18 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>label_selectors</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=string</span>
-                    </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.0.0</div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>List of label selectors to use to filter results.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
                         <div>Use to specify an object name.</div>
-                        <div>Use to create, delete, or discover an object without providing a full resource definition.</div>
-                        <div>Use in conjunction with <em>api_version</em>, <em>kind</em> and <em>namespace</em> to identify a specific object.</div>
-                        <div>If <em>resource definition</em> is provided, the <em>metadata.name</em> value from the <em>resource_definition</em> will override this option.</div>
+                        <div>Use in conjunction with <em>api_version</em>, <em>kind</em>, and <em>namespace</em> to identify a specific object.</div>
                 </td>
             </tr>
             <tr>
@@ -270,9 +217,7 @@ Parameters
                 </td>
                 <td>
                         <div>Use to specify an object namespace.</div>
-                        <div>Useful when creating, deleting, or discovering an object without providing a full resource definition.</div>
                         <div>Use in conjunction with <em>api_version</em>, <em>kind</em>, and <em>name</em> to identify a specific object.</div>
-                        <div>If <em>resource definition</em> is provided, the <em>metadata.namespace</em> value from the <em>resource_definition</em> will override this option.</div>
                 </td>
             </tr>
             <tr>
@@ -289,6 +234,23 @@ Parameters
                 <td>
                         <div>Provide a password for authenticating with the API. Can also be specified via K8S_AUTH_PASSWORD environment variable.</div>
                         <div>Please read the description of the <code>username</code> option for a discussion of when this option is applicable.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>patch</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of JSON patch operations.</div>
                 </td>
             </tr>
             <tr>
@@ -402,71 +364,6 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>replicas</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">integer</span>
-                         / <span style="color: red">required</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>The desired number of replicas.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>resource_definition</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">-</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>Provide a valid YAML definition (either as a string, list, or dict) for an object when creating or updating.</div>
-                        <div>NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the provided <em>resource_definition</em>.</div>
-                        <div style="font-size: small; color: darkgreen"><br/>aliases: definition, inline</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>resource_version</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>Only attempt to scale, if the current object version matches.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>src</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">path</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>Provide a path to a file containing a valid YAML definition of an object or objects to be created or updated. Mutually exclusive with <em>resource_definition</em>. NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the configuration read in from the <em>src</em> file.</div>
-                        <div>Reads from the local file system. To read from the Ansible controller&#x27;s file system, including vaulted files, use the file lookup plugin or template lookup plugin, combined with the from_yaml filter, and pass the result to <em>resource_definition</em>. See Examples below.</div>
-                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>k8s</span> module.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>username</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -511,14 +408,96 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
-                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
                         </ul>
                 </td>
                 <td>
-                        <div>For Deployment, ReplicaSet, Replication Controller, wait for the status value of <em>ready_replicas</em> to change to the number of <em>replicas</em>. In the case of a Job, this option is ignored.</div>
+                        <div>Whether to wait for certain resource kinds to end up in the desired state.</div>
+                        <div>By default the module exits once Kubernetes has received the request.</div>
+                        <div>Implemented for <code>state=present</code> for <code>Deployment</code>, <code>DaemonSet</code> and <code>Pod</code>, and for <code>state=absent</code> for all resource kinds.</div>
+                        <div>For resource kinds without an implementation, <code>wait</code> returns immediately unless <code>wait_condition</code> is set.</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>wait_condition</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Specifies a custom condition on the status to wait for.</div>
+                        <div>Ignored if <code>wait</code> is not set or is set to False.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>reason</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The value of the reason field in your desired condition</div>
+                        <div>For example, if a <code>Deployment</code> is paused, The <code>Progressing</code> <code>type</code> will have the <code>DeploymentPaused</code> reason.</div>
+                        <div>The possible reasons in a condition are specific to each resource type in Kubernetes.</div>
+                        <div>See the API documentation of the status field for a given resource to see possible choices.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>status</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>True</b>&nbsp;&larr;</div></li>
+                                    <li>False</li>
+                                    <li>Unknown</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>The value of the status field in your desired condition.</div>
+                        <div>For example, if a <code>Deployment</code> is paused, the <code>Progressing</code> <code>type</code> will have the <code>Unknown</code> status.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The type of condition to wait for.</div>
+                        <div>For example, the <code>Pod</code> resource will set the <code>Ready</code> condition (among others).</div>
+                        <div>Required if you are specifying a <code>wait_condition</code>.</div>
+                        <div>If left empty, the <code>wait_condition</code> field will be ignored.</div>
+                        <div>The possible types for a condition are specific to each resource type in Kubernetes.</div>
+                        <div>See the API documentation of the status field for a given resource to see possible choices.</div>
+                </td>
+            </tr>
+
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
@@ -527,7 +506,6 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">integer</span>
                     </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.0.0</div>
                 </td>
                 <td>
                         <b>Default:</b><br/><div style="color: blue">5</div>
@@ -546,10 +524,11 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">20</div>
+                        <b>Default:</b><br/><div style="color: blue">120</div>
                 </td>
                 <td>
-                        <div>When <code>wait</code> is <em>True</em>, the number of seconds to wait for the <em>ready_replicas</em> status to equal  <em>replicas</em>. If the status is not reached within the allotted time, an error will result. In the case of a Job, this option is ignored.</div>
+                        <div>How long in seconds to wait for the resource to end up in the desired state.</div>
+                        <div>Ignored if <code>wait</code> is not set.</div>
                 </td>
             </tr>
     </table>
@@ -569,60 +548,18 @@ Examples
 
 .. code-block:: yaml
 
-    - name: Scale deployment up, and extend timeout
-      kubernetes.core.k8s_scale:
-        api_version: v1
-        kind: Deployment
-        name: elastic
-        namespace: myproject
-        replicas: 3
-        wait_timeout: 60
-
-    - name: Scale deployment down when current replicas match
-      kubernetes.core.k8s_scale:
-        api_version: v1
-        kind: Deployment
-        name: elastic
-        namespace: myproject
-        current_replicas: 3
-        replicas: 2
-
-    - name: Increase job parallelism
-      kubernetes.core.k8s_scale:
-        api_version: batch/v1
-        kind: job
-        name: pi-with-timeout
+    - name: Apply multiple patch operations to an existing Pod
+      kubernetes.core.k8s_json_patch:
+        kind: Pod
         namespace: testing
-        replicas: 2
-
-    # Match object using local file or inline definition
-
-    - name: Scale deployment based on a file from the local filesystem
-      kubernetes.core.k8s_scale:
-        src: /myproject/elastic_deployment.yml
-        replicas: 3
-        wait: no
-
-    - name: Scale deployment based on a template output
-      kubernetes.core.k8s_scale:
-        resource_definition: "{{ lookup('template', '/myproject/elastic_deployment.yml') | from_yaml }}"
-        replicas: 3
-        wait: no
-
-    - name: Scale deployment based on a file from the Ansible controller filesystem
-      kubernetes.core.k8s_scale:
-        resource_definition: "{{ lookup('file', '/myproject/elastic_deployment.yml') | from_yaml }}"
-        replicas: 3
-        wait: no
-
-    - name: Scale deployment using label selectors (continue operation in case error occured on one resource)
-      kubernetes.core.k8s_scale:
-        replicas: 3
-        kind: Deployment
-        namespace: test
-        label_selectors:
-          - app=test
-        continue_on_error: true
+        name: mypod
+        patch:
+          - op: add
+            path: /metadata/labels/app
+            value: myapp
+          - op: replace
+            patch: /spec/containers/0/image
+            value: nginx
 
 
 
@@ -641,15 +578,49 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>duration</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>when <code>wait</code> is true</td>
+                <td>
+                            <div>Elapsed time of task in seconds.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">48</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>error</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">dictionary</span>
+                    </div>
+                </td>
+                <td>error</td>
+                <td>
+                            <div>The error when patching the object.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">{&#x27;msg&#x27;: &#x27;Failed to import the required Python library (jsonpatch) ...&#x27;, &#x27;exception&#x27;: &#x27;Traceback (most recent call last): ...&#x27;}</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>result</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">dictionary</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>If a change was made, will return the patched object, otherwise returns the existing object.</div>
+                            <div>The modified object.</div>
                     <br/>
                 </td>
             </tr>
@@ -673,24 +644,6 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>duration</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">integer</span>
-                    </div>
-                </td>
-                <td>when <code>wait</code> is true</td>
-                <td>
-                            <div>elapsed time of task in seconds</div>
-                    <br/>
-                        <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">48</div>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>kind</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
@@ -699,7 +652,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>success</td>
                 <td>
-                            <div>Represents the REST resource this object represents.</div>
+                            <div>The REST resource this object represents.</div>
                     <br/>
                 </td>
             </tr>
@@ -710,7 +663,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <b>metadata</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">dictionary</span>
                     </div>
                 </td>
                 <td>success</td>
@@ -726,7 +679,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <b>spec</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">dictionary</span>
                     </div>
                 </td>
                 <td>success</td>
@@ -742,7 +695,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <b>status</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">dictionary</span>
                     </div>
                 </td>
                 <td>success</td>
@@ -763,5 +716,4 @@ Status
 Authors
 ~~~~~~~
 
-- Chris Houseknecht (@chouseknecht)
-- Fabian von Feilitzsch (@fabianvf)
+- Mike Graves (@gravesm)

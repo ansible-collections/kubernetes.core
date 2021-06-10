@@ -1,2 +1,0 @@
-minor_changes:
-  - remove the deprecated ``KubernetesRawModule`` class (https://github.com/ansible-collections/community.kubernetes/issues/232).

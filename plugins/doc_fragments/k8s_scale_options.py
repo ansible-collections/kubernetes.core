@@ -40,4 +40,10 @@ options:
         is ignored.
     type: int
     default: 20
+  wait_sleep:
+    description:
+      - Number of seconds to sleep between checks.
+    default: 5
+    type: int
+    version_added: 2.0.0
 '''

@@ -5,6 +5,64 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.0.0
+======
+
+Major Changes
+-------------
+
+- k8s - deprecate merge_type=json. The JSON patch functionality has never worked (https://github.com/ansible-collections/kubernetes.core/pull/99).
+- k8s_json_patch - split JSON patch functionality out into a separate module (https://github.com/ansible-collections/kubernetes.core/pull/99).
+- replaces the openshift client with the official kubernetes client (https://github.com/ansible-collections/kubernetes.core/issues/34).
+
+Minor Changes
+-------------
+
+- Add cache_file when DynamicClient is created (https://github.com/ansible-collections/kubernetes.core/pull/46).
+- Add configmap and secret hash functionality (https://github.com/ansible-collections/kubernetes.core/pull/48).
+- Add logic for cache file name generation (https://github.com/ansible-collections/kubernetes.core/pull/46).
+- Replicate apply method in the DynamicClient (https://github.com/ansible-collections/kubernetes.core/pull/45).
+- add ``proxy_headers`` option for authentication on k8s_xxx modules (https://github.com/ansible-collections/kubernetes.core/pull/58).
+- add support for using tags when running molecule test suite (https://github.com/ansible-collections/kubernetes.core/pull/62).
+- added documentation for ``kubernetes.core`` collection (https://github.com/ansible-collections/kubernetes.core/pull/50).
+- common - removed ``KubernetesAnsibleModule``, use ``K8sAnsibleMixin`` instead (https://github.com/ansible-collections/kubernetes.core/pull/70).
+- helm - add example for complex values in ``helm`` module (https://github.com/ansible-collections/kubernetes.core/issues/109).
+- k8s - Handle list of definition for option `template` (https://github.com/ansible-collections/kubernetes.core/pull/49).
+- k8s - `continue_on_error` option added (whether to continue on creation/deletion errors) (https://github.com/ansible-collections/kubernetes.core/pull/49).
+- k8s - support ``patched`` value for ``state`` option. patched state is an existing resource that has a given patch applied (https://github.com/ansible-collections/kubernetes.core/pull/90).
+- k8s - wait for all pods to update when rolling out daemonset changes (https://github.com/ansible-collections/kubernetes.core/pull/102).
+- k8s_scale - ability to scale multiple resource using ``label_selectors`` (https://github.com/ansible-collections/kubernetes.core/pull/114).
+- k8s_scale - new parameter to determine whether to continue or not on error when scaling multiple resources (https://github.com/ansible-collections/kubernetes.core/pull/114).
+- kubeconfig - update ``kubeconfig`` file location in the documentation (https://github.com/ansible-collections/kubernetes.core/issues/53).
+- remove old change log fragment files.
+- remove the deprecated ``KubernetesRawModule`` class (https://github.com/ansible-collections/community.kubernetes/issues/232).
+- replicate base resource for lists functionality (https://github.com/ansible-collections/kubernetes.core/pull/89).
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- Drop python 2 support (https://github.com/ansible-collections/kubernetes.core/pull/86).
+- helm_plugin - remove unused ``release_namespace`` parameter (https://github.com/ansible-collections/kubernetes.core/pull/85).
+- helm_plugin_info - remove unused ``release_namespace`` parameter (https://github.com/ansible-collections/kubernetes.core/pull/85).
+- k8s_cluster_info - returned apis as list to avoid being overwritten in case of multiple version (https://github.com/ansible-collections/kubernetes.core/pull/41).
+- k8s_facts - remove the deprecated alias from k8s_facts to k8s_info (https://github.com/ansible-collections/kubernetes.core/pull/125).
+
+Bugfixes
+--------
+
+- enable unit tests in CI (https://github.com/ansible-collections/community.kubernetes/pull/407).
+- helm - Accept ``validate_certs`` with a ``context`` (https://github.com/ansible-collections/kubernetes.core/pull/74).
+- helm - fix helm ignoring the kubeconfig context when passed through the ``context`` param or the ``K8S_AUTH_CONTEXT`` environment variable (https://github.com/ansible-collections/community.kubernetes/issues/385).
+- helm - handle multiline output of ``helm plugin list`` command (https://github.com/ansible-collections/community.kubernetes/issues/399).
+- k8s - fix merge_type option when set to json (https://github.com/ansible-collections/kubernetes.core/issues/54).
+- k8s - lookup should return list even if single item is found (https://github.com/ansible-collections/kubernetes.core/issues/9).
+- k8s inventory - remove extra trailing slashes from the hostname (https://github.com/ansible-collections/kubernetes.core/issues/52).
+
+New Modules
+-----------
+
+- k8s_json_patch - Apply JSON patch operations to existing objects
+
 v1.2.0
 ======
 

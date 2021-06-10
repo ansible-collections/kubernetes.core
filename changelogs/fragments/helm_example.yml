@@ -1,2 +1,0 @@
-minor_changes:
-- helm - add example for complex values in ``helm`` module (https://github.com/ansible-collections/kubernetes.core/issues/109).

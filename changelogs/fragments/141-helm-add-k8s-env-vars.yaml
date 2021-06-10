@@ -1,3 +1,0 @@
----
-minor_changes:
-  - helm - Add support for K8S_AUTH_CONTEXT, K8S_AUTH_KUBECONFIG env (https://github.com/ansible-collections/community.kubernetes/pull/141).

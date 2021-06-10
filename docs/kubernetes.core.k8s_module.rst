@@ -407,6 +407,7 @@ Parameters
                         <div>See <a href='https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment'>https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment</a></div>
                         <div>If more than one <code>merge_type</code> is given, the merge_types will be tried in order. This defaults to <code>[&#x27;strategic-merge&#x27;, &#x27;merge&#x27;]</code>, which is ideal for using the same parameters on resource kinds that combine Custom Resources and built-in resources.</div>
                         <div>mutually exclusive with <code>apply</code></div>
+                        <div><em>merge_type=json</em> is deprecated and will be removed in version 3.0.0. Please use <span class='module'>kubernetes.core.k8s_json_patch</span> instead.</div>
                 </td>
             </tr>
             <tr>
@@ -616,10 +617,12 @@ Parameters
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>absent</li>
                                     <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
+                                    <li>patched</li>
                         </ul>
                 </td>
                 <td>
                         <div>Determines if an object should be created, patched, or deleted. When set to <code>present</code>, an object will be created, if it does not already exist. If set to <code>absent</code>, an existing object will be deleted. If set to <code>present</code>, an existing object will be patched, if its attributes differ from those specified using <em>resource_definition</em> or <em>src</em>.</div>
+                        <div><code>patched</code> state is an existing resource that has a given patch applied. If the resource doesn&#x27;t exist, silently skip it (do not raise an error).</div>
                 </td>
             </tr>
             <tr>
@@ -1015,6 +1018,17 @@ Examples
           type: Progressing
           status: Unknown
           reason: DeploymentPaused
+
+    # Patch existing namespace : add label
+    - name: add label to existing namespace
+      kubernetes.core.k8s:
+        state: patched
+        kind: Namespace
+        name: patch_namespace
+        definition:
+          metadata:
+            labels:
+              support: patch
 
 
 

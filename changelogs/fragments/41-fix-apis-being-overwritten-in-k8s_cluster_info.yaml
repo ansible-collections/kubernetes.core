@@ -1,3 +1,0 @@
----
-breaking_changes:
-  - k8s_cluster_info - returned apis as list to avoid being overwritten in case of multiple version (https://github.com/ansible-collections/kubernetes.core/pull/41).

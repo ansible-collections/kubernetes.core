@@ -1,3 +1,0 @@
----
-minor_changes:
-  - helm_info and helm_repository - minor code refactor (https://github.com/ansible-collections/community.kubernetes/pull/117).

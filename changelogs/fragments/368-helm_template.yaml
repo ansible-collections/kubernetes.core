@@ -1,2 +1,0 @@
-minor_changes:
-  - helm_template - add helm_template module to support template functionality (https://github.com/ansible-collections/community.kubernetes/issues/367).

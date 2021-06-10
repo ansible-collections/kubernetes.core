@@ -1,3 +1,0 @@
----
-minor_changes:
-  - Add sanity test ignore file for Ansible 2.11 (https://github.com/ansible-collections/community.kubernetes/pull/130).
