@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# (c) 2021, Aubin Bikouo <@abikouo>
+# Copyright: (c) 2021, Aubin Bikouo <@abikouo>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -130,7 +130,7 @@ class KubernetesClient(object):
         self._api_response.close()
 
     def get_file_content(self, file_path):
-        commands = ["cat {}\n".format(file_path)]
+        commands = ["cat {0}\n".format(file_path)]
         while self._api_response.is_open():
             self._api_response.update(timeout=1)
             if self._api_response.peek_stdout():
@@ -149,7 +149,7 @@ def execute_module(module):
     remote_path = module.params.get('remote_path')
     items = [{'local': local_path, 'remote': remote_path}]
     if not os.path.exists(local_path):
-        module.fail_json(msg="{} not found.".format(local_path))
+        module.fail_json(msg="{0} not found.".format(local_path))
 
     if os.path.isdir(local_path):
         items = []
@@ -165,7 +165,7 @@ def execute_module(module):
         with open(item.get('local'), 'r') as fh:
             l_content = fh.read()
             if l_content != r_content:
-                module.fail_json(msg="local file {} differs from remote file {}".format(item.get('local'), item.get('remote')),
+                module.fail_json(msg="local file {0} differs from remote file {1}".format(item.get('local'), item.get('remote')),
                                  local_content=l_content, remote_content=r_content)
                 k8s_client.close()
             content.append({'local': item['local'], 'remote': item['remote'], 'content': l_content})

@@ -14,6 +14,7 @@ action_groups:
     - k8s_log
     - k8s_scale
     - k8s_service
+    - k8s_cp
 
 plugin_routing:
   action:

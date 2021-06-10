@@ -187,13 +187,12 @@ class ActionModule(ActionBase):
 
         if os.path.exists(local_path):
             return local_path
-        else:
-            try:
-                # find in expected paths
-                source = self._find_needle('files', local_path)
-                return source
-            except AnsibleError:
-                raise AnsibleActionFail("%s does not exist in local filesystem" % local_path)
+
+        try:
+            # find in expected paths
+            return self._find_needle('files', local_path)
+        except AnsibleError:
+            raise AnsibleActionFail("%s does not exist in local filesystem" % local_path)
 
     def run(self, tmp=None, task_vars=None):
         ''' handler for k8s options '''

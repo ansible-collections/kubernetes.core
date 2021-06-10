@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# (c) 2021, Aubin Bikouo <@abikouo>
+# Copyright: (c) 2021, Aubin Bikouo <@abikouo>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -35,18 +35,18 @@ requirements:
 options:
   namespace:
     description:
-    - The pod namespace name
+    - The pod namespace name.
     type: str
     required: yes
   pod:
     description:
-    - The pod name
+    - The pod name.
     type: str
     required: yes
   container:
     description:
     - The name of the container in the pod to copy files/directories from/to.
-    - Defaults to only container if there is only one container in the pod.
+    - Defaults to the only container if there is only one container in the pod.
     type: str
   remote_path:
     description:
@@ -63,12 +63,12 @@ options:
     description:
     - When used instead of I(local_path), sets the contents of a local file directly to the specified value.
     - Works only when I(remote_path) is a file. Creates the file if it does not exist.
-    - For advanced formatting or if content contains a variable, use the ansible.builtin.template module.
+    - For advanced formatting or if the content contains a variable, use the M(ansible.builtin.template) module.
     - Mutually exclusive with I(local_path).
     type: str
   state:
     description:
-    - When set to C(to_pod), the local I(local_path) file or directory will be copied to I(remote_path) into pod.
+    - When set to C(to_pod), the local I(local_path) file or directory will be copied to I(remote_path) into the pod.
     - When set to C(from_pod), the remote file or directory I(remote_path) from pod will be copied locally to I(local_path).
     type: str
     default: to_pod
@@ -131,7 +131,6 @@ result:
 
 import copy
 import os
-import yaml
 from tempfile import TemporaryFile, NamedTemporaryFile
 import tarfile
 
@@ -144,6 +143,12 @@ try:
     from kubernetes.client.apis import core_v1_api
     from kubernetes.stream import stream
 except ImportError:
+    pass
+
+try:
+    import yaml
+except ImportError:
+    # ImportError are managed by the common module already.
     pass
 
 
@@ -254,16 +259,15 @@ class K8SCopyModule(object):
                     break
             response.close()
             if stderr:
-                self.module.fail_json(msg="copy operation failed: {}".format(stderr))
-            else:
-                self.module.exit_json(changed=True, result="content successfully copied into file {} on remote pod".format(self.remote_path))
+                self.module.fail_json(msg="copy operation failed: {0}".format(stderr))
+            self.module.exit_json(changed=True, result="content successfully copied into file {0} on remote pod".format(self.remote_path))
 
     def copy_to_remote(self):
         if self.local_path:
             if not os.path.exists(self.local_path):
-                self.module.fail_json(msg="{} does not exist in local filesystem".format(self.local_path))
+                self.module.fail_json(msg="{0} does not exist in local filesystem".format(self.local_path))
             if not os.access(self.local_path, os.R_OK):
-                self.module.fail_json(msg="{} not readable".format(self.local_path))
+                self.module.fail_json(msg="{0} not readable".format(self.local_path))
             is_remote_path_dir = self.test_remote_path()
             if os.path.isfile(self.local_path):
                 dest_file = self.remote_path
@@ -286,11 +290,11 @@ class K8SCopyModule(object):
         is_remote_path_file = self.test_remote_path(as_dir=False)
 
         if not is_remote_path_dir and not is_remote_path_file:
-            self.module.fail_json(msg="{} does not exist in remote pod filesystem".format(self.remote_path))
+            self.module.fail_json(msg="{0} does not exist in remote pod filesystem".format(self.remote_path))
 
         is_local_path_dir = os.path.isdir(self.local_path)
         if is_remote_path_dir and not is_local_path_dir:
-            self.module.fail_json(msg="{} does not exist in local filesystem".format(self.local_path))
+            self.module.fail_json(msg="{0} does not exist in local filesystem".format(self.local_path))
 
         exec_command = ['tar', 'cf', '-', '-C', os.path.dirname(self.remote_path), os.path.basename(self.remote_path)]
         with TemporaryFile() as tar_buffer:
@@ -324,7 +328,7 @@ class K8SCopyModule(object):
                             else:
                                 dest_file = self.local_path
                         tar.makefile(member, dest_file)
-        self.module.exit_json(changed=True, result="{} successfully copied locally into {}".format(self.remote_path, self.local_path))
+        self.module.exit_json(changed=True, result="{0} successfully copied locally into {1}".format(self.remote_path, self.local_path))
 
 
 def execute_module(module):
@@ -354,7 +358,7 @@ def execute_module(module):
             k8s_copy.copy_to_local()
     except Exception as e:
         import traceback
-        module.fail_json("Failed to copy object due to: {}".format(to_native(e)), trace=traceback.format_exc(), embbeded=AnsibleModule.embedded_in_server)
+        module.fail_json("Failed to copy object due to: {0}".format(to_native(e)), trace=traceback.format_exc(), embbeded=AnsibleModule.embedded_in_server)
 
 
 def main():
