@@ -836,6 +836,65 @@
         that:
           - k8s_secret is not changed
 
+    - name: Create network policy (egress array with empty dict)
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          kind: NetworkPolicy
+          apiVersion: networking.k8s.io/v1
+          metadata:
+            name: apply-netpolicy
+            labels:
+              app: apply-netpolicy
+            annotations:
+              {}
+          spec:
+            podSelector:
+              matchLabels:
+                app: apply-netpolicy
+            policyTypes:
+              - Ingress
+              - Egress
+            ingress:
+              - ports:
+                  - port: 9093
+                    protocol: TCP
+            egress:
+              - {}
+
+    - name: Apply network policy
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          kind: NetworkPolicy
+          apiVersion: networking.k8s.io/v1
+          metadata:
+            name: apply-netpolicy
+            labels:
+              app: apply-netpolicy
+            annotations:
+              {}
+          spec:
+            podSelector:
+              matchLabels:
+                app: apply-netpolicy
+            policyTypes:
+              - Ingress
+              - Egress
+            ingress:
+              - ports:
+                  - port: 9093
+                    protocol: TCP
+            egress:
+              - {}
+        apply: true
+      register: k8s_networkpolicy
+
+    - name: Check that nothing changed
+      assert:
+        that:
+          - k8s_networkpolicy is not changed
+
   always:
     - name: Remove namespace
       k8s:
