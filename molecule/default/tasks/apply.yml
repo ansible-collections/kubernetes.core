@@ -839,6 +839,7 @@
     - name: Create network policy (egress array with empty dict)
       k8s:
         namespace: "{{ apply_namespace }}"
+        apply: true
         definition:
           kind: NetworkPolicy
           apiVersion: networking.k8s.io/v1
