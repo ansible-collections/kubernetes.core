@@ -5,6 +5,14 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.0.1
+======
+
+Bugfixes
+--------
+
+- inventory - add community.kubernetes to list of plugin choices in k8s inventory (https://github.com/ansible-collections/kubernetes.core/pull/128).
+
 v2.0.0
 ======
 

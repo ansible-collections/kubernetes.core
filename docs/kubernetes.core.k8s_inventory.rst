@@ -300,6 +300,7 @@ Parameters
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>kubernetes.core.k8s</li>
                                     <li>k8s</li>
+                                    <li>community.kubernetes.k8s</li>
                         </ul>
                 </td>
                     <td>
