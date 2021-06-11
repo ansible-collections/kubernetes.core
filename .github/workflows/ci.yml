@@ -113,7 +113,7 @@ jobs:
           ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
 
       - name: Run molecule default test scenario
-        run: make test-molecule
+        run: molecule converge -- -v --tags gc
         working-directory: ./ansible_collections/kubernetes/core
 
   unit:
