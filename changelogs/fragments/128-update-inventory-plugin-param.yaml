@@ -1,3 +1,0 @@
----
-bugfixes:
-  - inventory - add community.kubernetes to list of plugin choices in k8s inventory (https://github.com/ansible-collections/kubernetes.core/pull/128).

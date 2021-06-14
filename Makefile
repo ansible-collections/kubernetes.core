@@ -1,5 +1,5 @@
 # Also needs to be updated in galaxy.yml
-VERSION = 2.0.0
+VERSION = 2.0.1
 
 TEST_ARGS ?= ""
 PYTHON_VERSION ?= `python -c 'import platform; print("{0}.{1}".format(platform.python_version_tuple()[0], platform.python_version_tuple()[1]))'`
