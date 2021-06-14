@@ -395,3 +395,11 @@ releases:
       name: k8s_json_patch
       namespace: ''
     release_date: '2021-06-09'
+  2.0.1:
+    changes:
+      bugfixes:
+      - inventory - add community.kubernetes to list of plugin choices in k8s inventory
+        (https://github.com/ansible-collections/kubernetes.core/pull/128).
+    fragments:
+    - 128-update-inventory-plugin-param.yaml
+    release_date: '2021-06-11'
