@@ -69,7 +69,7 @@ options:
     - Specifies a property on the resource to wait for.
     - Ignored if C(wait) is not set or is set to I(False).
     type: dict
-    version_added: '2.0.0'
+    version_added: '2.1.0'
     suboptions:
       property:
         type: str
