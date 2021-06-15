@@ -46,6 +46,9 @@
         wait: yes
         wait_timeout: 100
       register: job
+      until: job.resources[0].status.phase == "Running"
+      retries: 5
+      delay: 10
 
     - name: Assert job's pod is running
       assert:
