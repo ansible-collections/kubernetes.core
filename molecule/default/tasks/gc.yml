@@ -45,6 +45,9 @@
           - "job=gc"
         wait: yes
         wait_timeout: 100
+        wait_property:
+          property: "status.phase"
+          value: "running"
       register: job
 
     - name: Assert job's pod is running
