@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - Fix apply for k8s module when an array attribute from definition contains empty dict (https://github.com/ansible-collections/kubernetes.core/issues/113).
