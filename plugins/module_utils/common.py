@@ -29,12 +29,14 @@ from distutils.version import LooseVersion
 
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC, AUTH_PROXY_HEADERS_SPEC)
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
+from ansible_collections.kubernetes.core.plugins.module_utils.jsonpath_extractor import validate_with_jsonpath
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible.module_utils.parsing.convert_bool import boolean
+
 
 K8S_IMP_ERR = None
 try:
@@ -230,7 +232,7 @@ class K8sAnsibleMixin(object):
                 self.fail(msg='Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]'.format(api_version, kind))
 
     def kubernetes_facts(self, kind, api_version, name=None, namespace=None, label_selectors=None, field_selectors=None,
-                         wait=False, wait_sleep=5, wait_timeout=120, state='present', condition=None):
+                         wait=False, wait_sleep=5, wait_timeout=120, state='present', condition=None, property=None):
         resource = self.find_resource(kind, api_version)
         api_found = bool(resource)
         if not api_found:
@@ -286,7 +288,7 @@ class K8sAnsibleMixin(object):
             for resource_instance in resource_list:
                 success, res, duration = self.wait(resource, resource_instance,
                                                    sleep=wait_sleep, timeout=wait_timeout,
-                                                   state=state, condition=condition)
+                                                   state=state, condition=condition, property=property)
                 if not success:
                     self.fail(msg="Failed to gather information about %s(s) even"
                                   " after waiting for %s seconds" % (res.get('kind'), duration))
@@ -349,7 +351,7 @@ class K8sAnsibleMixin(object):
     def fail(self, msg=None):
         self.fail_json(msg=msg)
 
-    def _wait_for(self, resource, name, namespace, predicate, sleep, timeout, state):
+    def _wait_for(self, resource, name, namespace, predicates, sleep, timeout, state):
         start = datetime.now()
 
         def _wait_for_elapsed():
@@ -359,7 +361,7 @@ class K8sAnsibleMixin(object):
         while _wait_for_elapsed() < timeout:
             try:
                 response = resource.get(name=name, namespace=namespace)
-                if predicate(response):
+                if all([predicate(response) for predicate in predicates]):
                     if response:
                         return True, response.to_dict(), _wait_for_elapsed()
                     return True, {}, _wait_for_elapsed()
@@ -371,7 +373,7 @@ class K8sAnsibleMixin(object):
             response = response.to_dict()
         return False, response, _wait_for_elapsed()
 
-    def wait(self, resource, definition, sleep, timeout, state='present', condition=None):
+    def wait(self, resource, definition, sleep, timeout, state='present', condition=None, property=None):
 
         def _deployment_ready(deployment):
             # FIXME: frustratingly bool(deployment.status) is True even if status is empty
@@ -422,19 +424,29 @@ class K8sAnsibleMixin(object):
         def _resource_absent(resource):
             return not resource
 
+        def _wait_for_property(resource):
+            return validate_with_jsonpath(self, resource.to_dict(), property.get('property'), property.get('value', None))
+
         waiter = dict(
             Deployment=_deployment_ready,
             DaemonSet=_daemonset_ready,
             Pod=_pod_ready
         )
         kind = definition['kind']
-        if state == 'present' and not condition:
-            predicate = waiter.get(kind, lambda x: x)
-        elif state == 'present' and condition:
-            predicate = _custom_condition
+        predicates = []
+        if state == 'present':
+            if condition is None and property is None:
+                predicates.append(waiter.get(kind, lambda x: x))
+            else:
+                if condition:
+                    # add waiter on custom condition
+                    predicates.append(_custom_condition)
+                if property:
+                    # json path predicate
+                    predicates.append(_wait_for_property)
         else:
-            predicate = _resource_absent
-        return self._wait_for(resource, definition['metadata']['name'], definition['metadata'].get('namespace'), predicate, sleep, timeout, state)
+            predicates = [_resource_absent]
+        return self._wait_for(resource, definition['metadata']['name'], definition['metadata'].get('namespace'), predicates, sleep, timeout, state)
 
     def set_resource_definitions(self, module):
         resource_definition = module.params.get('resource_definition')
@@ -577,6 +589,7 @@ class K8sAnsibleMixin(object):
         continue_on_error = self.params.get('continue_on_error')
         if self.params.get('wait_condition') and self.params['wait_condition'].get('type'):
             wait_condition = self.params['wait_condition']
+        wait_property = self.params.get('wait_property')
 
         def build_error_msg(kind, name, msg):
             return "%s %s: %s" % (kind, name, msg)
@@ -686,7 +699,8 @@ class K8sAnsibleMixin(object):
                 success = True
                 result['result'] = k8s_obj
                 if wait and not self.check_mode:
-                    success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
+                    success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout,
+                                                                              condition=wait_condition, property=wait_property)
                 if existing:
                     existing = existing.to_dict()
                 else:
@@ -746,7 +760,8 @@ class K8sAnsibleMixin(object):
                 success = True
                 result['result'] = k8s_obj
                 if wait and not self.check_mode:
-                    success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
+                    success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout,
+                                                                              condition=wait_condition, property=wait_property)
                 result['changed'] = True
                 result['method'] = 'create'
                 if not success:
@@ -781,7 +796,8 @@ class K8sAnsibleMixin(object):
                 success = True
                 result['result'] = k8s_obj
                 if wait and not self.check_mode:
-                    success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
+                    success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout,
+                                                                              condition=wait_condition, property=wait_property)
                 match, diffs = self.diff_objects(existing.to_dict(), result['result'])
                 result['changed'] = not match
                 result['method'] = 'replace'
@@ -815,7 +831,8 @@ class K8sAnsibleMixin(object):
             success = True
             result['result'] = k8s_obj
             if wait and not self.check_mode:
-                success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
+                success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout,
+                                                                          condition=wait_condition, property=wait_property)
             match, diffs = self.diff_objects(existing.to_dict(), result['result'])
             result['changed'] = not match
             result['method'] = 'patch'
