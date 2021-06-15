@@ -164,7 +164,6 @@ def execute_module(module, k8s_ansible_mixin):
         wait_sleep=module.params["wait_sleep"],
         wait_timeout=module.params["wait_timeout"],
         condition=module.params["wait_condition"],
-        property=module.params["wait_property"]
     )
     module.exit_json(changed=False, **facts)
 

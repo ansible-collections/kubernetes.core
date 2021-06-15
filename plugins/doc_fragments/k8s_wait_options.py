@@ -64,22 +64,4 @@ options:
         - The possible reasons in a condition are specific to each resource type in Kubernetes.
         - See the API documentation of the status field for a given resource to see possible choices.
     type: dict
-  wait_property:
-    description:
-    - Specifies a property on the resource to wait for.
-    - Ignored if C(wait) is not set or is set to I(False).
-    type: dict
-    version_added: '2.1.0'
-    suboptions:
-      property:
-        type: str
-        required: True
-        description:
-        - The property name to wait for.
-      value:
-        type: str
-        description:
-        - The expected value of the C(property).
-        - The value is not case-sensitive.
-        - If this is missing, we will check only that the attribute C(property) is present.
 '''
