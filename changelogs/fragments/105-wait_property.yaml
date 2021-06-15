@@ -1,3 +1,0 @@
----
-minor_changes:
-  - k8s - add new option ``wait_property`` to support ability to wait on arbitrary property (https://github.com/ansible-collections/kubernetes.core/pull/105).
