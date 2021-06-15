@@ -236,8 +236,8 @@
       assert:
         that:
           - resource is successful
-          - resource.result.results | selectattr('changed') | length == 1
-          - resource.result.results | selectattr('error', 'defined') | length == 1
+          - resource.result.results | selectattr('changed') | list | length == 1
+          - resource.result.results | selectattr('error', 'defined') | list | length == 1
 
     - name: Remove Pod (Cleanup)
       kubernetes.core.k8s:
