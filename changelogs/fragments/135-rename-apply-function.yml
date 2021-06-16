@@ -1,3 +1,0 @@
----
-bugfixes:
-  - rename the apply function to fix broken imports in Ansible 2.9 (https://github.com/ansible-collections/kubernetes.core/pull/135).
