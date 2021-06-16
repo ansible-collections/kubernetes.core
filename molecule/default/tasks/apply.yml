@@ -24,6 +24,11 @@
             three: "3"
         apply: yes
       register: k8s_configmap
+      ignore_errors: true
+
+    - name: display context
+      debug:
+        msg: "{{ lookup('file', '/tmp/k8s_apply.txt') }}"
 
     - name: Check configmap was created
       assert:
