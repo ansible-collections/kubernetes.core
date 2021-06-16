@@ -110,7 +110,7 @@ def apply_object(resource, definition):
     return apply_patch(actual.to_dict(), definition)
 
 
-def apply(resource, definition):
+def k8s_apply(resource, definition):
     existing, desired = apply_object(resource, definition)
     if not existing:
         return resource.create(body=desired, namespace=definition['metadata'].get('namespace'))

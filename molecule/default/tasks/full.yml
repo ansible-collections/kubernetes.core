@@ -219,7 +219,7 @@
 
     ### https://github.com/ansible-collections/community.kubernetes/issues/111
     - set_fact:
-        api_groups: "{{ lookup('k8s', cluster_info='api_groups') }}"
+        api_groups: "{{ lookup('kubernetes.core.k8s', cluster_info='api_groups') }}"
 
     - debug:
         var: api_groups
