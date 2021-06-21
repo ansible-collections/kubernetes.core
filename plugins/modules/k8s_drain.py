@@ -64,7 +64,7 @@ options:
             default: False
         disable_eviction:
             description:
-            - forces drain to use delete rather than evict.
+            - Forces drain to use delete rather than evict.
             type: bool
             default: False
         wait_timeout:
@@ -80,25 +80,25 @@ requirements:
 
 EXAMPLES = r'''
 - name: Drain node "foo", even if there are pods not managed by a ReplicationController, Job, or DaemonSet on it.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: drain
     name: foo
     force: yes
 
 - name: Drain node "foo", but abort if there are pods not managed by a ReplicationController, Job, or DaemonSet, and use a grace period of 15 minutes.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: drain
     name: foo
     delete_options:
         terminate_grace_period: 900
 
 - name: Mark node "foo" as schedulable.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: uncordon
     name: foo
 
 - name: Mark node "foo" as unschedulable.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: cordon
     name: foo
 
