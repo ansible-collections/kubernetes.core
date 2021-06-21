@@ -246,8 +246,7 @@ class K8sDrainAnsible(object):
                 self._module.fail_json(msg="Exception raised: {0}".format(to_native(e)))
         if not pods:
             return None
-        else:
-            return "timeout reached while pods were still running."
+        return "timeout reached while pods were still running."
 
     def evict_pods(self, pods):
         for namespace, name in pods:
