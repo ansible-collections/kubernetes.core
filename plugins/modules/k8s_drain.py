@@ -107,30 +107,9 @@ EXAMPLES = r'''
 RETURN = r'''
 result:
   description:
-  - The created, patched, or otherwise present Service object. Will be empty in the case of a deletion.
+  - The node status and the number of pods deleted.
   returned: success
-  type: complex
-  contains:
-     api_version:
-       description: The versioned schema of this representation of an object.
-       returned: success
-       type: str
-     kind:
-       description: Always 'Service'.
-       returned: success
-       type: str
-     metadata:
-       description: Standard object metadata. Includes name, namespace, annotations, labels, etc.
-       returned: success
-       type: complex
-     spec:
-       description: Specific attributes of the object. Will vary based on the I(api_version) and I(kind).
-       returned: success
-       type: complex
-     status:
-       description: Current status details for the object.
-       returned: success
-       type: complex
+  type: str
 '''
 import copy
 from datetime import datetime
