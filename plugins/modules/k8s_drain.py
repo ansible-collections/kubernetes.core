@@ -69,7 +69,7 @@ options:
             default: False
         wait_timeout:
             description:
-            - The length of time to wait for pod to be delected/evicted before giving up, zero means infinite.
+            - The length of time to wait in seconds for pod to be delected/evicted before giving up, zero means infinite.
             - Ignored if C(wait) is not set.
             type: int
 
