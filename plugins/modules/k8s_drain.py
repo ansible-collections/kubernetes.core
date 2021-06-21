@@ -316,10 +316,11 @@ class K8sDrainAnsible(object):
         return dict(result=' '.join(result))
 
     def patch_node(self, unschedulable):
+
+        body = {
+            'spec': {'unschedulable': unschedulable}
+        }
         try:
-            body = {
-                'spec': {'unschedulable': unschedulable}
-            }
             self._api_instance.patch_node(name=self._module.params.get('name'), body=body)
         except Exception as exc:
             self._module.fail_json(msg="Failed to patch node due to: {0}".format(to_native(exc)))
