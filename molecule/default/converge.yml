@@ -164,6 +164,14 @@
       tags:
         - always
 
+    - name: Include drain.yml
+      include_tasks:
+        file: tasks/drain.yml
+        apply:
+          tags: [ drain, k8s ]
+      tags:
+        - always
+
   roles:
     - role: helm
       tags:
