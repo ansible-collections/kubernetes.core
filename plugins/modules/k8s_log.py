@@ -89,6 +89,7 @@ EXAMPLES = r'''
     kind: Deployment
     namespace: testing
     name: example
+    since_seconds: "4000"
   register: log
 
 # This will get the log from a single Pod managed by this DeploymentConfig
