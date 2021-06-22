@@ -64,12 +64,12 @@ options:
             default: False
         disable_eviction:
             description:
-            - forces drain to use delete rather than evict.
+            - Forces drain to use delete rather than evict.
             type: bool
             default: False
         wait_timeout:
             description:
-            - The length of time to wait for pod to be delected/evicted before giving up, zero means infinite.
+            - The length of time to wait in seconds for pod to be delected before giving up, zero means infinite.
             - Ignored if C(wait) is not set.
             type: int
 
@@ -80,25 +80,25 @@ requirements:
 
 EXAMPLES = r'''
 - name: Drain node "foo", even if there are pods not managed by a ReplicationController, Job, or DaemonSet on it.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: drain
     name: foo
     force: yes
 
 - name: Drain node "foo", but abort if there are pods not managed by a ReplicationController, Job, or DaemonSet, and use a grace period of 15 minutes.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: drain
     name: foo
     delete_options:
         terminate_grace_period: 900
 
 - name: Mark node "foo" as schedulable.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: uncordon
     name: foo
 
 - name: Mark node "foo" as unschedulable.
-  kubernetes.core.k8s_node:
+  kubernetes.core.k8s_drain:
     state: cordon
     name: foo
 
@@ -246,8 +246,7 @@ class K8sDrainAnsible(object):
                 self._module.fail_json(msg="Exception raised: {0}".format(to_native(e)))
         if not pods:
             return None
-        else:
-            return "timeout reached while pods were still running."
+        return "timeout reached while pods were still running."
 
     def evict_pods(self, pods):
         for namespace, name in pods:
@@ -316,10 +315,11 @@ class K8sDrainAnsible(object):
         return dict(result=' '.join(result))
 
     def patch_node(self, unschedulable):
+
+        body = {
+            'spec': {'unschedulable': unschedulable}
+        }
         try:
-            body = {
-                'spec': {'unschedulable': unschedulable}
-            }
             self._api_instance.patch_node(name=self._module.params.get('name'), body=body)
         except Exception as exc:
             self._module.fail_json(msg="Failed to patch node due to: {0}".format(to_native(exc)))
