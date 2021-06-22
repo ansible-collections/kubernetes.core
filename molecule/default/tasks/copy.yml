@@ -29,6 +29,7 @@
     - name: Create pod with one container {{ pod_with_one_container.name }}
       k8s:
         namespace: '{{ copy_namespace }}'
+        wait: yes
         definition:
           apiVersion: v1
           kind: Pod
@@ -42,6 +43,7 @@
     - name: Create pod with two container {{ pod_with_two_containers.name }}
       k8s:
         namespace: '{{ copy_namespace }}'
+        wait: yes
         definition:
           apiVersion: v1
           kind: Pod
