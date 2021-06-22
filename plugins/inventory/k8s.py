@@ -23,7 +23,7 @@ DOCUMENTATION = '''
       plugin:
          description: token that ensures this is a source file for the 'k8s' plugin.
          required: True
-         choices: ['kubernetes.core.k8s', 'k8s']
+         choices: ['kubernetes.core.k8s', 'k8s', 'community.kubernetes.k8s']
       connections:
           description:
           - Optional list of cluster connection settings. If no connections are provided, the default

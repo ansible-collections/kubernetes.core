@@ -19,7 +19,7 @@ __metaclass__ = type
 
 from kubernetes.dynamic import DynamicClient
 
-from ansible_collections.kubernetes.core.plugins.module_utils.apply import apply
+from ansible_collections.kubernetes.core.plugins.module_utils.apply import k8s_apply
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import ApplyException
 
 
@@ -33,7 +33,7 @@ class K8SDynamicClient(DynamicClient):
         if resource.namespaced:
             body['metadata']['namespace'] = super().ensure_namespace(resource, namespace, body)
         try:
-            return apply(resource, body)
+            return k8s_apply(resource, body)
         except ApplyException as e:
             raise ValueError("Could not apply strategic merge to %s/%s: %s" %
                              (body['kind'], body['metadata']['name'], e))

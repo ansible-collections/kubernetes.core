@@ -18,10 +18,8 @@ __metaclass__ = type
 
 from collections import OrderedDict
 import json
-import sys
 
 from ansible.module_utils.common.dict_transformations import dict_merge
-from ansible.module_utils.six import PY3
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import ApplyException
 
 try:
@@ -29,8 +27,6 @@ try:
 except ImportError:
     pass
 
-if PY3:
-    unicode = str
 
 LAST_APPLIED_CONFIG_ANNOTATION = 'kubectl.kubernetes.io/last-applied-configuration'
 
@@ -79,34 +75,6 @@ STRATEGIC_MERGE_PATCH_KEYS.update(
 )
 
 
-if sys.version_info.major >= 3:
-    json_loads_byteified = json.loads
-else:
-    # https://stackoverflow.com/a/33571117
-    def json_loads_byteified(json_text):
-        return _byteify(
-            json.loads(json_text, object_hook=_byteify),
-            ignore_dicts=True
-        )
-
-    def _byteify(data, ignore_dicts=False):
-        # if this is a unicode string, return its string representation
-        if isinstance(data, unicode):  # noqa: F821
-            return data.encode('utf-8')
-        # if this is a list of values, return list of byteified values
-        if isinstance(data, list):
-            return [_byteify(item, ignore_dicts=True) for item in data]
-        # if this is a dictionary, return dictionary of byteified keys and values
-        # but only if we haven't already byteified it
-        if isinstance(data, dict) and not ignore_dicts:
-            return {
-                _byteify(key, ignore_dicts=True): _byteify(value, ignore_dicts=True)
-                for key, value in data.items()
-            }
-        # if it's anything else, return it in its original form
-        return data
-
-
 def annotate(desired):
     return dict(
         metadata=dict(
@@ -123,7 +91,7 @@ def apply_patch(actual, desired):
     if last_applied:
         # ensure that last_applied doesn't come back as a dict of unicode key/value pairs
         # json.loads can be used if we stop supporting python 2
-        last_applied = json_loads_byteified(last_applied)
+        last_applied = json.loads(last_applied)
         patch = merge(dict_merge(last_applied, annotate(last_applied)),
                       dict_merge(desired, annotate(desired)), actual)
         if patch:
@@ -142,7 +110,7 @@ def apply_object(resource, definition):
     return apply_patch(actual.to_dict(), definition)
 
 
-def apply(resource, definition):
+def k8s_apply(resource, definition):
     existing, desired = apply_object(resource, definition)
     if not existing:
         return resource.create(body=desired, namespace=definition['metadata'].get('namespace'))
@@ -284,7 +252,7 @@ def get_delta(last_applied, actual, desired, position=None):
         elif isinstance(desired_value, list):
             p = list_merge(last_applied.get(k, []), actual_value, desired_value, this_position)
             if p:
-                patch[k] = [item for item in p if item]
+                patch[k] = [item for item in p if item is not None]
         elif actual_value != desired_value:
             patch[k] = desired_value
     return patch

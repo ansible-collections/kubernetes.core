@@ -5,6 +5,23 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.0.2
+======
+
+Bugfixes
+--------
+
+- Fix apply for k8s module when an array attribute from definition contains empty dict (https://github.com/ansible-collections/kubernetes.core/issues/113).
+- rename the apply function to fix broken imports in Ansible 2.9 (https://github.com/ansible-collections/kubernetes.core/pull/135).
+
+v2.0.1
+======
+
+Bugfixes
+--------
+
+- inventory - add community.kubernetes to list of plugin choices in k8s inventory (https://github.com/ansible-collections/kubernetes.core/pull/128).
+
 v2.0.0
 ======
 

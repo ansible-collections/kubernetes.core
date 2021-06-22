@@ -395,3 +395,21 @@ releases:
       name: k8s_json_patch
       namespace: ''
     release_date: '2021-06-09'
+  2.0.1:
+    changes:
+      bugfixes:
+      - inventory - add community.kubernetes to list of plugin choices in k8s inventory
+        (https://github.com/ansible-collections/kubernetes.core/pull/128).
+    fragments:
+    - 128-update-inventory-plugin-param.yaml
+    release_date: '2021-06-11'
+  2.0.2:
+    changes:
+      bugfixes:
+      - Fix apply for k8s module when an array attribute from definition contains
+        empty dict (https://github.com/ansible-collections/kubernetes.core/issues/113).
+      - rename the apply function to fix broken imports in Ansible 2.9 (https://github.com/ansible-collections/kubernetes.core/pull/135).
+    fragments:
+    - 129-k8s-fix-apply-array-with-empty-dict.yml
+    - 135-rename-apply-function.yml
+    release_date: '2021-06-16'
