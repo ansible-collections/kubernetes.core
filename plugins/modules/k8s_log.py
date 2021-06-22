@@ -167,11 +167,11 @@ def execute_module(module, k8s_ansible_mixin):
     if module.params.get('container'):
         kwargs['query_params'] = dict(container=module.params['container'])
 
-    if self.params.get('since_seconds'):
+    if module.params.get('since_seconds'):
         if not kwargs['query_params']:
-          kwargs['query_params'] = dict(sinceSeconds=self.params['since_seconds'])
+            kwargs['query_params'] = dict(sinceSeconds=module.params['since_seconds'])
         else:
-          kwargs['query_params'].update(dict(sinceSeconds=self.params['since_seconds']))
+            kwargs['query_params'].update(dict(sinceSeconds=module.params['since_seconds']))
 
     log = serialize_log(resource.log.get(
         name=name,
