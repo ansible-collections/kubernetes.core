@@ -59,6 +59,7 @@ options:
     - A relative time in seconds before the current time from which to show logs.
     required: no
     type: str
+    version_added: '2.1.0'
 
 requirements:
   - "python >= 3.6"
