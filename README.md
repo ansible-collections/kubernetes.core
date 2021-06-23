@@ -159,9 +159,9 @@ If upgrading older playbooks which were built prior to Ansible 2.10 and this col
 
 For documentation on how to use individual modules and other content included in this collection, please see the links in the 'Included content' section earlier in this README.
 
-## Ansible Turbo mode
+## Ansible Turbo mode Tech Preview
 
-The ``kubernetes.core`` collection supports Ansible Turbo mode via ``cloud.common`` collection. Please read more about Ansible Turbo mode - [here](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/ansible_turbo_mode.rst).
+The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection. Please read more about Ansible Turbo mode - [here](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/ansible_turbo_mode.rst).
 
 
 ## Testing and Development
