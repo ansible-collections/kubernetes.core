@@ -413,3 +413,12 @@ releases:
     - 129-k8s-fix-apply-array-with-empty-dict.yml
     - 135-rename-apply-function.yml
     release_date: '2021-06-16'
+  2.1.0:
+    changes:
+      minor_changes:
+      - remove cloud.common as default dependency (https://github.com/ansible-collections/kubernetes.core/pull/148).
+      - temporarily disable turbo mode (https://github.com/ansible-collections/kubernetes.core/pull/149).
+    fragments:
+    - 148-remove-cloud-common-dependency.yaml
+    - 149-disable-turbo-mode.yaml
+    release_date: '2021-06-23'
