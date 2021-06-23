@@ -164,6 +164,14 @@
       tags:
         - always
 
+    - name: Include diff.yml
+      include_tasks:
+        file: tasks/diff.yml
+        apply:
+          tags: [ diff, k8s ]
+      tags:
+        - always
+
   roles:
     - role: helm
       tags:
