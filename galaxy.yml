@@ -8,8 +8,6 @@ authors:
   - willthames (https://github.com/willthames)
   - mmazur (https://github.com/mmazur)
   - jamescassell (https://github.com/jamescassell)
-dependencies:
-  cloud.common: '>=2.0.1'
 description: Kubernetes Collection for Ansible.
 documentation: ''
 homepage: ''
@@ -27,7 +25,7 @@ tags:
   - openshift
   - okd
   - cluster
-version: 2.0.2
+version: 2.1.0
 build_ignore:
   - .DS_Store
   - '*.tar.gz'
