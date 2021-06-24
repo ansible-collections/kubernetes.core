@@ -422,3 +422,10 @@ releases:
     - 148-remove-cloud-common-dependency.yaml
     - 149-disable-turbo-mode.yaml
     release_date: '2021-06-23'
+  2.1.1:
+    changes:
+      bugfixes:
+      - check auth params for existence, not whether they are true (https://github.com/ansible-collections/kubernetes.core/pull/151).
+    fragments:
+    - 151-check-auth-params-for-existence.yaml
+    release_date: '2021-06-24'
