@@ -19,8 +19,8 @@ author: Aubin Bikouo (@abikouo)
 
 description:
   - Drain node in preparation for maintenance same as kubectl drain.
-  - Cordon will mark node as unschedulable.
-  - Uncordon will mark node as schedulable.
+  - Cordon will mark the node as unschedulable.
+  - Uncordon will mark the node as schedulable.
   - The given node will be marked unschedulable to prevent new pods from arriving.
   - Then drain deletes all pods except mirror pods (which cannot be deleted through the API server).
 
