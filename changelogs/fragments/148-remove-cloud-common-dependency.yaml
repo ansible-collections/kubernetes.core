@@ -1,3 +1,0 @@
----
-minor_changes:
-  - remove cloud.common as default dependency (https://github.com/ansible-collections/kubernetes.core/pull/148).
