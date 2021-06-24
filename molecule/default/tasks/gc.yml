@@ -37,18 +37,25 @@
       k8s:
         definition: "{{ job_definition }}"
 
-    - name: Test that job's pod is running
+    - name: Wait Job's pod
       k8s_info:
         kind: Pod
         namespace: "{{ gc_namespace }}"
         label_selectors:
           - "job=gc"
-        wait: yes
-        wait_timeout: 100
-      register: job
-      until: job.resources[0].status.phase == "Running"
+      register: wait_job
+      until: wait_job.resources
       retries: 5
       delay: 10
+      debugger: on_failed
+
+    - name: Wait job's pod running
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        name: "{{ wait_job.resources[0].metadata.name }}"
+        wait: yes
+      register: job
 
     - name: Assert job's pod is running
       assert:
@@ -81,18 +88,24 @@
       k8s:
         definition: "{{ job_definition }}"
 
-    - name: Test that job's pod is running
+    - name: Wait Job's pod
       k8s_info:
         kind: Pod
         namespace: "{{ gc_namespace }}"
         label_selectors:
           - "job=gc"
-        wait: yes
-        wait_timeout: 100
-      register: job
-      until: job.resources[0].status.phase == "Running"
+      register: wait_job
+      until: wait_job.resources
       retries: 5
       delay: 10
+
+    - name: Wait job's pod running
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        name: "{{ wait_job.resources[0].metadata.name }}"
+        wait: yes
+      register: job
 
     - name: Assert job's pod is running
       assert:
@@ -126,18 +139,24 @@
       k8s:
         definition: "{{ job_definition }}"
 
-    - name: Test that job's pod is running
+    - name: Wait Job's pod
       k8s_info:
         kind: Pod
         namespace: "{{ gc_namespace }}"
         label_selectors:
           - "job=gc"
-        wait: yes
-        wait_timeout: 100
-      register: job
-      until: job.resources[0].status.phase == "Running"
+      register: wait_job
+      until: wait_job.resources
       retries: 5
       delay: 10
+
+    - name: Wait job's pod running
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        name: "{{ wait_job.resources[0].metadata.name }}"
+        wait: yes
+      register: job
 
     - name: Assert job's pod is running
       assert:
