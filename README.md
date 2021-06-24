@@ -83,7 +83,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 2.0.2
+    version: 2.1.0
 ```
 
 ### Installing the Kubernetes Python Library
@@ -159,11 +159,6 @@ If upgrading older playbooks which were built prior to Ansible 2.10 and this col
 ```
 
 For documentation on how to use individual modules and other content included in this collection, please see the links in the 'Included content' section earlier in this README.
-
-## Ansible Turbo mode
-
-The ``kubernetes.core`` collection supports Ansible Turbo mode via ``cloud.common`` collection. Please read more about Ansible Turbo mode - [here](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/ansible_turbo_mode.rst).
-
 
 ## Testing and Development
 
