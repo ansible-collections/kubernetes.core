@@ -47,7 +47,6 @@
       until: wait_job.resources
       retries: 5
       delay: 10
-      debugger: on_failed
 
     - name: Wait job's pod running
       k8s_info:
