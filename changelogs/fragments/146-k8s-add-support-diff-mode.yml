@@ -1,2 +1,2 @@
-breaking_changes:
+bugfixes:
   - k8s - Add support for diff mode, diff is returned only when it is explicitly requested (https://github.com/ansible-collections/kubernetes.core/pull/146).
