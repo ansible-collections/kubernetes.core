@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - check auth params for existence, not whether they are true (https://github.com/ansible-collections/kubernetes.core/pull/151).
