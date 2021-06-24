@@ -5,6 +5,15 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.1.0
+======
+
+Minor Changes
+-------------
+
+- remove cloud.common as default dependency (https://github.com/ansible-collections/kubernetes.core/pull/148).
+- temporarily disable turbo mode (https://github.com/ansible-collections/kubernetes.core/pull/149).
+
 v2.0.2
 ======
 
