@@ -5,6 +5,14 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.1.1
+======
+
+Bugfixes
+--------
+
+- check auth params for existence, not whether they are true (https://github.com/ansible-collections/kubernetes.core/pull/151).
+
 v2.1.0
 ======
 
