@@ -70,12 +70,11 @@ jobs:
         with:
           fail_ci_if_error: false
 
-  molecule:
+  molecule-lint:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python_version: ['3.7']
-        ansible_version: ['==2.9.*', '==2.10.*', '']
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -114,7 +113,55 @@ jobs:
           ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
 
       - name: Run molecule default test scenario
-        run: make test-molecule
+        run: make lint-molecule
+        working-directory: ./ansible_collections/kubernetes/core
+
+  molecule-converge:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ['3.7']
+        ansible_version: ['==2.9.*', '==2.10.*', '']
+        ansible_tags: [ 'apply,append_hash,access_review,cluster_info,rollback', 'info,template,merge_type,log,patched,exec', 'full,lists,json_patch,waiter,lookup,scale,crd', 'helm,gc,delete' ]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/kubernetes/core
+
+      - name: Set up KinD cluster
+        uses: engineerd/setup-kind@v0.5.0
+
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      # The 3.3.0 release of molecule introduced a breaking change. See
+      # https://github.com/ansible-community/molecule/issues/3083
+      - name: Install molecule and kubernetes dependencies
+        run: pip install ansible${{ matrix.ansible_version }} "molecule<3.3.0" yamllint kubernetes flake8 jsonpatch
+
+      # The latest release doesn't work with Molecule currently.
+      # See: https://github.com/ansible-community/molecule/issues/2757
+      # - name: Install ansible base, latest release.
+      #   run: |
+      #     pip uninstall -y ansible
+      #     pip install --pre ansible-base
+
+      # The devel branch doesn't work with Molecule currently.
+      # See: https://github.com/ansible-community/molecule/issues/2757
+      # - name: Install ansible base (devel branch)
+      #   run: |
+      #     pip uninstall -y ansible
+      #     pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+      - name: Create default collection path symlink
+        run: |
+          mkdir -p /home/runner/.ansible
+          ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
+
+      - name: Run molecule default test scenario
+        run: make converge-molecule ANSIBLE_TAGS=${{ matrix.ansible_tags }}
         working-directory: ./ansible_collections/kubernetes/core
 
   unit:
