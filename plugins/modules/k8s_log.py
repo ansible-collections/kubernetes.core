@@ -59,7 +59,7 @@ options:
     - A relative time in seconds before the current time from which to show logs.
     required: no
     type: str
-    version_added: '2.1.0'
+    version_added: '2.2.0'
 
 requirements:
   - "python >= 3.6"
@@ -169,7 +169,6 @@ def execute_module(module, k8s_ansible_mixin):
 
     if module.params.get('since_seconds'):
         kwargs.setdefault('query_params', {}).update({'sinceSeconds': module.params['since_seconds']})
-
 
     log = serialize_log(resource.log.get(
         name=name,
