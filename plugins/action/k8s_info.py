@@ -126,8 +126,8 @@ class ActionModule(ActionBase):
 
     def load_template(self, template, new_module_args, task_vars):
         # template is only supported by k8s module.
-        if self._task.action not in ('k8s', 'kubernetes.core.k8s', 'community.okd.k8s'):
-            raise AnsibleActionFail("'template' is only supported parameter for 'k8s' module.")
+        if self._task.action not in ('k8s', 'kubernetes.core.k8s', 'community.okd.k8s', 'redhat.openshift.k8s', 'community.kubernetes.k8s'):
+            raise AnsibleActionFail("'template' is only a supported parameter for the 'k8s' module.")
 
         template_params = []
         if isinstance(template, string_types) or isinstance(template, dict):
