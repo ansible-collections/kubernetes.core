@@ -135,6 +135,12 @@ options:
     type: bool
     default: False
     version_added: 2.0.0
+  label_selectors:
+    description:
+    - Selector (label query) to filter on.
+    type: list
+    elements: str
+    version_added: 2.2.0
 
 requirements:
   - "python >= 3.6"
@@ -335,6 +341,7 @@ def argspec():
     argument_spec['continue_on_error'] = dict(type='bool', default=False)
     argument_spec['state'] = dict(default='present', choices=['present', 'absent', 'patched'])
     argument_spec['force'] = dict(type='bool', default=False)
+    argument_spec['label_selectors'] = dict(type='list', elements='str')
 
     return argument_spec
 
