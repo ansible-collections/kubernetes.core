@@ -39,7 +39,6 @@ class Selector(object):
         if self._operator in ('=', '=='):
             return self._data == labels.get(self._key)
         elif self._operator == '!=':
-            print("'{}' and {} (differs)".format(self._data, labels.get(self._key)))
             return self._data != labels.get(self._key)
         # operator not defined
         return True
