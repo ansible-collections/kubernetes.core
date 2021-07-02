@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - support the ``template`` param in all collections depending on kubernetes.core (https://github.com/ansible-collections/kubernetes.core/pull/154).

@@ -97,6 +97,7 @@
 
     - name: Gather Helm plugin info
       helm_plugin_info:
+        binary_path: "{{ helm_binary }}"
       register: r
 
     - name: Set sample_plugin version
