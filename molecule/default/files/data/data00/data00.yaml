@@ -1,9 +1,0 @@
-configuration:
-  root:
-    name: data
-    sub_dir:
-      name: data00
-      files:
-        - config.txt
-        - data00.txt
-        - data00.yaml
