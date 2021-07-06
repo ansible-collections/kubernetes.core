@@ -1,0 +1,67 @@
+---
+- set_fact:
+    random_content: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits,punctuation length=128') }}"
+
+- name: Copy content into first pod's container
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /file_from_localhost.txt
+    content: '{{ random_content }}'
+    container: '{{ pod_with_two_container.container[0] }}'
+    state: to_pod
+
+- name: Assert that content has been copied into first container
+  k8s_diff:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /file_from_localhost.txt
+    container: '{{ pod_with_two_container.container[0] }}'
+    content: '{{ random_content }}'
+
+- name: Assert that content has not been copied into second container
+  k8s_diff:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /file_from_localhost.txt
+    container: '{{ pod_with_two_container.container[1] }}'
+    content: '{{ random_content }}'
+  register: diff
+  ignore_errors: true
+
+- name: check that diff failed
+  assert:
+    that:
+      - diff is failed
+
+- name: Copy content into second's pod container
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /file_from_localhost_01.txt
+    content: '{{ random_content }}-secondpod'
+    container: '{{ pod_with_two_container.container[1] }}'
+    state: to_pod
+
+- name: Assert that content has not been copied into first container
+  k8s_diff:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /file_from_localhost_01.txt
+    container: '{{ pod_with_two_container.container[0] }}'
+    content: '{{ random_content }}-secondpod'
+  ignore_errors: true
+  register: diff_1
+
+- name: check that diff failed
+  assert:
+    that:
+      - diff_1 is failed
+
+- name: Assert that content has been copied into second container
+  k8s_diff:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /file_from_localhost_01.txt
+    container: '{{ pod_with_two_container.container[1] }}'
+    content: '{{ random_content }}-secondpod'

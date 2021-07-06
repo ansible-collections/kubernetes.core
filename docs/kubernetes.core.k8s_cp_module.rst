@@ -218,6 +218,23 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_preserve</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"no"</div>
+                </td>
+                <td>
+                        <div>The copied file/directory&#x27;s ownership and permissions will not be preserved in the container.</div>
+                        <div>This option is ignored when <em>content</em> is set or when <em>state</em> is set to <code>from_pod</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>password</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -435,7 +452,6 @@ Notes
 -----
 
 .. note::
-   - This module does not support copy of tar file or zip file.
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
 
@@ -469,6 +485,8 @@ Examples
         container: some-container
         remote_path: /tmp/bar
         local_path: /tmp/foo
+        no_preserve: True
+        state: to_pod
 
     # kubectl cp some-namespace/some-pod:/tmp/foo /tmp/bar
     - name: Copy /tmp/foo from a remote pod to /tmp/bar locally

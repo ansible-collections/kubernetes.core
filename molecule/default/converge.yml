@@ -164,18 +164,15 @@
       tags:
         - always
 
-    - name: Include copy.yml
-      include_tasks:
-        file: tasks/copy.yml
-        apply:
-          tags: [ copy, k8s ]
-      tags:
-        - always
-
   roles:
     - role: helm
       tags:
         - helm
+
+    - role: k8scopy
+      tags:
+        - copy
+        - k8s
 
   post_tasks:
     - name: Ensure namespace exists
