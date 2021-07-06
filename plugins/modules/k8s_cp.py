@@ -73,7 +73,7 @@ options:
     description:
     - The copied file/directory's ownership and permissions will not be preserved in the container.
     - This option is ignored when I(content) is set or when I(state) is set to C(from_pod).
-    type: str
+    type: bool
     default: False
 '''
 
@@ -233,7 +233,7 @@ class K8SCopyFromPod(K8SCopy):
             if not self.response.sock.connected:
                 self.response._connected = False
             else:
-                ret, _, _ = select((self.response.sock.sock, ), (), (), 0)
+                ret, out, err = select((self.response.sock.sock, ), (), (), 0)
                 if ret:
                     code, frame = self.response.sock.recv_data_frame(True)
                     if code == ABNF.OPCODE_CLOSE:
@@ -277,7 +277,7 @@ class K8SCopyFromPod(K8SCopy):
                     if self.stderr:
                         errors.append(self.stderr)
             if errors:
-                self.module.fail_json(msg="Failed to copy file from Pod: {}".format(''.join(errors)))
+                self.module.fail_json(msg="Failed to copy file from Pod: {0}".format(''.join(errors)))
         self.module.exit_json(changed=True, result="{0} successfully copied locally into {1}".format(self.remote_path, self.local_path))
 
     def run(self):
@@ -287,7 +287,7 @@ class K8SCopyFromPod(K8SCopy):
                 self.module.exit_json(changed=False, warning="No file found from directory '{0}' into remote Pod.".format(self.remote_path))
             self.copy()
         except Exception as e:
-            self.module.fail_json(msg="Failed to copy file/directory from Pod due to: {}".format(to_native(e)))
+            self.module.fail_json(msg="Failed to copy file/directory from Pod due to: {0}".format(to_native(e)))
 
 
 class K8SCopyToPod(K8SCopy):
@@ -480,7 +480,6 @@ def main():
     argument_spec['content'] = {'type': 'str'}
     argument_spec['state'] = {'type': 'str', 'default': 'to_pod', 'choices': ['to_pod', 'from_pod']}
     argument_spec['no_preserve'] = {'type': 'bool', 'default': False}
-    argument_spec['mode'] = {'type': 'raw'}
 
     module = AnsibleModule(argument_spec=argument_spec,
                            mutually_exclusive=[('local_path', 'content')],

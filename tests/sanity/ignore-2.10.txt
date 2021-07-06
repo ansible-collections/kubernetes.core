@@ -16,4 +16,4 @@ plugins/module_utils/client/discovery.py metaclass-boilerplate!skip
 tests/unit/module_utils/test_discoverer.py future-import-boilerplate!skip
 tests/unit/module_utils/test_discoverer.py metaclass-boilerplate!skip
 molecule/default/files/deployment.yaml yamllint!skip
-molecule/default/library/k8s_compare.py shebang
+molecule/default/roles/k8scopy/library/k8s_diff.py shebang
