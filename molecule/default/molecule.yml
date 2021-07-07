@@ -35,6 +35,7 @@ scenario:
     - dependency
     - lint
     - syntax
+    - prepare
     - converge
     - verify
 dependency:

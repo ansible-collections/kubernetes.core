@@ -13,3 +13,6 @@ changelogs/.plugin-cache.yaml
 tests/output
 tests/integration/cloud-config-*
 .cache
+
+# Helm charts
+molecule/default/*-chart-*.tgz
