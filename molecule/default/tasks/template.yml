@@ -22,7 +22,7 @@
       assert:
         that:
           - r.failed
-          - "'is only supported parameter for' in r.msg"
+          - "'is only a supported parameter for' in r.msg"
 
     - name: Specify both definition and template
       kubernetes.core.k8s:
