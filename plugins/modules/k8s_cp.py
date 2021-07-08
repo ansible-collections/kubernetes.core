@@ -13,7 +13,7 @@ module: k8s_cp
 
 short_description: Copy files and directories to and from pod.
 
-version_added: "2.1.2"
+version_added: "2.2.0"
 
 author:
     - Aubin Bikouo (@abikouo)
