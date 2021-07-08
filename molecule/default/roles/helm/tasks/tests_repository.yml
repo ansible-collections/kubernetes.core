@@ -1,11 +1,13 @@
 ---
 - name: "Ensure test_helm_repo doesn't exist"
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     state: absent
 
 - name: Add test_helm_repo chart repository
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     repo_url: "{{ chart_test_repo }}"
   register: repository
@@ -17,6 +19,7 @@
 
 - name: Check idempotency
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     repo_url: "{{ chart_test_repo }}"
   register: repository
@@ -28,6 +31,7 @@
 
 - name: Failed to add repository with the same name
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     repo_url: "https://other-charts.url"
   register: repository_errors
@@ -40,6 +44,7 @@
 
 - name: Remove test_helm_repo chart repository
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     state: absent
   register: repository
@@ -51,6 +56,7 @@
 
 - name: Check idempotency after remove
   helm_repository:
+    binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     state: absent
   register: repository

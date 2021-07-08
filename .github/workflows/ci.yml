@@ -82,8 +82,11 @@ jobs:
         with:
           path: ansible_collections/kubernetes/core
 
-      - name: Set up KinD cluster
-        uses: engineerd/setup-kind@v0.5.0
+      # We are facing some issue with the github action used to spawn k8s cluster
+      # This will be done into a dedicated prepare step for molecule, with the added benefit that
+      # it is no more github dependant
+      # - name: Set up KinD cluster
+      #   uses: engineerd/setup-kind@v0.5.0
 
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v1

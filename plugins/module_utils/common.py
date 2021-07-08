@@ -124,7 +124,7 @@ def get_api_client(module=None, **kwargs):
 
     # If authorization variables aren't defined, look for them in environment variables
     for true_name, arg_name in AUTH_ARG_MAP.items():
-        if module and module.params.get(arg_name):
+        if module and module.params.get(arg_name) is not None:
             auth[true_name] = module.params.get(arg_name)
         elif arg_name in kwargs and kwargs.get(arg_name) is not None:
             auth[true_name] = kwargs.get(arg_name)
