@@ -1,1 +1,1 @@
-kubernets.core
+kubernetes.core
