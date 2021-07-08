@@ -139,6 +139,12 @@ options:
     type: bool
     default: False
     version_added: "1.2.0"
+  history_max:
+    description:
+      - Limit the maximum number of revisions saved per release.
+    type: int
+    default: False
+    version_added: "2.1.2"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 '''
@@ -357,7 +363,7 @@ def fetch_chart_info(module, command, chart_ref):
 
 
 def deploy(command, release_name, release_values, chart_name, wait,
-           wait_timeout, disable_hook, force, values_files, atomic=False,
+           wait_timeout, disable_hook, force, values_files, history_max, atomic=False,
            create_namespace=False, replace=False, skip_crds=False):
     """
     Install/upgrade/rollback release chart
@@ -404,7 +410,7 @@ def deploy(command, release_name, release_values, chart_name, wait,
     if skip_crds:
         deploy_command += " --skip-crds"
 
-    deploy_command += " " + release_name + " " + chart_name
+    deploy_command +=  " --history-max=" + str(history_max) + " " + release_name + " " + chart_name
 
     return deploy_command
 
@@ -532,6 +538,7 @@ def main():
             create_namespace=dict(type='bool', default=False),
             replace=dict(type='bool', default=False),
             skip_crds=dict(type='bool', default=False),
+            history_max=dict(type='int', default=10),
 
             # Generic auth key
             host=dict(type='str', fallback=(env_fallback, ['K8S_AUTH_HOST'])),
@@ -575,6 +582,7 @@ def main():
     create_namespace = module.params.get('create_namespace')
     replace = module.params.get('replace')
     skip_crds = module.params.get('skip_crds')
+    history_max = module.params.get('history_max')
 
     if bin_path is not None:
         helm_cmd_common = bin_path
@@ -610,7 +618,7 @@ def main():
             helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
                               disable_hook, False, values_files=values_files, atomic=atomic,
                               create_namespace=create_namespace, replace=replace,
-                              skip_crds=skip_crds)
+                              skip_crds=skip_crds, history_max=history_max)
             changed = True
 
         else:
@@ -627,7 +635,7 @@ def main():
                 helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
                                   disable_hook, force, values_files=values_files, atomic=atomic,
                                   create_namespace=create_namespace, replace=replace,
-                                  skip_crds=skip_crds)
+                                  skip_crds=skip_crds, history_max=history_max)
                 changed = True
 
     if module.check_mode:
