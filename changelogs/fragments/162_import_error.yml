@@ -1,0 +1,3 @@
+---
+bugfixes:
+- common - import k8sdynamicclient directly to workaround Ansible upstream bug (https://github.com/ansible-collections/kubernetes.core/issues/162).
