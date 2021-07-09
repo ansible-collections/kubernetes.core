@@ -143,8 +143,7 @@ options:
     description:
       - Limit the maximum number of revisions saved per release.
     type: int
-    default: False
-    version_added: "2.1.2"
+    version_added: "2.2.0"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 '''
@@ -410,8 +409,10 @@ def deploy(command, release_name, release_values, chart_name, wait,
     if skip_crds:
         deploy_command += " --skip-crds"
 
-    deploy_command +=  " --history-max=" + str(history_max) + " " + release_name + " " + chart_name
+    if history_max is not None: 
+        deploy_command += " --history-max=%s" % str(history_max)
 
+    deploy_command += " " + release_name + " " + chart_name
     return deploy_command
 
 
@@ -538,7 +539,7 @@ def main():
             create_namespace=dict(type='bool', default=False),
             replace=dict(type='bool', default=False),
             skip_crds=dict(type='bool', default=False),
-            history_max=dict(type='int', default=10),
+            history_max=dict(type='int'),
 
             # Generic auth key
             host=dict(type='str', fallback=(env_fallback, ['K8S_AUTH_HOST'])),
