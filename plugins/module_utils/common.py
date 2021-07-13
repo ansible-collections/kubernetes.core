@@ -681,7 +681,7 @@ class K8sAnsibleMixin(object):
                 if not filter_selector.isMatching(definition):
                     result['changed'] = False
                     result['msg'] = "resource 'kind={kind},name={name},namespace={namespace}' filtered by label_selectors.".format(
-                                        kind=definition['kind'], name=origin_name, namespace=namespace)
+                                    kind=definition['kind'], name=origin_name, namespace=namespace)
                     return result
             if apply:
                 if self.check_mode:
