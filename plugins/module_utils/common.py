@@ -640,7 +640,6 @@ class K8sAnsibleMixin(object):
 
             if not existing or _empty_resource_list():
                 # The object already does not exist
-                result['result']['warning'] = 'No resources found'
                 return result
             else:
                 # Delete the object
@@ -681,8 +680,7 @@ class K8sAnsibleMixin(object):
                 filter_selector = LabelSelectorFilter(label_selectors)
                 if not filter_selector.isMatching(definition):
                     result['changed'] = False
-                    del result['result']
-                    result['warning'] = "resource 'kind={kind},name={name},namespace={namespace}' filtered by label_selectors.".format(
+                    result['msg'] = "resource 'kind={kind},name={name},namespace={namespace}' filtered by label_selectors.".format(
                                         kind=definition['kind'], name=origin_name, namespace=namespace)
                     return result
             if apply:
