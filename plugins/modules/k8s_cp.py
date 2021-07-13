@@ -447,7 +447,7 @@ def check_pod(k8s_ansible_mixin, module):
 
 def execute_module(module):
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
+    k8s_ansible_mixin = K8sAnsibleMixin(module, pyyaml_not_required=False)
     k8s_ansible_mixin.check_library_version()
 
     k8s_ansible_mixin.module = module
