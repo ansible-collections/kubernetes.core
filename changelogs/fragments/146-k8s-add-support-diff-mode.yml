@@ -1,2 +1,2 @@
 bugfixes:
-  - k8s - Add support for diff mode, diff is returned only when it is explicitly requested (https://github.com/ansible-collections/kubernetes.core/pull/146).
+  - k8s - Fixes a bug where diff was always returned when using apply or modifying an existing object, even when diff=no was specified. The module no longer returns diff unless requested and will now honor diff=no (https://github.com/ansible-collections/kubernetes.core/pull/146).
