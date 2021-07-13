@@ -1,0 +1,3 @@
+---
+bugfixes:
+- lookup - recommend query instead of lookup (https://github.com/ansible-collections/kubernetes.core/issues/147).
