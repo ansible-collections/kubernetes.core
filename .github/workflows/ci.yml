@@ -142,3 +142,27 @@ jobs:
       - name: Run unit tests on Python ${{ matrix.python_version }}
         run: make test-unit PYTHON_VERSION=${{ matrix.python_version }}
         working-directory: ./ansible_collections/kubernetes/core
+
+  cloud_common:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ['3.7']
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/kubernetes/core
+
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: Install Ansible base (devel branch)
+        run: pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+
+      - name: Checkout cloud-common
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/cloud/common
