@@ -36,11 +36,29 @@
             path: ~/.kube/config
             state: absent
 
+        - name: Try to create namespace without default kube config
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+          ignore_errors: true
+          register: result
+
+        - name: No default kube config should fail
+          assert:
+            that: result is not successful
+
         - name: Using custom config location should succeed
           kubernetes.core.k8s:
             name: testing
             kind: Namespace
             kubeconfig: ~/.kube/customconfig
+
+        - name: Using an env var to set config location should succeed
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+          environment:
+            K8S_AUTH_KUBECONFIG: ~/.kube/customconfig
 
       always:
         - name: Return kubeconfig
@@ -364,6 +382,37 @@
         name: testing6
       register: k8s_info_testing6
       failed_when: not k8s_info_testing6.resources or k8s_info_testing6.resources[0].status.phase != "Active"
+
+    - set_fact:
+        cmap_data: "{{ lookup('community.general.random_string', length=512000, base64=true) }}"
+
+    - name: Create configmap with large value
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: testmap
+            namespace: testing
+          data:
+            testkey: "{{ cmap_data }}"
+        wait: true
+      register: result
+
+    - assert:
+        that:
+          - result is changed
+
+    - name: Retrieve configmap
+      k8s_info:
+        kind: ConfigMap
+        namespace: testing
+        name: testmap
+      register: result
+
+    - assert:
+        that:
+          - result.resources[0].data.testkey == "{{ cmap_data }}"
 
   always:
     - name: Delete all namespaces
