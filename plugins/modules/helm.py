@@ -409,7 +409,7 @@ def deploy(command, release_name, release_values, chart_name, wait,
     if skip_crds:
         deploy_command += " --skip-crds"
 
-    if history_max is not None: 
+    if history_max is not None:
         deploy_command += " --history-max=%s" % str(history_max)
 
     deploy_command += " " + release_name + " " + chart_name
