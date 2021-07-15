@@ -130,6 +130,7 @@ options:
     description:
       - Reuse the given name, only if that name is a deleted release which remains in the history.
       - This is unsafe in production environment.
+      - mutually exclusive with with C(history_max)
     type: bool
     default: False
     version_added: "1.11.0"
@@ -142,6 +143,7 @@ options:
   history_max:
     description:
       - Limit the maximum number of revisions saved per release.
+      - mutually exclusive with with C(replace)
     type: int
     version_added: "2.2.0"
 extends_documentation_fragment:
@@ -554,6 +556,7 @@ def main():
         mutually_exclusive=[
             ("context", "ca_cert"),
             ("kubeconfig", "ca_cert"),
+            ("replace", "history_max"),
         ],
         supports_check_mode=True,
     )
