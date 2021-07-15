@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - re-enable turbo mode for collection (https://github.com/ansible-collections/kubernetes.core/pull/169).
