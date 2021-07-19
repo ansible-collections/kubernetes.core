@@ -54,6 +54,12 @@ options:
     - If there is more than one container, this option is required.
     required: no
     type: str
+  since_seconds:
+    description:
+    - A relative time in seconds before the current time from which to show logs.
+    required: no
+    type: str
+    version_added: '2.2.0'
 
 requirements:
   - "python >= 3.6"
@@ -83,6 +89,7 @@ EXAMPLES = r'''
     kind: Deployment
     namespace: testing
     name: example
+    since_seconds: "4000"
   register: log
 
 # This will get the log from a single Pod managed by this DeploymentConfig
@@ -124,6 +131,7 @@ def argspec():
         dict(
             kind=dict(type='str', default='Pod'),
             container=dict(),
+            since_seconds=dict(),
             label_selectors=dict(type='list', elements='str', default=[]),
         )
     )
@@ -158,6 +166,9 @@ def execute_module(module, k8s_ansible_mixin):
     kwargs = {}
     if module.params.get('container'):
         kwargs['query_params'] = dict(container=module.params['container'])
+
+    if module.params.get('since_seconds'):
+        kwargs.setdefault('query_params', {}).update({'sinceSeconds': module.params['since_seconds']})
 
     log = serialize_log(resource.log.get(
         name=name,

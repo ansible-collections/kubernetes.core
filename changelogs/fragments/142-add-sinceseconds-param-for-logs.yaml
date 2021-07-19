@@ -1,0 +1,2 @@
+minor_changes:
+  - k8s_log - Add since-seconds parameter to the k8s_log module (https://github.com/ansible-collections/kubernetes.core/pull/142).
