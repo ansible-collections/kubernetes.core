@@ -75,6 +75,9 @@ options:
     - This option is ignored when I(content) is set or when I(state) is set to C(from_pod).
     type: bool
     default: False
+
+notes:
+    - the tar binary is required on the container when copying from local filesystem to pod.
 '''
 
 EXAMPLES = r'''
