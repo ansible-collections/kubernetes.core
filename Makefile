@@ -3,6 +3,7 @@ VERSION = 2.1.1
 
 TEST_ARGS ?= ""
 PYTHON_VERSION ?= `python -c 'import platform; print("{0}.{1}".format(platform.python_version_tuple()[0], platform.python_version_tuple()[1]))'`
+TEST_SCENARIO ?= ""
 
 clean:
 	rm -f kubernetes-core-${VERSION}.tar.gz
@@ -25,7 +26,7 @@ test-integration:
 	ansible-test integration --docker -v --color --retry-on-error --python $(PYTHON_VERSION) --continue-on-error --diff --coverage $(?TEST_ARGS)
 
 test-molecule:
-	molecule test
+	molecule test -s $(TEST_SCENARIO)
 
 test-unit:
 	ansible-test units --docker -v --color --python $(PYTHON_VERSION) $(?TEST_ARGS)

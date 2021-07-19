@@ -76,6 +76,7 @@ jobs:
       matrix:
         python_version: ['3.7']
         ansible_version: ['==2.9.*', '==2.10.*', '']
+        molecule_scenario: ['default', 'drain']
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -117,7 +118,7 @@ jobs:
           ln -s /home/runner/work/kubernetes/kubernetes /home/runner/.ansible/collections
 
       - name: Run molecule default test scenario
-        run: make test-molecule
+        run: make test-molecule TEST_SCENARIO=${{ matrix.molecule_scenario }}
         working-directory: ./ansible_collections/kubernetes/core
 
   unit:

@@ -5,7 +5,7 @@
 kubernetes.core.k8s_drain
 *************************
 
-**Drain, Cordon, or Uncordon node in k8s cluster.**
+**Drain, Cordon, or Uncordon node in k8s cluster**
 
 
 
@@ -17,8 +17,8 @@ kubernetes.core.k8s_drain
 Synopsis
 --------
 - Drain node in preparation for maintenance same as kubectl drain.
-- Cordon will mark node as unschedulable.
-- Uncordon will mark node as schedulable.
+- Cordon will mark the node as unschedulable.
+- Uncordon will mark the node as schedulable.
 - The given node will be marked unschedulable to prevent new pods from arriving.
 - Then drain deletes all pods except mirror pods (which cannot be deleted through the API server).
 
@@ -154,7 +154,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>forces drain to use delete rather than evict.</div>
+                        <div>Forces drain to use delete rather than evict.</div>
                 </td>
             </tr>
             <tr>
@@ -228,7 +228,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>The length of time to wait for pod to be delected/evicted before giving up, zero means infinite.</div>
+                        <div>The length of time to wait in seconds for pod to be delected before giving up, zero means infinite.</div>
                         <div>Ignored if <code>wait</code> is not set.</div>
                 </td>
             </tr>
@@ -477,25 +477,25 @@ Examples
 .. code-block:: yaml
 
     - name: Drain node "foo", even if there are pods not managed by a ReplicationController, Job, or DaemonSet on it.
-      kubernetes.core.k8s_node:
+      kubernetes.core.k8s_drain:
         state: drain
         name: foo
         force: yes
 
     - name: Drain node "foo", but abort if there are pods not managed by a ReplicationController, Job, or DaemonSet, and use a grace period of 15 minutes.
-      kubernetes.core.k8s_node:
+      kubernetes.core.k8s_drain:
         state: drain
         name: foo
         delete_options:
             terminate_grace_period: 900
 
     - name: Mark node "foo" as schedulable.
-      kubernetes.core.k8s_node:
+      kubernetes.core.k8s_drain:
         state: uncordon
         name: foo
 
     - name: Mark node "foo" as unschedulable.
-      kubernetes.core.k8s_node:
+      kubernetes.core.k8s_drain:
         state: cordon
         name: foo
 
@@ -509,106 +509,25 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
 
     <table border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="2">Key</th>
+            <th colspan="1">Key</th>
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>result</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>The created, patched, or otherwise present Service object. Will be empty in the case of a deletion.</div>
-                    <br/>
-                </td>
-            </tr>
-                                <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>api_version</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
                       <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>The versioned schema of this representation of an object.</div>
+                            <div>The node status and the number of pods deleted.</div>
                     <br/>
                 </td>
             </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>kind</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Always &#x27;Service&#x27;.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>metadata</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Standard object metadata. Includes name, namespace, annotations, labels, etc.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>spec</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Specific attributes of the object. Will vary based on the <em>api_version</em> and <em>kind</em>.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>status</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Current status details for the object.</div>
-                    <br/>
-                </td>
-            </tr>
-
     </table>
     <br/><br/>
 
