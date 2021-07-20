@@ -15,7 +15,7 @@ short_description: Apply JSON patch operations to existing objects
 
 description:
   - This module is used to apply RFC 6902 JSON patch operations only.
-  - Use the M(k8s) module for strategic merge or JSON merge operations.
+  - Use the M(kubernetes.core.k8s) module for strategic merge or JSON merge operations.
   - The jsonpatch library is required for check mode.
 
 version_added: 2.0.0

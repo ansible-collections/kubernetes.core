@@ -53,7 +53,7 @@ except ImportError as e:
 
 IMP_K8S_CLIENT = None
 try:
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import K8SDynamicClient
+    from ansible_collections.kubernetes.core.plugins.module_utils import k8sdynamicclient
     from ansible_collections.kubernetes.core.plugins.module_utils.client.discovery import LazyDiscoverer
     IMP_K8S_CLIENT = True
 except ImportError as e:
@@ -195,7 +195,7 @@ def get_api_client(module=None, **kwargs):
         return client
 
     try:
-        client = K8SDynamicClient(kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer)
+        client = k8sdynamicclient.K8SDynamicClient(kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer)
     except Exception as err:
         _raise_or_fail(err, 'Failed to get client due to %s')
 
