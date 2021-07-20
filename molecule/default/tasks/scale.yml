@@ -54,6 +54,7 @@
         replicas: 0
         wait: yes
       register: scale_down
+      diff: true
 
     - name: Get pods in scale-deploy
       k8s_info:
@@ -143,7 +144,7 @@
         that:
           - scale_up is changed
           - '"duration" in scale_up'
-          - scale_up.diff
+          - scale_up.diff is not defined
           - scale_up_further_deploy_pods.resources | length == 2
 
     - name: Don't scale the deployment up
@@ -170,7 +171,7 @@
       assert:
         that:
           - scale_up_noop is not changed
-          - not scale_up_noop.diff
+          - scale_up_noop.diff is not defined
           - scale_up_noop_pods.resources | length == 2
           - '"duration" in scale_up_noop'
 
@@ -183,6 +184,7 @@
         replicas: 1
         wait: no
       register: scale_down_no_wait
+      diff: true
 
     - name: Ensure that scale down succeeds
       k8s_info:
