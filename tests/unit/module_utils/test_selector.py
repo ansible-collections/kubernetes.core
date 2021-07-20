@@ -129,3 +129,30 @@ def test_label_selector_conflicting_definition():
     assert not LabelSelectorFilter(label_selector).isMatching(prod_definition)
     assert not LabelSelectorFilter(label_selector).isMatching(no_label_definition)
     assert not LabelSelectorFilter(label_selector).isMatching(test_definition)
+
+
+def test_set_based_requirement():
+    label_selector = ['environment in (production)']
+    assert LabelSelectorFilter(label_selector).isMatching(prod_definition)
+    assert not LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert not LabelSelectorFilter(label_selector).isMatching(test_definition)
+    label_selector = ['environment in (production, test)']
+    assert LabelSelectorFilter(label_selector).isMatching(prod_definition)
+    assert not LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(test_definition)
+    label_selector = ['environment notin (production)']
+    assert not LabelSelectorFilter(label_selector).isMatching(prod_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(test_definition)
+    label_selector = ['environment notin (production, test)']
+    assert not LabelSelectorFilter(label_selector).isMatching(prod_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert not LabelSelectorFilter(label_selector).isMatching(test_definition)
+    label_selector = ['environment']
+    assert LabelSelectorFilter(label_selector).isMatching(prod_definition)
+    assert not LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(test_definition)
+    label_selector = ['!environment']
+    assert not LabelSelectorFilter(label_selector).isMatching(prod_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert not LabelSelectorFilter(label_selector).isMatching(test_definition)

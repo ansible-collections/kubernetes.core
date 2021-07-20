@@ -16,32 +16,70 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
+import re
+
 
 class Selector(object):
+
+    equality_based_operators = ('==', '!=', '=')
 
     def __init__(self, data):
         self._operator = None
         self._data = ''
-        for sep in ('==', '!=', '='):
-            pos = data.find(sep)
+        self.define_set_based_requirement(data)
+        if not self._set_based_requirement:
+            self.define_equality_based_requirement(data)
+
+    def define_set_based_requirement(self, data):
+        self._set_based_requirement = False
+        m = re.match(r'( *)([a-z0-9A-Z][a-z0-9A-Z\._-]*[a-z0-9A-Z])( *)(notin|in)( *)\((.*)\)( *)', data)
+        if m:
+            self._set_based_requirement = True
+            self._key = m.group(2)
+            self._operator = m.group(4)
+            self._data = [x.replace(' ', '') for x in m.group(6).split(',') if x != '']
+        elif all([x not in data for x in self.equality_based_operators]):
+            self._set_based_requirement = True
+            data = data.replace(" ", "")
+            self._key = data
+            if data.startswith("!"):
+                self._key = data[1:]
+                self._operator = "!"
+
+    def define_equality_based_requirement(self, data):
+        data_selector = data.replace(" ", "")
+        for sep in self.equality_based_operators:
+            pos = data_selector.find(sep)
             if pos != -1:
                 break
         if pos == -1:
-            self._key = data
+            self._key = data_selector
         else:
-            self._key = data[0:pos]
+            self._key = data_selector[0:pos]
             self._operator = sep
-            self._data = data[pos + len(sep):]
+            self._data = data_selector[pos + len(sep):]
 
-    def isMatch(self, labels):
+    def filter_equality_based_requirement(self, labels):
         if self._key not in labels:
             return False
         if self._operator in ('=', '=='):
             return self._data == labels.get(self._key)
         elif self._operator == '!=':
             return self._data != labels.get(self._key)
-        # operator not defined
         return True
+
+    def filter_set_based_requirement(self, labels):
+        if self._operator == "in":
+            return self._key in labels and labels.get(self._key) in self._data
+        elif self._operator == "notin":
+            return self._key not in labels or labels.get(self._key) not in self._data
+        else:
+            return self._key not in labels if self._operator == "!" else self._key in labels
+
+    def isMatch(self, labels):
+        if self._set_based_requirement:
+            return self.filter_set_based_requirement(labels)
+        return self.filter_equality_based_requirement(labels)
 
 
 class LabelSelectorFilter(object):
