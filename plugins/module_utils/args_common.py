@@ -70,6 +70,14 @@ WAIT_ARG_SPEC = dict(
             status=dict(default=True, choices=[True, False, "Unknown"]),
             reason=dict()
         )
+    ),
+    wait_property=dict(
+        type='dict',
+        default=None,
+        options=dict(
+            property=dict(required=True),
+            value=dict()
+        )
     )
 )
 
