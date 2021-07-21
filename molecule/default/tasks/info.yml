@@ -1,7 +1,7 @@
 ---
 - block:
     - set_fact:
-        wait_namespace: wait
+        info_namespace: info
         multi_pod_one: multi-pod-1
         multi_pod_two: multi-pod-2
 
@@ -11,7 +11,7 @@
           apiVersion: v1
           kind: Namespace
           metadata:
-            name: "{{ wait_namespace }}"
+            name: "{{ info_namespace }}"
 
     - name: Add a simple pod with initContainer
       k8s:
@@ -20,7 +20,7 @@
           kind: Pod
           metadata:
             name: "{{ k8s_pod_name }}"
-            namespace: "{{ wait_namespace }}"
+            namespace: "{{ info_namespace }}"
           spec:
             initContainers:
               - name: init-01
@@ -35,7 +35,7 @@
       k8s_info:
         name: "{{ k8s_pod_name }}"
         kind: Pod
-        namespace: "{{ wait_namespace }}"
+        namespace: "{{ info_namespace }}"
         wait: yes
         wait_sleep: 5
         wait_timeout: 400
@@ -53,7 +53,7 @@
         api_version: v1
         kind: Pod
         name: "{{ k8s_pod_name }}"
-        namespace: "{{ wait_namespace }}"
+        namespace: "{{ info_namespace }}"
         state: absent
         wait: yes
       ignore_errors: yes
@@ -74,7 +74,7 @@
             labels:
               run: multi-box
             name: "{{ multi_pod_one }}"
-            namespace: "{{ wait_namespace }}"
+            namespace: "{{ info_namespace }}"
           spec:
             initContainers:
               - name: init-01
@@ -94,7 +94,7 @@
             labels:
               run: multi-box
             name: "{{ multi_pod_two }}"
-            namespace: "{{ wait_namespace }}"
+            namespace: "{{ info_namespace }}"
           spec:
             initContainers:
               - name: init-02
@@ -108,7 +108,7 @@
     - name: Wait and gather information about new pods
       k8s_info:
         kind: Pod
-        namespace: "{{ wait_namespace }}"
+        namespace: "{{ info_namespace }}"
         wait: yes
         wait_sleep: 5
         wait_timeout: 400
@@ -129,7 +129,7 @@
         api_version: v1
         kind: Pod
         name: "{{ multi_pod_one }}"
-        namespace: "{{ wait_namespace }}"
+        namespace: "{{ info_namespace }}"
         state: absent
         wait: yes
       ignore_errors: yes
@@ -146,7 +146,7 @@
         api_version: v1
         kind: Pod
         name: "{{ multi_pod_two }}"
-        namespace: "{{ wait_namespace }}"
+        namespace: "{{ info_namespace }}"
         state: absent
         wait: yes
       ignore_errors: yes
@@ -189,7 +189,7 @@
       k8s_info:
         kind: Pod
         name: does-not-exist
-        namespace: "{{ wait_namespace }}"
+        namespace: "{{ info_namespace }}"
         wait: yes
         wait_timeout: 45
       register: result
@@ -206,5 +206,5 @@
     - name: Remove namespace
       k8s:
         kind: Namespace
-        name: "{{ wait_namespace }}"
+        name: "{{ info_namespace }}"
         state: absent

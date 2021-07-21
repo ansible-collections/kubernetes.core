@@ -2,6 +2,8 @@
 VERSION = 2.1.1
 
 TEST_ARGS ?= ""
+ANSIBLE_TAGS ?= ""
+ANSIBLE_VERBOSE ?= v
 PYTHON_VERSION ?= `python -c 'import platform; print("{0}.{1}".format(platform.python_version_tuple()[0], platform.python_version_tuple()[1]))'`
 
 clean:
@@ -24,8 +26,11 @@ test-sanity:
 test-integration:
 	ansible-test integration --docker -v --color --retry-on-error --python $(PYTHON_VERSION) --continue-on-error --diff --coverage $(?TEST_ARGS)
 
-test-molecule:
-	molecule test
+converge-molecule:
+	molecule converge -- --tags $(ANSIBLE_TAGS) -$(ANSIBLE_VERBOSE)
+
+lint-molecule:
+	molecule lint
 
 test-unit:
 	ansible-test units --docker -v --color --python $(PYTHON_VERSION) $(?TEST_ARGS)
