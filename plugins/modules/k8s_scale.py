@@ -181,7 +181,9 @@ def execute_module(module, k8s_ansible_mixin,):
     wait_sleep = module.params.get('wait_sleep')
     existing = None
     existing_count = None
-    return_attributes = dict(result=dict(), diff=dict())
+    return_attributes = dict(result=dict())
+    if module._diff:
+        return_attributes['diff'] = dict()
     if wait:
         return_attributes['duration'] = 0
 
@@ -256,7 +258,9 @@ def execute_module(module, k8s_ansible_mixin,):
             name = existing.metadata.name
             namespace = existing.metadata.namespace
             existing = resource.get(name=name, namespace=namespace)
-            result = {'changed': False, 'result': existing.to_dict(), 'diff': {}}
+            result = {'changed': False, 'result': existing.to_dict()}
+            if module._diff:
+                result['diff'] = {}
             if wait:
                 result['duration'] = 0
         # append result to the return attribute
@@ -302,7 +306,8 @@ def scale(module, k8s_ansible_mixin, resource, existing_object, replicas, wait, 
     result = dict()
     result['result'] = k8s_obj
     result['changed'] = not match
-    result['diff'] = diffs
+    if module._diff:
+        result['diff'] = diffs
 
     if wait:
         success, result['result'], result['duration'] = k8s_ansible_mixin.wait(resource, scale_obj, wait_sleep, wait_time)
