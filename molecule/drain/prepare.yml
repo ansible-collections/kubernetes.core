@@ -1,0 +1,37 @@
+---
+- name: Prepare
+  hosts: localhost
+  connection: local
+
+  collections:
+    - kubernetes.core
+
+  vars:
+    node_taints:
+      - "node.kubernetes.io/not-ready"
+      - "node.kubernetes.io/unreachable"
+      - "node.kubernetes.io/unschedulable"
+
+  tasks:
+    # We are spawning k8s cluster using kind executable and we ensure that the cluster is up
+    # and node is ready, if this is not validated we may face issue later on when running tests
+    - name: Download kind
+      get_url:
+        url: https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+        dest: /tmp/kind
+
+    - name: make kind executable
+      file:
+        path: /tmp/kind
+        mode: '0755'
+
+    - name: Create cluster
+      command: "kind create cluster"
+
+    - name: Assert that nodes are ready
+      k8s_info:
+        kind: Node
+      retries: 10
+      delay: 30
+      register: nodes
+      until: nodes.resources | selectattr("spec.taints", "defined") |  map(attribute="spec.taints") | list | length == 0
