@@ -392,7 +392,6 @@ class K8SCopyToPod(K8SCopy):
 
                 stderr, stdout = [], []
                 while response.is_open():
-                    # response.update(timeout=1)
                     if response.peek_stdout():
                         stdout.append(response.read_stdout().rstrip("\n"))
                     if response.peek_stderr():
