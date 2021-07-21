@@ -139,7 +139,6 @@ result:
 import copy
 import os
 from tempfile import TemporaryFile, NamedTemporaryFile
-import stat
 from select import select
 from abc import ABCMeta, abstractmethod
 import tarfile
@@ -339,13 +338,6 @@ class K8SCopyToPod(K8SCopy):
             return True
         return False
 
-    def preserve_perms(self, local, remote):
-        local_stat = os.lstat(local)
-        local_mode = stat.S_IMODE(local_stat.st_mode)
-
-        chmod_command = ['chmod', local_mode, remote]
-        self.run_from_pod(chmod_command)
-
     def close_temp_file(self):
         if self.named_temp_file:
             self.named_temp_file.close()
@@ -378,10 +370,6 @@ class K8SCopyToPod(K8SCopy):
             else:
                 tar_command = ['tar', '-xmf', '-']
 
-            # dest_dir = os.path.dirname(dest_file)
-            # if dest_dir:
-            #     tar_command.extend(['-C', dest_dir])
-
             response = stream(self.api_instance.connect_get_namespaced_pod_exec,
                               self.name,
                               self.namespace,
@@ -394,11 +382,17 @@ class K8SCopyToPod(K8SCopy):
                     tar.add(src_file, dest_file)
                 tar_buffer.seek(0)
                 commands = []
-                commands.append(tar_buffer.read())
+                # push command in chunk mode
+                size = 1024 * 1024
+                while True:
+                    data = tar_buffer.read(size)
+                    if not data:
+                        break
+                    commands.append(data)
 
                 stderr, stdout = [], []
                 while response.is_open():
-                    response.update(timeout=1)
+                    # response.update(timeout=1)
                     if response.peek_stdout():
                         stdout.append(response.read_stdout().rstrip("\n"))
                     if response.peek_stderr():

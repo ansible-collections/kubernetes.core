@@ -10,11 +10,12 @@
       state: to_pod
 
   - name: Compare files
-    k8s_diff:
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_file.txt
       content: "{{ lookup('file', 'simple_file.txt')}}"
+      kubectl_path: "{{ kubectl_path }}"
 
   - name: Copy simple text file from Pod
     k8s_cp:
@@ -25,11 +26,12 @@
       state: from_pod
 
   - name: Compare files
-    k8s_diff:
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_file.txt
       local_path: /tmp/copy_from_pod.txt
+      kubectl_path: "{{ kubectl_path }}"
 
   # Binary file
   - name: Generate random content
@@ -44,24 +46,15 @@
       local_path: files/hello
       state: to_pod
 
-  # this executable display hello message in the stdout and the
-  # hostname is the stderr
-  - name: Run executable from local host
-    command: "{{ role_path + '/files/hello ' + hello_arg }}"
-    register: local_cmd
-
-  - name: Run executable into Pod
-    k8s_exec:
+  - name: Compare executable
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
-      command: "/tmp/hello.exe {{ hello_arg }}"
-    register: remote_cmd
-
-  - name: Check the output are the same
-    assert:
-      that:
-      - local_cmd.stdout == remote_cmd.stdout
-      - remote_cmd.stderr == pod_with_one_container.name
+      remote_path: /tmp/hello.exe
+      local_path: "{{ role_path }}/files/hello"
+      kubectl_path: "{{ kubectl_path }}"
+      args:
+      - "{{ hello_arg }}"
 
   - name: Copy executable from Pod
     k8s_cp:
@@ -76,15 +69,15 @@
       path: /tmp/hello
       mode: '0755'
 
-  - name: Run executable from local host
-    command: /tmp/hello {{ hello_arg }}
-    register: local_cmd
-
-  - name: Check the output are the same
-    assert:
-      that:
-      - local_cmd.stdout == remote_cmd.stdout
-      - remote_cmd.stderr == pod_with_one_container.name
+  - name: Compare executable
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/hello.exe
+      local_path: /tmp/hello
+      kubectl_path: "{{ kubectl_path }}"
+      args:
+      - "{{ hello_arg }}"
 
   # zip files
   - name: copy zip file into remote pod
@@ -96,11 +89,12 @@
       state: to_pod
 
   - name: compare zip files
-    k8s_diff:
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_zip_file.txt.gz
       local_path: '{{ role_path }}/files/simple_zip_file.txt.gz'
+      kubectl_path: "{{ kubectl_path }}"
 
   - name: copy zip file from pod into local filesystem
     k8s_cp:
@@ -111,11 +105,12 @@
       state: from_pod
 
   - name: compare zip files
-    k8s_diff:
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_zip_file.txt.gz
       local_path: /tmp/copied_from_pod.txt.gz
+      kubectl_path: "{{ kubectl_path }}"
 
   # tar files
   - name: copy archive into remote pod
@@ -127,11 +122,12 @@
       state: to_pod
 
   - name: compare archive
-    k8s_diff:
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/archive.tar
       local_path: '{{ role_path }}/files/archive.tar'
+      kubectl_path: "{{ kubectl_path }}"
 
   - name: copy archive from remote pod into local filesystem
     k8s_cp:
@@ -142,11 +138,12 @@
       state: from_pod
 
   - name: compare archive
-    k8s_diff:
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/archive.tar
       local_path: /tmp/local_archive.tar
+      kubectl_path: "{{ kubectl_path }}"
 
   # Copy into Pod using content option
   - name: set content to be copied into Pod
@@ -162,11 +159,12 @@
       state: to_pod
 
   - name: Assert that content is as expected into Pod
-    k8s_diff:
+    kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /this_content.txt
       content: '{{ pod_content }}'
+      kubectl_path: "{{ kubectl_path }}"
 
   always:
   - name: Delete file created on Pod

@@ -12,20 +12,22 @@
     state: to_pod
 
 - name: Assert that content has been copied into first container
-  k8s_diff:
+  kubectl_file_compare:
     namespace: '{{ copy_namespace }}'
     pod: '{{ pod_with_two_container.name }}'
     remote_path: /file_from_localhost.txt
     container: '{{ pod_with_two_container.container[0] }}'
     content: '{{ random_content }}'
+    kubectl_path: "{{ kubectl_path }}"
 
 - name: Assert that content has not been copied into second container
-  k8s_diff:
+  kubectl_file_compare:
     namespace: '{{ copy_namespace }}'
     pod: '{{ pod_with_two_container.name }}'
     remote_path: /file_from_localhost.txt
     container: '{{ pod_with_two_container.container[1] }}'
     content: '{{ random_content }}'
+    kubectl_path: "{{ kubectl_path }}"
   register: diff
   ignore_errors: true
 
@@ -44,12 +46,13 @@
     state: to_pod
 
 - name: Assert that content has not been copied into first container
-  k8s_diff:
+  kubectl_file_compare:
     namespace: '{{ copy_namespace }}'
     pod: '{{ pod_with_two_container.name }}'
     remote_path: /file_from_localhost_01.txt
     container: '{{ pod_with_two_container.container[0] }}'
     content: '{{ random_content }}-secondpod'
+    kubectl_path: "{{ kubectl_path }}"
   ignore_errors: true
   register: diff_1
 
@@ -59,9 +62,10 @@
       - diff_1 is failed
 
 - name: Assert that content has been copied into second container
-  k8s_diff:
+  kubectl_file_compare:
     namespace: '{{ copy_namespace }}'
     pod: '{{ pod_with_two_container.name }}'
     remote_path: /file_from_localhost_01.txt
     container: '{{ pod_with_two_container.container[1] }}'
     content: '{{ random_content }}-secondpod'
+    kubectl_path: "{{ kubectl_path }}"
