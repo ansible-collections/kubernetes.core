@@ -10,6 +10,20 @@
       debug:
         var: output
 
+    - name: Use aliases and check if those values are picked up
+      k8s:
+        name: testing
+        kind: Namespace
+        validate_certs: yes
+        ssl_ca_cert: /dev/null  # invalid CA certificate
+      ignore_errors: yes
+      register: output
+
+    - name: assert that ssl_ca_cert caused a failure (and therefore was correctly translated to ssl_ca_cert)
+      assert:
+        that:
+          - output is failed
+
     - name: Setting validate_certs to true causes a failure
       k8s:
         name: testing

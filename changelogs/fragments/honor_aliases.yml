@@ -1,0 +1,2 @@
+bugfixes:
+- common - handle ``aliases`` passed from inventory or module params.
