@@ -6,10 +6,6 @@ driver:
     login_cmd_template: 'docker exec -ti {instance} bash'
     ansible_connection_options:
       ansible_connection: docker
-lint: |
-  set -e
-  yamllint .
-  flake8
 platforms:
   - name: instance-kind
 provisioner:
@@ -33,7 +29,6 @@ scenario:
   name: default
   test_sequence:
     - dependency
-    - lint
     - syntax
     - prepare
     - converge
