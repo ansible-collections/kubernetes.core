@@ -132,13 +132,13 @@ jobs:
           path: ansible_collections/kubernetes/core
 
       - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{ matrix.python_version }}
 
-      - name: Install ansible base (devel branch)
-        run: pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+      - name: Install tox
+        run: pip install tox
 
       - name: Run unit tests on Python ${{ matrix.python_version }}
-        run: make test-unit PYTHON_VERSION=${{ matrix.python_version }}
+        run: tox -eunits -vv -- ${{ matrix.python_version }} -vv
         working-directory: ./ansible_collections/kubernetes/core
