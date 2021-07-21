@@ -1,0 +1,15 @@
+---
+# defaults file for k8copy
+copy_namespace: copy
+
+pod_with_one_container:
+  name: pod-copy-0
+  container: container-00
+
+pod_with_two_container:
+  name: pod-copy-1
+  container:
+  - container-10
+  - container-11
+
+kubectl_path: /tmp/kubectl

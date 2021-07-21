@@ -1,0 +1,69 @@
+---
+# copy non-existent local file should fail
+- name: copy non-existent file into remote Pod
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_one_container.name }}'
+    remote_path: /tmp
+    local_path: this_file_does_not_exist
+    state: to_pod
+  ignore_errors: true
+  register: copy_non_existent
+
+- name: check that error message is as expected
+  assert:
+    that:
+      - copy_non_existent is failed
+      - copy_non_existent.msg == "this_file_does_not_exist does not exist in local filesystem"
+
+# copy non-existent pod file should fail
+- name: copy of non-existent file from remote pod should fail
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_one_container.name }}'
+    remote_path: /this_file_does_not_exist
+    local_path: /tmp
+    state: from_pod
+  ignore_errors: true
+  register: copy_non_existent
+
+- name: check that error message is as expected
+  assert:
+    that:
+      - copy_non_existent is failed
+      - copy_non_existent.msg == "/this_file_does_not_exist does not exist in remote pod filesystem"
+
+# copy file into multiple container pod without specifying the container should fail
+- name: copy file into multiple container pod
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /tmp
+    local_path: files/simple_file.txt
+    state: to_pod
+  ignore_errors: true
+  register: copy_multi_container
+
+- name: check that error message is as expected
+  assert:
+    that:
+      - copy_multi_container is failed
+      - copy_multi_container.msg == "Pod contains more than 1 container, option 'container' should be set"
+
+# copy using non-existent container from pod should failed
+- name: copy file into multiple container pod
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_two_container.name }}'
+    remote_path: /tmp
+    local_path: files/simple_file.txt
+    state: to_pod
+    container: this_is_a_fake_container
+  ignore_errors: true
+  register: copy_fake_container
+
+- name: check that error message is as expected
+  assert:
+    that:
+      - copy_fake_container is failed
+      - copy_fake_container.msg == "Pod has no container this_is_a_fake_container"

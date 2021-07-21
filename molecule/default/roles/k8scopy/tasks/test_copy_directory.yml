@@ -1,0 +1,85 @@
+---
+- block:
+  - name: copy directory into remote Pod (create new directory)
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /dest_data
+      local_path: files/data
+      state: to_pod
+
+  - name: compare directories
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /dest_data
+      local_path: '{{ role_path }}/files/data'
+      kubectl_path: "{{ kubectl_path }}"
+
+  - name: copy directory into remote Pod (existing directory)
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp
+      local_path: files/data
+      state: to_pod
+
+  - name: compare directories
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/data
+      local_path: '{{ role_path }}/files/data'
+      kubectl_path: "{{ kubectl_path }}"
+
+  - name: copy directory from Pod into local filesystem (new directory to create)
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/data
+      local_path: /tmp/test
+      state: from_pod
+
+  - name: compare directories
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/data
+      local_path: /tmp/test
+      kubectl_path: "{{ kubectl_path }}"
+
+  - name: copy directory from Pod into local filesystem (existing directory)
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/data
+      local_path: /tmp
+      state: from_pod
+
+  - name: compare directories
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/data
+      local_path: /tmp/data
+      kubectl_path: "{{ kubectl_path }}"
+
+  always:
+  - name: Remove directories created into remote Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: 'rm -rf {{ item }}'
+    ignore_errors: true
+    with_items:
+    - /dest_data
+    - /tmp/data
+
+  - name: Remove local directories
+    file:
+      path: '{{ item }}'
+      state: absent
+    ignore_errors: true
+    with_items:
+    - /tmp/data
+    - /tmp/test

@@ -1,0 +1,120 @@
+---
+- name: test copy of large binary and text files
+  block:
+  - set_fact:
+      test_directory: "/tmp/test_k8scp_large_files"
+    no_log: true
+
+  - name: create temporary directory for local files
+    ansible.builtin.file:
+      path: "{{ test_directory }}"
+      state: directory
+
+  - name: Download kind executable
+    get_url:
+      url: https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+      dest: "{{ test_directory }}/kind"
+
+  - name: make kind executable
+    ansible.builtin.file:
+      path: "{{ test_directory }}/kind"
+      mode: "+x"
+
+  - name: Run executable from local host
+    command: "{{ test_directory }}/kind version"
+    register: local_result_0
+
+  - name: create large text file
+    k8s_create_file:
+      path: "{{ test_directory }}/large_text_file.txt"
+      size: 1
+
+  # Copy large text file from/to local filesystem to Pod
+  - name: copy large file into remote Pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /large_text_file.txt
+      local_path: "{{ test_directory }}/large_text_file.txt"
+      state: to_pod
+
+  - name: Compare files
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /large_text_file.txt
+      local_path: "{{ test_directory }}/large_text_file.txt"
+      kubectl_path: "{{ kubectl_path }}"
+
+  - name: copy large file from Pod into local filesystem
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /large_text_file.txt
+      local_path: "{{ test_directory }}/large_text_file_from_pod.txt"
+      state: from_pod
+
+  - name: Compare files
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /large_text_file.txt
+      local_path: "{{ test_directory }}/large_text_file_from_pod.txt"
+      kubectl_path: "{{ kubectl_path }}"
+
+  # Copy large executable file from/to local filesystem to Pod
+  - name: copy large file into remote Pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /kind
+      local_path: "{{ test_directory }}/kind"
+      state: to_pod
+
+  - name: Compare executable, local vs remote
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /kind
+      local_path: "{{ test_directory }}/kind"
+      args:
+      - version
+
+  - name: copy executable from pod into local filesystem
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /kind
+      local_path: "{{ test_directory }}/kind_from_pod"
+      state: from_pod
+
+  - name: make kind executable
+    ansible.builtin.file:
+      path: "{{ test_directory }}/kind_from_pod"
+      mode: "0755"
+
+  - name: Compare executable, local vs remote
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /kind
+      local_path: "{{ test_directory }}/kind_from_pod"
+      args:
+      - version
+
+  always:
+  - name: Delete temporary directory created for the test
+    ansible.builtin.file:
+      path: "{{ test_directory }}"
+      state: absent
+    ignore_errors: true
+
+  - name: Delete file created on Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: 'rm {{ item }}'
+    ignore_errors: true
+    with_items:
+    - /large_text_file.txt
+    - /kind
