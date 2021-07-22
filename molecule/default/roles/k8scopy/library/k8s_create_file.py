@@ -31,6 +31,11 @@ options:
     - The size of the output file in MB.
     type: int
     default: 400
+  binary:
+    description:
+    - If this flag is set to yes, the generated file content binary data.
+    type: bool
+    default: False
 '''
 
 EXAMPLES = r'''
@@ -44,6 +49,7 @@ EXAMPLES = r'''
 RETURN = r'''
 '''
 
+import os
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_native
@@ -53,12 +59,18 @@ def execute_module(module):
     try:
         size = module.params.get('size') * 1024 * 1024
         path = module.params.get('path')
-        content = ""
-        count = 0
-        while len(content) < size:
-            content += f"This file has been generated using ansible: {count}\n"
-            count += 1
-        with open(path, "w") as f:
+        write_mode = "w"
+        if module.params.get('binary'):
+            content = os.urandom(size)
+            write_mode = "wb"
+        else:
+            content = ""
+            count = 0
+            while len(content) < size:
+                content += f"This file has been generated using ansible: {count}\n"
+                count += 1
+
+        with open(path, write_mode) as f:
             f.write(content)
         module.exit_json(changed=True, size=len(content))
     except Exception as e:
@@ -69,6 +81,7 @@ def main():
     argument_spec = {}
     argument_spec['size'] = {'type': 'int', 'default': 400}
     argument_spec['path'] = {'type': 'path', 'required': True}
+    argument_spec['binary'] = {'type': 'bool', 'default': False}
     module = AnsibleModule(argument_spec=argument_spec)
 
     execute_module(module)

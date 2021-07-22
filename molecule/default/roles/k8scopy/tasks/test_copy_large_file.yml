@@ -10,24 +10,15 @@
       path: "{{ test_directory }}"
       state: directory
 
-  - name: Download kind executable
-    get_url:
-      url: https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
-      dest: "{{ test_directory }}/kind"
-
-  - name: make kind executable
-    ansible.builtin.file:
-      path: "{{ test_directory }}/kind"
-      mode: "+x"
-
-  - name: Run executable from local host
-    command: "{{ test_directory }}/kind version"
-    register: local_result_0
-
   - name: create large text file
     k8s_create_file:
       path: "{{ test_directory }}/large_text_file.txt"
-      size: 1
+      size: 150
+
+  - name: create large binary file
+    k8s_create_file:
+      path: "{{ test_directory }}/large_bin_file.bin"
+      size: 200
 
   # Copy large text file from/to local filesystem to Pod
   - name: copy large file into remote Pod
@@ -62,45 +53,36 @@
       local_path: "{{ test_directory }}/large_text_file_from_pod.txt"
       kubectl_path: "{{ kubectl_path }}"
 
-  # Copy large executable file from/to local filesystem to Pod
+  # Copy large binary file from/to local filesystem to Pod
   - name: copy large file into remote Pod
     k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
-      remote_path: /kind
-      local_path: "{{ test_directory }}/kind"
+      remote_path: /large_bin_file.bin
+      local_path: "{{ test_directory }}/large_bin_file.bin"
       state: to_pod
 
   - name: Compare executable, local vs remote
     kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
-      remote_path: /kind
-      local_path: "{{ test_directory }}/kind"
-      args:
-      - version
+      remote_path: /large_bin_file.bin
+      local_path: "{{ test_directory }}/large_bin_file.bin"
 
   - name: copy executable from pod into local filesystem
     k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
-      remote_path: /kind
-      local_path: "{{ test_directory }}/kind_from_pod"
+      remote_path: /large_bin_file.bin
+      local_path: "{{ test_directory }}/large_bin_file_from_pod.bin"
       state: from_pod
-
-  - name: make kind executable
-    ansible.builtin.file:
-      path: "{{ test_directory }}/kind_from_pod"
-      mode: "0755"
 
   - name: Compare executable, local vs remote
     kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
-      remote_path: /kind
-      local_path: "{{ test_directory }}/kind_from_pod"
-      args:
-      - version
+      remote_path: /large_bin_file.bin
+      local_path: "{{ test_directory }}/large_bin_file_from_pod.bin"
 
   always:
   - name: Delete temporary directory created for the test
@@ -117,4 +99,4 @@
     ignore_errors: true
     with_items:
     - /large_text_file.txt
-    - /kind
+    - /large_bin_file.bin
