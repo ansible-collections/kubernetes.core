@@ -257,9 +257,6 @@ class ActionModule(ActionBase):
         state = self._task.args.get('state', None)
         if local_path and state == 'to_pod':
             new_module_args['local_path'] = self.get_file_realpath(local_path)
-            with open('/tmp/k8s_action.txt', 'w') as f:
-                import json
-                f.write(json.dumps(new_module_args, indent=2))
 
         # Execute the k8s_* module.
         module_return = self._execute_module(module_name=self._task.action, module_args=new_module_args, task_vars=task_vars)
