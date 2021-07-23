@@ -255,8 +255,6 @@ class ActionModule(ActionBase):
 
         local_path = self._task.args.get('local_path')
         state = self._task.args.get('state', None)
-        with open('/tmp/k8s_action.txt', 'w') as f:
-            f.write("args {0}".format(self._task.args))
         if local_path and state == 'to_pod':
             new_module_args['local_path'] = self.get_file_realpath(local_path)
             with open('/tmp/k8s_action.txt', 'w') as f:
