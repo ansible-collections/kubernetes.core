@@ -182,7 +182,7 @@ class ActionModule(ActionBase):
 
     def get_file_realpath(self, local_path):
         # local_path is only supported by k8s_cp module.
-        if self._task.action not in ('k8s_cp', 'kubernetes.core.k8s_cp', 'community.okd.k8s_cp'):
+        if self._task.action not in ('k8s_cp', 'kubernetes.core.k8s_cp', 'community.kubernetes.k8s_cp'):
             raise AnsibleActionFail("'local_path' is only supported parameter for 'k8s_cp' module.")
 
         if os.path.exists(local_path):
