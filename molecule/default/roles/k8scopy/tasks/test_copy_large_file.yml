@@ -19,6 +19,7 @@
     k8s_create_file:
       path: "{{ test_directory }}/large_bin_file.bin"
       size: 200
+      binary: true
 
   # Copy large text file from/to local filesystem to Pod
   - name: copy large file into remote Pod
