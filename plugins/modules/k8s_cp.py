@@ -83,7 +83,7 @@ notes:
 EXAMPLES = r'''
 # kubectl cp /tmp/foo some-namespace/some-pod:/tmp/bar
 - name: Copy /tmp/foo local file to /tmp/bar in a remote pod
-  kubernetes.core.k8s:
+  kubernetes.core.k8s_cp:
     namespace: some-namespace
     pod: some-pod
     remote_path: /tmp/bar
@@ -91,7 +91,7 @@ EXAMPLES = r'''
 
 # kubectl cp /tmp/foo_dir some-namespace/some-pod:/tmp/bar_dir
 - name: Copy /tmp/foo_dir local directory to /tmp/bar_dir in a remote pod
-  kubernetes.core.k8s:
+  kubernetes.core.k8s_cp:
     namespace: some-namespace
     pod: some-pod
     remote_path: /tmp/bar_dir
@@ -99,7 +99,7 @@ EXAMPLES = r'''
 
 # kubectl cp /tmp/foo some-namespace/some-pod:/tmp/bar -c some-container
 - name: Copy /tmp/foo local file to /tmp/bar in a remote pod in a specific container
-  kubernetes.core.k8s:
+  kubernetes.core.k8s_cp:
     namespace: some-namespace
     pod: some-pod
     container: some-container
@@ -110,7 +110,7 @@ EXAMPLES = r'''
 
 # kubectl cp some-namespace/some-pod:/tmp/foo /tmp/bar
 - name: Copy /tmp/foo from a remote pod to /tmp/bar locally
-  kubernetes.core.k8s:
+  kubernetes.core.k8s_cp:
     namespace: some-namespace
     pod: some-pod
     remote_path: /tmp/foo
@@ -119,7 +119,7 @@ EXAMPLES = r'''
 
 # copy content into a file in the remote pod
 - name: Copy /tmp/foo from a remote pod to /tmp/bar locally
-  kubernetes.core.k8s:
+  kubernetes.core.k8s_cp:
     state: to_pod
     namespace: some-namespace
     pod: some-pod
