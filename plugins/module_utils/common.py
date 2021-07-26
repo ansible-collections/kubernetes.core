@@ -208,13 +208,13 @@ get_api_client._pool = {}
 
 class K8sAnsibleMixin(object):
 
-    def __init__(self, module, *args, **kwargs):
+    def __init__(self, module, pyyaml_required=True, *args, **kwargs):
         if not HAS_K8S_MODULE_HELPER:
             module.fail_json(msg=missing_required_lib('kubernetes'), exception=K8S_IMP_ERR,
                              error=to_native(k8s_import_exception))
         self.kubernetes_version = kubernetes.__version__
 
-        if not HAS_YAML:
+        if pyyaml_required and not HAS_YAML:
             module.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
 
     def find_resource(self, kind, api_version, fail=False):

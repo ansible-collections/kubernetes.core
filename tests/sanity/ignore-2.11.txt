@@ -232,3 +232,5 @@ plugins/modules/k8s_service.py validate-modules:return-syntax-error
 tests/sanity/refresh_ignore_files shebang!skip
 tests/unit/module_utils/test_discoverer.py future-import-boilerplate!skip
 tests/unit/module_utils/test_discoverer.py metaclass-boilerplate!skip
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py shebang
+molecule/default/roles/k8scopy/library/k8s_create_file.py shebang
