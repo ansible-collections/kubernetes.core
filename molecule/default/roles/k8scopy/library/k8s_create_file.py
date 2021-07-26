@@ -67,7 +67,7 @@ def execute_module(module):
             content = ""
             count = 0
             while len(content) < size:
-                content += f"This file has been generated using ansible: {count}\n"
+                content += "This file has been generated using ansible: {0}\n".format(count)
                 count += 1
 
         with open(path, write_mode) as f:

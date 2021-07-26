@@ -228,3 +228,10 @@ tests/unit/module_utils/test_discoverer.py future-import-boilerplate!skip
 tests/unit/module_utils/test_discoverer.py metaclass-boilerplate!skip
 molecule/default/roles/k8scopy/library/kubectl_file_compare.py shebang
 molecule/default/roles/k8scopy/library/k8s_create_file.py shebang
+plugins/modules/k8s_cp.py compile-2.6!skip
+plugins/modules/k8s_cp.py compile-2.7!skip
+plugins/modules/k8s_cp.py import-2.6!skip
+plugins/modules/k8s_cp.py import-2.7!skip
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-2.6!skip
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-2.7!skip
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-3.5!skip
