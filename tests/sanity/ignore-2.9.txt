@@ -3,6 +3,14 @@ molecule/default/roles/helm/files/appversionless-chart-v2/templates/configmap.ya
 molecule/default/roles/helm/files/appversionless-chart/templates/configmap.yaml yamllint!skip
 molecule/default/roles/helm/files/test-chart-v2/templates/configmap.yaml yamllint!skip
 molecule/default/roles/helm/files/test-chart/templates/configmap.yaml yamllint!skip
+molecule/default/roles/k8scopy/library/k8s_create_file.py compile-2.6!skip
+molecule/default/roles/k8scopy/library/k8s_create_file.py compile-2.7!skip
+molecule/default/roles/k8scopy/library/k8s_create_file.py compile-3.5!skip
+molecule/default/roles/k8scopy/library/k8s_create_file.py shebang
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-2.6!skip
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-2.7!skip
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-3.5!skip
+molecule/default/roles/k8scopy/library/kubectl_file_compare.py shebang
 plugins/module_utils/__init__.py compile-2.6!skip
 plugins/module_utils/__init__.py compile-2.7!skip
 plugins/module_utils/__init__.py compile-3.5!skip
@@ -165,6 +173,14 @@ plugins/modules/k8s_cluster_info.py import-2.6!skip
 plugins/modules/k8s_cluster_info.py import-2.7!skip
 plugins/modules/k8s_cluster_info.py import-3.5!skip
 plugins/modules/k8s_cluster_info.py metaclass-boilerplate!skip
+plugins/modules/k8s_cp.py compile-2.6!skip
+plugins/modules/k8s_cp.py compile-2.7!skip
+plugins/modules/k8s_cp.py compile-3.5!skip
+plugins/modules/k8s_cp.py future-import-boilerplate!skip
+plugins/modules/k8s_cp.py import-2.6!skip
+plugins/modules/k8s_cp.py import-2.7!skip
+plugins/modules/k8s_cp.py import-3.5!skip
+plugins/modules/k8s_cp.py metaclass-boilerplate!skip
 plugins/modules/k8s_exec.py compile-2.6!skip
 plugins/modules/k8s_exec.py compile-2.7!skip
 plugins/modules/k8s_exec.py compile-3.5!skip
@@ -226,5 +242,3 @@ plugins/modules/k8s_service.py validate-modules:parameter-type-not-in-doc
 tests/sanity/refresh_ignore_files shebang!skip
 tests/unit/module_utils/test_discoverer.py future-import-boilerplate!skip
 tests/unit/module_utils/test_discoverer.py metaclass-boilerplate!skip
-molecule/default/roles/k8scopy/library/kubectl_file_compare.py shebang
-molecule/default/roles/k8scopy/library/k8s_create_file.py shebang
