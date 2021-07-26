@@ -166,7 +166,7 @@ def execute_module(module):
         pod_rc, pod_out, pod_err = kubectl_run_from_pod(module)
         rc, out, err = module.run_command([module.params.get('local_path')] + args)
         if rc == pod_rc and out == pod_out:
-            module.exit_json(msg=f"{0} and {1}/{2}:{3} are same.".format(
+            module.exit_json(msg="{0} and {1}/{2}:{3} are same.".format(
                 local_path, namespace, pod, file
             ), rc=rc, stderr=err, stdout=out)
         result = dict(local=dict(rc=rc, out=out, err=err), remote=dict(rc=pod_rc, out=pod_out, err=pod_err))
