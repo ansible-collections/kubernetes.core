@@ -30,6 +30,7 @@ options:
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_name_options
+  - kubernetes.core.k8s_turbo_options
 requirements:
   - "python >= 3.6"
   - "kubernetes >= 12.0.0"
@@ -80,7 +81,7 @@ import copy
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, NAME_ARG_SPEC)
+    AUTH_ARG_SPEC, NAME_ARG_SPEC, TURBO_ARG_SPEC)
 
 
 def get_managed_resource(module):
@@ -181,6 +182,7 @@ def perform_action(module, k8s_ansible_mixin, resource):
 
 def argspec():
     args = copy.deepcopy(AUTH_ARG_SPEC)
+    args.update(TURBO_ARG_SPEC)
     args.update(NAME_ARG_SPEC)
     args.update(
         dict(

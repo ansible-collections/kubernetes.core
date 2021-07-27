@@ -35,6 +35,7 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_wait_options
   - kubernetes.core.k8s_delete_options
+  - kubernetes.core.k8s_turbo_options
 
 options:
   state:
@@ -326,7 +327,7 @@ import copy
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, WAIT_ARG_SPEC, NAME_ARG_SPEC, RESOURCE_ARG_SPEC, DELETE_OPTS_ARG_SPEC)
+    AUTH_ARG_SPEC, WAIT_ARG_SPEC, NAME_ARG_SPEC, RESOURCE_ARG_SPEC, DELETE_OPTS_ARG_SPEC, TURBO_ARG_SPEC)
 
 
 def validate_spec():
@@ -342,6 +343,7 @@ def argspec():
     argument_spec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
     argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
     argument_spec.update(copy.deepcopy(WAIT_ARG_SPEC))
+    argument_spec.update(copy.deepcopy(TURBO_ARG_SPEC))
     argument_spec['merge_type'] = dict(type='list', elements='str', choices=['json', 'merge', 'strategic-merge'])
     argument_spec['validate'] = dict(type='dict', default=None, options=validate_spec())
     argument_spec['append_hash'] = dict(type='bool', default=False)

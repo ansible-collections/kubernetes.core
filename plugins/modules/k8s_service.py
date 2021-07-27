@@ -24,6 +24,7 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_resource_options
   - kubernetes.core.k8s_state_options
+  - kubernetes.core.k8s_turbo_options
 
 options:
   merge_type:
@@ -148,7 +149,7 @@ from collections import defaultdict
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, COMMON_ARG_SPEC, RESOURCE_ARG_SPEC)
+    AUTH_ARG_SPEC, COMMON_ARG_SPEC, RESOURCE_ARG_SPEC, TURBO_ARG_SPEC)
 
 SERVICE_ARG_SPEC = {
     'apply': {
@@ -188,6 +189,7 @@ def argspec():
     argument_spec.update(COMMON_ARG_SPEC)
     argument_spec.update(RESOURCE_ARG_SPEC)
     argument_spec.update(SERVICE_ARG_SPEC)
+    argument_spec.update(TURBO_ARG_SPEC)
     return argument_spec
 
 

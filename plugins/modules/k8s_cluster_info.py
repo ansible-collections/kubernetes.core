@@ -31,6 +31,7 @@ options:
 
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_turbo_options
 
 requirements:
   - "python >= 3.6"
@@ -155,7 +156,7 @@ from ansible.module_utils._text import to_native
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC, TURBO_ARG_SPEC)
 
 
 def execute_module(module, client):
@@ -196,6 +197,7 @@ def execute_module(module, client):
 
 def argspec():
     spec = copy.deepcopy(AUTH_ARG_SPEC)
+    spec.update(copy.deepcopy(TURBO_ARG_SPEC))
     spec['invalidate_cache'] = dict(type='bool', default=True)
     return spec
 

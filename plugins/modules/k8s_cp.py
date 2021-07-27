@@ -23,6 +23,7 @@ description:
 
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
+  - kubernetes.core.k8s_turbo_options
 
 requirements:
   - "python >= 3.6"

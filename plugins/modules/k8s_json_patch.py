@@ -60,6 +60,7 @@ options:
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_wait_options
+  - kubernetes.core.k8s_turbo_options
 
 requirements:
   - "python >= 3.6"
@@ -130,7 +131,9 @@ import traceback
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import AUTH_ARG_SPEC, WAIT_ARG_SPEC
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    AUTH_ARG_SPEC, WAIT_ARG_SPEC, TURBO_ARG_SPEC
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     get_api_client, K8sAnsibleMixin)
 
@@ -267,6 +270,7 @@ def execute_module(k8s_module, module):
 def main():
     args = copy.deepcopy(AUTH_ARG_SPEC)
     args.update(copy.deepcopy(WAIT_ARG_SPEC))
+    args.update(copy.deepcopy(TURBO_ARG_SPEC))
     args.update(JSON_PATCH_ARGS)
     module = AnsibleModule(argument_spec=args, supports_check_mode=True)
     k8s_module = K8sAnsibleMixin(module)

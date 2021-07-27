@@ -30,6 +30,7 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_resource_options
   - kubernetes.core.k8s_scale_options
+  - kubernetes.core.k8s_turbo_options
 
 options:
   label_selectors:
@@ -145,7 +146,7 @@ import copy
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, RESOURCE_ARG_SPEC, NAME_ARG_SPEC)
+    AUTH_ARG_SPEC, RESOURCE_ARG_SPEC, NAME_ARG_SPEC, TURBO_ARG_SPEC)
 
 
 SCALE_ARG_SPEC = {
@@ -274,6 +275,7 @@ def execute_module(module, k8s_ansible_mixin,):
 
 def argspec():
     args = copy.deepcopy(SCALE_ARG_SPEC)
+    args.update(TURBO_ARG_SPEC)
     args.update(RESOURCE_ARG_SPEC)
     args.update(NAME_ARG_SPEC)
     args.update(AUTH_ARG_SPEC)
