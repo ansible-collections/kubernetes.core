@@ -177,6 +177,11 @@
       tags:
         - helm
 
+    - role: k8scopy
+      tags:
+        - copy
+        - k8s
+
   post_tasks:
     - name: Ensure namespace exists
       k8s:
