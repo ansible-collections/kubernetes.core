@@ -142,3 +142,10 @@ DELETE_OPTS_ARG_SPEC = {
         }
     }
 }
+
+TURBO_ARG_SPEC = {
+    'enable_session_cache': {
+        'type': 'bool',
+        'default': False,
+    },
+}

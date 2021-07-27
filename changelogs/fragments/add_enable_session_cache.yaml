@@ -1,0 +1,3 @@
+---
+minor_changes:
+- add ``enable_session_cache`` parameter to turn on the session cache. The option is disabled by default. 
