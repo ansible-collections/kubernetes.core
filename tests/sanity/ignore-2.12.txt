@@ -235,3 +235,7 @@ plugins/modules/k8s_service.py metaclass-boilerplate!skip
 plugins/modules/k8s_service.py validate-modules:parameter-type-not-in-doc
 plugins/modules/k8s_service.py validate-modules:return-syntax-error
 tests/sanity/refresh_ignore_files shebang!skip
+plugins/modules/k8s_cp.py compile-2.6!skip
+plugins/modules/k8s_cp.py compile-2.7!skip
+plugins/modules/k8s_cp.py import-2.6!skip
+plugins/modules/k8s_cp.py import-2.7!skip
