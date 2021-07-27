@@ -13,7 +13,7 @@ provisioner:
   log: true
   config_options:
     inventory:
-      enable_plugins: kubernetes.core.k8s
+      enable_plugins: kubernetes.core.k8s,yaml
   lint: {}
   inventory:
     hosts:
@@ -30,7 +30,6 @@ scenario:
   test_sequence:
     - dependency
     - syntax
-    - prepare
     - converge
     - verify
 dependency:
