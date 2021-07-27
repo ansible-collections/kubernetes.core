@@ -239,3 +239,5 @@ plugins/modules/k8s_cp.py compile-2.6!skip
 plugins/modules/k8s_cp.py compile-2.7!skip
 plugins/modules/k8s_cp.py import-2.6!skip
 plugins/modules/k8s_cp.py import-2.7!skip
+plugins/module_utils/selector.py future-import-boilerplate!skip
+plugins/module_utils/selector.py metaclass-boilerplate!skip

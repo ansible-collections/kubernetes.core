@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from __future__ import absolute_import, division, print_function
-__metaclass__ = type
-
-from ansible_collections.kubernetes.core.plugins.module_utils.selector import LabelSelectorFilter
+from ansible_collections.kubernetes.core.plugins.module_utils.selector import LabelSelectorFilter, Selector
 
 prod_definition = {
     'apiVersion': 'v1',
@@ -67,6 +63,39 @@ test_definition = {
 }
 
 
+def test_selector_parser():
+    f_selector = "environment==true"
+    sel = Selector(f_selector)
+    assert sel._operator == "in" and sel._data == ["true"] and sel._key == "environment"
+    f_selector = "environment=true"
+    sel = Selector(f_selector)
+    assert sel._operator == "in" and sel._data == ["true"] and sel._key == "environment"
+    f_selector = " environment  ==  true "
+    sel = Selector(f_selector)
+    assert sel._operator == "in" and sel._data == ["true"] and sel._key == "environment"
+    f_selector = "environment!=false"
+    sel = Selector(f_selector)
+    assert sel._operator == "notin" and sel._data == ["false"] and sel._key == "environment"
+    f_selector = "environment notin (true, false)"
+    sel = Selector(f_selector)
+    assert sel._operator == "notin" and "true" in sel._data and "false" in sel._data and sel._key == "environment"
+    f_selector = "environment in (true, false)"
+    sel = Selector(f_selector)
+    assert sel._operator == "in" and "true" in sel._data and "false" in sel._data and sel._key == "environment"
+    f_selector = "environmentin(true, false)"
+    sel = Selector(f_selector)
+    assert not sel._operator and not sel._data and sel._key == f_selector
+    f_selector = "environment notin (true, false"
+    sel = Selector(f_selector)
+    assert not sel._operator and not sel._data and sel._key == f_selector
+    f_selector = "!environment"
+    sel = Selector(f_selector)
+    assert sel._operator == "!" and not sel._data and sel._key == "environment"
+    f_selector = "!  environment  "
+    sel = Selector(f_selector)
+    assert sel._operator == "!" and not sel._data and sel._key == "environment"
+
+
 def test_label_selector_without_operator():
     label_selector = ['environment', 'app']
     assert LabelSelectorFilter(label_selector).isMatching(prod_definition)
@@ -100,11 +129,11 @@ def test_label_selector_equal_operator():
 def test_label_selector_notequal_operator():
     label_selector = ['environment!=test']
     assert LabelSelectorFilter(label_selector).isMatching(prod_definition)
-    assert not LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(no_label_definition)
     assert not LabelSelectorFilter(label_selector).isMatching(test_definition)
     label_selector = ['environment!=production']
     assert not LabelSelectorFilter(label_selector).isMatching(prod_definition)
-    assert not LabelSelectorFilter(label_selector).isMatching(no_label_definition)
+    assert LabelSelectorFilter(label_selector).isMatching(no_label_definition)
     assert LabelSelectorFilter(label_selector).isMatching(test_definition)
     label_selector = ['environment=production', 'app!=mongodb']
     assert LabelSelectorFilter(label_selector).isMatching(prod_definition)

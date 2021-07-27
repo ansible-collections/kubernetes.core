@@ -169,6 +169,9 @@
         file: tasks/label_selectors.yml
         apply:
           tags: [ label_selectors, k8s ]
+      tags:
+        - always
+
     - name: Include diff.yml
       include_tasks:
         file: tasks/diff.yml
