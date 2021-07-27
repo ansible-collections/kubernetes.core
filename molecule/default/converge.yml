@@ -169,6 +169,11 @@
         file: tasks/label_selectors.yml
         apply:
           tags: [ label_selectors, k8s ]
+    - name: Include diff.yml
+      include_tasks:
+        file: tasks/diff.yml
+        apply:
+          tags: [ diff, k8s ]
       tags:
         - always
 
@@ -176,6 +181,11 @@
     - role: helm
       tags:
         - helm
+
+    - role: k8scopy
+      tags:
+        - copy
+        - k8s
 
   post_tasks:
     - name: Ensure namespace exists
