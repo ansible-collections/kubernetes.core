@@ -252,6 +252,32 @@ EXAMPLES = r'''
       status: Unknown
       reason: DeploymentPaused
 
+# Wait for this service to have acquired an External IP
+- name: Create ingress and wait for ip to be assigned
+  kubernetes.core.k8s:
+    template: dash-service.yaml
+    wait: yes
+    wait_property:
+      property: status.loadBalancer.ingress[*].ip
+
+# Wait for container inside a pod to be ready
+- name: Create Pod and wait for containers to be ready
+  kubernetes.core.k8s:
+    template: pod.yaml
+    wait: yes
+    wait_property:
+      property: status.containerStatuses[*].ready
+      value: "true"
+
+# Wait for first container inside a pod to be ready
+- name: Create Pod and wait for first containers to be ready
+  kubernetes.core.k8s:
+    template: pod.yaml
+    wait: yes
+    wait_property:
+      property: status.containerStatuses[0].ready
+      value: "true"
+
 # Patch existing namespace : add label
 - name: add label to existing namespace
   kubernetes.core.k8s:
