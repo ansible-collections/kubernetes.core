@@ -235,3 +235,7 @@ plugins/modules/k8s_cp.py import-2.7!skip
 molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-2.6!skip
 molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-2.7!skip
 molecule/default/roles/k8scopy/library/kubectl_file_compare.py compile-3.5!skip
+tests/unit/module_utils/test_selector.py future-import-boilerplate!skip
+tests/unit/module_utils/test_selector.py metaclass-boilerplate!skip
+plugins/module_utils/selector.py future-import-boilerplate!skip
+plugins/module_utils/selector.py metaclass-boilerplate!skip
