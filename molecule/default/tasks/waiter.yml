@@ -140,6 +140,111 @@
           - ds.result.status.currentNumberScheduled == ds.result.status.desiredNumberScheduled
           - updated_ds_pods.resources[0].spec.containers[0].image.endswith(":3")
 
+    - name: Add a statefulset
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: wait-statefulset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 5
+        wait_timeout: 180
+      vars:
+        k8s_pod_name: wait-sts
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: sts
+
+    - name: Check that statefulset wait worked
+      assert:
+        that:
+          - sts.result.spec.replicas == sts.result.status.readyReplicas
+
+    - name: Update a statefulset in check_mode
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: wait-statefulset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            updateStrategy:
+              type: RollingUpdate
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 3
+        wait_timeout: 180
+      vars:
+        k8s_pod_name: wait-sts
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: update_sts_check_mode
+      check_mode: yes
+
+    - name: Check that check_mode result contains the changes
+      assert:
+        that:
+          - update_sts_check_mode is changed
+          - "update_sts_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:2'"
+
+    - name: Update a statefulset
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: wait-statefulset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            updateStrategy:
+              type: RollingUpdate
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 3
+        wait_timeout: 180
+      vars:
+        k8s_pod_name: wait-sts
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:3
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: sts
+
+    - name: Get updated pods
+      k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ wait_namespace }}"
+        label_selectors:
+          - app=wait-sts
+        field_selectors:
+          - status.phase=Running
+      register: updated_sts_pods
+
+    - name: Check that statefulset wait worked
+      assert:
+        that:
+          - sts.result.spec.replicas == sts.result.status.readyReplicas
+          - updated_sts_pods.resources[0].spec.containers[0].image.endswith(":3")
+
     - name: Add a crashing pod
       k8s:
         definition:

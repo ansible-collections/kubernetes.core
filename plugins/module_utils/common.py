@@ -397,6 +397,14 @@ class K8sAnsibleMixin(object):
                     and daemonset.status.observedGeneration == daemonset.metadata.generation
                     and not daemonset.status.unavailableReplicas)
 
+        def _statefulset_ready(statefulset):
+            return (statefulset.status and statefulset.spec.updateStrategy.type == "RollingUpdate"
+                    and statefulset.status.observedGeneration == (statefulset.metadata.generation or 0)
+                    and statefulset.status.updateRevision == statefulset.status.currentRevision
+                    and statefulset.status.updatedReplicas == statefulset.spec.replicas
+                    and statefulset.status.readyReplicas == statefulset.spec.replicas
+                    and statefulset.status.replicas == statefulset.spec.replicas)
+
         def _custom_condition(resource):
             if not resource.status or not resource.status.conditions:
                 return False
@@ -423,6 +431,7 @@ class K8sAnsibleMixin(object):
             return not resource
 
         waiter = dict(
+            StatefulSet=_statefulset_ready,
             Deployment=_deployment_ready,
             DaemonSet=_daemonset_ready,
             Pod=_pod_ready
