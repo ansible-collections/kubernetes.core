@@ -1,0 +1,3 @@
+---
+bugfixes:
+- connection plugin - add arguments information into censored command. (https://github.com/ansible-collections/kubernetes.core/issues/147).
