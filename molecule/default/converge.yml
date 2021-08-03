@@ -273,19 +273,3 @@
         kind: Namespace
         name: inventory
         state: absent
-
-- name: Drain node
-  hosts: localhost
-  connection: local
-
-  collections:
-    - kubernetes.core
-
-  tasks:
-    - name: Include drain.yml
-      include_tasks:
-        file: tasks/drain.yml
-        apply:
-          tags: [ drain, k8s ]
-      tags:
-        - always
