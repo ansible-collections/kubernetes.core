@@ -16,3 +16,5 @@ rules:
     indent-sequences: consistent
 ignore: |
   .cache
+  .tox
+  tests/output
