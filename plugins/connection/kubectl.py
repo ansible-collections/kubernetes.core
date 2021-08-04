@@ -245,6 +245,8 @@ class Connection(ConnectionBase):
                 # Redact password and token from console log
                 if key.endswith(('_token', '_password')):
                     censored_local_cmd += [cmd_arg, '********']
+                else:
+                    censored_local_cmd += [cmd_arg, self.get_option(key)]
 
         extra_args_name = u'{0}_extra_args'.format(self.transport)
         if self.get_option(extra_args_name):
