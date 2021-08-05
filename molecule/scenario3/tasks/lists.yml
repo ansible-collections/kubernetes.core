@@ -1,18 +1,15 @@
 ---
 - block:
-    - name: Define namespace
-      lists_namespace: "lists"
-
-    - name: "Ensure {{ lists_namespace }} namespace exists"
+    - name: Ensure lists namespace exists
       k8s:
         api_version: v1
         kind: Namespace
-        name: "{{ lists_namespace }}"
+        name: lists
 
     - block:
         - name: Create configmaps
           k8s:
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             definition:
               apiVersion: v1
               kind: ConfigMapList
@@ -22,7 +19,7 @@
           k8s_info:
             api_version: v1
             kind: ConfigMap
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             label_selectors:
               - app=test
           register: cms
@@ -35,7 +32,7 @@
         - name: Delete configmaps
           k8s:
             state: absent
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             definition:
               apiVersion: v1
               kind: ConfigMapList
@@ -45,7 +42,7 @@
           k8s_info:
             api_version: v1
             kind: ConfigMap
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             label_selectors:
               - app=test
           register: cms
@@ -77,18 +74,18 @@
     - block:
         - name: Create list of arbitrary resources
           k8s:
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             definition:
               apiVersion: v1
               kind: List
-              namespace: "{{ lists_namespace }}"
+              namespace: lists
               items: '{{ resources }}'
 
         - name: Get the created resources
           k8s_info:
             api_version: '{{ item.apiVersion }}'
             kind: '{{ item.kind }}'
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             name: '{{ item.metadata.name }}'
           register: list_resources
           with_items: '{{ resources }}'
@@ -100,18 +97,18 @@
         - name: Delete list of arbitrary resources
           k8s:
             state: absent
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             definition:
               apiVersion: v1
               kind: List
-              namespace: "{{ lists_namespace }}"
+              namespace: lists
               items: '{{ resources }}'
 
         - name: Get the resources
           k8s_info:
             api_version: '{{ item.apiVersion }}'
             kind: '{{ item.kind }}'
-            namespace: "{{ lists_namespace }}"
+            namespace: lists
             name: '{{ item.metadata.name }}'
           register: list_resources
           with_items: '{{ resources }}'
@@ -142,9 +139,9 @@
                   name: port-8000-tcp
                   port: 8000
   always:
-    - name: Remove "{{ lists_namespace }}" namespace
+    - name: Remove lists namespace
       k8s:
         kind: Namespace
-        name: "{{ lists_namespace }}"
+        name: lists
         state: absent
       ignore_errors: yes
