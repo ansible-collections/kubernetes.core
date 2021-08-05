@@ -1,0 +1,74 @@
+---
+- name: Converge
+  hosts: localhost
+  connection: local
+
+  collections:
+    - kubernetes.core
+
+  tasks:
+    - name: Verify cluster is working.
+      k8s_info:
+        namespace: kube-system
+        kind: Pod
+      register: pod_list
+
+    - name: Verify cluster has more than 5 pods running.
+      assert:
+        that: (pod_list.resources | count) > 5
+
+    - name: Include info.yml
+      include_tasks:
+        file: tasks/info.yml
+        apply:
+          tags: [ info, k8s ]
+      tags:
+        - always
+
+    - name: Include template.yml
+      include_tasks:
+        file: tasks/template.yml
+        apply:
+          tags: [ template, k8s ]
+      tags:
+        - always
+
+    - name: Include merge_type.yml
+      include_tasks:
+        file: tasks/merge_type.yml
+        apply:
+          tags: [ merge_type, k8s ]
+      tags:
+        - always
+
+    - name: Include log.yml
+      include_tasks:
+        file: tasks/log.yml
+        apply:
+          tags: [ log, k8s ]
+      tags:
+        - always
+
+    - name: Include patched.yml
+      include_tasks:
+        file: tasks/patched.yml
+        apply:
+          tags: [ patched, k8s ]
+      tags:
+        - always
+
+    - name: Include exec.yml
+      include_tasks:
+        file: tasks/exec.yml
+        apply:
+          tags: [ exec, k8s ]
+      tags:
+        - always
+
+    - name: Include gc.yml
+      include_tasks:
+        file: tasks/gc.yml
+        apply:
+          tags: [ gc, k8s ]
+      tags:
+        - always

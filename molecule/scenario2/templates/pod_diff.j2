@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    name: {{ pod_name }}
+    labels:
+        ansible: {{ pod_label | default('demo') }}
+spec:
+    containers:
+    - name: c0
+      image: {{ pod_image }}
+      command:
+        - /bin/sh
+        - -c
+        - while true;do date;sleep 5; done
