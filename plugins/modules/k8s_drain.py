@@ -69,8 +69,13 @@ options:
             default: False
         wait_timeout:
             description:
-            - The length of time to wait in seconds for pod to be delected before giving up, zero means infinite.
-            - Ignored if C(wait) is not set.
+            - The length of time to wait in seconds for pod to be deleted before giving up, zero means infinite.
+            type: int
+        wait_sleep:
+            description:
+            - Number of seconds to sleep between checks.
+            - Ignored if C(wait_timeout) is not set.
+            default: 5
             type: int
 
 requirements:
@@ -222,7 +227,7 @@ class K8sDrainAnsible(object):
 
         self._changed = False
 
-    def wait_for_pod_deletion(self, pods, wait_timeout):
+    def wait_for_pod_deletion(self, pods, wait_timeout, wait_sleep):
         start = datetime.now()
 
         def _elapsed_time():
@@ -237,7 +242,7 @@ class K8sDrainAnsible(object):
                 response = self._api_instance.read_namespaced_pod(namespace=pod[0], name=pod[1])
                 if not response:
                     pod = None
-                time.sleep(1)
+                time.sleep(wait_sleep)
             except ApiException as exc:
                 if exc.reason != "Not Found":
                     self._module.fail_json(msg="Exception raised: {0}".format(exc.reason))
@@ -273,6 +278,20 @@ class K8sDrainAnsible(object):
                 self._module.fail_json(msg="Failed to delete pod {0}/{1} due to: {2}".format(namespace, name, to_native(exc)))
 
     def delete_or_evict_pods(self, node_unschedulable):
+        # Mark node as unschedulable
+        result = []
+        if not node_unschedulable:
+            self.patch_node(unschedulable=True)
+            result.append("node {0} marked unschedulable.".format(self._module.params.get('name')))
+            self._changed = True
+        else:
+            result.append("node {0} already marked unschedulable.".format(self._module.params.get('name')))
+
+        def _revert_node_patch():
+            if self._changed:
+                self._changed = False
+                self.patch_node(unschedulable=False)
+
         try:
             field_selector = "spec.nodeName={name}".format(name=self._module.params.get('name'))
             pod_list = self._api_instance.list_pod_for_all_namespaces(field_selector=field_selector)
@@ -281,32 +300,27 @@ class K8sDrainAnsible(object):
             ignore_daemonset = self._drain_options.get('ignore_daemonsets', False)
             pods, warnings, errors = filter_pods(pod_list.items, force, ignore_daemonset)
             if errors:
+                _revert_node_patch()
                 self._module.fail_json(msg="Pod deletion errors: {0}".format(" ".join(errors)))
         except ApiException as exc:
             if exc.reason != "Not Found":
+                _revert_node_patch()
                 self._module.fail_json(msg="Failed to list pod from node {name} due to: {reason}".format(
                                        name=self._module.params.get('name'), reason=exc.reason), status=exc.status)
             pods = []
         except Exception as exc:
+            _revert_node_patch()
             self._module.fail_json(msg="Failed to list pod from node {name} due to: {error}".format(
                                    name=self._module.params.get('name'), error=to_native(exc)))
 
-        # Mark node as unschedulable
-        result = []
-        if not node_unschedulable:
-            self.patch_node(unschedulable=True)
-            result.append("node {0} marked unschedulable.".format(self._module.params.get('name')))
-            self._changed = True
-        else:
-            warnings.append("node {0} already marked unschedulable.".format(self._module.params.get('name')))
-
         # Delete Pods
         if pods:
-            self._changed = True
             self.evict_pods(pods)
             number_pod = len(pods)
             if self._drain_options.get('wait_timeout') is not None:
-                warn = self.wait_for_pod_deletion(pods, self._drain_options.get('wait_timeout'))
+                warn = self.wait_for_pod_deletion(pods,
+                                                  self._drain_options.get('wait_timeout'),
+                                                  self._drain_options.get('wait_sleep'))
                 if warn:
                     warnings.append(warn)
             result.append("{0} Pod(s) deleted from node.".format(number_pod))
@@ -375,7 +389,8 @@ def argspec():
                     force=dict(type='bool', default=False),
                     ignore_daemonsets=dict(type='bool', default=False),
                     disable_eviction=dict(type='bool', default=False),
-                    wait_timeout=dict(type='int')
+                    wait_timeout=dict(type='int'),
+                    wait_sleep=dict(type='int', default=5),
                 )
             ),
         )
@@ -384,7 +399,7 @@ def argspec():
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
+    module = AnsibleModule(argument_spec=argspec())
 
     k8s_drain = K8sDrainAnsible(module)
     k8s_drain.execute_module()

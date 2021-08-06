@@ -173,6 +173,13 @@
       - drain_result is changed
       - '"node {{ node_to_drain }} marked unschedulable." in drain_result.result'
 
+  - name: assert that unmanaged pod were deleted
+    k8s_info:
+      namespace: '{{ drain_namespace }}'
+      kind: Pod
+    register: _result
+    failed_when: _result.resources | selectattr("metadata.ownerReferences", "undefined") | length > 0
+
   - name: Test drain idempotency
     k8s_drain:
       state: drain
