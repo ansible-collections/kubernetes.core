@@ -8,7 +8,7 @@ kubernetes.core.k8s_cp
 **Copy files and directories to and from pod.**
 
 
-Version added: 2.1.0
+Version added: 2.2.0
 
 .. contents::
    :local:
@@ -221,11 +221,14 @@ Parameters
                     <b>no_preserve</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">string</span>
+                        <span style="color: purple">boolean</span>
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">"no"</div>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
                 </td>
                 <td>
                         <div>The copied file/directory&#x27;s ownership and permissions will not be preserved in the container.</div>
@@ -452,6 +455,7 @@ Notes
 -----
 
 .. note::
+   - the tar binary is required on the container when copying from local filesystem to pod.
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
 
@@ -463,7 +467,7 @@ Examples
 
     # kubectl cp /tmp/foo some-namespace/some-pod:/tmp/bar
     - name: Copy /tmp/foo local file to /tmp/bar in a remote pod
-      kubernetes.core.k8s:
+      kubernetes.core.k8s_cp:
         namespace: some-namespace
         pod: some-pod
         remote_path: /tmp/bar
@@ -471,7 +475,7 @@ Examples
 
     # kubectl cp /tmp/foo_dir some-namespace/some-pod:/tmp/bar_dir
     - name: Copy /tmp/foo_dir local directory to /tmp/bar_dir in a remote pod
-      kubernetes.core.k8s:
+      kubernetes.core.k8s_cp:
         namespace: some-namespace
         pod: some-pod
         remote_path: /tmp/bar_dir
@@ -479,7 +483,7 @@ Examples
 
     # kubectl cp /tmp/foo some-namespace/some-pod:/tmp/bar -c some-container
     - name: Copy /tmp/foo local file to /tmp/bar in a remote pod in a specific container
-      kubernetes.core.k8s:
+      kubernetes.core.k8s_cp:
         namespace: some-namespace
         pod: some-pod
         container: some-container
@@ -490,7 +494,7 @@ Examples
 
     # kubectl cp some-namespace/some-pod:/tmp/foo /tmp/bar
     - name: Copy /tmp/foo from a remote pod to /tmp/bar locally
-      kubernetes.core.k8s:
+      kubernetes.core.k8s_cp:
         namespace: some-namespace
         pod: some-pod
         remote_path: /tmp/foo
@@ -499,7 +503,7 @@ Examples
 
     # copy content into a file in the remote pod
     - name: Copy /tmp/foo from a remote pod to /tmp/bar locally
-      kubernetes.core.k8s:
+      kubernetes.core.k8s_cp:
         state: to_pod
         namespace: some-namespace
         pod: some-pod

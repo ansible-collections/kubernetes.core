@@ -219,6 +219,24 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>wait_sleep</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">5</div>
+                </td>
+                <td>
+                        <div>Number of seconds to sleep between checks.</div>
+                        <div>Ignored if <code>wait_timeout</code> is not set.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>wait_timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -228,8 +246,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>The length of time to wait in seconds for pod to be delected before giving up, zero means infinite.</div>
-                        <div>Ignored if <code>wait</code> is not set.</div>
+                        <div>The length of time to wait in seconds for pod to be deleted before giving up, zero means infinite.</div>
                 </td>
             </tr>
 
