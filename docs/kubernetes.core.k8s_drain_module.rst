@@ -1,14 +1,13 @@
-.. _kubernetes.core.k8s_cp_module:
+.. _kubernetes.core.k8s_drain_module:
 
 
-**********************
-kubernetes.core.k8s_cp
-**********************
+*************************
+kubernetes.core.k8s_drain
+*************************
 
-**Copy files and directories to and from pod.**
+**Drain, Cordon, or Uncordon node in k8s cluster**
 
 
-Version added: 2.2.0
 
 .. contents::
    :local:
@@ -17,7 +16,11 @@ Version added: 2.2.0
 
 Synopsis
 --------
-- Use the Kubernetes Python client to copy files and directories to and from containers inside a pod.
+- Drain node in preparation for maintenance same as kubectl drain.
+- Cordon will mark the node as unschedulable.
+- Uncordon will mark the node as schedulable.
+- The given node will be marked unschedulable to prevent new pods from arriving.
+- Then drain deletes all pods except mirror pods (which cannot be deleted through the API server).
 
 
 
@@ -106,40 +109,6 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>container</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>The name of the container in the pod to copy files/directories from/to.</div>
-                        <div>Defaults to the only container if there is only one container in the pod.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>content</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>When used instead of <em>local_path</em>, sets the contents of a local file directly to the specified value.</div>
-                        <div>Works only when <em>remote_path</em> is a file. Creates the file if it does not exist.</div>
-                        <div>For advanced formatting or if the content contains a variable, use the <span class='module'>ansible.builtin.template</span> module.</div>
-                        <div>Mutually exclusive with <em>local_path</em>.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>context</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -152,6 +121,135 @@ Parameters
                         <div>The name of a context found in the config file. Can also be specified via K8S_AUTH_CONTEXT environment variable.</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>delete_options</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Specify options to delete pods.</div>
+                        <div>This option has effect only when <code>state</code> is set to <em>drain</em>.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_eviction</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Forces drain to use delete rather than evict.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>force</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Continue even if there are pods not managed by a ReplicationController, Job, or DaemonSet.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ignore_daemonsets</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Ignore DaemonSet-managed pods.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>terminate_grace_period</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Specify how many seconds to wait before forcefully terminating.</div>
+                        <div>If not specified, the default grace period for the object type will be used.</div>
+                        <div>The value zero indicates delete immediately.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>wait_sleep</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">5</div>
+                </td>
+                <td>
+                        <div>Number of seconds to sleep between checks.</div>
+                        <div>Ignored if <code>wait_timeout</code> is not set.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>wait_timeout</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The length of time to wait in seconds for pod to be deleted before giving up, zero means infinite.</div>
+                </td>
+            </tr>
+
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
@@ -185,24 +283,7 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>local_path</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">path</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>Path of the local file or directory.</div>
-                        <div>Required when <em>state</em> is set to <code>from_pod</code>.</div>
-                        <div>Mutually exclusive with <em>content</em>.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>namespace</b>
+                    <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
@@ -212,27 +293,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>The pod namespace name.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>no_preserve</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
-                                    <li>yes</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>The copied file/directory&#x27;s ownership and permissions will not be preserved in the container.</div>
-                        <div>This option is ignored when <em>content</em> is set or when <em>state</em> is set to <code>from_pod</code>.</div>
+                        <div>The name of the node.</div>
                 </td>
             </tr>
             <tr>
@@ -272,22 +333,6 @@ Parameters
                         <div>Default to false.</div>
                         <div>Please note that the current version of the k8s python client library does not support setting this flag to True yet.</div>
                         <div>The fix for this k8s python library is here: https://github.com/kubernetes-client/python-base/pull/169</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>pod</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>The pod name.</div>
                 </td>
             </tr>
             <tr>
@@ -378,22 +423,6 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>remote_path</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">path</span>
-                         / <span style="color: red">required</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>Path of the file or directory to copy.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -402,13 +431,13 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li><div style="color: blue"><b>to_pod</b>&nbsp;&larr;</div></li>
-                                    <li>from_pod</li>
+                                    <li>cordon</li>
+                                    <li><div style="color: blue"><b>drain</b>&nbsp;&larr;</div></li>
+                                    <li>uncordon</li>
                         </ul>
                 </td>
                 <td>
-                        <div>When set to <code>to_pod</code>, the local <em>local_path</em> file or directory will be copied to <em>remote_path</em> into the pod.</div>
-                        <div>When set to <code>from_pod</code>, the remote file or directory <em>remote_path</em> from pod will be copied locally to <em>local_path</em>.</div>
+                        <div>Determines whether to drain, cordon, or uncordon node.</div>
                 </td>
             </tr>
             <tr>
@@ -455,7 +484,6 @@ Notes
 -----
 
 .. note::
-   - the tar binary is required on the container when copying from local filesystem to pod.
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
 
@@ -465,50 +493,28 @@ Examples
 
 .. code-block:: yaml
 
-    # kubectl cp /tmp/foo some-namespace/some-pod:/tmp/bar
-    - name: Copy /tmp/foo local file to /tmp/bar in a remote pod
-      kubernetes.core.k8s_cp:
-        namespace: some-namespace
-        pod: some-pod
-        remote_path: /tmp/bar
-        local_path: /tmp/foo
+    - name: Drain node "foo", even if there are pods not managed by a ReplicationController, Job, or DaemonSet on it.
+      kubernetes.core.k8s_drain:
+        state: drain
+        name: foo
+        force: yes
 
-    # kubectl cp /tmp/foo_dir some-namespace/some-pod:/tmp/bar_dir
-    - name: Copy /tmp/foo_dir local directory to /tmp/bar_dir in a remote pod
-      kubernetes.core.k8s_cp:
-        namespace: some-namespace
-        pod: some-pod
-        remote_path: /tmp/bar_dir
-        local_path: /tmp/foo_dir
+    - name: Drain node "foo", but abort if there are pods not managed by a ReplicationController, Job, or DaemonSet, and use a grace period of 15 minutes.
+      kubernetes.core.k8s_drain:
+        state: drain
+        name: foo
+        delete_options:
+            terminate_grace_period: 900
 
-    # kubectl cp /tmp/foo some-namespace/some-pod:/tmp/bar -c some-container
-    - name: Copy /tmp/foo local file to /tmp/bar in a remote pod in a specific container
-      kubernetes.core.k8s_cp:
-        namespace: some-namespace
-        pod: some-pod
-        container: some-container
-        remote_path: /tmp/bar
-        local_path: /tmp/foo
-        no_preserve: True
-        state: to_pod
+    - name: Mark node "foo" as schedulable.
+      kubernetes.core.k8s_drain:
+        state: uncordon
+        name: foo
 
-    # kubectl cp some-namespace/some-pod:/tmp/foo /tmp/bar
-    - name: Copy /tmp/foo from a remote pod to /tmp/bar locally
-      kubernetes.core.k8s_cp:
-        namespace: some-namespace
-        pod: some-pod
-        remote_path: /tmp/foo
-        local_path: /tmp/bar
-        state: from_pod
-
-    # copy content into a file in the remote pod
-    - name: Copy /tmp/foo from a remote pod to /tmp/bar locally
-      kubernetes.core.k8s_cp:
-        state: to_pod
-        namespace: some-namespace
-        pod: some-pod
-        remote_path: /tmp/foo.txt
-        content: "This content will be copied into remote file"
+    - name: Mark node "foo" as unschedulable.
+      kubernetes.core.k8s_drain:
+        state: cordon
+        name: foo
 
 
 
@@ -535,7 +541,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>success</td>
                 <td>
-                            <div>message describing the copy operation successfully done.</div>
+                            <div>The node status and the number of pods deleted.</div>
                     <br/>
                 </td>
             </tr>
