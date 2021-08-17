@@ -143,7 +143,7 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
                 result for result in results if result.group_version == kwargs['api_version']
             ]
         # If there are multiple matches, prefer non-List kinds
-        if len(results) > 1 and not all([isinstance(x, ResourceList) for x in results]):
+        if len(results) > 1 and not all(isinstance(x, ResourceList) for x in results):
             results = [result for result in results if not isinstance(result, ResourceList)]
         # if multiple resources are found that share a GVK, prefer the one with the most supported verbs
         if len(results) > 1 and len(set((x.group_version, x.kind) for x in results)) == 1:
@@ -161,6 +161,10 @@ class LazyDiscoverer(Discoverer, kubernetes.dynamic.LazyDiscoverer):
     def __init__(self, client, cache_file):
         Discoverer.__init__(self, client, cache_file)
         self.__update_cache = False
+
+    @property
+    def update_cache(self):
+        self.__update_cache
 
 
 class CacheDecoder(json.JSONDecoder):

@@ -148,7 +148,7 @@ def filter_pods(pods, force, ignore_daemonset):
 
         # Pod with local storage cannot be deleted
         # TODO: support new option delete-emptydatadir in order to allow deletion of such pod
-        if pod.spec.volumes and any([vol.empty_dir for vol in pod.spec.volumes]):
+        if pod.spec.volumes and any(vol.empty_dir for vol in pod.spec.volumes):
             localStorage.append((pod.metadata.namespace, pod.metadata.name))
             continue
 
