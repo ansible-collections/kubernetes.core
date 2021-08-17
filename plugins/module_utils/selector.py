@@ -40,7 +40,7 @@ class Selector(object):
             self._operator = m.group(4)
             self._data = [x.replace(' ', '') for x in m.group(6).split(',') if x != '']
             return True
-        elif all([x not in data for x in self.equality_based_operators]):
+        elif all(x not in data for x in self.equality_based_operators):
             self._key = data.rstrip(" ").lstrip(" ")
             if self._key.startswith("!"):
                 self._key = self._key[1:].lstrip(" ")
@@ -68,4 +68,4 @@ class LabelSelectorFilter(object):
         labels = definition['metadata']['labels']
         if not isinstance(labels, dict):
             return None
-        return all([sel.isMatch(labels) for sel in self.selectors])
+        return all(sel.isMatch(labels) for sel in self.selectors)

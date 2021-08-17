@@ -148,7 +148,7 @@ def get_api_client(module=None, **kwargs):
                 auth[true_name] = env_value
 
     def auth_set(*names):
-        return all([auth.get(name) for name in names])
+        return all(auth.get(name) for name in names)
 
     if auth_set('host'):
         # Removing trailing slashes if any from hostname
@@ -392,7 +392,7 @@ class K8sAnsibleMixin(object):
 
         def _pod_ready(pod):
             return (pod.status and pod.status.containerStatuses is not None
-                    and all([container.ready for container in pod.status.containerStatuses]))
+                    and all(container.ready for container in pod.status.containerStatuses))
 
         def _daemonset_ready(daemonset):
             return (daemonset.status and daemonset.status.desiredNumberScheduled is not None

@@ -114,7 +114,7 @@ class ActionModule(ActionBase):
 
     def import_jinja2_lstrip(self, templates):
         # Option `lstrip_blocks' was added in Jinja2 version 2.7.
-        if any([tmp['lstrip_blocks'] for tmp in templates]):
+        if any(tmp['lstrip_blocks'] for tmp in templates):
             try:
                 import jinja2.defaults
             except ImportError:
