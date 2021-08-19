@@ -1,0 +1,85 @@
+---
+- name: Converge
+  hosts: localhost
+  connection: local
+
+  collections:
+    - kubernetes.core
+
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Verify cluster is working.
+      k8s_info:
+        namespace: kube-system
+        kind: Pod
+      register: pod_list
+
+    - name: Verify cluster has more than 5 pods running.
+      assert:
+        that: (pod_list.resources | count) > 5
+
+    - name: Include full.yml
+      include_tasks:
+        file: tasks/full.yml
+        apply:
+          tags: [ full, k8s ]
+      tags:
+        - always
+
+    - name: Include lists.yml
+      include_tasks:
+        file: tasks/lists.yml
+        apply:
+          tags: [ lists, k8s ]
+      tags:
+        - always
+
+    - name: Include json_patch.yml
+      include_tasks:
+        file: tasks/json_patch.yml
+        apply:
+          tags: [ json_patch, k8s ]
+      tags:
+        - always
+
+    - name: Include waiter.yml
+      include_tasks:
+        file: tasks/waiter.yml
+        apply:
+          tags: [ waiter, k8s ]
+      tags:
+        - always
+
+    - name: Include lookup_k8s.yml
+      include_tasks:
+        file: tasks/lookup_k8s.yml
+        apply:
+          tags: [ lookup, k8s ]
+      tags:
+        - always
+
+    - name: Include scale.yml
+      include_tasks:
+        file: tasks/scale.yml
+        apply:
+          tags: [ scale, k8s ]
+      tags:
+        - always
+
+    - name: Include crd.yml
+      include_tasks:
+        file: tasks/crd.yml
+        apply:
+          tags: [ crd, k8s ]
+      tags:
+        - always
+
+    - name: Include diff.yml
+      include_tasks:
+        file: tasks/diff.yml
+        apply:
+          tags: [ diff, k8s ]
+      tags:
+        - always

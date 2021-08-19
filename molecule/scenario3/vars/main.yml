@@ -27,10 +27,14 @@ k8s_pod_resources:
     cpu: "100m"
     memory: "100Mi"
 
-k8s_pod_env: []
 k8s_pod_command: []
+
 k8s_pod_ports: []
+
+k8s_pod_env: []
 
 k8s_pod_template:
   metadata: "{{ k8s_pod_metadata }}"
   spec: "{{ k8s_pod_spec }}"
+
+kubernetes_role_path: ../../tests/integration/targets/kubernetes

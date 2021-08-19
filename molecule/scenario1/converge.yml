@@ -1,0 +1,17 @@
+---
+- name: Converge
+  hosts: localhost
+  connection: local
+
+  collections:
+    - kubernetes.core
+
+  roles:
+    - role: helm
+      tags:
+        - helm
+
+    - role: k8scopy
+      tags:
+        - copy
+        - k8s

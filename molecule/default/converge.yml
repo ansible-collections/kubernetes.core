@@ -27,6 +27,7 @@
           tags: [ access_review, k8s ]
       tags:
         - always
+
     - name: Include append_hash.yml
       include_tasks:
         file: tasks/append_hash.yml
@@ -34,6 +35,7 @@
           tags: [ append_hash, k8s ]
       tags:
         - always
+
     - name: Include apply.yml
       include_tasks:
         file: tasks/apply.yml
@@ -41,6 +43,7 @@
           tags: [ apply, k8s ]
       tags:
         - always
+
     - name: Include cluster_info.yml
       include_tasks:
         file: tasks/cluster_info.yml
@@ -48,69 +51,7 @@
           tags: [ cluster_info, k8s ]
       tags:
         - always
-    - name: Include crd.yml
-      include_tasks:
-        file: tasks/crd.yml
-        apply:
-          tags: [ crd, k8s ]
-      tags:
-        - always
-    - name: Include delete.yml
-      include_tasks:
-        file: tasks/delete.yml
-        apply:
-          tags: [ delete, k8s ]
-      tags:
-        - always
-    - name: Include exec.yml
-      include_tasks:
-        file: tasks/exec.yml
-        apply:
-          tags: [ exec, k8s ]
-      tags:
-        - always
-    - name: Include full.yml
-      include_tasks:
-        file: tasks/full.yml
-        apply:
-          tags: [ full, k8s ]
-      tags:
-        - always
-    - name: Include gc.yml
-      include_tasks:
-        file: tasks/gc.yml
-        apply:
-          tags: [ gc, k8s ]
-      tags:
-        - always
-    - name: Include info.yml
-      include_tasks:
-        file: tasks/info.yml
-        apply:
-          tags: [ info, k8s ]
-      tags:
-        - always
-    - name: Include json_patch.yml
-      include_tasks:
-        file: tasks/json_patch.yml
-        apply:
-          tags: [ json_patch, k8s ]
-      tags:
-        - always
-    - name: Include lists.yml
-      include_tasks:
-        file: tasks/lists.yml
-        apply:
-          tags: [ lists, k8s ]
-      tags:
-        - always
-    - name: Include log.yml
-      include_tasks:
-        file: tasks/log.yml
-        apply:
-          tags: [ log, k8s ]
-      tags:
-        - always
+
     - name: Include rollback.yml
       include_tasks:
         file: tasks/rollback.yml
@@ -118,49 +59,12 @@
           tags: [ rollback, k8s ]
       tags:
         - always
-    - name: Include scale.yml
-      include_tasks:
-        file: tasks/scale.yml
-        apply:
-          tags: [ scale, k8s ]
-      tags:
-        - always
-    - name: Include template.yml
-      include_tasks:
-        file: tasks/template.yml
-        apply:
-          tags: [ template, k8s ]
-      tags:
-        - always
-    - name: Include waiter.yml
-      include_tasks:
-        file: tasks/waiter.yml
-        apply:
-          tags: [ waiter, k8s ]
-      tags:
-        - always
 
-    - name: Include merge_type.yml
+    - name: Include delete.yml
       include_tasks:
-        file: tasks/merge_type.yml
+        file: tasks/delete.yml
         apply:
-          tags: [ merge_type, k8s ]
-      tags:
-        - always
-
-    - name: Include patched.yml
-      include_tasks:
-        file: tasks/patched.yml
-        apply:
-          tags: [ patched, k8s ]
-      tags:
-        - always
-
-    - name: Include lookup_k8s.yml
-      include_tasks:
-        file: tasks/lookup_k8s.yml
-        apply:
-          tags: [ lookup, k8s ]
+          tags: [ delete, k8s ]
       tags:
         - always
 
@@ -171,24 +75,6 @@
           tags: [ label_selectors, k8s ]
       tags:
         - always
-
-    - name: Include diff.yml
-      include_tasks:
-        file: tasks/diff.yml
-        apply:
-          tags: [ diff, k8s ]
-      tags:
-        - always
-
-  roles:
-    - role: helm
-      tags:
-        - helm
-
-    - role: k8scopy
-      tags:
-        - copy
-        - k8s
 
   post_tasks:
     - name: Ensure namespace exists
