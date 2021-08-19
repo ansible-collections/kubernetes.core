@@ -14,20 +14,20 @@
   - name: list cluster nodes
     k8s_info:
       kind: node
-    register: nodes
+    register: _nodes
 
   - name: Select uncordoned nodes
     set_fact:
-      uncordoned_nodes: "{{ nodes.resources | selectattr('spec.unschedulable', 'undefined') | map(attribute='metadata.name') | list}}"
+      _uncordoned_nodes: "{{ _nodes.resources | selectattr('spec.unschedulable', 'undefined') | map(attribute='metadata.name') | list}}"
 
   - name: Assert that at least one node is schedulable
     assert:
       that:
-      - uncordoned_nodes | length > 0
+      - _uncordoned_nodes | length > 0
 
   - name: select node to drain
     set_fact:
-      node_to_drain: '{{ uncordoned_nodes[0] }}'
+      node_to_drain: '{{ _uncordoned_nodes[0] }}'
 
   - name: Deploy daemonset on cluster
     k8s:
@@ -177,8 +177,9 @@
     k8s_info:
       namespace: '{{ drain_namespace }}'
       kind: Pod
+      name: '{{ drain_pod_name }}'
     register: _result
-    failed_when: _result.resources | selectattr("metadata.ownerReferences", "undefined") | length > 0
+    failed_when: _result.resources
 
   - name: Test drain idempotency
     k8s_drain:
@@ -212,6 +213,13 @@
       name: '{{ node_to_drain }}'
 
   always:
+  - name: Uncordon node
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+    when: node_to_drain is defined
+    ignore_errors: true
+
   - name: delete namespace
     k8s:
       state: absent
