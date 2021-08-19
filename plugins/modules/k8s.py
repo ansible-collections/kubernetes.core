@@ -108,6 +108,7 @@ options:
     description:
     - Provide a valid YAML template definition file for an object when creating or updating.
     - Value can be provided as string or dictionary.
+    - The parameter accepts multiple template files. Added in version 2.0.0.
     - Mutually exclusive with C(src) and C(resource_definition).
     - Template files needs to be present on the Ansible Controller's file system.
     - Additional parameters can be specified using dictionary.
@@ -213,6 +214,15 @@ EXAMPLES = r'''
       path: '/testing/deployment.j2'
       variable_start_string: '[['
       variable_end_string: ']]'
+
+- name: Read multiple definition template file from the Ansible controller file system
+  kubernetes.core.k8s:
+    state: present
+    template:
+      - path: '/testing/deployment_one.j2'
+      - path: '/testing/deployment_two.j2'
+        variable_start_string: '[['
+        variable_end_string: ']]'
 
 - name: fail on validation errors
   kubernetes.core.k8s:
