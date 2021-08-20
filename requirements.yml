@@ -1,0 +1,3 @@
+collections:
+  - name: cloud.common
+    version: ">=2.0.4"
