@@ -132,6 +132,15 @@
           tags: [ template, k8s ]
       tags:
         - always
+
+    - name: Include validate.yml
+      include_tasks:
+        file: tasks/validate.yml
+        apply:
+          tags: [ validate, k8s ]
+      tags:
+        - always
+
     - name: Include waiter.yml
       include_tasks:
         file: tasks/waiter.yml
