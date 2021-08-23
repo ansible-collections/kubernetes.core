@@ -18,7 +18,7 @@
 
     - set_fact:
         virtualenv: "{{ remote_tmp_dir }}/virtualenv"
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
+        virtualenv_command: "virtualenv --python {{ ansible_python_interpreter }}"
 
     - set_fact:
         virtualenv_interpreter: "{{ virtualenv }}/bin/python"
