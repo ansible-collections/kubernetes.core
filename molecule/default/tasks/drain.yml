@@ -177,8 +177,9 @@
     k8s_info:
       namespace: '{{ drain_namespace }}'
       kind: Pod
+      name: '{{ drain_pod_name }}'
     register: _result
-    failed_when: _result.resources | selectattr("metadata.ownerReferences", "undefined") | length > 0
+    failed_when: _result.resources
 
   - name: Test drain idempotency
     k8s_drain:
@@ -212,6 +213,13 @@
       name: '{{ node_to_drain }}'
 
   always:
+  - name: Uncordon node
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+    when: node_to_drain is defined
+    ignore_errors: true
+
   - name: delete namespace
     k8s:
       state: absent
