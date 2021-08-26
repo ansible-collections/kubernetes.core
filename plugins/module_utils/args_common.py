@@ -19,7 +19,7 @@ AUTH_PROXY_HEADERS_SPEC = dict(
 
 AUTH_ARG_SPEC = {
     'kubeconfig': {
-        'type': 'path',
+        'type': 'raw',
     },
     'context': {},
     'host': {},

@@ -194,6 +194,24 @@ class ActionModule(ActionBase):
         except AnsibleError:
             raise AnsibleActionFail("%s does not exist in local filesystem" % local_path)
 
+    def get_kubeconfig(self, kubeconfig, remote_transport, new_module_args):
+        if isinstance(kubeconfig, string_types):
+            # find the kubeconfig in the expected search path
+            if not remote_transport:
+                # kubeconfig is local
+                # find in expected paths
+                kubeconfig = self._find_needle('files', kubeconfig)
+
+                # decrypt kubeconfig found
+                actual_file = self._loader.get_real_file(kubeconfig, decrypt=True)
+                new_module_args['kubeconfig'] = actual_file
+
+        elif isinstance(kubeconfig, dict):
+            new_module_args['kubeconfig'] = kubeconfig
+        else:
+            raise AnsibleActionFail("Error while reading kubeconfig parameter - "
+                                    "a string or dict expected, but got %s instead" % type(kubeconfig))
+
     def run(self, tmp=None, task_vars=None):
         ''' handler for k8s options '''
         if task_vars is None:
@@ -211,21 +229,14 @@ class ActionModule(ActionBase):
         new_module_args = copy.deepcopy(self._task.args)
 
         kubeconfig = self._task.args.get('kubeconfig', None)
-        # find the kubeconfig in the expected search path
-        if kubeconfig and not remote_transport:
-            # kubeconfig is local
+        if kubeconfig:
             try:
-                # find in expected paths
-                kubeconfig = self._find_needle('files', kubeconfig)
+                self.get_kubeconfig(kubeconfig, remote_transport, new_module_args)
             except AnsibleError as e:
                 result['failed'] = True
                 result['msg'] = to_text(e)
                 result['exception'] = traceback.format_exc()
                 return result
-
-            # decrypt kubeconfig found
-            actual_file = self._loader.get_real_file(kubeconfig, decrypt=True)
-            new_module_args['kubeconfig'] = actual_file
 
         # find the file in the expected search path
         src = self._task.args.get('src', None)
