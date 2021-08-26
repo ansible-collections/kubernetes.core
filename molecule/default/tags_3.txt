@@ -1,0 +1,8 @@
+info
+template
+merge_type
+log
+patched
+exec
+gc
+drain

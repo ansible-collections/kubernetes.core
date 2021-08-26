@@ -1,0 +1,8 @@
+full
+lists
+json_patch
+waiter
+lookup
+scale
+crd
+diff
