@@ -1,0 +1,4 @@
+---
+ignore_tasks:
+    - drain.yml
+ignore_roles: []

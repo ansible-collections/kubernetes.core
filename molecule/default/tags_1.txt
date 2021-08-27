@@ -5,3 +5,4 @@ cluster_info
 rollback
 delete
 label_selectors
+validate
