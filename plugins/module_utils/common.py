@@ -120,7 +120,7 @@ def get_api_client(module=None, **kwargs):
 
     def _raise_or_fail(exc, msg):
         if module:
-            module.fail_json(msg % to_native(exc))
+            module.fail_json(msg=msg % to_native(exc))
         raise exc
     # If authorization variables aren't defined, look for them in environment variables
     for true_name, arg_name in AUTH_ARG_MAP.items():
