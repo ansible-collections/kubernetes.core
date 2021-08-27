@@ -1,3 +1,7 @@
+from __future__ import (absolute_import, division, print_function)
+
+__metaclass__ = type
+
 import os
 import glob
 import yaml
@@ -11,7 +15,8 @@ def list_tags(data):
         tags = role.get('tags', None)
         name = role.get("role")
         if not tags:
-            raise Exception(f"role '{name}' should define at least one tag.")
+            print("role - %s - should define at least one tag." % name)
+            sys.exit(1)
         roles[name] = [x for x in tags if x not in excluded_tags]
 
     tasks = {}
@@ -30,17 +35,17 @@ def validate_roles(roles, all_tags, ignore_data):
     errors = []
     for rol in roles:
         if not any(x in all_tags for x in roles.get(rol)):
-            errors.append(f"role {rol} has no tag included into tags_*.txt files")
+            errors.append("role %s has no tag included into tags_*.txt files" % rol)
 
     # assert that all roles are tested
     for rol in glob.glob("molecule/default/roles/*"):
         base_rol = os.path.basename(rol)
         if "ignore_roles" in ignore_data and base_rol in ignore_data['ignore_roles']:
-            print(f"\033[0;33minfo: ignoring role: {base_rol}\033[0m")
+            print("\033[0;33minfo: ignoring role: %s\033[0m" % base_rol)
             continue
 
         if os.path.isdir(rol) and base_rol not in roles:
-            errors.append(f"role {base_rol} is not included into converge.")
+            errors.append("role %s is not included into converge." % base_rol)
     return errors
 
 
@@ -49,7 +54,7 @@ def validate_tasks(tasks, all_tags, ignore_data):
     errors = []
     for t in tasks:
         if not any(x in all_tags for x in tasks[t].get('tags')):
-            errors.append(f"task {t} has no tag included into tags_*.txt files")
+            errors.append("task %s has no tag included into tags_*.txt files" % t)
 
     # assert that all tasks are tested
     def _is_task_included(task_file, tasks):
@@ -61,10 +66,10 @@ def validate_tasks(tasks, all_tags, ignore_data):
     for task_file in glob.glob("molecule/default/tasks/*"):
         base_task = os.path.basename(task_file)
         if "ignore_tasks" in ignore_data and base_task in ignore_data['ignore_tasks']:
-            print(f"\033[0;33minfo: ignoring task: {base_task}\033[0m")
+            print("\033[0;33minfo: ignoring task: %s\033[0m" % base_task)
             continue
         if os.path.isfile(task_file) and not _is_task_included(task_file, tasks):
-            errors.append(f"task {task_file} is not included into converge.")
+            errors.append("task %s is not included into converge." % task_file)
     return errors
 
 
@@ -80,7 +85,7 @@ def parse_ignore():
 def main():
     converge = "molecule/default/converge.yml"
     if not os.path.isfile(converge):
-        sys.stderr.write(f"missing mandatory {converge} for default molecule scenario\n.")
+        sys.stderr.write("missing mandatory %s for default molecule scenario\n." % converge)
         sys.exit(1)
 
     ignore_data = parse_ignore()
@@ -100,11 +105,11 @@ def main():
                     errors += validate_tasks(tasks, all_tags, ignore_data)
                     if errors:
                         msg = '\n  - '.join(errors)
-                        print(f"\033[0;31merrors\033[0m:\n  - {msg}")
+                        print("\033[0;31merrors\033[0m:\n  - %s" % msg)
                         sys.exit(1)
                     sys.exit(0)
     except Exception as e:
-        sys.stderr.write(f"raise: {e}")
+        sys.stderr.write("raise: %s" % e)
         sys.exit(1)
 
 
