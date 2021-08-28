@@ -53,6 +53,7 @@ options:
     default: false
     type: bool
     aliases: [ dep_up ]
+    version_added: "2.2.0"
   include_crds:
     description:
       - Include custom resource descriptions in rendered templates.
