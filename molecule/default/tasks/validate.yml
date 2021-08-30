@@ -177,10 +177,43 @@
             that:
               - result is successful
               - "'warnings' in result"
-
-
       vars:
         ansible_python_interpreter: "{{ virtualenv_interpreter }}"
+
+    - name: stat default kube config
+      stat:
+        path: "~/.kube/config"
+      register: _stat
+
+    - name: validate that in-memory kubeconfig authentication failed for kubernetes < 17.17.0
+      block:
+        - set_fact:
+            virtualenv_kubeconfig: "{{ remote_tmp_dir }}/kubeconfig"
+
+        - pip:
+            name:
+              - "kubernetes<17.17.0"
+            virtualenv: "{{ virtualenv_kubeconfig }}"
+            virtualenv_command: "{{ virtualenv_command }}"
+            virtualenv_site_packages: false
+
+        - name: list namespace using in-memory kubeconfig
+          k8s_info:
+            kind: Namespace
+            kubeconfig: "{{ lookup('file', '~/.kube/config') | from_yaml }}"
+          register: _result
+          ignore_errors: true
+          vars:
+            ansible_python_interpreter: "{{ virtualenv_kubeconfig }}/bin/python"
+
+        - name: assert that task failed with proper message
+          assert:
+            that:
+              - '"kubernetes >= 17.17.0 is required" in _result.msg'
+      when:
+        - _stat.stat.exists
+        - _stat.stat.readable
+        - _stat.stat.isreg
   always:
     - name: Remove temp directory
       file:

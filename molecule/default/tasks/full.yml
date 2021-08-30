@@ -60,6 +60,12 @@
           environment:
             K8S_AUTH_KUBECONFIG: ~/.kube/customconfig
 
+        - name: Using in-memory kubeconfig should succeed
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+            kubeconfig: "{{ lookup('file', '~/.kube/customconfig') | from_yaml }}"
+
       always:
         - name: Return kubeconfig
           copy:

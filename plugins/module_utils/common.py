@@ -120,9 +120,8 @@ def get_api_client(module=None, **kwargs):
 
     def _raise_or_fail(exc, msg):
         if module:
-            module.fail_json(msg % to_native(exc))
+            module.fail_json(msg=msg % to_native(exc))
         raise exc
-
     # If authorization variables aren't defined, look for them in environment variables
     for true_name, arg_name in AUTH_ARG_MAP.items():
         if module and module.params.get(arg_name) is not None:
@@ -150,6 +149,22 @@ def get_api_client(module=None, **kwargs):
     def auth_set(*names):
         return all(auth.get(name) for name in names)
 
+    def _load_config():
+        kubeconfig = auth.get('kubeconfig')
+        optional_arg = {
+            'context': auth.get('context'),
+            'persist_config': auth.get('persist_config'),
+        }
+        if kubeconfig:
+            if isinstance(kubeconfig, string_types):
+                kubernetes.config.load_kube_config(config_file=kubeconfig, **optional_arg)
+            elif isinstance(kubeconfig, dict):
+                if LooseVersion(kubernetes.__version__) < LooseVersion("17.17"):
+                    _raise_or_fail(Exception("kubernetes >= 17.17.0 is required to use in-memory kubeconfig."), 'Failed to load kubeconfig due to: %s')
+                kubernetes.config.load_kube_config_from_dict(config_dict=kubeconfig, **optional_arg)
+        else:
+            kubernetes.config.load_kube_config(config_file=None, **optional_arg)
+
     if auth_set('host'):
         # Removing trailing slashes if any from hostname
         auth['host'] = auth.get('host').rstrip('/')
@@ -159,7 +174,7 @@ def get_api_client(module=None, **kwargs):
         pass
     elif auth_set('kubeconfig') or auth_set('context'):
         try:
-            kubernetes.config.load_kube_config(auth.get('kubeconfig'), auth.get('context'), persist_config=auth.get('persist_config'))
+            _load_config()
         except Exception as err:
             _raise_or_fail(err, 'Failed to load kubeconfig due to %s')
 
@@ -169,7 +184,7 @@ def get_api_client(module=None, **kwargs):
             kubernetes.config.load_incluster_config()
         except kubernetes.config.ConfigException:
             try:
-                kubernetes.config.load_kube_config(auth.get('kubeconfig'), auth.get('context'), persist_config=auth.get('persist_config'))
+                _load_config()
             except Exception as err:
                 _raise_or_fail(err, 'Failed to load kubeconfig due to %s')
 

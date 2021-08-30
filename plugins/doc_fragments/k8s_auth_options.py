@@ -27,7 +27,8 @@ options:
       options are provided, the Kubernetes client will attempt to load the default
       configuration file from I(~/.kube/config). Can also be specified via K8S_AUTH_KUBECONFIG environment
       variable.
-    type: path
+    - The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version >= 17.17.0. Added in version 2.2.0.
+    type: raw
   context:
     description:
     - The name of a context found in the config file. Can also be specified via K8S_AUTH_CONTEXT environment variable.
