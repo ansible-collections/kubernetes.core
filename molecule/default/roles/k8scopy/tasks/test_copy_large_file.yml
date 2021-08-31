@@ -69,6 +69,7 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_bin_file.bin
       local_path: "{{ test_directory }}/large_bin_file.bin"
+      kubectl_path: "{{ kubectl_path }}"
 
   - name: copy executable from pod into local filesystem
     k8s_cp:
@@ -84,6 +85,7 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_bin_file.bin
       local_path: "{{ test_directory }}/large_bin_file_from_pod.bin"
+      kubectl_path: "{{ kubectl_path }}"
 
   always:
   - name: Delete temporary directory created for the test
