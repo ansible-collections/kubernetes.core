@@ -236,3 +236,5 @@
 
   vars:
     validate_namespace: validate
+  environment:
+    ENABLE_TURBO_MODE: false
