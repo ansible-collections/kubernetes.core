@@ -120,7 +120,7 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib, env_fallback
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
@@ -180,6 +180,12 @@ def main():
             repo_username=dict(type='str', aliases=['username']),
             repo_password=dict(type='str', aliases=['password'], no_log=True),
             repo_state=dict(default='present', choices=['present', 'absent'], aliases=['state']),
+
+            # Generic auth key
+            host=dict(type='str', fallback=(env_fallback, ['K8S_AUTH_HOST'])),
+            ca_cert=dict(type='path', aliases=['ssl_ca_cert'], fallback=(env_fallback, ['K8S_AUTH_SSL_CA_CERT'])),
+            validate_certs=dict(type='bool', default=True, aliases=['verify_ssl'], fallback=(env_fallback, ['K8S_AUTH_VERIFY_SSL'])),
+            api_key=dict(type='str', no_log=True, fallback=(env_fallback, ['K8S_AUTH_API_KEY']))
         ),
         required_together=[
             ['repo_username', 'repo_password']
