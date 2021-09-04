@@ -400,8 +400,8 @@ def run_dep_update(module, command, chart_ref):
     """
     Run dependency update
     """
-    repo_dep_update = command + " dependency update " + chart_ref
-    rc, out, err = run_helm(module, repo_dep_update)
+    dep_update = command + " dependency update " + chart_ref
+    rc, out, err = module.run_command(dep_update)
 
 
 def fetch_chart_info(module, command, chart_ref):
@@ -755,10 +755,8 @@ def main():
 
         if dependency_update:
             if not chart_info.get('dependencies'):
-                msg_fail = (f"No subchart will be pulled for {chart_ref}. "
-                            "Please make sure to add dependencies block in Chart.yaml or requirements.yaml. "
-                            "For more information please visite https://helm.sh/docs/helm/helm_dependency/")
-                module.fail_json(msg=msg_fail)
+                module.warn("There is no dependencies block defined in Chart.yaml. Dependency update will not be performed. "
+                            "Please consider add dependencies block or disable dependency_update to remove this warning.")
 
             # Can't use '--dependency-update' with 'helm upgrade' that is the
             # default chart install method, so if chart_repo_url is defined
@@ -767,6 +765,9 @@ def main():
             # option. Please see https://github.com/helm/helm/pull/8810
             if not chart_repo_url:
                 run_dep_update(module, helm_cmd_common, chart_ref)
+
+                # To not add --dependency-update option in the deploy function
+                dependency_update = False
             else:
                 module.warn("This is a not stable feature with 'chart_repo_url'. Please consider to use dependency update with on-disk charts")
                 if not replace:

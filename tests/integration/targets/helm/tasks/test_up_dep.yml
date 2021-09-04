@@ -1,14 +1,14 @@
 # Helm module
-- name: copy chart
-  copy:
-    src: "{{ item }}"
-    dest: /tmp
-  loop:
-    - test-chart
-    - dep-up
-
-- name: "Test chart with dependency_update false"
+- name: "Test dependency update for helm module"
   block:
+    - name: copy chart
+      copy:
+        src: "{{ item }}"
+        dest: /tmp
+      loop:
+        - test-chart
+        - dep-up
+
     - name: "Test chart with dependency_update false"
       helm:
         binary_path: "{{ helm_binary }}"
@@ -20,20 +20,19 @@
         create_namespace: yes
       register: release
 
-    - name: "Check if the subchart exist in chart"
+    - name: "Get stats of the subchart"
       stat:
         path: "/tmp/test-chart/Chart.lock"
       register: stat_result
 
-    - assert:
+    - name: "Check if the subchart not exist in chart"
+      assert:
         that:
           - not stat_result.stat.exists
         success_msg: "subchart not exist in the chart directory"
         fail_msg: "subchart exist in the charts directory"
 
-- name: "Test chart without dependencies block and dependency_update true"
-  block:
-    - name: "Test chart without dependencies block"
+    - name: "Test chart without dependencies block and dependency_update true"
       helm:
         binary_path: "{{ helm_binary }}"
         name: test
@@ -47,12 +46,9 @@
 
     - assert:
         that:
-          - release.failed
-          - release.msg == "No subchart will be pulled for /tmp/test-chart. Please make sure to add dependencies block in Chart.yaml or requirements.yaml. For more information please visite https://helm.sh/docs/helm/helm_dependency/"
-        success_msg: "Failed when there is no dependencies block with dependency_update enabled"
+          - release.warnings[0] == "There is no dependencies block defined in Chart.yaml. Dependency update will not be performed. Please consider add dependencies block or disable dependency_update to remove this warning."
+        success_msg: "warning when there is no dependencies block with dependency_update enabled"
 
-- name: "Test chart with dependencies block and dependency_update true"
-  block:
     - name: "Test chart with dependencies block and dependency_update true"
       helm:
         binary_path: "{{ helm_binary }}"
@@ -64,20 +60,18 @@
         create_namespace: yes
       register: release
 
-    - name: "Check if the subchart exist in chart"
+    - name: "Get stats of the subchart"
       stat:
         path: "/tmp/dep-up/Chart.lock"
       register: stat_result
 
-    - assert:
+    - name: "Check if the subchart exists in chart"
+      assert:
         that:
           - stat_result.stat.exists
         success_msg: "subchart exist in the chart directory"
         fail_msg: "subchart not exist in the charts directory"
-
-# Clean
-- name: "Clean"
-  block:
+  always:
     - name: Remove helm namespace
       k8s:
         api_version: v1
@@ -95,17 +89,17 @@
         - test-chart
         - dep-up
 
-# Helm template module
-- name: copy chart
-  copy:
-    src: "{{ item }}"
-    dest: /tmp
-  loop:
-    - test-chart
-    - dep-up
-
-- name: "Test Helm dependency update block exist in the helm_template module and dependency_update true"
+# Helm_template module
+- name: "Test dependency update for helm_template module"
   block:
+    - name: copy chart
+      copy:
+        src: "{{ item }}"
+        dest: /tmp
+      loop:
+        - test-chart
+        - dep-up
+
     - name: Test Helm dependency update block exist in the helm_template module and dependency_update true
       helm_template:
         binary_path: "{{ helm_binary }}"
@@ -115,7 +109,7 @@
         output_dir: "/tmp"
       register: result
 
-    - name: "Check if the subchart exist in chart"
+    - name: "Get stats of the subchart"
       stat:
         path: "{{ item }}"
       register: stat_result
@@ -123,15 +117,14 @@
         - /tmp/dep-up/Chart.lock
         - /tmp/dep_up/charts/test-chart/templates/configmap.yaml
 
-    - assert:
+    - name: "Check if the subchart exist in chart"
+      assert:
         that:
           - stat_result.results[0].stat.exists
           - stat_result.results[1].stat.exists
         success_msg: "subchart exist in the charts directory"
         fail_msg: "There is no Subchart pulled"
 
-- name: "Test Helm dependency update block not exist in the helm_template module and dependency_update true"
-  block:
     - name: Test Helm dependency update block not exist in the helm_template module and dependency_update true
       helm_template:
         binary_path: "{{ helm_binary }}"
@@ -148,9 +141,7 @@
           - release.msg == "No subchart will be pulled for /tmp/test-chart. Please make sure to add dependencies block in Chart.yaml or requirements.yaml. For more information please visite https://helm.sh/docs/helm/helm_dependency/"
         success_msg: "Failed when there is no dependencies block with dependency_update enabled"
 
-- name: "Test Helm subchart not pulled when dependency_update false for helm_template"
-  block:
-    - name: Test Helm subchart not pulled when dependency_update false
+    - name: Test Helm subchart not pulled when dependency_update false for helm_template
       helm_template:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/test-chart"
@@ -159,7 +150,7 @@
         output_dir: "/tmp"
       register: result
 
-    - name: "Check if the subchart exist in chart"
+    - name: "Get stats of the subchart"
       stat:
         path: "{{ item }}"
       register: stat_result
@@ -167,9 +158,27 @@
         - /tmp/test-chart/Chart.lock
         - /tmp/test-chart/templates/configmap.yaml
 
-    - assert:
+    - name: "Check if the subchart not exist in chart"
+      assert:
         that:
           - not stat_result.results[0].stat.exists
           - stat_result.results[1].stat.exists
         success_msg: "subchart not exist in the charts directory"
         fail_msg: "There is no Subchart pulled"
+  always:
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent
+        wait: true
+        wait_timeout: 180
+
+    - name: "Remove charts"
+      file:
+        state: absent
+        path: "/tmp/{{ item }}"
+      loop:
+        - test-chart
+        - dep-up

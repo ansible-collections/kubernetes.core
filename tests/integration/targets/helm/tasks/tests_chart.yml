@@ -39,7 +39,7 @@
       assert:
         that:
           - install_fail is failed
-          - '''Error: create: failed to create: namespaces "'' + helm_namespace + ''" not found'' in install_fail.stderr'
+          - "'Error: create: failed to create: namespaces \"' + helm_namespace + '\" not found' in install_fail.stderr"
 
     - name: "Install {{ chart_test }} from {{ source }} in check mode"
       helm:
@@ -358,7 +358,8 @@
       register: result
 
     - assert:
-        that: result.stat.exists
+        that:
+          result.stat.exists
 
     - name: Release using non-existent context
       helm:
@@ -376,7 +377,7 @@
       assert:
         that:
           - result is failed
-          - '''context "does-not-exist" does not exist'' in result.stderr'
+          - "'context \"does-not-exist\" does not exist' in result.stderr"
 
   always:
     - name: Clean up temp dir
