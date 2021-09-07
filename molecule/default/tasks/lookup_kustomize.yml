@@ -41,18 +41,6 @@
       - content: "project=ansible"
         dest: "{{ kustomize_dir }}/data.properties"
 
-    - set_fact:
-        test0: "{{ lookup('kubernetes.core.kustomize', dir=kustomize_dir) }}"
-      ignore_errors: true
-      register: _test0
-
-    - name: assert that the lookup failed when tools are not defined into path
-      assert:
-        that:
-        - test0 is not defined
-        - _test0 is failed
-        - '"Failed to find required executable" in _test0.msg'
-
     - name: copy script to install kustomize
       get_url:
         url: https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh
