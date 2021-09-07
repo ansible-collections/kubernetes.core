@@ -169,7 +169,7 @@
       include_tasks:
         file: tasks/lookup_k8s.yml
         apply:
-          tags: [ lookup, k8s ]
+          tags: [ lookup_k8s, k8s ]
       tags:
         - always
 
@@ -186,6 +186,14 @@
         file: tasks/diff.yml
         apply:
           tags: [ diff, k8s ]
+      tags:
+        - always
+
+    - name: Include lookup_kustomize.yml
+      include_tasks:
+        file: tasks/lookup_kustomize.yml
+        apply:
+          tags: [ lookup_kustomize, k8s ]
       tags:
         - always
 
