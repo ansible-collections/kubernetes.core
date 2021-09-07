@@ -117,3 +117,49 @@
         state: absent
         plugin_name: sample_plugin
       ignore_errors: yes
+
+- block:
+    - name: uninstall helm plugin secrets
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_name: secrets
+        state: absent
+
+    - name: install helm-secrets on a specific version
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_path: https://github.com/jkroepke/helm-secrets
+        plugin_version: 3.4.1
+        state: present
+
+    - name: list helm plugin
+      helm_plugin_info:
+        plugin_name: secrets
+        binary_path: "{{ helm_binary }}"
+      register: plugin_list
+
+    - name: assert that secrets has been installed with specified version
+      assert:
+        that:
+          - plugin_list.plugin_list[0].version == "3.4.1"
+
+    - name: Update helm plugin version to latest
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_name: secrets
+        state: latest
+      register: _update
+
+    - name: assert update was performed
+      assert:
+        that:
+          - _update.changed
+          - '"Updated plugin: secrets" in _update.stdout'
+
+  always:
+    - name: Uninstall sample_plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: secrets
+      ignore_errors: yes
