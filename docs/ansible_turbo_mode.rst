@@ -99,7 +99,7 @@ The background service
 The daemon kills itself after 15s, and communication are done
 through an Unix socket.
 It runs in one single process and uses ``asyncio`` internally.
-Consequently you can use the ``sync`` keyword in your Ansible module.
+Consequently you can use the ``async`` keyword in your Ansible module.
 This will be handy if you interact with a lot of remote systems
 at the same time.
 
