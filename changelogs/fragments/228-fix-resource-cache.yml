@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - fix resource cache not being used (https://github.com/ansible-collections/kubernetes.core/pull/228).
