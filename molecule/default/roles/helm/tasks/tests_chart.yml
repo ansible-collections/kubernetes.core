@@ -250,7 +250,7 @@
         binary_path: "{{ helm_binary }}"
         state: absent
         name: test-0001
-        purge: False
+        purge: True
         namespace: "{{ helm_namespace }}"
       register: install
 
