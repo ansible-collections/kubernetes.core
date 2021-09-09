@@ -18,6 +18,7 @@ import os
 from collections import defaultdict
 import hashlib
 import tempfile
+from functools import partial
 
 import kubernetes.dynamic
 import kubernetes.dynamic.discovery
@@ -74,7 +75,7 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
         else:
             try:
                 with open(self.__cache_file, 'r') as f:
-                    self._cache = json.load(f, cls=CacheDecoder(self.client))
+                    self._cache = json.load(f, cls=partial(CacheDecoder, self.client))
                 if self._cache.get('library_version') != __version__:
                     # Version mismatch, need to refresh cache
                     self.invalidate_cache()
