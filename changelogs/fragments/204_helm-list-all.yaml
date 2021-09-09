@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm - lookup and info modules now return all releases regardless of their state (https://github.com/ansible-collections/kubernetes.core/pull/204).
