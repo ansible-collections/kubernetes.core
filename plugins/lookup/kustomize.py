@@ -8,7 +8,7 @@ DOCUMENTATION = '''
 
     short_description: Build a set of kubernetes resources using a 'kustomization.yaml' file.
 
-    version_added: "1.0.0"
+    version_added: "2.2.0"
 
     author:
       - Aubin Bikouo <@abikouo>
