@@ -8,6 +8,8 @@ DOCUMENTATION = '''
 
     short_description: Build a set of kubernetes resources using a 'kustomization.yaml' file.
 
+    version_added: "1.0.0"
+
     author:
       - Aubin Bikouo <@abikouo>
     notes:
@@ -44,9 +46,7 @@ EXAMPLES = """
 
 - name: Create kubernetes resources for lookup output
   k8s:
-    definition: "{{ item }}"
-  with_items:
-    "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization') }}"
 """
 
 RETURN = """
@@ -82,7 +82,6 @@ from ansible.plugins.lookup import LookupBase
 from ansible.module_utils.common.process import get_bin_path
 
 
-import os
 import subprocess
 
 
@@ -119,11 +118,6 @@ class LookupModule(LookupBase):
 
         # check input directory
         kustomization_dir = dir
-        if not os.path.isdir(kustomization_dir):
-            raise AnsibleLookupError("dir parameter {0} is not a valid directory.".format(kustomization_dir))
-        kustomization_file = os.path.join(kustomization_dir, "kustomization.yaml")
-        if not os.path.isfile(kustomization_file):
-            raise AnsibleLookupError("missing 'kustomization.yaml' file from input directory '{0}'".format(kustomization_dir))
 
         command = [executable_path]
         if executable_path.endswith('kustomize'):
