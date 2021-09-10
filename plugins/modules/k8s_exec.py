@@ -31,6 +31,7 @@ requirements:
   - "PyYAML >= 3.11"
 
 notes:
+  - Return code C(rc) for the command executed is added in output in version 2.3.0, and depricates return code C(return_code).
   - Return code C(return_code) for the command executed is added in output in version 1.0.0.
   - The authenticated user must have at least read access to the pods resource and write access to the pods/exec resource.
 
@@ -82,7 +83,7 @@ EXAMPLES = r'''
 - name: Check last command status
   debug:
     msg: "cmd failed"
-  when: command_status.return_code != 0
+  when: command_status.rc != 0
 '''
 
 RETURN = r'''
@@ -104,8 +105,12 @@ result:
      stderr_lines:
        description: The command stderr
        type: str
-     return_code:
+     rc:
        description: The command status code
+       type: int
+       version_added: 2.3.0
+     return_code:
+       description: The command status code. This attribute is depricated and will remove in future release. Please use rc instead.
        type: int
 '''
 
@@ -183,6 +188,7 @@ def execute_module(module, k8s_ansible_mixin):
         changed=True,
         stdout="".join(stdout),
         stderr="".join(stderr),
+        rc=rc,
         return_code=rc
     )
 
