@@ -382,7 +382,7 @@ Notes
 -----
 
 .. note::
-   - Return code ``return_code`` for the command executed is added in output in version 1.0.0.
+   - Return code ``rc`` for the command executed is added in output in version 1.0.0.
    - The authenticated user must have at least read access to the pods resource and write access to the pods/exec resource.
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
@@ -410,7 +410,7 @@ Examples
     - name: Check last command status
       debug:
         msg: "cmd failed"
-      when: command_status.return_code != 0
+      when: command_status.rc != 0
 
 
 
@@ -441,6 +441,23 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <br/>
                 </td>
             </tr>
+            <tr>
+                <td class="elbow-placeholder">&nbsp;</td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>rc</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td></td>
+                <td>
+                            <div>The command status code</div>
+                    <br/>
+                </td>
+            </tr>
+
                                 <tr>
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
@@ -453,7 +470,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td></td>
                 <td>
-                            <div>The command status code</div>
+                            <div>The command status code. This attribute is deprecated and will be removed in future release. Please use rc instead.</div>
                     <br/>
                 </td>
             </tr>

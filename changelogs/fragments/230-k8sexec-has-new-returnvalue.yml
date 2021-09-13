@@ -1,0 +1,2 @@
+bugfixes:
+- k8s_exec - fix k8s_exec returning rc attribute,  to follow ansible's common return values (https://github.com/ansible-collections/kubernetes.core/pull/230).

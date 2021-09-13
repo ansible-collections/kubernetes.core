@@ -54,6 +54,7 @@
     - name: Check last command status
       assert:
         that:
+          - command_status.rc != 0
           - command_status.return_code != 0
 
   always:
