@@ -370,6 +370,9 @@ class K8SCopyToPod(K8SCopy):
             else:
                 tar_command = ['tar', '-xmf', '-']
 
+            if dest_file.startswith("/"):
+                tar_command.extend(['-C', '/'])
+
             response = stream(self.api_instance.connect_get_namespaced_pod_exec,
                               self.name,
                               self.namespace,
