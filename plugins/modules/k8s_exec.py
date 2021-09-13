@@ -183,7 +183,7 @@ def execute_module(module, k8s_ansible_mixin):
     else:
         rc = int(err['details']['causes'][0]['message'])
 
-    module.deprecate("The 'return_code' return key is deprecated. Please use 'rc' instead.", date="2022-10-01", collection_name="kubernetes.core")
+    module.deprecate("The 'return_code' return key is deprecated. Please use 'rc' instead.", version="4.0.0", collection_name="kubernetes.core")
     module.exit_json(
         # Some command might change environment, but ultimately failing at end
         changed=True,
