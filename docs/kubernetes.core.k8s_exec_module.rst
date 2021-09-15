@@ -452,7 +452,8 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <div style="font-size: small">
                       <span style="color: purple">integer</span>
                     </div>
-<div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>                </td>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.2.0</div>
+                </td>
                 <td></td>
                 <td>
                             <div>The command status code</div>
