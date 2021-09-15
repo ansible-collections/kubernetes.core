@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s_exec - add missing deprecation notice to return_code for k8s_exec (https://github.com/ansible-collections/kubernetes.core/pull/233).

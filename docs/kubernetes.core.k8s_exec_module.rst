@@ -172,13 +172,14 @@ Parameters
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">path</span>
+                        <span style="color: purple">raw</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
                         <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version &gt;= 17.17.0. Added in version 2.2.0.</div>
                 </td>
             </tr>
             <tr>
@@ -382,7 +383,8 @@ Notes
 -----
 
 .. note::
-   - Return code ``rc`` for the command executed is added in output in version 1.0.0.
+   - Return code ``rc`` for the command executed is added in output in version 2.2.0, and deprecates return code ``return_code``.
+   - Return code ``return_code`` for the command executed is added in output in version 1.0.0.
    - The authenticated user must have at least read access to the pods resource and write access to the pods/exec resource.
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
@@ -441,8 +443,8 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <br/>
                 </td>
             </tr>
-            <tr>
-                <td class="elbow-placeholder">&nbsp;</td>
+                                <tr>
+                    <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>rc</b>
@@ -450,15 +452,14 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <div style="font-size: small">
                       <span style="color: purple">integer</span>
                     </div>
-                </td>
+<div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>                </td>
                 <td></td>
                 <td>
                             <div>The command status code</div>
                     <br/>
                 </td>
             </tr>
-
-                                <tr>
+            <tr>
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
@@ -470,7 +471,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td></td>
                 <td>
-                            <div>The command status code. This attribute is deprecated and will be removed in future release. Please use rc instead.</div>
+                            <div>The command status code. This attribute is deprecated and will be removed in a future release. Please use rc instead.</div>
                     <br/>
                 </td>
             </tr>

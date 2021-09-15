@@ -46,6 +46,7 @@ Name | Description
 Name | Description
 --- | ---
 [kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_lookup.rst)|Query the K8s API
+[kubernetes.core.kustomize](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kustomize_lookup.rst)|Build a set of kubernetes resources using a 'kustomization.yaml' file.
 
 ### Modules
 Name | Description
@@ -84,7 +85,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 2.1.1
+    version: 2.2.0
 ```
 
 ### Installing the Kubernetes Python Library

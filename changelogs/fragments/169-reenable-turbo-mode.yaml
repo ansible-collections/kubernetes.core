@@ -1,3 +1,0 @@
----
-minor_changes:
-  - re-enable turbo mode for collection. The default is initially set to off (https://github.com/ansible-collections/kubernetes.core/pull/169).

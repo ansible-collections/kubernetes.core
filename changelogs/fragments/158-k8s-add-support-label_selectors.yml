@@ -1,3 +1,0 @@
----
-minor_changes:
-- k8s - add support for label_selectors options (https://github.com/ansible-collections/kubernetes.core/issues/43).

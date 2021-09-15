@@ -1,2 +1,0 @@
-bugfixes:
-  - k8s_cp - fix k8s_cp uploading when target container's WORKDIR is not '/' (https://github.com/ansible-collections/kubernetes.core/issues/222).
