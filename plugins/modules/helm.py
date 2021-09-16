@@ -565,6 +565,7 @@ def main():
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
     changed = False
+    diff = ""
 
     bin_path = module.params.get('binary_path')
     chart_ref = module.params.get('chart_ref')
