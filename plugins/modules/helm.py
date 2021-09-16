@@ -491,7 +491,7 @@ def helmdiff_check(module, helm_cmd, release_name, chart_ref, release_values,
             cmd += " -f=" + values_file
 
     rc, out, err = run_helm(module, cmd)
-    return len(out.strip()) > 0
+    return len(out.strip()) > 0, out
 
 
 def default_check(release_status, chart_info, values=None, values_files=None):
@@ -628,8 +628,8 @@ def main():
         else:
 
             if has_plugin(helm_cmd_common, "diff") and not chart_repo_url:
-                would_change = helmdiff_check(module, helm_cmd_common, release_name, chart_ref,
-                                              release_values, values_files, chart_version, replace)
+                would_change, diff = helmdiff_check(module, helm_cmd_common, release_name, chart_ref,
+                                                    release_values, values_files, chart_version, replace)
             else:
                 module.warn("The default idempotency check can fail to report changes in certain cases. "
                             "Install helm diff for better results.")
@@ -656,6 +656,7 @@ def main():
         module.exit_json(
             changed=changed,
             command=helm_cmd,
+            diff={'prepared': diff},
             status=check_status,
             stdout='',
             stderr='',
@@ -673,6 +674,7 @@ def main():
 
     module.exit_json(
         changed=changed,
+        diff={'prepared': diff},
         stdout=out,
         stderr=err,
         status=get_release_status(module, helm_cmd_common, release_name),
