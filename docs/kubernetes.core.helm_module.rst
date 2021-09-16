@@ -234,6 +234,23 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>history_max</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.2.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Limit the maximum number of revisions saved per release.</div>
+                        <div>mutually exclusive with with <code>replace</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>host</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -373,6 +390,7 @@ Parameters
                 <td>
                         <div>Reuse the given name, only if that name is a deleted release which remains in the history.</div>
                         <div>This is unsafe in production environment.</div>
+                        <div>mutually exclusive with with <code>history_max</code>.</div>
                 </td>
             </tr>
             <tr>

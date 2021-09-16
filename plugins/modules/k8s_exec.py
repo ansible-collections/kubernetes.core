@@ -108,7 +108,7 @@ result:
      rc:
        description: The command status code
        type: int
-       version_added: 2.3.0
+       version_added: 2.2.0
      return_code:
        description: The command status code. This attribute is deprecated and will be removed in a future release. Please use rc instead.
        type: int

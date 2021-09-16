@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s - add support for waiting on statefulsets (https://github.com/ansible-collections/kubernetes.core/pull/195).

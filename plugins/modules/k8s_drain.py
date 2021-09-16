@@ -15,6 +15,8 @@ module: k8s_drain
 
 short_description: Drain, Cordon, or Uncordon node in k8s cluster
 
+version_added: "2.2.0"
+
 author: Aubin Bikouo (@abikouo)
 
 description:

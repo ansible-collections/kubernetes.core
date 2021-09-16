@@ -5,6 +5,47 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.2.0
+======
+
+Minor Changes
+-------------
+
+- add support for in-memory kubeconfig in addition to file for k8s modules. (https://github.com/ansible-collections/kubernetes.core/pull/212).
+- helm - add support for history_max cli parameter (https://github.com/ansible-collections/kubernetes.core/pull/164).
+- k8s - add support for label_selectors options (https://github.com/ansible-collections/kubernetes.core/issues/43).
+- k8s - add support for waiting on statefulsets (https://github.com/ansible-collections/kubernetes.core/pull/195).
+- k8s_log - Add since-seconds parameter to the k8s_log module (https://github.com/ansible-collections/kubernetes.core/pull/142).
+- new lookup plugin to support kubernetes kustomize feature. (https://github.com/ansible-collections/kubernetes.core/issues/39).
+- re-enable turbo mode for collection. The default is initially set to off (https://github.com/ansible-collections/kubernetes.core/pull/169).
+
+Bugfixes
+--------
+
+- common - import k8sdynamicclient directly to workaround Ansible upstream bug (https://github.com/ansible-collections/kubernetes.core/issues/162).
+- connection plugin - add arguments information into censored command (https://github.com/ansible-collections/kubernetes.core/pull/196).
+- fix resource cache not being used (https://github.com/ansible-collections/kubernetes.core/pull/228).
+- k8s - Fixes a bug where diff was always returned when using apply or modifying an existing object, even when diff=no was specified. The module no longer returns diff unless requested and will now honor diff=no (https://github.com/ansible-collections/kubernetes.core/pull/146).
+- k8s_cp - fix k8s_cp uploading when target container's WORKDIR is not '/' (https://github.com/ansible-collections/kubernetes.core/issues/222).
+- k8s_exec - add missing deprecation notice to return_code for k8s_exec (https://github.com/ansible-collections/kubernetes.core/pull/233).
+- k8s_exec - fix k8s_exec returning rc attribute,  to follow ansible's common return values (https://github.com/ansible-collections/kubernetes.core/pull/230).
+- lookup - recommend query instead of lookup (https://github.com/ansible-collections/kubernetes.core/issues/147).
+- support the ``template`` param in all collections depending on kubernetes.core (https://github.com/ansible-collections/kubernetes.core/pull/154).
+
+New Plugins
+-----------
+
+Lookup
+~~~~~~
+
+- kustomize - Build a set of kubernetes resources using a 'kustomization.yaml' file.
+
+New Modules
+-----------
+
+- k8s_cp - Copy files and directories to and from pod.
+- k8s_drain - Drain, Cordon, or Uncordon node in k8s cluster
+
 v2.1.1
 ======
 

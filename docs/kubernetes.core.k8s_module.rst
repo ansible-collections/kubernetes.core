@@ -375,13 +375,31 @@ Parameters
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">path</span>
+                        <span style="color: purple">raw</span>
                     </div>
                 </td>
                 <td>
                 </td>
                 <td>
                         <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version &gt;= 17.17.0. Added in version 2.2.0.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>label_selectors</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.2.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Selector (label query) to filter on.</div>
                 </td>
             </tr>
             <tr>
@@ -639,6 +657,7 @@ Parameters
                 <td>
                         <div>Provide a valid YAML template definition file for an object when creating or updating.</div>
                         <div>Value can be provided as string or dictionary.</div>
+                        <div>The parameter accepts multiple template files. Added in version 2.0.0.</div>
                         <div>Mutually exclusive with <code>src</code> and <code>resource_definition</code>.</div>
                         <div>Template files needs to be present on the Ansible Controller&#x27;s file system.</div>
                         <div>Additional parameters can be specified using dictionary.</div>
@@ -974,6 +993,15 @@ Examples
           path: '/testing/deployment.j2'
           variable_start_string: '[['
           variable_end_string: ']]'
+
+    - name: Read multiple definition template file from the Ansible controller file system
+      kubernetes.core.k8s:
+        state: present
+        template:
+          - path: '/testing/deployment_one.j2'
+          - path: '/testing/deployment_two.j2'
+            variable_start_string: '[['
+            variable_end_string: ']]'
 
     - name: fail on validation errors
       kubernetes.core.k8s:
