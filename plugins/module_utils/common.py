@@ -612,17 +612,38 @@ class K8sAnsibleMixin(object):
 
         self.remove_aliases()
 
+        def _test_metadata(definition, key="name"):
+            return key in definition['metadata'] and definition['metadata'].get(key)
+
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
             if append_hash and definition['kind'] in ['ConfigMap', 'Secret']:
-                name = '%s-%s' % (name, generate_hash(definition))
-                definition['metadata']['name'] = name
-            params = dict(name=name)
+                if name:
+                    name = '%s-%s' % (name, generate_hash(definition))
+                    definition['metadata']['name'] = name
+                elif self.generate_name or _test_metadata(definition, key='generateName'):
+                    gen_name = self.generate_name or definition.get('metadata', {}).get('generateName')
+                    definition['metadata']['generateName'] = '%s-%s' % (gen_name, generate_hash(definition))
+            params = {}
+            required_fields = False
+            if _test_metadata(definition):
+                required_fields = True
+                params['name'] = name
             if namespace:
                 params['namespace'] = namespace
             if label_selectors:
+                required_fields = True
                 params['label_selector'] = ','.join(label_selectors)
-            existing = resource.get(**params)
+
+            if required_fields:
+                existing = resource.get(**params)
+            elif state == 'absent':
+                msg = "At least one of name|label_selectors is required to delete object."
+                if continue_on_error:
+                    result['error'] = dict(msg=msg)
+                    return result
+                else:
+                    self.fail_json(msg=msg)
         except (NotFoundError, MethodNotAllowedError):
             # Remove traceback so that it doesn't show up in later failures
             try:
@@ -761,6 +782,15 @@ class K8sAnsibleMixin(object):
                     k8s_obj = _encode_stringdata(definition)
                 else:
                     try:
+                        if not _test_metadata(definition, key="name") and not _test_metadata(definition, key="generateName") and self.generate_name is not None:
+                            definition['metadata'].update({'generateName': self.generate_name})
+                        if not _test_metadata(definition, key="name") and not _test_metadata(definition, key="generateName"):
+                            msg = "At least one of metadata.name|metadata.generateName is required to create object."
+                            if continue_on_error:
+                                result['error'] = dict(msg=msg)
+                                return result
+                            else:
+                                self.fail_json(msg=msg)
                         k8s_obj = resource.create(definition, namespace=namespace).to_dict()
                     except ConflictError:
                         # Some resources, like ProjectRequests, can't be created multiple times,
@@ -791,6 +821,7 @@ class K8sAnsibleMixin(object):
                 success = True
                 result['result'] = k8s_obj
                 if wait and not self.check_mode:
+                    definition['metadata'].update({'name': k8s_obj['metadata']['name']})
                     success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
                 result['changed'] = True
                 result['method'] = 'create'
