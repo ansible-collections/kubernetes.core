@@ -1,0 +1,2 @@
+bugfixes:
+  - helm - If using module with helmdiff, the module now outputs diff (https://github.com/ansible-collections/kubernetes.core/pull/236).
