@@ -234,13 +234,16 @@ def execute_module(k8s_module, module):
         msg = 'Failed to retrieve requested object: {0}'.format(to_native(exc))
         module.fail_json(msg=build_error_msg(kind, name, msg), error='', status='', reason='')
 
-    if module.check_mode:
+    if module.check_mode and not k8s_module.supports_dry_run:
         obj, error = json_patch(existing.to_dict(), patch)
         if error:
             module.fail_json(**error)
     else:
+        params = {}
+        if module.check_mode:
+            params["dry_run"] = "All"
         try:
-            obj = resource.patch(patch, name=name, namespace=namespace, content_type="application/json-patch+json").to_dict()
+            obj = resource.patch(patch, name=name, namespace=namespace, content_type="application/json-patch+json", **params).to_dict()
         except DynamicApiError as exc:
             msg = "Failed to patch existing object: {0}".format(exc.body)
             module.fail_json(msg=msg, error=exc.status, status=exc.status, reason=exc.reason)
