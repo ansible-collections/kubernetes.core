@@ -259,6 +259,8 @@
         namespace: "{{ scale_namespace }}"
         label_selectors:
           - app=nginx
+        wait: yes
+        wait_timeout: 60
       register: scale_out
 
     - assert:
