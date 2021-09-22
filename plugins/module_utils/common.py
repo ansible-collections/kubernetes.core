@@ -365,7 +365,7 @@ class K8sAnsibleMixin(object):
     def fail(self, msg=None):
         self.fail_json(msg=msg)
 
-    def _wait_for(self, resource, name, namespace, predicate, sleep, timeout, state, label_selectors):
+    def _wait_for(self, resource, name, namespace, predicate, sleep, timeout, state, label_selectors=None):
         start = datetime.now()
 
         def _wait_for_elapsed():
