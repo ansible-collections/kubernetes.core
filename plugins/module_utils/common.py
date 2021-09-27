@@ -580,8 +580,11 @@ class K8sAnsibleMixin(object):
         definition['kind'] = resource.kind
         definition['apiVersion'] = resource.group_version
         metadata = definition.get('metadata', {})
-        if self.name and not metadata.get('name'):
-            metadata['name'] = self.name
+        if not metadata.get('name') and not metadata.get('generateName'):
+            if self.name:
+                metadata['name'] = self.name
+            elif self.generate_name:
+                metadata['generateName'] = self.generate_name
         if resource.namespaced and self.namespace and not metadata.get('namespace'):
             metadata['namespace'] = self.namespace
         definition['metadata'] = metadata
@@ -595,6 +598,7 @@ class K8sAnsibleMixin(object):
         state = self.params.get('state', None)
         force = self.params.get('force', False)
         name = definition['metadata'].get('name')
+        generate_name = definition['metadata'].get('generateName')
         origin_name = definition['metadata'].get('name')
         namespace = definition['metadata'].get('namespace')
         existing = None
@@ -612,30 +616,23 @@ class K8sAnsibleMixin(object):
 
         self.remove_aliases()
 
-        def _test_metadata(definition, key="name"):
-            return key in definition['metadata'] and definition['metadata'].get(key)
-
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
             if append_hash and definition['kind'] in ['ConfigMap', 'Secret']:
                 if name:
                     name = '%s-%s' % (name, generate_hash(definition))
                     definition['metadata']['name'] = name
-                elif self.generate_name or _test_metadata(definition, key='generateName'):
-                    gen_name = self.generate_name or definition.get('metadata', {}).get('generateName')
-                    definition['metadata']['generateName'] = '%s-%s' % (gen_name, generate_hash(definition))
+                elif generate_name:
+                    definition['metadata']['generateName'] = '%s-%s' % (generate_name, generate_hash(definition))
             params = {}
-            required_fields = False
-            if _test_metadata(definition):
-                required_fields = True
+            if name:
                 params['name'] = name
             if namespace:
                 params['namespace'] = namespace
             if label_selectors:
-                required_fields = True
                 params['label_selector'] = ','.join(label_selectors)
 
-            if required_fields:
+            if "name" in params or "label_selector" in params:
                 existing = resource.get(**params)
             elif state == 'absent':
                 msg = "At least one of name|label_selectors is required to delete object."
@@ -782,15 +779,6 @@ class K8sAnsibleMixin(object):
                     k8s_obj = _encode_stringdata(definition)
                 else:
                     try:
-                        if not _test_metadata(definition, key="name") and not _test_metadata(definition, key="generateName") and self.generate_name is not None:
-                            definition['metadata'].update({'generateName': self.generate_name})
-                        if not _test_metadata(definition, key="name") and not _test_metadata(definition, key="generateName"):
-                            msg = "At least one of metadata.name|metadata.generateName is required to create object."
-                            if continue_on_error:
-                                result['error'] = dict(msg=msg)
-                                return result
-                            else:
-                                self.fail_json(msg=msg)
                         k8s_obj = resource.create(definition, namespace=namespace).to_dict()
                     except ConflictError:
                         # Some resources, like ProjectRequests, can't be created multiple times,

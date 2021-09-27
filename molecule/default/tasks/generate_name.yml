@@ -32,7 +32,7 @@
       definition:
         kind: Namespace
         metadata:
-          generateName: test-
+          generateName: "test-"
           labels:
             ansible: test
     register: result
@@ -42,8 +42,8 @@
 
   - name: Create Pod without name
     k8s:
-      namespace: '{{ namespace }}'
-      definition: '{{ pod_00 }}'
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_00 }}"
     register: result
     ignore_errors: true
 
@@ -51,61 +51,61 @@
     assert:
       that:
       - result is failed
-      - "result.msg == 'At least one of metadata.name|metadata.generateName is required to create object.'"
+      - "'name or generateName is required' in result.msg"
 
   - name: create pod using name parameter should succeed
     k8s:
-      namespace: '{{ namespace }}'
-      definition: '{{ pod_00 }}'
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_00 }}"
       name: pod-01
 
   - name: list Pod for namespace
     k8s_info:
       kind: Pod
-      namespace: '{{ namespace }}'
+      namespace: "{{ namespace }}"
     register: pods
 
   - name: assert pod has been created
     assert:
       that:
-      - '{{ pods.resources | length == 1 }}'
+      - "{{ pods.resources | length == 1 }}"
 
   - name: create pod using generate_name parameter should succeed
     k8s:
-      namespace: '{{ namespace }}'
-      definition: '{{ pod_00 }}'
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_00 }}"
       generate_name: pod-
 
   - name: list Pod for namespace
     k8s_info:
       kind: Pod
-      namespace: '{{ namespace }}'
+      namespace: "{{ namespace }}"
     register: pods
 
   - name: assert pod has been created
     assert:
       that:
-      - '{{ pods.resources | length == 2 }}'
+      - "{{ pods.resources | length == 2 }}"
 
   - name: create pod using metadata.generateName parameter should succeed
     k8s:
-      namespace: '{{ namespace }}'
-      definition: '{{ pod_01 }}'
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_01 }}"
 
   - name: list Pod for namespace
     k8s_info:
       kind: Pod
-      namespace: '{{ namespace }}'
+      namespace: "{{ namespace }}"
     register: pods
 
   - name: assert pod has been created
     assert:
       that:
-      - '{{ pods.resources | length == 3 }}'
+      - "{{ pods.resources | length == 3 }}"
 
   - name: create object using metadata.generateName should support wait option
     k8s:
-      namespace: '{{ namespace }}'
+      namespace: "{{ namespace }}"
       definition:
         apiVersion: apps/v1
         kind: StatefulSet
@@ -136,7 +136,7 @@
   - name: Create ConfigMap using generateName
     kubernetes.core.k8s:
       kind: ConfigMap
-      namespace: '{{ namespace }}'
+      namespace: "{{ namespace }}"
       generate_name: cmap-
       append_hash: yes
     register: config
@@ -148,7 +148,7 @@
 
   - name: Create Pod with failing container
     kubernetes.core.k8s:
-      namespace: '{{ namespace }}'
+      namespace: "{{ namespace }}"
       definition:
         apiVersion: v1
         kind: Pod
@@ -161,12 +161,11 @@
 
   - name: Create second Pod using wait (it should not wait for the first container)
     kubernetes.core.k8s:
-      namespace: '{{ namespace }}'
+      namespace: "{{ namespace }}"
+      generate_name: "pod2-"
       definition:
         apiVersion: v1
         kind: Pod
-        metadata:
-          name: pod2
         spec:
           containers:
           - args:
@@ -183,6 +182,6 @@
   - name: Delete namespace
     k8s:
       kind: Namespace
-      name: '{{ namespace }}'
+      name: "{{ namespace }}"
       state: absent
     ignore_errors: true
