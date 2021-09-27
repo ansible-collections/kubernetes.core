@@ -120,7 +120,7 @@ options:
     description:
       - A Go duration (described here I(https://pkg.go.dev/time#ParseDuration)) value to wait for Kubernetes commands to complete. This defaults to 5m0s.
       - similar to C(wait_timeout) but does not required C(wait) to be activated.
-      - Mutually exclusive with C(wait_timeout)
+      - Mutually exclusive with C(wait_timeout).
     type: str
     version_added: "2.3.0"
   atomic:
