@@ -122,7 +122,7 @@ options:
       - similar to C(wait_timeout) but does not required C(wait) to be activated.
       - Mutually exclusive with C(wait_timeout)
     type: str
-    version_added: "2.2.0"
+    version_added: "2.3.0"
   atomic:
     description:
       - If set, the installation process deletes the installation on failure.
