@@ -114,7 +114,15 @@ options:
   wait_timeout:
     description:
       - Timeout when wait option is enabled (helm2 is a number of seconds, helm3 is a duration).
+      - The use of I(wait_timeout) to wait for kubernetes commands to complete has been deprecated and will be removed after 2022-12-01.
     type: str
+  timeout:
+    description:
+      - A Go duration (described here I(https://pkg.go.dev/time#ParseDuration)) value to wait for Kubernetes commands to complete. This defaults to 5m0s.
+      - similar to C(wait_timeout) but does not required C(wait) to be activated.
+      - Mutually exclusive with C(wait_timeout).
+    type: str
+    version_added: "2.3.0"
   atomic:
     description:
       - If set, the installation process deletes the installation on failure.
@@ -365,7 +373,7 @@ def fetch_chart_info(module, command, chart_ref):
 
 def deploy(command, release_name, release_values, chart_name, wait,
            wait_timeout, disable_hook, force, values_files, history_max, atomic=False,
-           create_namespace=False, replace=False, skip_crds=False):
+           create_namespace=False, replace=False, skip_crds=False, timeout=None):
     """
     Install/upgrade/rollback release chart
     """
@@ -385,6 +393,9 @@ def deploy(command, release_name, release_values, chart_name, wait,
 
     if atomic:
         deploy_command += " --atomic"
+
+    if timeout:
+        deploy_command += " --timeout " + timeout
 
     if force:
         deploy_command += " --force"
@@ -537,6 +548,7 @@ def main():
             purge=dict(type='bool', default=True),
             wait=dict(type='bool', default=False),
             wait_timeout=dict(type='str'),
+            timeout=dict(type='str'),
             atomic=dict(type='bool', default=False),
             create_namespace=dict(type='bool', default=False),
             replace=dict(type='bool', default=False),
@@ -557,6 +569,7 @@ def main():
             ("context", "ca_cert"),
             ("kubeconfig", "ca_cert"),
             ("replace", "history_max"),
+            ("wait_timeout", "timeout"),
         ],
         supports_check_mode=True,
     )
@@ -587,6 +600,7 @@ def main():
     replace = module.params.get('replace')
     skip_crds = module.params.get('skip_crds')
     history_max = module.params.get('history_max')
+    timeout = module.params.get('timeout')
 
     if bin_path is not None:
         helm_cmd_common = bin_path
@@ -622,7 +636,7 @@ def main():
             helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
                               disable_hook, False, values_files=values_files, atomic=atomic,
                               create_namespace=create_namespace, replace=replace,
-                              skip_crds=skip_crds, history_max=history_max)
+                              skip_crds=skip_crds, history_max=history_max, timeout=timeout)
             changed = True
 
         else:
@@ -639,7 +653,7 @@ def main():
                 helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
                                   disable_hook, force, values_files=values_files, atomic=atomic,
                                   create_namespace=create_namespace, replace=replace,
-                                  skip_crds=skip_crds, history_max=history_max)
+                                  skip_crds=skip_crds, history_max=history_max, timeout=timeout)
                 changed = True
 
     if module.check_mode:
