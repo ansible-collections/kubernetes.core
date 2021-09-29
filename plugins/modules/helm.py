@@ -108,7 +108,10 @@ options:
     type: bool
   wait:
     description:
-      - Wait until all Pods, PVCs, Services, and minimum number of Pods of a Deployment are in a ready state before marking the release as successful.
+      - When I(release_state) is set to C(present), wait until all Pods, PVCs, Services,
+        and minimum number of Pods of a Deployment are in a ready state before marking the release as successful.
+      - When I(release_state) is set to C(absent), will wait until all the resources are deleted before returning.
+        It will wait for as long as I(wait_timeout). This feature requires helm>=3.7.0. Added in version 2.3.0.
     default: False
     type: bool
   wait_timeout:
@@ -304,6 +307,7 @@ command:
 
 import tempfile
 import traceback
+from distutils.version import LooseVersion
 
 try:
     import yaml
@@ -317,7 +321,8 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     run_helm,
     get_values,
     get_helm_plugin_list,
-    parse_helm_plugin_list
+    parse_helm_plugin_list,
+    get_helm_version,
 )
 
 
@@ -429,7 +434,8 @@ def deploy(command, release_name, release_values, chart_name, wait,
     return deploy_command
 
 
-def delete(command, release_name, purge, disable_hook):
+def delete(command, release_name, purge, disable_hook,
+           wait, wait_timeout):
     """
     Delete release chart
     """
@@ -441,6 +447,12 @@ def delete(command, release_name, purge, disable_hook):
 
     if disable_hook:
         delete_command += " --no-hooks"
+
+    if wait:
+        delete_command += " --wait"
+
+    if wait_timeout is not None:
+        delete_command += " --timeout " + wait_timeout
 
     delete_command += " " + release_name
 
@@ -615,11 +627,19 @@ def main():
 
     # keep helm_cmd_common for get_release_status in module_exit_json
     helm_cmd = helm_cmd_common
+    opt_result = {}
     if release_state == "absent" and release_status is not None:
         if replace:
             module.fail_json(msg="replace is not applicable when state is absent")
 
-        helm_cmd = delete(helm_cmd, release_name, purge, disable_hook)
+        if wait:
+            helm_version = get_helm_version(module, helm_cmd_common)
+            if LooseVersion(helm_version) < LooseVersion("3.7.0"):
+                opt_result['warnings'] = []
+                opt_result['warnings'].append("helm uninstall support option --wait for helm release >= 3.7.0")
+                wait = False
+
+        helm_cmd = delete(helm_cmd, release_name, purge, disable_hook, wait, wait_timeout)
         changed = True
     elif release_state == "present":
 
@@ -673,6 +693,7 @@ def main():
             status=check_status,
             stdout='',
             stderr='',
+            **opt_result,
         )
     elif not changed:
         module.exit_json(
@@ -681,6 +702,7 @@ def main():
             stdout='',
             stderr='',
             command=helm_cmd,
+            **opt_result,
         )
 
     rc, out, err = run_helm(module, helm_cmd)
@@ -691,6 +713,7 @@ def main():
         stderr=err,
         status=get_release_status(module, helm_cmd_common, release_name),
         command=helm_cmd,
+        **opt_result,
     )
 
 

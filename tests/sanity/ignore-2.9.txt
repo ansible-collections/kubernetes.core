@@ -241,3 +241,6 @@ plugins/module_utils/selector.py future-import-boilerplate!skip
 plugins/module_utils/selector.py metaclass-boilerplate!skip
 plugins/lookup/kustomize.py future-import-boilerplate!skip
 plugins/lookup/kustomize.py metaclass-boilerplate!skip
+molecule/default/roles/helm/library/helm_test_version.py metaclass-boilerplate!skip
+molecule/default/roles/helm/library/helm_test_version.py future-import-boilerplate!skip
+molecule/default/roles/helm/library/helm_test_version.py shebang

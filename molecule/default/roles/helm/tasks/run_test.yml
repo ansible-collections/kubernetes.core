@@ -33,6 +33,9 @@
 - name: Test helm diff
   include_tasks: tests_helm_diff.yml
 
+- name: Test helm uninstall
+  include_tasks: test_helm_uninstall.yml
+
 # https://github.com/ansible-collections/community.kubernetes/issues/296
 - name: Test Skip CRDS feature in helm chart install
   include_tasks: test_crds.yml

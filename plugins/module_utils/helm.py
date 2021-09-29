@@ -11,6 +11,7 @@ from contextlib import contextmanager
 import os
 import tempfile
 import traceback
+import re
 
 from ansible.module_utils.basic import missing_required_lib
 
@@ -158,3 +159,14 @@ def parse_helm_plugin_list(module, output=None):
         ret.append((name, version, description))
 
     return ret
+
+
+def get_helm_version(module, helm_bin):
+
+    helm_version_command = helm_bin + " version"
+    rc, out, err = module.run_command(helm_version_command)
+    if rc == 0:
+        m = re.match(r'version.BuildInfo{Version:"v([0-9\.]*)",', out)
+        if m:
+            return m.group(1)
+    return None
