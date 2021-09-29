@@ -169,5 +169,4 @@ def get_helm_version(module, helm_bin):
         m = re.match(r'version.BuildInfo{Version:"v([0-9\.]*)",', out)
         if m:
             return m.group(1)
-        return m.group(1)
     return None
