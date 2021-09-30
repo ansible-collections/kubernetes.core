@@ -44,14 +44,21 @@ def sorted_dict(unsorted_dict):
 
 def generate_hash(resource):
     # Get name from metadata
-    resource['name'] = resource.get('metadata', {}).get('name', '')
-    if resource['kind'] == 'ConfigMap':
-        marshalled = marshal(sorted_dict(resource), ['data', 'kind', 'name'])
+    metada = resource.get('metadata', {})
+    key = 'name'
+    resource['name'] = metada.get('name', '')
+    generate_name = metada.get('generateName', '')
+    if resource['name'] == '' and generate_name:
         del(resource['name'])
+        key = 'generateName'
+        resource['generateName'] = generate_name
+    if resource['kind'] == 'ConfigMap':
+        marshalled = marshal(sorted_dict(resource), ['data', 'kind', key])
+        del(resource[key])
         return encode(marshalled)
     if resource['kind'] == 'Secret':
-        marshalled = marshal(sorted_dict(resource), ['data', 'kind', 'name', 'type'])
-        del(resource['name'])
+        marshalled = marshal(sorted_dict(resource), ['data', 'kind', key, 'type'])
+        del(resource[key])
         return encode(marshalled)
     raise NotImplementedError
 

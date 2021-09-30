@@ -197,6 +197,14 @@
       tags:
         - always
 
+    - name: Include generate_name.yml
+      include_tasks:
+        file: tasks/generate_name.yml
+        apply:
+          tags: [ generate_name, k8s ]
+      tags:
+        - always
+
   roles:
     - role: helm
       tags:

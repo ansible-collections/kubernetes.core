@@ -580,8 +580,11 @@ class K8sAnsibleMixin(object):
         definition['kind'] = resource.kind
         definition['apiVersion'] = resource.group_version
         metadata = definition.get('metadata', {})
-        if self.name and not metadata.get('name'):
-            metadata['name'] = self.name
+        if not metadata.get('name') and not metadata.get('generateName'):
+            if self.name:
+                metadata['name'] = self.name
+            elif self.generate_name:
+                metadata['generateName'] = self.generate_name
         if resource.namespaced and self.namespace and not metadata.get('namespace'):
             metadata['namespace'] = self.namespace
         definition['metadata'] = metadata
@@ -595,6 +598,7 @@ class K8sAnsibleMixin(object):
         state = self.params.get('state', None)
         force = self.params.get('force', False)
         name = definition['metadata'].get('name')
+        generate_name = definition['metadata'].get('generateName')
         origin_name = definition['metadata'].get('name')
         namespace = definition['metadata'].get('namespace')
         existing = None
@@ -615,14 +619,28 @@ class K8sAnsibleMixin(object):
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
             if append_hash and definition['kind'] in ['ConfigMap', 'Secret']:
-                name = '%s-%s' % (name, generate_hash(definition))
-                definition['metadata']['name'] = name
-            params = dict(name=name)
+                if name:
+                    name = '%s-%s' % (name, generate_hash(definition))
+                    definition['metadata']['name'] = name
+                elif generate_name:
+                    definition['metadata']['generateName'] = '%s-%s' % (generate_name, generate_hash(definition))
+            params = {}
+            if name:
+                params['name'] = name
             if namespace:
                 params['namespace'] = namespace
             if label_selectors:
                 params['label_selector'] = ','.join(label_selectors)
-            existing = resource.get(**params)
+
+            if "name" in params or "label_selector" in params:
+                existing = resource.get(**params)
+            elif state == 'absent':
+                msg = "At least one of name|label_selectors is required to delete object."
+                if continue_on_error:
+                    result['error'] = dict(msg=msg)
+                    return result
+                else:
+                    self.fail_json(msg=msg)
         except (NotFoundError, MethodNotAllowedError):
             # Remove traceback so that it doesn't show up in later failures
             try:
@@ -791,6 +809,7 @@ class K8sAnsibleMixin(object):
                 success = True
                 result['result'] = k8s_obj
                 if wait and not self.check_mode:
+                    definition['metadata'].update({'name': k8s_obj['metadata']['name']})
                     success, result['result'], result['duration'] = self.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
                 result['changed'] = True
                 result['method'] = 'create'
