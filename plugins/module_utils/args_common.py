@@ -32,6 +32,8 @@ AUTH_ARG_SPEC = {
     "no_proxy": {"type": "str"},
     "proxy_headers": {"type": "dict", "options": AUTH_PROXY_HEADERS_SPEC},
     "persist_config": {"type": "bool"},
+    "impersonate_user": {},
+    "impersonate_groups": {"type": "list", "elements": "str"},
 }
 
 WAIT_ARG_SPEC = dict(

@@ -119,6 +119,19 @@ options:
     - Please note that the current version of the k8s python client library does not support setting this flag to True yet.
     - "The fix for this k8s python library is here: https://github.com/kubernetes-client/python-base/pull/169"
     type: bool
+  impersonate_user:
+    description:
+    - Username to impersonate for the operation.
+    - Can also be specified via K8S_AUTH_IMPERSONATE_USER environment.
+    type: str
+    version_added: 2.3.0
+  impersonate_groups:
+    description:
+    - Group(s) to impersonate for the operation.
+    - Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: 'Group1,Group2'
+    type: list
+    elements: str
+    version_added: 2.3.0
 notes:
   - "To avoid SSL certificate validation errors when C(validate_certs) is I(True), the full
     certificate chain for the API server must be provided via C(ca_cert) or in the

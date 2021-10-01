@@ -127,7 +127,7 @@ except ImportError as e:
     K8S_IMP_ERR = traceback.format_exc()
 
 
-def configuration_digest(configuration):
+def configuration_digest(configuration, **kwargs):
     m = hashlib.sha256()
     for k in AUTH_ARG_MAP:
         if not hasattr(configuration, k):
@@ -140,8 +140,30 @@ def configuration_digest(configuration):
                 m.update(content.encode())
         else:
             m.update(str(v).encode())
+    for k in kwargs:
+        content = "{0}: {1}".format(k, kwargs.get(k))
+        m.update(content.encode())
     digest = m.hexdigest()
     return digest
+
+
+class unique_string(str):
+    _low = None
+
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, other):
+        return self is other
+
+    def lower(self):
+        if self._low is None:
+            lower = str.lower(self)
+            if str.__eq__(lower, self):
+                self._low = self
+            else:
+                self._low = unique_string(lower)
+        return self._low
 
 
 def get_api_client(module=None, **kwargs):
@@ -219,9 +241,14 @@ def get_api_client(module=None, **kwargs):
                 "Failed to set no_proxy due to: %s",
             )
 
+    configuration = None
     if auth_set("username", "password", "host") or auth_set("api_key", "host"):
         # We have enough in the parameters to authenticate, no need to load incluster or kubeconfig
-        pass
+        arg_init = {}
+        # api_key will be set later in this function
+        for key in ("username", "password", "host"):
+            arg_init[key] = auth.get(key)
+        configuration = kubernetes.client.Configuration(**arg_init)
     elif auth_set("kubeconfig") or auth_set("context"):
         try:
             _load_config()
@@ -240,10 +267,11 @@ def get_api_client(module=None, **kwargs):
 
     # Override any values in the default configuration with Ansible parameters
     # As of kubernetes-client v12.0.0, get_default_copy() is required here
-    try:
-        configuration = kubernetes.client.Configuration().get_default_copy()
-    except AttributeError:
-        configuration = kubernetes.client.Configuration()
+    if not configuration:
+        try:
+            configuration = kubernetes.client.Configuration().get_default_copy()
+        except AttributeError:
+            configuration = kubernetes.client.Configuration()
 
     for key, value in iteritems(auth):
         if key in AUTH_ARG_MAP.keys() and value is not None:
@@ -257,14 +285,46 @@ def get_api_client(module=None, **kwargs):
             else:
                 setattr(configuration, key, value)
 
-    digest = configuration_digest(configuration)
+    api_client = kubernetes.client.ApiClient(configuration)
+    impersonate_map = {
+        "impersonate_user": "Impersonate-User",
+        "impersonate_groups": "Impersonate-Group",
+    }
+    api_digest = {}
+
+    headers = {}
+    for arg_name, header_name in impersonate_map.items():
+        value = None
+        if module and module.params.get(arg_name) is not None:
+            value = module.params.get(arg_name)
+        elif arg_name in kwargs and kwargs.get(arg_name) is not None:
+            value = kwargs.get(arg_name)
+        else:
+            value = os.getenv("K8S_AUTH_{0}".format(arg_name.upper()), None)
+            if value is not None:
+                if AUTH_ARG_SPEC[arg_name].get("type") == "list":
+                    value = [x for x in env_value.split(",") if x != ""]
+        if value:
+            if isinstance(value, list):
+                api_digest[header_name] = ",".join(sorted(value))
+                for v in value:
+                    api_client.set_default_header(
+                        header_name=unique_string(header_name), header_value=v
+                    )
+            else:
+                api_digest[header_name] = value
+                api_client.set_default_header(
+                    header_name=header_name, header_value=value
+                )
+
+    digest = configuration_digest(configuration, **api_digest)
     if digest in get_api_client._pool:
         client = get_api_client._pool[digest]
         return client
 
     try:
         client = k8sdynamicclient.K8SDynamicClient(
-            kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer
+            api_client, discoverer=LazyDiscoverer
         )
     except Exception as err:
         _raise_or_fail(err, "Failed to get client due to %s")
