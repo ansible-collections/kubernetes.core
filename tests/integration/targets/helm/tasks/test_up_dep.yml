@@ -100,7 +100,7 @@
         - test-chart
         - dep-up
 
-    - name: Test Helm dependency update block exist in the helm_template module and dependency_update true
+    - name: Test Helm dependency update true
       helm_template:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/dep-up"
@@ -124,22 +124,6 @@
           - stat_result.results[1].stat.exists
         success_msg: "subchart exist in the charts directory"
         fail_msg: "There is no Subchart pulled"
-
-    - name: Test Helm dependency update block not exist in the helm_template module and dependency_update true
-      helm_template:
-        binary_path: "{{ helm_binary }}"
-        chart_ref: "/tmp/test-chart"
-        chart_version: "{{ chart_source_version | default(omit) }}"
-        output_dir: "/tmp"
-        dependency_update: true
-      register: release
-      ignore_errors: true
-
-    - assert:
-        that:
-          - release.failed
-          - release.msg == "No subchart will be pulled for /tmp/test-chart. Please make sure to add dependencies block in Chart.yaml or requirements.yaml. For more information please visite https://helm.sh/docs/helm/helm_dependency/"
-        success_msg: "Failed when there is no dependencies block with dependency_update enabled"
 
     - name: Test Helm subchart not pulled when dependency_update false for helm_template
       helm_template:

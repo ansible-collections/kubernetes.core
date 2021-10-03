@@ -8,7 +8,7 @@ __metaclass__ = type
 
 import unittest
 
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import patch
 
 from ansible.module_utils import basic
 from ansible_collections.kubernetes.core.plugins.modules import helm_template
