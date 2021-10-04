@@ -198,6 +198,10 @@ def main():
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)
+    k8s_ansible_mixin.fail_json = module.fail_json
+    k8s_ansible_mixin.fail = module.fail_json
+    k8s_ansible_mixin.exit_json = module.exit_json
+    k8s_ansible_mixin.warn = module.warn
     execute_module(module, k8s_ansible_mixin)
 
 
