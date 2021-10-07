@@ -18,7 +18,7 @@ Version added: 2.0.0
 Synopsis
 --------
 - This module is used to apply RFC 6902 JSON patch operations only.
-- Use the :ref:`k8s <k8s_module>` module for strategic merge or JSON merge operations.
+- Use the :ref:`kubernetes.core.k8s <kubernetes.core.k8s_module>` module for strategic merge or JSON merge operations.
 - The jsonpatch library is required for check mode.
 
 
