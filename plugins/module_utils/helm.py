@@ -18,6 +18,7 @@ from ansible.module_utils.basic import missing_required_lib
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     YAML_IMP_ERR = traceback.format_exc()
@@ -28,11 +29,11 @@ except ImportError:
 def prepare_helm_environ_update(module):
     environ_update = {}
     file_to_cleam_up = None
-    kubeconfig_path = module.params.get('kubeconfig')
-    if module.params.get('context') is not None:
-        environ_update["HELM_KUBECONTEXT"] = module.params.get('context')
-    if module.params.get('release_namespace'):
-        environ_update["HELM_NAMESPACE"] = module.params.get('release_namespace')
+    kubeconfig_path = module.params.get("kubeconfig")
+    if module.params.get("context") is not None:
+        environ_update["HELM_KUBECONTEXT"] = module.params.get("context")
+    if module.params.get("release_namespace"):
+        environ_update["HELM_NAMESPACE"] = module.params.get("release_namespace")
     if module.params.get("api_key"):
         environ_update["HELM_KUBETOKEN"] = module.params["api_key"]
     if module.params.get("host"):
@@ -41,7 +42,8 @@ def prepare_helm_environ_update(module):
         kubeconfig_path = write_temp_kubeconfig(
             module.params["host"],
             validate_certs=module.params["validate_certs"],
-            ca_cert=module.params["ca_cert"])
+            ca_cert=module.params["ca_cert"],
+        )
         file_to_cleam_up = kubeconfig_path
     if kubeconfig_path is not None:
         environ_update["KUBECONFIG"] = kubeconfig_path
@@ -61,7 +63,9 @@ def run_helm(module, command, fails_on_error=True):
         rc, out, err = module.run_command(command, environ_update=environ_update)
     if fails_on_error and rc != 0:
         module.fail_json(
-            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(rc, out, err),
+            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
+                rc, out, err
+            ),
             stdout=out,
             stderr=err,
             command=command,
@@ -90,23 +94,11 @@ def write_temp_kubeconfig(server, validate_certs=True, ca_cert=None):
     content = {
         "apiVersion": "v1",
         "kind": "Config",
-        "clusters": [
-            {
-                "cluster": {
-                    "server": server,
-                },
-                "name": "generated-cluster"
-            }
-        ],
+        "clusters": [{"cluster": {"server": server}, "name": "generated-cluster"}],
         "contexts": [
-            {
-                "context": {
-                    "cluster": "generated-cluster"
-                },
-                "name": "generated-context"
-            }
+            {"context": {"cluster": "generated-cluster"}, "name": "generated-context"}
         ],
-        "current-context": "generated-context"
+        "current-context": "generated-context",
     }
 
     if not validate_certs:
@@ -115,7 +107,7 @@ def write_temp_kubeconfig(server, validate_certs=True, ca_cert=None):
         content["clusters"][0]["cluster"]["certificate-authority"] = ca_cert
 
     _fd, file_name = tempfile.mkstemp()
-    with os.fdopen(_fd, 'w') as fp:
+    with os.fdopen(_fd, "w") as fp:
         yaml.dump(content, fp)
     return file_name
 
@@ -128,7 +120,7 @@ def get_helm_plugin_list(module, helm_bin=None):
         return []
     helm_plugin_list = helm_bin + " list"
     rc, out, err = run_helm(module, helm_plugin_list)
-    if rc != 0 or (out == '' and err == ''):
+    if rc != 0 or (out == "" and err == ""):
         module.fail_json(
             msg="Failed to get Helm plugin info",
             command=helm_plugin_list,
@@ -150,11 +142,11 @@ def parse_helm_plugin_list(module, output=None):
     for line in output:
         if line.startswith("NAME"):
             continue
-        name, version, description = line.split('\t', 3)
+        name, version, description = line.split("\t", 3)
         name = name.strip()
         version = version.strip()
         description = description.strip()
-        if name == '':
+        if name == "":
             continue
         ret.append((name, version, description))
 

@@ -6,10 +6,11 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: test_tempfile
 
@@ -50,7 +51,7 @@ seealso:
 
 author:
   - Krzysztof Magosa (@krzysztof-magosa)
-'''
+"""
 
 EXAMPLES = """
 - name: create temporary build directory
@@ -71,13 +72,13 @@ EXAMPLES = """
   when: tempfile_1.path is defined
 """
 
-RETURN = '''
+RETURN = """
 path:
   description: Path to created file or directory
   returned: success
   type: str
   sample: "/tmp/ansible.bMlvdk"
-'''
+"""
 
 from os import close
 from tempfile import mkstemp, mkdtemp
@@ -90,26 +91,26 @@ from ansible.module_utils._text import to_native
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            state=dict(type='str', default='file', choices=['file', 'directory']),
-            path=dict(type='path'),
-            prefix=dict(type='str', default='ansible.'),
-            suffix=dict(type='str', default=''),
+            state=dict(type="str", default="file", choices=["file", "directory"]),
+            path=dict(type="path"),
+            prefix=dict(type="str", default="ansible."),
+            suffix=dict(type="str", default=""),
         ),
     )
 
     try:
-        if module.params['state'] == 'file':
+        if module.params["state"] == "file":
             handle, path = mkstemp(
-                prefix=module.params['prefix'],
-                suffix=module.params['suffix'],
-                dir=module.params['path'],
+                prefix=module.params["prefix"],
+                suffix=module.params["suffix"],
+                dir=module.params["path"],
             )
             close(handle)
-        elif module.params['state'] == 'directory':
+        elif module.params["state"] == "directory":
             path = mkdtemp(
-                prefix=module.params['prefix'],
-                suffix=module.params['suffix'],
-                dir=module.params['path'],
+                prefix=module.params["prefix"],
+                suffix=module.params["suffix"],
+                dir=module.params["path"],
             )
 
         module.exit_json(changed=True, path=path)
@@ -117,5 +118,5 @@ def main():
         module.fail_json(msg=to_native(e), exception=format_exc())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

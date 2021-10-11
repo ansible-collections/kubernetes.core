@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 
 module: k8s_scale
 
@@ -48,9 +48,9 @@ requirements:
     - "python >= 3.6"
     - "kubernetes >= 12.0.0"
     - "PyYAML >= 3.11"
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Scale deployment up, and extend timeout
   kubernetes.core.k8s_scale:
     api_version: v1
@@ -105,9 +105,9 @@ EXAMPLES = r'''
     label_selectors:
       - app=test
     continue_on_error: true
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 result:
   description:
   - If a change was made, will return the patched object, otherwise returns the existing object.
@@ -139,133 +139,166 @@ result:
        returned: when C(wait) is true
        type: int
        sample: 48
-'''
+"""
 
 import copy
 
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, RESOURCE_ARG_SPEC, NAME_ARG_SPEC)
+    AUTH_ARG_SPEC,
+    RESOURCE_ARG_SPEC,
+    NAME_ARG_SPEC,
+)
 
 
 SCALE_ARG_SPEC = {
-    'replicas': {'type': 'int', 'required': True},
-    'current_replicas': {'type': 'int'},
-    'resource_version': {},
-    'wait': {'type': 'bool', 'default': True},
-    'wait_timeout': {'type': 'int', 'default': 20},
-    'wait_sleep': {'type': 'int', 'default': 5},
+    "replicas": {"type": "int", "required": True},
+    "current_replicas": {"type": "int"},
+    "resource_version": {},
+    "wait": {"type": "bool", "default": True},
+    "wait_timeout": {"type": "int", "default": 20},
+    "wait_sleep": {"type": "int", "default": 5},
 }
 
 
-def execute_module(module, k8s_ansible_mixin,):
+def execute_module(
+    module, k8s_ansible_mixin,
+):
     k8s_ansible_mixin.set_resource_definitions(module)
 
     definition = k8s_ansible_mixin.resource_definitions[0]
 
-    name = definition['metadata']['name']
-    namespace = definition['metadata'].get('namespace')
-    api_version = definition['apiVersion']
-    kind = definition['kind']
-    current_replicas = module.params.get('current_replicas')
-    replicas = module.params.get('replicas')
-    resource_version = module.params.get('resource_version')
+    name = definition["metadata"]["name"]
+    namespace = definition["metadata"].get("namespace")
+    api_version = definition["apiVersion"]
+    kind = definition["kind"]
+    current_replicas = module.params.get("current_replicas")
+    replicas = module.params.get("replicas")
+    resource_version = module.params.get("resource_version")
 
-    label_selectors = module.params.get('label_selectors')
+    label_selectors = module.params.get("label_selectors")
     if not label_selectors:
         label_selectors = []
-    continue_on_error = module.params.get('continue_on_error')
+    continue_on_error = module.params.get("continue_on_error")
 
-    wait = module.params.get('wait')
-    wait_time = module.params.get('wait_timeout')
-    wait_sleep = module.params.get('wait_sleep')
+    wait = module.params.get("wait")
+    wait_time = module.params.get("wait_timeout")
+    wait_sleep = module.params.get("wait_sleep")
     existing = None
     existing_count = None
     return_attributes = dict(result=dict())
     if module._diff:
-        return_attributes['diff'] = dict()
+        return_attributes["diff"] = dict()
     if wait:
-        return_attributes['duration'] = 0
+        return_attributes["duration"] = 0
 
     resource = k8s_ansible_mixin.find_resource(kind, api_version, fail=True)
 
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import NotFoundError
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+        NotFoundError,
+    )
 
     multiple_scale = False
     try:
-        existing = resource.get(name=name, namespace=namespace, label_selector=','.join(label_selectors))
-        if existing.kind.endswith('List'):
+        existing = resource.get(
+            name=name, namespace=namespace, label_selector=",".join(label_selectors)
+        )
+        if existing.kind.endswith("List"):
             existing_items = existing.items
             multiple_scale = len(existing_items) > 1
         else:
             existing_items = [existing]
     except NotFoundError as exc:
-        module.fail_json(msg='Failed to retrieve requested object: {0}'.format(exc),
-                         error=exc.value.get('status'))
+        module.fail_json(
+            msg="Failed to retrieve requested object: {0}".format(exc),
+            error=exc.value.get("status"),
+        )
 
     if multiple_scale:
         # when scaling multiple resource, the 'result' is changed to 'results' and is a list
-        return_attributes = {'results': []}
+        return_attributes = {"results": []}
     changed = False
 
     def _continue_or_fail(error):
         if multiple_scale and continue_on_error:
             if "errors" not in return_attributes:
-                return_attributes['errors'] = []
-            return_attributes['errors'].append({'error': error, 'failed': True})
+                return_attributes["errors"] = []
+            return_attributes["errors"].append({"error": error, "failed": True})
         else:
             module.fail_json(msg=error, **return_attributes)
 
     def _continue_or_exit(warn):
         if multiple_scale:
-            return_attributes['results'].append({'warning': warn, 'changed': False})
+            return_attributes["results"].append({"warning": warn, "changed": False})
         else:
             module.exit_json(warning=warn, **return_attributes)
 
     for existing in existing_items:
-        if module.params['kind'] == 'job':
+        if module.params["kind"] == "job":
             existing_count = existing.spec.parallelism
-        elif hasattr(existing.spec, 'replicas'):
+        elif hasattr(existing.spec, "replicas"):
             existing_count = existing.spec.replicas
 
         if existing_count is None:
-            error = 'Failed to retrieve the available count for object kind={0} name={1} namespace={2}.'.format(
-                    existing.kind, existing.metadata.name, existing.metadata.namespace)
+            error = "Failed to retrieve the available count for object kind={0} name={1} namespace={2}.".format(
+                existing.kind, existing.metadata.name, existing.metadata.namespace
+            )
             _continue_or_fail(error)
             continue
 
         if resource_version and resource_version != existing.metadata.resourceVersion:
-            warn = 'expected resource version {0} does not match with actual {1} for object kind={2} name={3} namespace={4}.'.format(
-                   resource_version, existing.metadata.resourceVersion, existing.kind, existing.metadata.name, existing.metadata.namespace)
+            warn = "expected resource version {0} does not match with actual {1} for object kind={2} name={3} namespace={4}.".format(
+                resource_version,
+                existing.metadata.resourceVersion,
+                existing.kind,
+                existing.metadata.name,
+                existing.metadata.namespace,
+            )
             _continue_or_exit(warn)
             continue
 
         if current_replicas is not None and existing_count != current_replicas:
-            warn = 'current replicas {0} does not match with actual {1} for object kind={2} name={3} namespace={4}.'.format(
-                   current_replicas, existing_count, existing.kind, existing.metadata.name, existing.metadata.namespace)
+            warn = "current replicas {0} does not match with actual {1} for object kind={2} name={3} namespace={4}.".format(
+                current_replicas,
+                existing_count,
+                existing.kind,
+                existing.metadata.name,
+                existing.metadata.namespace,
+            )
             _continue_or_exit(warn)
             continue
 
         if existing_count != replicas:
             if not module.check_mode:
-                if module.params['kind'] == 'job':
+                if module.params["kind"] == "job":
                     existing.spec.parallelism = replicas
                     result = resource.patch(existing.to_dict()).to_dict()
                 else:
-                    result = scale(module, k8s_ansible_mixin, resource, existing, replicas, wait, wait_time, wait_sleep)
-                    changed = changed or result['changed']
+                    result = scale(
+                        module,
+                        k8s_ansible_mixin,
+                        resource,
+                        existing,
+                        replicas,
+                        wait,
+                        wait_time,
+                        wait_sleep,
+                    )
+                    changed = changed or result["changed"]
         else:
             name = existing.metadata.name
             namespace = existing.metadata.namespace
             existing = resource.get(name=name, namespace=namespace)
-            result = {'changed': False, 'result': existing.to_dict()}
+            result = {"changed": False, "result": existing.to_dict()}
             if module._diff:
-                result['diff'] = {}
+                result["diff"] = {}
             if wait:
-                result['duration'] = 0
+                result["duration"] = 0
         # append result to the return attribute
         if multiple_scale:
-            return_attributes['results'].append(result)
+            return_attributes["results"].append(result)
         else:
             module.exit_json(**result)
 
@@ -277,22 +310,35 @@ def argspec():
     args.update(RESOURCE_ARG_SPEC)
     args.update(NAME_ARG_SPEC)
     args.update(AUTH_ARG_SPEC)
-    args.update({'label_selectors': {'type': 'list', 'elements': 'str', 'default': []}})
-    args.update(({'continue_on_error': {'type': 'bool', 'default': False}}))
+    args.update({"label_selectors": {"type": "list", "elements": "str", "default": []}})
+    args.update(({"continue_on_error": {"type": "bool", "default": False}}))
     return args
 
 
-def scale(module, k8s_ansible_mixin, resource, existing_object, replicas, wait, wait_time, wait_sleep):
+def scale(
+    module,
+    k8s_ansible_mixin,
+    resource,
+    existing_object,
+    replicas,
+    wait,
+    wait_time,
+    wait_sleep,
+):
     name = existing_object.metadata.name
     namespace = existing_object.metadata.namespace
     kind = existing_object.kind
 
-    if not hasattr(resource, 'scale'):
+    if not hasattr(resource, "scale"):
         module.fail_json(
             msg="Cannot perform scale on resource of kind {0}".format(resource.kind)
         )
 
-    scale_obj = {'kind': kind, 'metadata': {'name': name, 'namespace': namespace}, 'spec': {'replicas': replicas}}
+    scale_obj = {
+        "kind": kind,
+        "metadata": {"name": name, "namespace": namespace},
+        "spec": {"replicas": replicas},
+    }
 
     existing = resource.get(name=name, namespace=namespace)
 
@@ -304,13 +350,15 @@ def scale(module, k8s_ansible_mixin, resource, existing_object, replicas, wait, 
     k8s_obj = resource.get(name=name, namespace=namespace).to_dict()
     match, diffs = k8s_ansible_mixin.diff_objects(existing.to_dict(), k8s_obj)
     result = dict()
-    result['result'] = k8s_obj
-    result['changed'] = not match
+    result["result"] = k8s_obj
+    result["changed"] = not match
     if module._diff:
-        result['diff'] = diffs
+        result["diff"] = diffs
 
     if wait:
-        success, result['result'], result['duration'] = k8s_ansible_mixin.wait(resource, scale_obj, wait_sleep, wait_time)
+        success, result["result"], result["duration"] = k8s_ansible_mixin.wait(
+            resource, scale_obj, wait_sleep, wait_time
+        )
         if not success:
             module.fail_json(msg="Resource scaling timed out", **result)
     return result
@@ -318,15 +366,22 @@ def scale(module, k8s_ansible_mixin, resource, existing_object, replicas, wait, 
 
 def main():
     mutually_exclusive = [
-        ('resource_definition', 'src'),
+        ("resource_definition", "src"),
     ]
-    module = AnsibleModule(argument_spec=argspec(), mutually_exclusive=mutually_exclusive, supports_check_mode=True)
+    module = AnsibleModule(
+        argument_spec=argspec(),
+        mutually_exclusive=mutually_exclusive,
+        supports_check_mode=True,
+    )
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin, get_api_client)
+        K8sAnsibleMixin,
+        get_api_client,
+    )
+
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)
     execute_module(module, k8s_ansible_mixin)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

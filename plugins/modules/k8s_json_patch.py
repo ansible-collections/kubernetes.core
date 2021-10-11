@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 module: k8s_json_patch
 
 short_description: Apply JSON patch operations to existing objects
@@ -66,9 +66,9 @@ requirements:
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Apply multiple patch operations to an existing Pod
   kubernetes.core.k8s_json_patch:
     kind: Pod
@@ -81,9 +81,9 @@ EXAMPLES = r'''
       - op: replace
         patch: /spec/containers/0/image
         value: nginx
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 result:
   description: The modified object.
   returned: success
@@ -122,17 +122,24 @@ error:
       "msg": "Failed to import the required Python library (jsonpatch) ...",
       "exception": "Traceback (most recent call last): ..."
     }
-'''
+"""
 
 import copy
 import traceback
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils._text import to_native
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import AUTH_ARG_SPEC, WAIT_ARG_SPEC
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    AUTH_ARG_SPEC,
+    WAIT_ARG_SPEC,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-    get_api_client, K8sAnsibleMixin)
+    get_api_client,
+    K8sAnsibleMixin,
+)
 
 try:
     from kubernetes.dynamic.exceptions import DynamicApiError
@@ -143,6 +150,7 @@ except ImportError:
 JSON_PATCH_IMPORT_ERR = None
 try:
     import jsonpatch
+
     HAS_JSON_PATCH = True
 except ImportError:
     HAS_JSON_PATCH = False
@@ -150,33 +158,18 @@ except ImportError:
 
 
 JSON_PATCH_ARGS = {
-    'api_version': {
-        'default': 'v1',
-        'aliases': ['api', 'version'],
-    },
-    "kind": {
-        "type": "str",
-        "required": True,
-    },
-    "namespace": {
-        "type": "str",
-    },
-    "name": {
-        "type": "str",
-        "required": True,
-    },
-    "patch": {
-        "type": "list",
-        "required": True,
-        "elements": "dict",
-    },
+    "api_version": {"default": "v1", "aliases": ["api", "version"]},
+    "kind": {"type": "str", "required": True},
+    "namespace": {"type": "str"},
+    "name": {"type": "str", "required": True},
+    "patch": {"type": "list", "required": True, "elements": "dict"},
 }
 
 
 def json_patch(existing, patch):
     if not HAS_JSON_PATCH:
         error = {
-            "msg": missing_required_lib('jsonpatch'),
+            "msg": missing_required_lib("jsonpatch"),
             "exception": JSON_PATCH_IMPORT_ERR,
         }
         return None, error
@@ -185,16 +178,10 @@ def json_patch(existing, patch):
         patched = patch.apply(existing)
         return patched, None
     except jsonpatch.InvalidJsonPatch as e:
-        error = {
-            "msg": "Invalid JSON patch",
-            "exception": e
-        }
+        error = {"msg": "Invalid JSON patch", "exception": e}
         return None, error
     except jsonpatch.JsonPatchConflict as e:
-        error = {
-            "msg": "Patch could not be applied due to a conflict",
-            "exception": e
-        }
+        error = {"msg": "Patch could not be applied due to a conflict", "exception": e}
         return None, error
 
 
@@ -209,15 +196,14 @@ def execute_module(k8s_module, module):
     wait_sleep = module.params.get("wait_sleep")
     wait_timeout = module.params.get("wait_timeout")
     wait_condition = None
-    if module.params.get("wait_condition") and module.params.get("wait_condition").get("type"):
-        wait_condition = module.params['wait_condition']
+    if module.params.get("wait_condition") and module.params.get("wait_condition").get(
+        "type"
+    ):
+        wait_condition = module.params["wait_condition"]
     # definition is needed for wait
     definition = {
         "kind": kind,
-        "metadata": {
-            "name": name,
-            "namespace": namespace,
-        }
+        "metadata": {"name": name, "namespace": namespace},
     }
 
     def build_error_msg(kind, name, msg):
@@ -228,11 +214,18 @@ def execute_module(k8s_module, module):
     try:
         existing = resource.get(name=name, namespace=namespace)
     except DynamicApiError as exc:
-        msg = 'Failed to retrieve requested object: {0}'.format(exc.body)
-        module.fail_json(msg=build_error_msg(kind, name, msg), error=exc.status, status=exc.status, reason=exc.reason)
+        msg = "Failed to retrieve requested object: {0}".format(exc.body)
+        module.fail_json(
+            msg=build_error_msg(kind, name, msg),
+            error=exc.status,
+            status=exc.status,
+            reason=exc.reason,
+        )
     except ValueError as exc:
-        msg = 'Failed to retrieve requested object: {0}'.format(to_native(exc))
-        module.fail_json(msg=build_error_msg(kind, name, msg), error='', status='', reason='')
+        msg = "Failed to retrieve requested object: {0}".format(to_native(exc))
+        module.fail_json(
+            msg=build_error_msg(kind, name, msg), error="", status="", reason=""
+        )
 
     if module.check_mode and not k8s_module.supports_dry_run:
         obj, error = json_patch(existing.to_dict(), patch)
@@ -243,18 +236,28 @@ def execute_module(k8s_module, module):
         if module.check_mode:
             params["dry_run"] = "All"
         try:
-            obj = resource.patch(patch, name=name, namespace=namespace, content_type="application/json-patch+json", **params).to_dict()
+            obj = resource.patch(
+                patch,
+                name=name,
+                namespace=namespace,
+                content_type="application/json-patch+json",
+                **params
+            ).to_dict()
         except DynamicApiError as exc:
             msg = "Failed to patch existing object: {0}".format(exc.body)
-            module.fail_json(msg=msg, error=exc.status, status=exc.status, reason=exc.reason)
+            module.fail_json(
+                msg=msg, error=exc.status, status=exc.status, reason=exc.reason
+            )
         except Exception as exc:
             msg = "Failed to patch existing object: {0}".format(exc)
-            module.fail_json(msg=msg, error=to_native(exc), status='', reason='')
+            module.fail_json(msg=msg, error=to_native(exc), status="", reason="")
 
     success = True
     result = {"result": obj}
     if wait and not module.check_mode:
-        success, result['result'], result['duration'] = k8s_module.wait(resource, definition, wait_sleep, wait_timeout, condition=wait_condition)
+        success, result["result"], result["duration"] = k8s_module.wait(
+            resource, definition, wait_sleep, wait_timeout, condition=wait_condition
+        )
     match, diffs = k8s_module.diff_objects(existing.to_dict(), obj)
     result["changed"] = not match
     if module._diff:

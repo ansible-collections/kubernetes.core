@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 
 module: helm_template
 
@@ -79,9 +79,9 @@ options:
       - Run C(helm repo update) before the operation. Can be run as part of the template generation or as a separate step.
     default: false
     type: bool
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Render templates to specified directory
   kubernetes.core.helm_template:
     chart_ref: stable/prometheus
@@ -96,9 +96,9 @@ EXAMPLES = r'''
   copy:
     dest: myfile.yaml
     content: "{{ result.stdout }}"
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 stdout:
   type: str
   description: Full C(helm) command stdout. If no I(output_dir) has been provided this will contain the rendered templates as concatenated yaml documents.
@@ -114,13 +114,14 @@ command:
   description: Full C(helm) command run by this module, in case you want to re-run the command outside the module or debug a problem.
   returned: always
   sample: helm template --output-dir mychart nginx-stable/nginx-ingress
-'''
+"""
 
 import tempfile
 import traceback
 
 try:
     import yaml
+
     IMP_YAML = True
 except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
@@ -130,8 +131,16 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
-def template(cmd, chart_ref, chart_repo_url=None, chart_version=None, output_dir=None,
-             release_values=None, values_files=None, include_crds=False):
+def template(
+    cmd,
+    chart_ref,
+    chart_repo_url=None,
+    chart_version=None,
+    output_dir=None,
+    release_values=None,
+    values_files=None,
+    include_crds=False,
+):
     cmd += " template " + chart_ref
 
     if chart_repo_url:
@@ -144,8 +153,8 @@ def template(cmd, chart_ref, chart_repo_url=None, chart_version=None, output_dir
         cmd += " --output-dir=" + output_dir
 
     if release_values:
-        fd, path = tempfile.mkstemp(suffix='.yml')
-        with open(path, 'w') as yaml_file:
+        fd, path = tempfile.mkstemp(suffix=".yml")
+        with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         cmd += " -f=" + path
 
@@ -162,43 +171,49 @@ def template(cmd, chart_ref, chart_repo_url=None, chart_version=None, output_dir
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            binary_path=dict(type='path'),
-            chart_ref=dict(type='path', required=True),
-            chart_repo_url=dict(type='str'),
-            chart_version=dict(type='str'),
-            include_crds=dict(type='bool', default=False),
-            output_dir=dict(type='path'),
-            release_values=dict(type='dict', default={}, aliases=['values']),
-            values_files=dict(type='list', default=[], elements='str'),
-            update_repo_cache=dict(type='bool', default=False)
+            binary_path=dict(type="path"),
+            chart_ref=dict(type="path", required=True),
+            chart_repo_url=dict(type="str"),
+            chart_version=dict(type="str"),
+            include_crds=dict(type="bool", default=False),
+            output_dir=dict(type="path"),
+            release_values=dict(type="dict", default={}, aliases=["values"]),
+            values_files=dict(type="list", default=[], elements="str"),
+            update_repo_cache=dict(type="bool", default=False),
         ),
-        supports_check_mode=True
+        supports_check_mode=True,
     )
 
     check_mode = module.check_mode
-    bin_path = module.params.get('binary_path')
-    chart_ref = module.params.get('chart_ref')
-    chart_repo_url = module.params.get('chart_repo_url')
-    chart_version = module.params.get('chart_version')
-    include_crds = module.params.get('include_crds')
-    output_dir = module.params.get('output_dir')
-    release_values = module.params.get('release_values')
-    values_files = module.params.get('values_files')
-    update_repo_cache = module.params.get('update_repo_cache')
+    bin_path = module.params.get("binary_path")
+    chart_ref = module.params.get("chart_ref")
+    chart_repo_url = module.params.get("chart_repo_url")
+    chart_version = module.params.get("chart_version")
+    include_crds = module.params.get("include_crds")
+    output_dir = module.params.get("output_dir")
+    release_values = module.params.get("release_values")
+    values_files = module.params.get("values_files")
+    update_repo_cache = module.params.get("update_repo_cache")
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
-    helm_cmd = bin_path or module.get_bin_path('helm', required=True)
+    helm_cmd = bin_path or module.get_bin_path("helm", required=True)
 
     if update_repo_cache:
         update_cmd = helm_cmd + " repo update"
         run_helm(module, update_cmd)
 
-    tmpl_cmd = template(helm_cmd, chart_ref, chart_repo_url=chart_repo_url,
-                        chart_version=chart_version, output_dir=output_dir,
-                        release_values=release_values, values_files=values_files,
-                        include_crds=include_crds)
+    tmpl_cmd = template(
+        helm_cmd,
+        chart_ref,
+        chart_repo_url=chart_repo_url,
+        chart_version=chart_version,
+        output_dir=output_dir,
+        release_values=release_values,
+        values_files=values_files,
+        include_crds=include_crds,
+    )
 
     if not check_mode:
         rc, out, err = run_helm(module, tmpl_cmd)
@@ -207,14 +222,9 @@ def main():
         rc = 0
 
     module.exit_json(
-        failed=False,
-        changed=True,
-        command=tmpl_cmd,
-        stdout=out,
-        stderr=err,
-        rc=rc
+        failed=False, changed=True, command=tmpl_cmd, stdout=out, stderr=err, rc=rc
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

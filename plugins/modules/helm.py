@@ -4,10 +4,11 @@
 # Copyright: Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: helm
 
@@ -159,9 +160,9 @@ options:
     version_added: "2.2.0"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Deploy latest version of Prometheus chart inside monitoring namespace (and create it)
   kubernetes.core.helm:
     name: test
@@ -248,7 +249,7 @@ EXAMPLES = r'''
         enabled: True
       logging:
         enabled: True
-'''
+"""
 
 RETURN = r"""
 status:
@@ -311,6 +312,7 @@ from distutils.version import LooseVersion
 
 try:
     import yaml
+
     IMP_YAML = True
 except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
@@ -333,7 +335,7 @@ def get_release(state, release_name):
 
     if state is not None:
         for release in state:
-            if release['name'] == release_name:
+            if release["name"] == release_name:
                 return release
     return None
 
@@ -352,7 +354,7 @@ def get_release_status(module, command, release_name):
     if release is None:  # not install
         return None
 
-    release['values'] = get_values(module, command, release_name)
+    release["values"] = get_values(module, command, release_name)
 
     return release
 
@@ -376,9 +378,23 @@ def fetch_chart_info(module, command, chart_ref):
     return yaml.safe_load(out)
 
 
-def deploy(command, release_name, release_values, chart_name, wait,
-           wait_timeout, disable_hook, force, values_files, history_max, atomic=False,
-           create_namespace=False, replace=False, skip_crds=False, timeout=None):
+def deploy(
+    command,
+    release_name,
+    release_values,
+    chart_name,
+    wait,
+    wait_timeout,
+    disable_hook,
+    force,
+    values_files,
+    history_max,
+    atomic=False,
+    create_namespace=False,
+    replace=False,
+    skip_crds=False,
+    timeout=None,
+):
     """
     Install/upgrade/rollback release chart
     """
@@ -419,8 +435,8 @@ def deploy(command, release_name, release_values, chart_name, wait,
             deploy_command += " --values=" + value_file
 
     if release_values != {}:
-        fd, path = tempfile.mkstemp(suffix='.yml')
-        with open(path, 'w') as yaml_file:
+        fd, path = tempfile.mkstemp(suffix=".yml")
+        with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         deploy_command += " -f=" + path
 
@@ -434,8 +450,7 @@ def deploy(command, release_name, release_values, chart_name, wait,
     return deploy_command
 
 
-def delete(command, release_name, purge, disable_hook,
-           wait, wait_timeout):
+def delete(command, release_name, purge, disable_hook, wait, wait_timeout):
     """
     Delete release chart
     """
@@ -462,7 +477,7 @@ def delete(command, release_name, purge, disable_hook,
 def load_values_files(values_files):
     values = {}
     for values_file in values_files or []:
-        with open(values_file, 'r') as fd:
+        with open(values_file, "r") as fd:
             content = yaml.safe_load(fd)
             if not isinstance(content, dict):
                 continue
@@ -489,8 +504,16 @@ def has_plugin(command, plugin):
     return False
 
 
-def helmdiff_check(module, helm_cmd, release_name, chart_ref, release_values,
-                   values_files=None, chart_version=None, replace=False):
+def helmdiff_check(
+    module,
+    helm_cmd,
+    release_name,
+    chart_ref,
+    release_values,
+    values_files=None,
+    chart_version=None,
+    replace=False,
+):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
     """
@@ -504,8 +527,8 @@ def helmdiff_check(module, helm_cmd, release_name, chart_ref, release_values,
         cmd += " " + "--reset-values"
 
     if release_values != {}:
-        fd, path = tempfile.mkstemp(suffix='.yml')
-        with open(path, 'w') as yaml_file:
+        fd, path = tempfile.mkstemp(suffix=".yml")
+        with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         cmd += " -f=" + path
 
@@ -522,60 +545,83 @@ def default_check(release_status, chart_info, values=None, values_files=None):
     Use default check to determine if release would change by upgrading a chart.
     """
     # the 'appVersion' specification is optional in a chart
-    chart_app_version = chart_info.get('appVersion', None)
-    released_app_version = release_status.get('app_version', None)
+    chart_app_version = chart_info.get("appVersion", None)
+    released_app_version = release_status.get("app_version", None)
 
     # when deployed without an 'appVersion' chart value the 'helm list' command will return the entry `app_version: ""`
-    appversion_is_same = (chart_app_version == released_app_version) or (chart_app_version is None and released_app_version == "")
+    appversion_is_same = (chart_app_version == released_app_version) or (
+        chart_app_version is None and released_app_version == ""
+    )
 
     if values_files:
-        values_match = release_status['values'] == load_values_files(values_files)
+        values_match = release_status["values"] == load_values_files(values_files)
     else:
-        values_match = release_status['values'] == values
-    return not values_match \
-        or (chart_info['name'] + '-' + chart_info['version']) != release_status["chart"] \
+        values_match = release_status["values"] == values
+    return (
+        not values_match
+        or (chart_info["name"] + "-" + chart_info["version"]) != release_status["chart"]
         or not appversion_is_same
+    )
 
 
 def main():
     global module
     module = AnsibleModule(
         argument_spec=dict(
-            binary_path=dict(type='path'),
-            chart_ref=dict(type='path'),
-            chart_repo_url=dict(type='str'),
-            chart_version=dict(type='str'),
-            release_name=dict(type='str', required=True, aliases=['name']),
-            release_namespace=dict(type='str', required=True, aliases=['namespace']),
-            release_state=dict(default='present', choices=['present', 'absent'], aliases=['state']),
-            release_values=dict(type='dict', default={}, aliases=['values']),
-            values_files=dict(type='list', default=[], elements='str'),
-            update_repo_cache=dict(type='bool', default=False),
-
+            binary_path=dict(type="path"),
+            chart_ref=dict(type="path"),
+            chart_repo_url=dict(type="str"),
+            chart_version=dict(type="str"),
+            release_name=dict(type="str", required=True, aliases=["name"]),
+            release_namespace=dict(type="str", required=True, aliases=["namespace"]),
+            release_state=dict(
+                default="present", choices=["present", "absent"], aliases=["state"]
+            ),
+            release_values=dict(type="dict", default={}, aliases=["values"]),
+            values_files=dict(type="list", default=[], elements="str"),
+            update_repo_cache=dict(type="bool", default=False),
             # Helm options
-            disable_hook=dict(type='bool', default=False),
-            force=dict(type='bool', default=False),
-            context=dict(type='str', aliases=['kube_context'], fallback=(env_fallback, ['K8S_AUTH_CONTEXT'])),
-            kubeconfig=dict(type='path', aliases=['kubeconfig_path'], fallback=(env_fallback, ['K8S_AUTH_KUBECONFIG'])),
-            purge=dict(type='bool', default=True),
-            wait=dict(type='bool', default=False),
-            wait_timeout=dict(type='str'),
-            timeout=dict(type='str'),
-            atomic=dict(type='bool', default=False),
-            create_namespace=dict(type='bool', default=False),
-            replace=dict(type='bool', default=False),
-            skip_crds=dict(type='bool', default=False),
-            history_max=dict(type='int'),
-
+            disable_hook=dict(type="bool", default=False),
+            force=dict(type="bool", default=False),
+            context=dict(
+                type="str",
+                aliases=["kube_context"],
+                fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
+            ),
+            kubeconfig=dict(
+                type="path",
+                aliases=["kubeconfig_path"],
+                fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
+            ),
+            purge=dict(type="bool", default=True),
+            wait=dict(type="bool", default=False),
+            wait_timeout=dict(type="str"),
+            timeout=dict(type="str"),
+            atomic=dict(type="bool", default=False),
+            create_namespace=dict(type="bool", default=False),
+            replace=dict(type="bool", default=False),
+            skip_crds=dict(type="bool", default=False),
+            history_max=dict(type="int"),
             # Generic auth key
-            host=dict(type='str', fallback=(env_fallback, ['K8S_AUTH_HOST'])),
-            ca_cert=dict(type='path', aliases=['ssl_ca_cert'], fallback=(env_fallback, ['K8S_AUTH_SSL_CA_CERT'])),
-            validate_certs=dict(type='bool', default=True, aliases=['verify_ssl'], fallback=(env_fallback, ['K8S_AUTH_VERIFY_SSL'])),
-            api_key=dict(type='str', no_log=True, fallback=(env_fallback, ['K8S_AUTH_API_KEY']))
+            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
+            ca_cert=dict(
+                type="path",
+                aliases=["ssl_ca_cert"],
+                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
+            ),
+            validate_certs=dict(
+                type="bool",
+                default=True,
+                aliases=["verify_ssl"],
+                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
+            ),
+            api_key=dict(
+                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
+            ),
         ),
         required_if=[
-            ('release_state', 'present', ['release_name', 'chart_ref']),
-            ('release_state', 'absent', ['release_name'])
+            ("release_state", "present", ["release_name", "chart_ref"]),
+            ("release_state", "absent", ["release_name"]),
         ],
         mutually_exclusive=[
             ("context", "ca_cert"),
@@ -591,33 +637,33 @@ def main():
 
     changed = False
 
-    bin_path = module.params.get('binary_path')
-    chart_ref = module.params.get('chart_ref')
-    chart_repo_url = module.params.get('chart_repo_url')
-    chart_version = module.params.get('chart_version')
-    release_name = module.params.get('release_name')
-    release_state = module.params.get('release_state')
-    release_values = module.params.get('release_values')
-    values_files = module.params.get('values_files')
-    update_repo_cache = module.params.get('update_repo_cache')
+    bin_path = module.params.get("binary_path")
+    chart_ref = module.params.get("chart_ref")
+    chart_repo_url = module.params.get("chart_repo_url")
+    chart_version = module.params.get("chart_version")
+    release_name = module.params.get("release_name")
+    release_state = module.params.get("release_state")
+    release_values = module.params.get("release_values")
+    values_files = module.params.get("values_files")
+    update_repo_cache = module.params.get("update_repo_cache")
 
     # Helm options
-    disable_hook = module.params.get('disable_hook')
-    force = module.params.get('force')
-    purge = module.params.get('purge')
-    wait = module.params.get('wait')
-    wait_timeout = module.params.get('wait_timeout')
-    atomic = module.params.get('atomic')
-    create_namespace = module.params.get('create_namespace')
-    replace = module.params.get('replace')
-    skip_crds = module.params.get('skip_crds')
-    history_max = module.params.get('history_max')
-    timeout = module.params.get('timeout')
+    disable_hook = module.params.get("disable_hook")
+    force = module.params.get("force")
+    purge = module.params.get("purge")
+    wait = module.params.get("wait")
+    wait_timeout = module.params.get("wait_timeout")
+    atomic = module.params.get("atomic")
+    create_namespace = module.params.get("create_namespace")
+    replace = module.params.get("replace")
+    skip_crds = module.params.get("skip_crds")
+    history_max = module.params.get("history_max")
+    timeout = module.params.get("timeout")
 
     if bin_path is not None:
         helm_cmd_common = bin_path
     else:
-        helm_cmd_common = module.get_bin_path('helm', required=True)
+        helm_cmd_common = module.get_bin_path("helm", required=True)
 
     if update_repo_cache:
         run_repo_update(module, helm_cmd_common)
@@ -635,11 +681,15 @@ def main():
         if wait:
             helm_version = get_helm_version(module, helm_cmd_common)
             if LooseVersion(helm_version) < LooseVersion("3.7.0"):
-                opt_result['warnings'] = []
-                opt_result['warnings'].append("helm uninstall support option --wait for helm release >= 3.7.0")
+                opt_result["warnings"] = []
+                opt_result["warnings"].append(
+                    "helm uninstall support option --wait for helm release >= 3.7.0"
+                )
                 wait = False
 
-        helm_cmd = delete(helm_cmd, release_name, purge, disable_hook, wait, wait_timeout)
+        helm_cmd = delete(
+            helm_cmd, release_name, purge, disable_hook, wait, wait_timeout
+        )
         changed = True
     elif release_state == "present":
 
@@ -653,54 +703,87 @@ def main():
         chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
 
         if release_status is None:  # Not installed
-            helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
-                              disable_hook, False, values_files=values_files, atomic=atomic,
-                              create_namespace=create_namespace, replace=replace,
-                              skip_crds=skip_crds, history_max=history_max, timeout=timeout)
+            helm_cmd = deploy(
+                helm_cmd,
+                release_name,
+                release_values,
+                chart_ref,
+                wait,
+                wait_timeout,
+                disable_hook,
+                False,
+                values_files=values_files,
+                atomic=atomic,
+                create_namespace=create_namespace,
+                replace=replace,
+                skip_crds=skip_crds,
+                history_max=history_max,
+                timeout=timeout,
+            )
             changed = True
 
         else:
 
             if has_plugin(helm_cmd_common, "diff") and not chart_repo_url:
-                would_change = helmdiff_check(module, helm_cmd_common, release_name, chart_ref,
-                                              release_values, values_files, chart_version, replace)
+                would_change = helmdiff_check(
+                    module,
+                    helm_cmd_common,
+                    release_name,
+                    chart_ref,
+                    release_values,
+                    values_files,
+                    chart_version,
+                    replace,
+                )
             else:
-                module.warn("The default idempotency check can fail to report changes in certain cases. "
-                            "Install helm diff for better results.")
-                would_change = default_check(release_status, chart_info, release_values, values_files)
+                module.warn(
+                    "The default idempotency check can fail to report changes in certain cases. "
+                    "Install helm diff for better results."
+                )
+                would_change = default_check(
+                    release_status, chart_info, release_values, values_files
+                )
 
             if force or would_change:
-                helm_cmd = deploy(helm_cmd, release_name, release_values, chart_ref, wait, wait_timeout,
-                                  disable_hook, force, values_files=values_files, atomic=atomic,
-                                  create_namespace=create_namespace, replace=replace,
-                                  skip_crds=skip_crds, history_max=history_max, timeout=timeout)
+                helm_cmd = deploy(
+                    helm_cmd,
+                    release_name,
+                    release_values,
+                    chart_ref,
+                    wait,
+                    wait_timeout,
+                    disable_hook,
+                    force,
+                    values_files=values_files,
+                    atomic=atomic,
+                    create_namespace=create_namespace,
+                    replace=replace,
+                    skip_crds=skip_crds,
+                    history_max=history_max,
+                    timeout=timeout,
+                )
                 changed = True
 
     if module.check_mode:
-        check_status = {
-            'values': {
-                "current": {},
-                "declared": {},
-            }
-        }
+        check_status = {"values": {"current": {}, "declared": {}}}
         if release_status:
-            check_status['values']['current'] = release_status['values']
-            check_status['values']['declared'] = release_status
+            check_status["values"]["current"] = release_status["values"]
+            check_status["values"]["declared"] = release_status
 
         module.exit_json(
             changed=changed,
             command=helm_cmd,
             status=check_status,
-            stdout='',
-            stderr='',
+            stdout="",
+            stderr="",
             **opt_result,
         )
     elif not changed:
         module.exit_json(
             changed=False,
             status=release_status,
-            stdout='',
-            stderr='',
+            stdout="",
+            stderr="",
             command=helm_cmd,
             **opt_result,
         )
@@ -717,5 +800,5 @@ def main():
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

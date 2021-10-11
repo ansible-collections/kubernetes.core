@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 
 module: k8s_service
 
@@ -85,9 +85,9 @@ options:
 requirements:
   - python >= 3.6
   - kubernetes >= 12.0.0
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Expose https port with ClusterIP
   kubernetes.core.k8s_service:
     state: present
@@ -111,9 +111,9 @@ EXAMPLES = r'''
           protocol: TCP
         selector:
           key: special
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 result:
   description:
   - The created, patched, or otherwise present Service object. Will be empty in the case of a deletion.
@@ -140,32 +140,36 @@ result:
        description: Current status details for the object.
        returned: success
        type: complex
-'''
+"""
 
 import copy
 
 from collections import defaultdict
 
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, COMMON_ARG_SPEC, RESOURCE_ARG_SPEC)
+    AUTH_ARG_SPEC,
+    COMMON_ARG_SPEC,
+    RESOURCE_ARG_SPEC,
+)
 
 SERVICE_ARG_SPEC = {
-    'apply': {
-        'type': 'bool',
-        'default': False,
+    "apply": {"type": "bool", "default": False},
+    "name": {"required": True},
+    "namespace": {"required": True},
+    "merge_type": {
+        "type": "list",
+        "elements": "str",
+        "choices": ["json", "merge", "strategic-merge"],
     },
-    'name': {'required': True},
-    'namespace': {'required': True},
-    'merge_type': {'type': 'list', 'elements': 'str', 'choices': ['json', 'merge', 'strategic-merge']},
-    'selector': {'type': 'dict'},
-    'type': {
-        'type': 'str',
-        'choices': [
-            'NodePort', 'ClusterIP', 'LoadBalancer', 'ExternalName'
-        ],
+    "selector": {"type": "dict"},
+    "type": {
+        "type": "str",
+        "choices": ["NodePort", "ClusterIP", "LoadBalancer", "ExternalName"],
     },
-    'ports': {'type': 'list', 'elements': 'dict'},
+    "ports": {"type": "list", "elements": "dict"},
 }
 
 
@@ -195,29 +199,31 @@ def execute_module(module, k8s_ansible_mixin):
     """ Module execution """
     k8s_ansible_mixin.set_resource_definitions(module)
 
-    api_version = 'v1'
-    selector = module.params.get('selector')
-    service_type = module.params.get('type')
-    ports = module.params.get('ports')
+    api_version = "v1"
+    selector = module.params.get("selector")
+    service_type = module.params.get("type")
+    ports = module.params.get("ports")
 
     definition = defaultdict(defaultdict)
 
-    definition['kind'] = 'Service'
-    definition['apiVersion'] = api_version
+    definition["kind"] = "Service"
+    definition["apiVersion"] = api_version
 
-    def_spec = definition['spec']
-    def_spec['type'] = service_type
-    def_spec['ports'] = ports
-    def_spec['selector'] = selector
+    def_spec = definition["spec"]
+    def_spec["type"] = service_type
+    def_spec["ports"] = ports
+    def_spec["selector"] = selector
 
-    def_meta = definition['metadata']
-    def_meta['name'] = module.params.get('name')
-    def_meta['namespace'] = module.params.get('namespace')
+    def_meta = definition["metadata"]
+    def_meta["name"] = module.params.get("name")
+    def_meta["namespace"] = module.params.get("namespace")
 
     # 'resource_definition:' has lower priority than module parameters
-    definition = dict(merge_dicts(k8s_ansible_mixin.resource_definitions[0], definition))
+    definition = dict(
+        merge_dicts(k8s_ansible_mixin.resource_definitions[0], definition)
+    )
 
-    resource = k8s_ansible_mixin.find_resource('Service', api_version, fail=True)
+    resource = k8s_ansible_mixin.find_resource("Service", api_version, fail=True)
     definition = k8s_ansible_mixin.set_defaults(resource, definition)
     result = k8s_ansible_mixin.perform_action(resource, definition)
 
@@ -227,12 +233,14 @@ def execute_module(module, k8s_ansible_mixin):
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin, get_api_client)
+        K8sAnsibleMixin,
+        get_api_client,
+    )
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)
     execute_module(module, k8s_ansible_mixin)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

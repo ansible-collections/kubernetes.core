@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 
 module: k8s_exec
 
@@ -63,9 +63,9 @@ options:
     - The command to execute
     type: str
     required: yes
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Execute a command
   kubernetes.core.k8s_exec:
     namespace: myproject
@@ -84,9 +84,9 @@ EXAMPLES = r'''
   debug:
     msg: "cmd failed"
   when: command_status.rc != 0
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 result:
   description:
   - The command object
@@ -112,7 +112,7 @@ result:
      return_code:
        description: The command status code. This attribute is deprecated and will be removed in a future release. Please use rc instead.
        type: int
-'''
+"""
 
 import copy
 import shlex
@@ -123,10 +123,12 @@ except ImportError:
     # ImportError are managed by the common module already.
     pass
 
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
 from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-    AUTH_ARG_SPEC
+    AUTH_ARG_SPEC,
 )
 
 try:
@@ -139,10 +141,10 @@ except ImportError:
 
 def argspec():
     spec = copy.deepcopy(AUTH_ARG_SPEC)
-    spec['namespace'] = dict(type='str', required=True)
-    spec['pod'] = dict(type='str', required=True)
-    spec['container'] = dict(type='str')
-    spec['command'] = dict(type='str', required=True)
+    spec["namespace"] = dict(type="str", required=True)
+    spec["pod"] = dict(type="str", required=True)
+    spec["container"] = dict(type="str")
+    spec["command"] = dict(type="str", required=True)
     return spec
 
 
@@ -153,8 +155,8 @@ def execute_module(module, k8s_ansible_mixin):
 
     # hack because passing the container as None breaks things
     optional_kwargs = {}
-    if module.params.get('container'):
-        optional_kwargs['container'] = module.params['container']
+    if module.params.get("container"):
+        optional_kwargs["container"] = module.params["container"]
     try:
         resp = stream(
             api.connect_get_namespaced_pod_exec,
@@ -165,10 +167,14 @@ def execute_module(module, k8s_ansible_mixin):
             stderr=True,
             stdin=False,
             tty=False,
-            _preload_content=False, **optional_kwargs)
+            _preload_content=False,
+            **optional_kwargs
+        )
     except Exception as e:
-        module.fail_json(msg="Failed to execute on pod %s"
-                             " due to : %s" % (module.params.get('pod'), to_native(e)))
+        module.fail_json(
+            msg="Failed to execute on pod %s"
+            " due to : %s" % (module.params.get("pod"), to_native(e))
+        )
     stdout, stderr, rc = [], [], 0
     while resp.is_open():
         resp.update(timeout=1)
@@ -178,34 +184,37 @@ def execute_module(module, k8s_ansible_mixin):
             stderr.append(resp.read_stderr())
     err = resp.read_channel(3)
     err = yaml.safe_load(err)
-    if err['status'] == 'Success':
+    if err["status"] == "Success":
         rc = 0
     else:
-        rc = int(err['details']['causes'][0]['message'])
+        rc = int(err["details"]["causes"][0]["message"])
 
-    module.deprecate("The 'return_code' return key is deprecated. Please use 'rc' instead.", version="4.0.0", collection_name="kubernetes.core")
+    module.deprecate(
+        "The 'return_code' return key is deprecated. Please use 'rc' instead.",
+        version="4.0.0",
+        collection_name="kubernetes.core",
+    )
     module.exit_json(
         # Some command might change environment, but ultimately failing at end
         changed=True,
         stdout="".join(stdout),
         stderr="".join(stderr),
         rc=rc,
-        return_code=rc
+        return_code=rc,
     )
 
 
 def main():
-    module = AnsibleModule(
-        argument_spec=argspec(),
-        supports_check_mode=True,
-    )
+    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True,)
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin, get_api_client)
+        K8sAnsibleMixin,
+        get_api_client,
+    )
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)
     execute_module(module, k8s_ansible_mixin)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

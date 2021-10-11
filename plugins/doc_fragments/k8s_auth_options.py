@@ -5,13 +5,14 @@
 
 # Options for authenticating with the API.
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
 class ModuleDocFragment(object):
 
-    DOCUMENTATION = r'''
+    DOCUMENTATION = r"""
 options:
   host:
     description:
@@ -114,4 +115,4 @@ notes:
   - "To avoid SSL certificate validation errors when C(validate_certs) is I(True), the full
     certificate chain for the API server must be provided via C(ca_cert) or in the
     kubeconfig file."
-'''
+"""

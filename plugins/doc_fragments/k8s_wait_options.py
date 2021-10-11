@@ -5,13 +5,14 @@
 
 # Options for specifying object wait
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
 class ModuleDocFragment(object):
 
-    DOCUMENTATION = r'''
+    DOCUMENTATION = r"""
 options:
   wait:
     description:
@@ -64,4 +65,4 @@ options:
         - The possible reasons in a condition are specific to each resource type in Kubernetes.
         - See the API documentation of the status field for a given resource to see possible choices.
     type: dict
-'''
+"""
