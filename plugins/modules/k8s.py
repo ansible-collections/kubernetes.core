@@ -152,6 +152,26 @@ options:
     - mutually exclusive with C(name).
     type: str
     version_added: 2.3.0
+  server_side_apply:
+    description:
+    - When this option is set, apply runs in the server instead of the client.
+    - Ignored if C(apply) is not set or is set to False.
+    - This option requires "kubernetes > 18.20.0".
+    type: dict
+    version_added: 2.3.0
+    suboptions:
+      field_manager:
+        type: str
+        description:
+        - Name of the manager used to track field ownership.
+        required: True
+      force_conflicts:
+        description:
+        - A conflict is a special status error that occurs when an Server Side Apply operation tries to change a field,
+          which another user also claims to manage.
+        - When set to True, server-side apply will force the changes against conflicts.
+      type: bool
+      default: False
 
 requirements:
   - "python >= 3.6"
@@ -302,6 +322,19 @@ EXAMPLES = r"""
         - name: py
           image: python:3.7-alpine
           imagePullPolicy: IfNotPresent
+
+# Server side apply
+- name: Create configmap using server side apply
+  kubernetes.core.k8s:
+    namespace: testing
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: my-configmap
+    apply: yes
+    server_side_apply:
+      field_manager: ansible
 """
 
 RETURN = r"""
@@ -368,11 +401,19 @@ def validate_spec():
     )
 
 
+def server_apply_spec():
+    return dict(
+        field_manager=dict(type='str'),
+        force_conflicts=dict(type='bool', default=False),
+    )
+
+
 def argspec():
     argument_spec = copy.deepcopy(NAME_ARG_SPEC)
     argument_spec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
     argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
     argument_spec.update(copy.deepcopy(WAIT_ARG_SPEC))
+<<<<<<< HEAD
     argument_spec["merge_type"] = dict(
         type="list", elements="str", choices=["json", "merge", "strategic-merge"]
     )
@@ -390,6 +431,20 @@ def argspec():
     argument_spec["force"] = dict(type="bool", default=False)
     argument_spec["label_selectors"] = dict(type="list", elements="str")
     argument_spec["generate_name"] = dict()
+=======
+    argument_spec['merge_type'] = dict(type='list', elements='str', choices=['json', 'merge', 'strategic-merge'])
+    argument_spec['validate'] = dict(type='dict', default=None, options=validate_spec())
+    argument_spec['append_hash'] = dict(type='bool', default=False)
+    argument_spec['apply'] = dict(type='bool', default=False)
+    argument_spec['template'] = dict(type='raw', default=None)
+    argument_spec['delete_options'] = dict(type='dict', default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC))
+    argument_spec['continue_on_error'] = dict(type='bool', default=False)
+    argument_spec['state'] = dict(default='present', choices=['present', 'absent', 'patched'])
+    argument_spec['force'] = dict(type='bool', default=False)
+    argument_spec['label_selectors'] = dict(type='list', elements='str')
+    argument_spec['generate_name'] = dict()
+    argument_spec['server_side_apply'] = dict(type='dict', default=None, options=server_apply_spec())
+>>>>>>> 96e1b3a (add support for Server Side apply)
 
     return argument_spec
 

@@ -834,6 +834,7 @@ class K8sAnsibleMixin(object):
         wait_condition = None
         continue_on_error = self.params.get("continue_on_error")
         label_selectors = self.params.get("label_selectors")
+        server_side_apply = self.params.get("server_side_apply")
         if self.params.get("wait_condition") and self.params["wait_condition"].get(
             "type"
         ):
@@ -1043,6 +1044,18 @@ class K8sAnsibleMixin(object):
                         params = {}
                         if self.check_mode:
                             params["dry_run"] = "All"
+                        if server_side_apply:
+                            params["server_side"] = True
+                            if LooseVersion(kubernetes.__version__) <= LooseVersion("18.20.0"):
+                                msg = "kubernetes > 18.20.0 is required to use server side apply."
+                                if continue_on_error:
+                                    result["error"] = dict(msg=msg)
+                                    return result
+                                else:
+                                    self.fail_json(msg=msg, version=kubernetes.__version__)
+                            if not server_side_apply.get("field_manager"):
+                                self.fail(msg="field_manager is required to use server side apply.")
+                            params.update(server_side_apply)
                         k8s_obj = resource.apply(
                             definition, namespace=namespace, **params
                         ).to_dict()

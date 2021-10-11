@@ -896,6 +896,139 @@
         that:
           - k8s_networkpolicy is not changed
 
+    # Server Side Apply
+    - name: Create Configmap using server side apply - field_manager not specified
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          force_conflicts: false
+      register: result
+      ignore_errors: true
+
+    - name: Check that configmap creation failed
+      assert:
+        that:
+          - result is failed
+          - result.msg == "field_manager is required to use server side apply."
+
+    - name: Create Configmap using server side apply
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-00"
+      register: result
+
+    - name: Check configmap was created with expected manager
+      assert:
+        that:
+          - result is changed
+          - result.result.metadata.managedFields | length == 1
+          - result.result.metadata.managedFields[0].manager == 'manager-00'
+
+    - name: Apply ConfigMap using same parameters
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-00"
+      register: result
+
+    - name: Assert that nothing change using check_mode
+      assert:
+        that:
+          - result is not changed
+
+    - name: Apply ConfigMap adding new manager
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-01"
+      register: result
+
+    - name: Assert that number of manager has increased
+      assert:
+        that:
+          - result is changed
+          - result.result.metadata.managedFields | length == 2
+
+    - name: Apply changes to Configmap using new field_manager
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-1
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-02"
+      register: result
+      ignore_errors: true
+
+    - name: assert that operation failed with conflicts
+      assert:
+        that:
+          - result is failed
+          - result.reason == 'Conflict'
+
+    - name: Apply changes to Configmap using new field_manager and force_conflicts
+      k8s:
+        namespace: "{{ apply_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-1
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-02"
+          force_conflicts: true
+      register: result
+
+    - name: assert that operation failed with conflicts
+      assert:
+        that:
+          - result is changed
+          - result.result.metadata.managedFields | length == 1
+          - result.result.metadata.managedFields[0].manager == 'manager-02'
+          - result.result.data.key == 'value-1'
+
+
   always:
     - name: Remove namespace
       k8s:
