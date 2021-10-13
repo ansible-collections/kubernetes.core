@@ -11,6 +11,17 @@
       kind: Namespace
       name: '{{ drain_namespace }}'
 
+  # It seems that the default ServiceAccount can take a bit to be created
+  # right after a cluster is brought up. This can lead to the ServiceAccount
+  # admission controller rejecting a Pod creation request because the
+  # ServiceAccount does not yet exist.
+  - name: Wait for default serviceaccount to be created
+    k8s_info:
+      kind: ServiceAccount
+      name: default
+      namespace: "{{ drain_namespace }}"
+      wait: yes
+
   - name: list cluster nodes
     k8s_info:
       kind: node
