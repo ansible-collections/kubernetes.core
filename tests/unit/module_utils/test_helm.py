@@ -41,7 +41,7 @@ def test_write_temp_kubeconfig_server_only():
     file_name = write_temp_kubeconfig("ff")
     try:
         with open(file_name, "r") as fd:
-            content = yaml.load(fd)
+            content = yaml.safe_load(fd)
     finally:
         os.remove(file_name)
 
@@ -60,7 +60,7 @@ def test_write_temp_kubeconfig_server_inscure_certs():
     file_name = write_temp_kubeconfig("ff", False, "my-certificate")
     try:
         with open(file_name, "r") as fd:
-            content = yaml.load(fd)
+            content = yaml.safe_load(fd)
     finally:
         os.remove(file_name)
 
