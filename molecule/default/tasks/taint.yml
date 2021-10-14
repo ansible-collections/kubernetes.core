@@ -1,0 +1,310 @@
+---
+- block:
+  - set_fact:
+      namespace: "namespace-taint"
+      pod_name_1: "pod-1-taint"
+      pod_name_2: "pod-2-taint"
+      taint_patch_1:
+        - effect: NoExecute
+          key: "key1"
+          value: "value1"
+      taint_patch_2:
+        - effect: NoSchedule
+          key: "key2"
+          value: "value2"
+        - effect: NoExecute
+          key: "key2"
+  
+  - name: List cluster nodes
+    kubernetes.core.k8s_info:
+      kind: node
+    register: _result
+  
+  - name: Assert that at least two nodes do not have taints
+    assert:
+      that:
+        - _result | length >= 2
+
+  - name: Select a node without taints
+    set_fact:
+      untainted_nodes: "{{ _result.resources | selectattr('spec.taints', 'undefined') | map(attribute='metadata.name') | list}}"
+  
+  - name: Select node to taint
+    set_fact:
+      node_to_taint: '{{ untainted_nodes[0] }}'
+  
+  - name: Create namespace
+    kubernetes.core.k8s:
+      kind: Namespace
+      name: "{{ namespace }}"
+
+  - name: Create Pod 
+    kubernetes.core.k8s:
+       namespace: '{{ namespace }}'
+       wait: yes
+       definition:
+         apiVersion: v1
+         kind: Pod
+         metadata:
+           name: "{{ pod_name_1 }}"
+         spec:
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                  - matchFields:
+                    - key: metadata.name
+                      operator: In
+                      values:
+                      - '{{ node_to_taint }}'
+            containers:
+            - name: c0
+              image: busybox
+              command:
+              - /bin/sh
+              - -c
+              - while true; do date;sleep 5; done
+            terminationGracePeriodSeconds: 10
+
+  - name: Get Pods
+    kubernetes.core.k8s_info:
+      kind: Pod
+      namespace: "{{ namespace }}"
+    register: _result
+
+  - name: Assert that pod is running on the node
+    assert:
+        that:
+          - "{{ _result.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_taint) | list | length > 0 }}"
+  
+  - name: Taint node
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+    register: _result
+  
+  - name: Assert that node has been tainted
+    assert:
+      that:
+        - _result.changed
+  
+  - name: Check node taints
+    kubernetes.core.k8s_info:
+      kind: node
+      name: "{{ node_to_taint }}"
+    register: _result
+  
+  - name: Assert node taints
+    assert:
+      that:
+        "{{  _result.resources | selectattr('spec.taints', 'defined') | map(attribute='spec.taints') | map('length')| sum == 1 }}"
+  
+  - name: Taint node (idempotency)
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+    register: _result
+
+  - name: Assert that node has been tainted (idempotency - no change) 
+    assert:
+      that:
+        - not _result.changed
+  
+  - name: Pause for 30 seconds
+    pause:
+      seconds: 30
+  
+  - name: Get Pods
+    kubernetes.core.k8s_info:
+      kind: Pod
+      namespace: "{{ namespace }}"
+    register: _result
+  
+  - name: Assert that pod has been evicted
+    assert:
+        that:
+          - _result.resources | list | length == 0
+
+  - name: Create another Pod 
+    kubernetes.core.k8s:
+       namespace: '{{ namespace }}'
+       wait: yes
+       definition:
+         apiVersion: v1
+         kind: Pod
+         metadata:
+           name: "{{ pod_name_2 }}"
+         spec:
+            tolerations:
+            - key: "key1"
+              operator: "Equal"
+              value: "value1"
+              effect: "NoExecute"
+            containers:
+            - name: c0
+              image: busybox
+              command:
+              - /bin/sh
+              - -c
+              - while true; do date;sleep 5; done
+  
+  - name: Get Pods
+    kubernetes.core.k8s_info:
+      kind: Pod
+      namespace: "{{ namespace }}"
+    register: _result
+  
+  - name: Assert that Pod is running on tainted node
+    assert:
+        that:
+          - "{{ _result.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_taint) | list | length > 0 }}"
+
+  - name: Taint node with overwrite=true
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1}}"
+      overwrite: true
+    register: _result
+  
+  - name: Assert that node has been tainted (overwrite=true)
+    assert:
+      that:
+        - _result.changed
+  
+  - name: Taint again node with overwrite=true
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+      overwrite: true
+    register: _result
+  
+  - name: Assert that node has been tainted (overwrite=true)
+    assert:
+      that:
+        - _result.changed
+
+  - name: Add other taints to node
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_2 }}"
+    register: _result
+  
+  - name: Assert that other taints has been added
+    assert:
+      that:
+        - _result.changed
+  
+  - name: Check node taints
+    kubernetes.core.k8s_info:
+      kind: node
+      name: "{{ node_to_taint }}"
+    register: _result
+
+  - name: Assert node taints
+    assert:
+      that:
+        - "{{  _result.resources | selectattr('spec.taints', 'defined') | map(attribute='spec.taints') | map('length')| sum == 3 }}"
+  
+  - name: Remove taint from node
+    kubernetes.core.k8s_taint:
+      state: absent
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+    register: _result
+  
+  - name: Assert that other taints have been added
+    assert:
+      that:
+        - _result.changed
+  
+  - name: Check node taints
+    kubernetes.core.k8s_info:
+      kind: node
+      name: "{{ node_to_taint }}"
+    register: _result
+  
+  - name: Assert node taints
+    assert:
+      that:
+        - "{{  _result.resources | selectattr('spec.taints', 'defined') | map(attribute='spec.taints') | map('length')| sum == 2 }}"
+  
+  - name: Re-add taint to node
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+    register: _result
+  
+  - name: Assert that taint has been added
+    assert:
+      that:
+        - _result.changed
+
+  - name: Create another Pod 
+    kubernetes.core.k8s:
+       namespace: "{{ namespace }}"
+       wait: yes
+       definition:
+         apiVersion: v1
+         kind: Pod
+         metadata:
+           name: "{{ pod_name_1 }}"
+         spec:
+            tolerations:
+            - key: "key1"
+              operator: "Equal"
+              value: "value1"
+              effect: "NoExecute"
+            - key: "key2"
+              operator: "Equal"
+              value: "value2"
+              effect: "NoSchedule"
+            containers:
+            - name: c0
+              image: busybox
+              command:
+              - /bin/sh
+              - -c
+              - while true; do date;sleep 5; done
+  
+  - name: Get Pods
+    kubernetes.core.k8s_info:
+      kind: Pod
+      namespace: "{{ namespace }}"
+    register: _result
+  
+  - name: Assert that pod is running on another node
+    assert:
+        that:
+          - "{{ _result.resources | selectattr('status.phase', 'equalto', 'Running') | map(attribute='spec.nodeName') != node_to_taint | list | length > 0 }}"
+  
+  always:
+  - name: Delete Pods
+    kubernetes.core.k8s:
+        state: absent
+        kind: Pod
+        name: '{{ item }}'
+    with_items:
+        - "{{ pod_name_1 }}"
+        - "{{ pod_name_2 }}"
+    ignore_errors: true
+
+  - name: Delete namespace
+    kubernetes.core.k8s:
+        state: absent
+        kind: Namespace
+        name: "{{ namespace }}"
+    ignore_errors: true
+  
+  - name: Remove taints
+    kubernetes.core.k8s_taint:
+        state: absent
+        name: "{{ node_to_taint }}"
+        taints: "{{ taint_patch_1 }}"
+    ignore_errors: true
+  
+  - name: Remove taints
+    kubernetes.core.k8s_taint:
+        state: absent
+        name: "{{ node_to_taint }}"
+        taints: "{{ taint_patch_2[0].key }}"
+    ignore_errors: true

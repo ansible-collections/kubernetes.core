@@ -10,3 +10,7 @@
     - name: Include drain.yml
       include_tasks:
         file: tasks/drain.yml
+    
+    - name: Include taint.yml
+      include_tasks:
+        file: tasks/taint.yml
