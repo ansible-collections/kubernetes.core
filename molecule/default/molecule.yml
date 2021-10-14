@@ -33,7 +33,3 @@ scenario:
     - prepare
     - converge
     - verify
-dependency:
-  name: galaxy
-  options:
-    requirements-file: requirements.yml
