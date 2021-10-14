@@ -19,9 +19,7 @@ description:
     - Taint allows a node to refuse Pod to be scheduled unless that Pod has a matching toleration.
     - Untaint will remove taints from nodes as needed.
 extends_documentation_fragment:
-    - kubernetes.core.k8s_auth_options
-    - kubernetes.core.k8s_wait_options
-    - kubernetes.core.k8s_resource_options
+  - kubernetes.core.k8s_auth_options
 options:
     state:
         description:
