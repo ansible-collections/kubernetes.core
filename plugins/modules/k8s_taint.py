@@ -175,7 +175,35 @@ def if_failed(function):
     return wrapper
 
 
-class K8sTaintAnsible():
+def if_check_mode(function):
+    def wrapper(self, *args):
+        result = {}
+        if self.module.check_mode:
+            self.changed = True
+            result["result"] = "Would have tainted node/{0} if not in check mode".format(
+                self.module.params.get("name")
+            )
+            self.module.exit_json(changed=self.changed, **result)
+        return function(self, *args)
+
+    return wrapper
+
+
+def argspec():
+    argument_spec = copy.deepcopy(AUTH_ARG_SPEC)
+    argument_spec.update(
+        dict(
+            state=dict(type="str", choices=["present", "absent"], default="present"),
+            name=dict(type="str", required=True),
+            taints=dict(type="list", required=True),
+            overwrite=dict(type="bool", default=False),
+        )
+    )
+
+    return argument_spec
+
+
+class K8sTaintAnsible:
     def __init__(self, module):
         from ansible_collections.kubernetes.core.plugins.module_utils.common import (
             K8sAnsibleMixin,
@@ -195,9 +223,7 @@ class K8sTaintAnsible():
         self.k8s_ansible_mixin.warn = self.module.warn
         self.k8s_ansible_mixin.warnings = []
 
-        self.api_instance = core_v1_api.CoreV1Api(
-            self.k8s_ansible_mixin.client.client
-        )
+        self.api_instance = core_v1_api.CoreV1Api(self.k8s_ansible_mixin.client.client)
         self.k8s_ansible_mixin.check_library_version()
         self.changed = False
 
@@ -206,9 +232,7 @@ class K8sTaintAnsible():
             node = self.api_instance.read_node(name=name)
         except ApiException as exc:
             if exc.reason == "Not Found":
-                self.module.fail_json(
-                    msg="Node '{0}' has not been found.".format(name)
-                )
+                self.module.fail_json(msg="Node '{0}' has not been found.".format(name))
             self.module.fail_json(
                 msg="Failed to retrieve node '{0}' due to: {1}".format(
                     name, exc.reason
@@ -235,6 +259,7 @@ class K8sTaintAnsible():
             )
 
     @if_failed
+    @if_check_mode
     def _taint(self, new_taints, current_taints):
         if not self.module.params.get("overwrite"):
             self.patch_node(taints=[*current_taints, *new_taints])
@@ -242,6 +267,7 @@ class K8sTaintAnsible():
             self.patch_node(taints=new_taints)
 
     @if_failed
+    @if_check_mode
     def _untaint(self, new_taints, current_taints):
         self.patch_node(taints=_get_difference(current_taints, new_taints))
 
@@ -273,22 +299,11 @@ class K8sTaintAnsible():
         self.module.exit_json(changed=self.changed, **result)
 
 
-def argspec():
-    argument_spec = copy.deepcopy(AUTH_ARG_SPEC)
-    argument_spec.update(
-        dict(
-            state=dict(type="str", choices=["present", "absent"], default="present"),
-            name=dict(type="str", required=True),
-            taints=dict(type="list", required=True),
-            overwrite=dict(type="bool", default=False),
-        )
-    )
-
-    return argument_spec
-
-
 def main():
-    module = AnsibleModule(argument_spec=argspec())
+    module = AnsibleModule(
+        argument_spec=argspec(),
+        supports_check_mode=True,
+    )
     k8s_taint = K8sTaintAnsible(module)
     k8s_taint.execute_module()
 
