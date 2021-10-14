@@ -77,6 +77,18 @@
         that:
           - "{{ _result.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_taint) | list | length > 0 }}"
   
+  - name: Taint node (check_mode)
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+    check_mode: true
+    register: _result
+  
+  - name: Assert that node has been tainted (check_mode)
+    assert:
+      that:
+        - _result.changed
+  
   - name: Taint node
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
@@ -98,6 +110,18 @@
     assert:
       that:
         "{{  _result.resources | selectattr('spec.taints', 'defined') | map(attribute='spec.taints') | map('length')| sum == 1 }}"
+
+  - name: Taint node (idempotency) - (check_mode)
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+    check_mode: true
+    register: _result
+
+  - name: Assert that node has been tainted (idempotency - no change) - (check_mode)
+    assert:
+      that:
+        - not _result.changed
   
   - name: Taint node (idempotency)
     kubernetes.core.k8s_taint:
@@ -159,6 +183,19 @@
         that:
           - "{{ _result.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_taint) | list | length > 0 }}"
 
+  - name: Taint node with overwrite=true (check_mode)
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1}}"
+      overwrite: true
+    check_mode: true
+    register: _result
+  
+  - name: Assert that node has been tainted (overwrite=true)
+    assert:
+      that:
+        - _result.changed
+
   - name: Taint node with overwrite=true
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
@@ -171,6 +208,19 @@
       that:
         - _result.changed
   
+  - name: Taint again node with overwrite=true (check_mode)
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+      overwrite: true
+    check_mode: true
+    register: _result
+  
+  - name: Assert that node has been tainted (overwrite=true) - (check_mode)
+    assert:
+      that:
+        - _result.changed
+
   - name: Taint again node with overwrite=true
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
@@ -179,6 +229,18 @@
     register: _result
   
   - name: Assert that node has been tainted (overwrite=true)
+    assert:
+      that:
+        - _result.changed
+  
+  - name: Add other taints to node (check_mode)
+    kubernetes.core.k8s_taint:
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_2 }}"
+    check_mode: true
+    register: _result
+  
+  - name: Assert that other taints has been added (check_mode)
     assert:
       that:
         - _result.changed
@@ -205,6 +267,19 @@
       that:
         - "{{  _result.resources | selectattr('spec.taints', 'defined') | map(attribute='spec.taints') | map('length')| sum == 3 }}"
   
+  - name: Remove taint from node (check_mode)
+    kubernetes.core.k8s_taint:
+      state: absent
+      name: "{{ node_to_taint }}"
+      taints: "{{ taint_patch_1 }}"
+    check_mode: true
+    register: _result
+  
+  - name: Assert that other taints have been added (check_mode)
+    assert:
+      that:
+        - _result.changed
+      
   - name: Remove taint from node
     kubernetes.core.k8s_taint:
       state: absent
