@@ -294,7 +294,7 @@ class K8sTaintAnsible:
 
         def _ensure_effect_defined(a):
             return all(
-                l["effect"] in ("NoExecute", "NoSchedule", "PreferNoSchedule")
+                l.get("effect") in ("NoExecute", "NoSchedule", "PreferNoSchedule")
                 for l in a
             )
 
