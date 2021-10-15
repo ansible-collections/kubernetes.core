@@ -60,11 +60,16 @@
           environment:
             K8S_AUTH_KUBECONFIG: ~/.kube/customconfig
 
+        - name: Get currently installed version of kubernetes
+          ansible.builtin.command: python -c "import kubernetes; print(kubernetes.__version__)"
+          register: kubernetes_version
+
         - name: Using in-memory kubeconfig should succeed
           kubernetes.core.k8s:
             name: testing
             kind: Namespace
             kubeconfig: "{{ lookup('file', '~/.kube/customconfig') | from_yaml }}"
+          when: kubernetes_version.stdout is version("17.17.0", ">=")
 
       always:
         - name: Return kubeconfig

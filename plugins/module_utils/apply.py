@@ -110,16 +110,17 @@ def apply_object(resource, definition):
     return apply_patch(actual.to_dict(), definition)
 
 
-def k8s_apply(resource, definition):
+def k8s_apply(resource, definition, **kwargs):
     existing, desired = apply_object(resource, definition)
     if not existing:
-        return resource.create(body=desired, namespace=definition['metadata'].get('namespace'))
+        return resource.create(body=desired, namespace=definition['metadata'].get('namespace'), **kwargs)
     if existing == desired:
         return resource.get(name=definition['metadata']['name'], namespace=definition['metadata'].get('namespace'))
     return resource.patch(body=desired,
                           name=definition['metadata']['name'],
                           namespace=definition['metadata'].get('namespace'),
-                          content_type='application/merge-patch+json')
+                          content_type='application/merge-patch+json',
+                          **kwargs)
 
 
 # The patch is the difference from actual to desired without deletions, plus deletions

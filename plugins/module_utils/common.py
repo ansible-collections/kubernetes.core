@@ -229,6 +229,7 @@ class K8sAnsibleMixin(object):
             module.fail_json(msg=missing_required_lib('kubernetes'), exception=K8S_IMP_ERR,
                              error=to_native(k8s_import_exception))
         self.kubernetes_version = kubernetes.__version__
+        self.supports_dry_run = LooseVersion(self.kubernetes_version) >= LooseVersion("18.20.0")
 
         if pyyaml_required and not HAS_YAML:
             module.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
@@ -686,7 +687,9 @@ class K8sAnsibleMixin(object):
             else:
                 # Delete the object
                 result['changed'] = True
-                if not self.check_mode:
+                if self.check_mode and not self.supports_dry_run:
+                    return result
+                else:
                     if delete_options:
                         body = {
                             'apiVersion': 'v1',
@@ -694,6 +697,8 @@ class K8sAnsibleMixin(object):
                         }
                         body.update(delete_options)
                         params['body'] = body
+                    if self.check_mode:
+                        params['dry_run'] = "All"
                     try:
                         k8s_obj = resource.delete(**params)
                         result['result'] = k8s_obj.to_dict()
@@ -705,7 +710,7 @@ class K8sAnsibleMixin(object):
                             return result
                         else:
                             self.fail_json(msg=build_error_msg(definition['kind'], origin_name, msg), error=exc.status, status=exc.status, reason=exc.reason)
-                    if wait:
+                    if wait and not self.check_mode:
                         success, resource, duration = self.wait(resource, definition, wait_sleep, wait_timeout, 'absent', label_selectors=label_selectors)
                         result['duration'] = duration
                         if not success:
@@ -726,7 +731,7 @@ class K8sAnsibleMixin(object):
                                     kind=definition['kind'], name=origin_name, namespace=namespace)
                     return result
             if apply:
-                if self.check_mode:
+                if self.check_mode and not self.supports_dry_run:
                     ignored, patch = apply_object(resource, _encode_stringdata(definition))
                     if existing:
                         k8s_obj = dict_merge(existing.to_dict(), patch)
@@ -734,7 +739,10 @@ class K8sAnsibleMixin(object):
                         k8s_obj = patch
                 else:
                     try:
-                        k8s_obj = resource.apply(definition, namespace=namespace).to_dict()
+                        params = {}
+                        if self.check_mode:
+                            params['dry_run'] = 'All'
+                        k8s_obj = resource.apply(definition, namespace=namespace, **params).to_dict()
                     except DynamicApiError as exc:
                         msg = "Failed to apply object: {0}".format(exc.body)
                         if self.warnings:
@@ -775,11 +783,14 @@ class K8sAnsibleMixin(object):
                                         parameter has been set to '{state}'".format(
                                         kind=definition['kind'], name=origin_name, state=state)
                     return result
-                elif self.check_mode:
+                elif self.check_mode and not self.supports_dry_run:
                     k8s_obj = _encode_stringdata(definition)
                 else:
+                    params = {}
+                    if self.check_mode:
+                        params['dry_run'] = "All"
                     try:
-                        k8s_obj = resource.create(definition, namespace=namespace).to_dict()
+                        k8s_obj = resource.create(definition, namespace=namespace, **params).to_dict()
                     except ConflictError:
                         # Some resources, like ProjectRequests, can't be created multiple times,
                         # because the resources that they create don't match their kind
@@ -826,11 +837,14 @@ class K8sAnsibleMixin(object):
             diffs = []
 
             if state == 'present' and existing and force:
-                if self.check_mode:
+                if self.check_mode and not self.supports_dry_run:
                     k8s_obj = _encode_stringdata(definition)
                 else:
+                    params = {}
+                    if self.check_mode:
+                        params['dry_run'] = "All"
                     try:
-                        k8s_obj = resource.replace(definition, name=name, namespace=namespace, append_hash=append_hash).to_dict()
+                        k8s_obj = resource.replace(definition, name=name, namespace=namespace, append_hash=append_hash, **params).to_dict()
                     except DynamicApiError as exc:
                         msg = "Failed to replace object: {0}".format(exc.body)
                         if self.warnings:
@@ -861,7 +875,7 @@ class K8sAnsibleMixin(object):
                 return result
 
             # Differences exist between the existing obj and requested params
-            if self.check_mode:
+            if self.check_mode and not self.supports_dry_run:
                 k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
             else:
                 for merge_type in self.params['merge_type'] or ['strategic-merge', 'merge']:
@@ -903,6 +917,8 @@ class K8sAnsibleMixin(object):
                 version="3.0.0", collection_name="kubernetes.core")
         try:
             params = dict(name=name, namespace=namespace)
+            if self.check_mode:
+                params['dry_run'] = 'All'
             if merge_type:
                 params['content_type'] = 'application/{0}-patch+json'.format(merge_type)
             k8s_obj = resource.patch(definition, **params).to_dict()
