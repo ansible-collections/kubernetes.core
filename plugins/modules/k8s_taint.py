@@ -36,13 +36,13 @@ options:
         description:
             - List containing the taints.
         type: list
+        required: true
         elements: dict
         suboptions:
             key:
                 description:
                     - The taint key to be applied to a node.
                 type: str
-                required: true
             value:
                 description:
                     - The taint value corresponding to the taint key.
@@ -50,9 +50,15 @@ options:
             effect:
                 description:
                     - The effect of the taint on Pods that do not tolerate the taint.
+                    - Required when I(state=present).
                 type: str
-                required: when I(state=present)
                 choices: [ NoSchedule, NoExecute, PreferNoSchedule ]
+    overwrite:
+        description:
+            - If true, allow taints to be overwritten, otherwise reject taint updates that overwrite existing taints.
+        required: false
+        default: false
+        type: bool
 requirements:
   - python >= 3.6
   - kubernetes >= 12.0.0
@@ -101,6 +107,7 @@ result:
    description:
         -  Shows if the node has been successfully tainted/untained.
    type: str
+   returned: success
    sample: "node/ip-10-0-152-161.eu-central-1.compute.internal untainted"
 """
 
@@ -178,7 +185,9 @@ def if_check_mode(function):
         result = {}
         if self.module.check_mode:
             self.changed = True
-            result["result"] = "Would have tainted node/{0} if not in check mode".format(
+            result[
+                "result"
+            ] = "Would have tainted node/{0} if not in check mode".format(
                 self.module.params.get("name")
             )
             self.module.exit_json(changed=self.changed, **result)
@@ -193,7 +202,7 @@ def argspec():
         dict(
             state=dict(type="str", choices=["present", "absent"], default="present"),
             name=dict(type="str", required=True),
-            taints=dict(type="list", required=True),
+            taints=dict(type="list", required=True, elements="dict"),
             overwrite=dict(type="bool", default=False),
         )
     )
@@ -283,7 +292,19 @@ class K8sTaintAnsible:
                     a.remove(item_a)
                     a.append({"key": item_a})
 
+        def _ensure_effect_defined(a):
+            return all(
+                l["effect"] in ("NoExecute", "NoSchedule", "PreferNoSchedule")
+                for l in a
+            )
+
         if state == "present":
+            if not _ensure_effect_defined:
+                self.module.fail_json(
+                    msg="An effect must be specified. Valid values: {0}".format(
+                        t for t in ("NoExecute", "NoSchedule", "PreferNoSchedule")
+                    )
+                )
             self._taint(taints, current_taints)
             result["result"] = "node/{0} tainted".format(name)
             self.changed = True
