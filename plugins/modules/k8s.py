@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 
 module: k8s
 
@@ -158,9 +158,9 @@ requirements:
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Create a k8s namespace
   kubernetes.core.k8s:
     name: testing
@@ -302,9 +302,9 @@ EXAMPLES = r'''
         - name: py
           image: python:3.7-alpine
           imagePullPolicy: IfNotPresent
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 result:
   description:
   - The created, patched, or otherwise present object. Will be empty in the case of a deletion.
@@ -344,20 +344,27 @@ result:
        description: error while trying to create/delete the object.
        returned: error
        type: complex
-'''
+"""
 
 import copy
 
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC, WAIT_ARG_SPEC, NAME_ARG_SPEC, RESOURCE_ARG_SPEC, DELETE_OPTS_ARG_SPEC)
+    AUTH_ARG_SPEC,
+    WAIT_ARG_SPEC,
+    NAME_ARG_SPEC,
+    RESOURCE_ARG_SPEC,
+    DELETE_OPTS_ARG_SPEC,
+)
 
 
 def validate_spec():
     return dict(
-        fail_on_error=dict(type='bool'),
+        fail_on_error=dict(type="bool"),
         version=dict(),
-        strict=dict(type='bool', default=True)
+        strict=dict(type="bool", default=True),
     )
 
 
@@ -366,17 +373,23 @@ def argspec():
     argument_spec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
     argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
     argument_spec.update(copy.deepcopy(WAIT_ARG_SPEC))
-    argument_spec['merge_type'] = dict(type='list', elements='str', choices=['json', 'merge', 'strategic-merge'])
-    argument_spec['validate'] = dict(type='dict', default=None, options=validate_spec())
-    argument_spec['append_hash'] = dict(type='bool', default=False)
-    argument_spec['apply'] = dict(type='bool', default=False)
-    argument_spec['template'] = dict(type='raw', default=None)
-    argument_spec['delete_options'] = dict(type='dict', default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC))
-    argument_spec['continue_on_error'] = dict(type='bool', default=False)
-    argument_spec['state'] = dict(default='present', choices=['present', 'absent', 'patched'])
-    argument_spec['force'] = dict(type='bool', default=False)
-    argument_spec['label_selectors'] = dict(type='list', elements='str')
-    argument_spec['generate_name'] = dict()
+    argument_spec["merge_type"] = dict(
+        type="list", elements="str", choices=["json", "merge", "strategic-merge"]
+    )
+    argument_spec["validate"] = dict(type="dict", default=None, options=validate_spec())
+    argument_spec["append_hash"] = dict(type="bool", default=False)
+    argument_spec["apply"] = dict(type="bool", default=False)
+    argument_spec["template"] = dict(type="raw", default=None)
+    argument_spec["delete_options"] = dict(
+        type="dict", default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC)
+    )
+    argument_spec["continue_on_error"] = dict(type="bool", default=False)
+    argument_spec["state"] = dict(
+        default="present", choices=["present", "absent", "patched"]
+    )
+    argument_spec["force"] = dict(type="bool", default=False)
+    argument_spec["label_selectors"] = dict(type="list", elements="str")
+    argument_spec["generate_name"] = dict()
 
     return argument_spec
 
@@ -392,11 +405,11 @@ def execute_module(module, k8s_ansible_mixin):
     k8s_ansible_mixin.warn = k8s_ansible_mixin.module.warn
     k8s_ansible_mixin.warnings = []
 
-    k8s_ansible_mixin.kind = k8s_ansible_mixin.params.get('kind')
-    k8s_ansible_mixin.api_version = k8s_ansible_mixin.params.get('api_version')
-    k8s_ansible_mixin.name = k8s_ansible_mixin.params.get('name')
-    k8s_ansible_mixin.generate_name = k8s_ansible_mixin.params.get('generate_name')
-    k8s_ansible_mixin.namespace = k8s_ansible_mixin.params.get('namespace')
+    k8s_ansible_mixin.kind = k8s_ansible_mixin.params.get("kind")
+    k8s_ansible_mixin.api_version = k8s_ansible_mixin.params.get("api_version")
+    k8s_ansible_mixin.name = k8s_ansible_mixin.params.get("name")
+    k8s_ansible_mixin.generate_name = k8s_ansible_mixin.params.get("generate_name")
+    k8s_ansible_mixin.namespace = k8s_ansible_mixin.params.get("namespace")
 
     k8s_ansible_mixin.check_library_version()
     k8s_ansible_mixin.set_resource_definitions(module)
@@ -405,20 +418,26 @@ def execute_module(module, k8s_ansible_mixin):
 
 def main():
     mutually_exclusive = [
-        ('resource_definition', 'src'),
-        ('merge_type', 'apply'),
-        ('template', 'resource_definition'),
-        ('template', 'src'),
-        ('name', 'generate_name'),
+        ("resource_definition", "src"),
+        ("merge_type", "apply"),
+        ("template", "resource_definition"),
+        ("template", "src"),
+        ("name", "generate_name"),
     ]
-    module = AnsibleModule(argument_spec=argspec(), mutually_exclusive=mutually_exclusive, supports_check_mode=True)
+    module = AnsibleModule(
+        argument_spec=argspec(),
+        mutually_exclusive=mutually_exclusive,
+        supports_check_mode=True,
+    )
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin, get_api_client)
+        K8sAnsibleMixin,
+        get_api_client,
+    )
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)
     execute_module(module, k8s_ansible_mixin)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -5,13 +5,14 @@
 
 # Options for specifying object state
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
 class ModuleDocFragment(object):
 
-    DOCUMENTATION = r'''
+    DOCUMENTATION = r"""
 options:
   state:
     description:
@@ -27,4 +28,4 @@ options:
     - If set to C(yes), and I(state) is C(present), an existing object will be replaced.
     type: bool
     default: no
-'''
+"""

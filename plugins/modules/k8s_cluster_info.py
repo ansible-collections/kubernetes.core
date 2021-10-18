@@ -4,10 +4,11 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 module: k8s_cluster_info
 
 version_added: "0.11.1"
@@ -36,9 +37,9 @@ requirements:
   - "python >= 3.6"
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Get Cluster information
   kubernetes.core.k8s_cluster_info:
   register: api_status
@@ -47,9 +48,9 @@ EXAMPLES = r'''
   kubernetes.core.k8s_cluster_info:
     invalidate_cache: False
   register: api_status
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 connection:
   description:
   - Connection information
@@ -136,7 +137,7 @@ apis:
       description: Resource singular name
       returned: success
       type: str
-'''
+"""
 
 
 import copy
@@ -145,7 +146,10 @@ from collections import defaultdict
 
 HAS_K8S = False
 try:
-    from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import ResourceList
+    from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import (
+        ResourceList,
+    )
+
     HAS_K8S = True
 except ImportError as e:
     K8S_IMP_ERR = e
@@ -154,12 +158,18 @@ except ImportError as e:
 from ansible.module_utils._text import to_native
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC)
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    AUTH_ARG_SPEC,
+)
 
 
 def execute_module(module, client):
-    invalidate_cache = boolean(module.params.get('invalidate_cache', True), strict=False)
+    invalidate_cache = boolean(
+        module.params.get("invalidate_cache", True), strict=False
+    )
     if invalidate_cache:
         client.resources.invalidate_cache()
     results = defaultdict(dict)
@@ -167,47 +177,60 @@ def execute_module(module, client):
         resource = resource[0]
         if isinstance(resource, ResourceList):
             continue
-        key = resource.group_version if resource.group == '' else '/'.join([resource.group, resource.group_version.split('/')[-1]])
+        key = (
+            resource.group_version
+            if resource.group == ""
+            else "/".join([resource.group, resource.group_version.split("/")[-1]])
+        )
         results[key][resource.kind] = {
-            'categories': resource.categories if resource.categories else [],
-            'name': resource.name,
-            'namespaced': resource.namespaced,
-            'preferred': resource.preferred,
-            'short_names': resource.short_names if resource.short_names else [],
-            'singular_name': resource.singular_name,
+            "categories": resource.categories if resource.categories else [],
+            "name": resource.name,
+            "namespaced": resource.namespaced,
+            "preferred": resource.preferred,
+            "short_names": resource.short_names if resource.short_names else [],
+            "singular_name": resource.singular_name,
         }
     configuration = client.configuration
     connection = {
-        'cert_file': configuration.cert_file,
-        'host': configuration.host,
-        'password': configuration.password,
-        'proxy': configuration.proxy,
-        'ssl_ca_cert': configuration.ssl_ca_cert,
-        'username': configuration.username,
-        'verify_ssl': configuration.verify_ssl,
+        "cert_file": configuration.cert_file,
+        "host": configuration.host,
+        "password": configuration.password,
+        "proxy": configuration.proxy,
+        "ssl_ca_cert": configuration.ssl_ca_cert,
+        "username": configuration.username,
+        "verify_ssl": configuration.verify_ssl,
     }
     from kubernetes import __version__ as version
+
     version_info = {
-        'client': version,
-        'server': client.version,
+        "client": version,
+        "server": client.version,
     }
-    module.exit_json(changed=False, apis=results, connection=connection, version=version_info)
+    module.exit_json(
+        changed=False, apis=results, connection=connection, version=version_info
+    )
 
 
 def argspec():
     spec = copy.deepcopy(AUTH_ARG_SPEC)
-    spec['invalidate_cache'] = dict(type='bool', default=True)
+    spec["invalidate_cache"] = dict(type="bool", default=True)
     return spec
 
 
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
     if not HAS_K8S:
-        module.fail_json(msg=missing_required_lib('kubernetes'), exception=K8S_IMP_EXC,
-                         error=to_native(K8S_IMP_ERR))
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import get_api_client
+        module.fail_json(
+            msg=missing_required_lib("kubernetes"),
+            exception=K8S_IMP_EXC,
+            error=to_native(K8S_IMP_ERR),
+        )
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+        get_api_client,
+    )
+
     execute_module(module, client=get_api_client(module=module))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

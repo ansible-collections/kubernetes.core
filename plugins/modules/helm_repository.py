@@ -4,10 +4,11 @@
 # Copyright: (c) 2020, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: helm_repository
 
@@ -64,9 +65,9 @@ options:
     default: present
     aliases: [ state ]
     type: str
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Add a repository
   kubernetes.core.helm_repository:
     name: stable
@@ -76,9 +77,9 @@ EXAMPLES = r'''
   kubernetes.core.helm_repository:
     name: redhat-charts
     repo_url: https://redhat-developer.github.com/redhat-helm-charts
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 stdout:
   type: str
   description: Full `helm` command stdout, in case you want to display it or examine the event log
@@ -109,12 +110,13 @@ msg:
   description: Error message returned by `helm` command
   returned: on failure
   sample: 'Repository already have a repository named bitnami'
-'''
+"""
 
 import traceback
 
 try:
     import yaml
+
     IMP_YAML = True
 except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
@@ -128,7 +130,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_he
 def get_repository(state, repo_name):
     if state is not None:
         for repository in state:
-            if repository['name'] == repo_name:
+            if repository["name"] == repo_name:
                 return repository
     return None
 
@@ -144,15 +146,19 @@ def get_repository_status(module, command, repository_name):
         return None
     elif rc != 0:
         module.fail_json(
-            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(rc, out, err),
-            command=list_command
+            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
+                rc, out, err
+            ),
+            command=list_command,
         )
 
     return get_repository(yaml.safe_load(out), repository_name)
 
 
 # Install repository
-def install_repository(command, repository_name, repository_url, repository_username, repository_password):
+def install_repository(
+    command, repository_name, repository_url, repository_username, repository_password
+):
     install_command = command + " repo add " + repository_name + " " + repository_url
 
     if repository_username is not None and repository_password is not None:
@@ -174,19 +180,17 @@ def main():
 
     module = AnsibleModule(
         argument_spec=dict(
-            binary_path=dict(type='path'),
-            repo_name=dict(type='str', aliases=['name'], required=True),
-            repo_url=dict(type='str', aliases=['url']),
-            repo_username=dict(type='str', aliases=['username']),
-            repo_password=dict(type='str', aliases=['password'], no_log=True),
-            repo_state=dict(default='present', choices=['present', 'absent'], aliases=['state']),
+            binary_path=dict(type="path"),
+            repo_name=dict(type="str", aliases=["name"], required=True),
+            repo_url=dict(type="str", aliases=["url"]),
+            repo_username=dict(type="str", aliases=["username"]),
+            repo_password=dict(type="str", aliases=["password"], no_log=True),
+            repo_state=dict(
+                default="present", choices=["present", "absent"], aliases=["state"]
+            ),
         ),
-        required_together=[
-            ['repo_username', 'repo_password']
-        ],
-        required_if=[
-            ('repo_state', 'present', ['repo_url']),
-        ],
+        required_together=[["repo_username", "repo_password"]],
+        required_if=[("repo_state", "present", ["repo_url"])],
         supports_check_mode=True,
     )
 
@@ -195,17 +199,17 @@ def main():
 
     changed = False
 
-    bin_path = module.params.get('binary_path')
-    repo_name = module.params.get('repo_name')
-    repo_url = module.params.get('repo_url')
-    repo_username = module.params.get('repo_username')
-    repo_password = module.params.get('repo_password')
-    repo_state = module.params.get('repo_state')
+    bin_path = module.params.get("binary_path")
+    repo_name = module.params.get("repo_name")
+    repo_url = module.params.get("repo_url")
+    repo_username = module.params.get("repo_username")
+    repo_password = module.params.get("repo_password")
+    repo_state = module.params.get("repo_state")
 
     if bin_path is not None:
         helm_cmd = bin_path
     else:
-        helm_cmd = module.get_bin_path('helm', required=True)
+        helm_cmd = module.get_bin_path("helm", required=True)
 
     repository_status = get_repository_status(module, helm_cmd, repo_name)
 
@@ -214,10 +218,14 @@ def main():
         changed = True
     elif repo_state == "present":
         if repository_status is None:
-            helm_cmd = install_repository(helm_cmd, repo_name, repo_url, repo_username, repo_password)
+            helm_cmd = install_repository(
+                helm_cmd, repo_name, repo_url, repo_username, repo_password
+            )
             changed = True
-        elif repository_status['url'] != repo_url:
-            module.fail_json(msg="Repository already have a repository named {0}".format(repo_name))
+        elif repository_status["url"] != repo_url:
+            module.fail_json(
+                msg="Repository already have a repository named {0}".format(repo_name)
+            )
 
     if module.check_mode:
         module.exit_json(changed=changed)
@@ -227,16 +235,18 @@ def main():
     rc, out, err = run_helm(module, helm_cmd)
 
     if repo_password is not None:
-        helm_cmd = helm_cmd.replace(repo_password, '******')
+        helm_cmd = helm_cmd.replace(repo_password, "******")
 
     if rc != 0:
         module.fail_json(
-            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(rc, out, err),
-            command=helm_cmd
+            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
+                rc, out, err
+            ),
+            command=helm_cmd,
         )
 
     module.exit_json(changed=changed, stdout=out, stderr=err, command=helm_cmd)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -6,13 +6,14 @@
 
 # Options for common Helm modules
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
 class ModuleDocFragment(object):
 
-    DOCUMENTATION = r'''
+    DOCUMENTATION = r"""
 options:
   binary_path:
     description:
@@ -56,4 +57,4 @@ options:
     type: path
     aliases: [ ssl_ca_cert ]
     version_added: "1.2.0"
-'''
+"""

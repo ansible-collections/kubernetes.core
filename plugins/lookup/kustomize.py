@@ -3,7 +3,7 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
     lookup: kustomize
 
     short_description: Build a set of kubernetes resources using a 'kustomization.yaml' file.
@@ -33,7 +33,7 @@ DOCUMENTATION = '''
 
     requirements:
       - "python >= 3.6"
-'''
+"""
 
 EXAMPLES = """
 - name: Run lookup using kustomize
@@ -91,7 +91,7 @@ def get_binary_from_path(name, opt_dirs=None):
         if opt_dirs is not None:
             if not isinstance(opt_dirs, list):
                 opt_dirs = [opt_dirs]
-            opt_arg['opt_dirs'] = opt_dirs
+            opt_arg["opt_dirs"] = opt_dirs
         bin_path = get_bin_path(name, **opt_arg)
         return bin_path
     except ValueError:
@@ -104,30 +104,41 @@ def run_command(command):
 
 
 class LookupModule(LookupBase):
-
-    def run(self, terms, variables=None, dir=".", binary_path=None, opt_dirs=None, **kwargs):
+    def run(
+        self, terms, variables=None, dir=".", binary_path=None, opt_dirs=None, **kwargs
+    ):
         executable_path = binary_path
         if executable_path is None:
             executable_path = get_binary_from_path(name="kustomize", opt_dirs=opt_dirs)
             if executable_path is None:
-                executable_path = get_binary_from_path(name="kubectl", opt_dirs=opt_dirs)
+                executable_path = get_binary_from_path(
+                    name="kubectl", opt_dirs=opt_dirs
+                )
 
             # validate that at least one tool was found
             if executable_path is None:
-                raise AnsibleLookupError("Failed to find required executable 'kubectl' and 'kustomize' in paths")
+                raise AnsibleLookupError(
+                    "Failed to find required executable 'kubectl' and 'kustomize' in paths"
+                )
 
         # check input directory
         kustomization_dir = dir
 
         command = [executable_path]
-        if executable_path.endswith('kustomize'):
-            command += ['build', kustomization_dir]
-        elif executable_path.endswith('kubectl'):
-            command += ['kustomize', kustomization_dir]
+        if executable_path.endswith("kustomize"):
+            command += ["build", kustomization_dir]
+        elif executable_path.endswith("kubectl"):
+            command += ["kustomize", kustomization_dir]
         else:
-            raise AnsibleLookupError("unexpected tool provided as parameter {0}, expected one of kustomize, kubectl.".format(executable_path))
+            raise AnsibleLookupError(
+                "unexpected tool provided as parameter {0}, expected one of kustomize, kubectl.".format(
+                    executable_path
+                )
+            )
 
         (out, err) = run_command(command)
         if err:
-            raise AnsibleLookupError("kustomize command failed with: {0}".format(err.decode("utf-8")))
-        return [out.decode('utf-8')]
+            raise AnsibleLookupError(
+                "kustomize command failed with: {0}".format(err.decode("utf-8"))
+            )
+        return [out.decode("utf-8")]

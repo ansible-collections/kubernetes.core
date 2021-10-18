@@ -5,13 +5,14 @@
 
 # Options for selecting or identifying a specific K8s object
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
 class ModuleDocFragment(object):
 
-    DOCUMENTATION = r'''
+    DOCUMENTATION = r"""
 options:
   api_version:
     description:
@@ -49,4 +50,4 @@ options:
     - If I(resource definition) is provided, the I(metadata.namespace) value from the I(resource_definition)
       will override this option.
     type: str
-'''
+"""

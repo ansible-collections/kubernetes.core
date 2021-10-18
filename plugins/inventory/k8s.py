@@ -1,10 +1,11 @@
 # Copyright (c) 2018 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
     name: k8s
     plugin_type: inventory
     author:
@@ -89,9 +90,9 @@ DOCUMENTATION = '''
     - "python >= 3.6"
     - "kubernetes >= 12.0.0"
     - "PyYAML >= 3.11"
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 # File must be named k8s.yaml or k8s.yml
 
 # Authenticate with token, and return all pods and services for all namespaces
@@ -112,12 +113,17 @@ plugin: kubernetes.core.k8s
 connections:
   - kubeconfig: /path/to/config
     context: 'awx/192-168-64-4:8443/developer'
-'''
+"""
 
 import json
 
 from ansible.errors import AnsibleError
-from ansible_collections.kubernetes.core.plugins.module_utils.common import K8sAnsibleMixin, HAS_K8S_MODULE_HELPER, k8s_import_exception, get_api_client
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+    K8sAnsibleMixin,
+    HAS_K8S_MODULE_HELPER,
+    k8s_import_exception,
+    get_api_client,
+)
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 
 try:
@@ -128,13 +134,13 @@ except ImportError:
 
 def format_dynamic_api_exc(exc):
     if exc.body:
-        if exc.headers and exc.headers.get('Content-Type') == 'application/json':
-            message = json.loads(exc.body).get('message')
+        if exc.headers and exc.headers.get("Content-Type") == "application/json":
+            message = json.loads(exc.body).get("message")
             if message:
                 return message
         return exc.body
     else:
-        return '%s Reason: %s' % (exc.status, exc.reason)
+        return "%s Reason: %s" % (exc.status, exc.reason)
 
 
 class K8sInventoryException(Exception):
@@ -142,10 +148,10 @@ class K8sInventoryException(Exception):
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleMixin):
-    NAME = 'kubernetes.core.k8s'
+    NAME = "kubernetes.core.k8s"
 
-    connection_plugin = 'kubernetes.core.kubectl'
-    transport = 'kubectl'
+    connection_plugin = "kubernetes.core.kubectl"
+    transport = "kubectl"
 
     def parse(self, inventory, loader, path, cache=True):
         super(InventoryModule, self).parse(inventory, loader, path)
@@ -154,11 +160,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
         self.setup(config_data, cache, cache_key)
 
     def setup(self, config_data, cache, cache_key):
-        connections = config_data.get('connections')
+        connections = config_data.get("connections")
 
         if not HAS_K8S_MODULE_HELPER:
             raise K8sInventoryException(
-                "This module requires the Kubernetes Python client. Try `pip install kubernetes`. Detail: {0}".format(k8s_import_exception)
+                "This module requires the Kubernetes Python client. Try `pip install kubernetes`. Detail: {0}".format(
+                    k8s_import_exception
+                )
             )
 
         source_data = None
@@ -179,11 +187,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
 
             for connection in connections:
                 if not isinstance(connection, dict):
-                    raise K8sInventoryException("Expecting connection to be a dictionary.")
+                    raise K8sInventoryException(
+                        "Expecting connection to be a dictionary."
+                    )
                 client = get_api_client(**connection)
-                name = connection.get('name', self.get_default_host_name(client.configuration.host))
-                if connection.get('namespaces'):
-                    namespaces = connection['namespaces']
+                name = connection.get(
+                    "name", self.get_default_host_name(client.configuration.host)
+                )
+                if connection.get("namespaces"):
+                    namespaces = connection["namespaces"]
                 else:
                     namespaces = self.get_available_namespaces(client)
                 for namespace in namespaces:
@@ -199,27 +211,36 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
 
     @staticmethod
     def get_default_host_name(host):
-        return host.replace('https://', '').replace('http://', '').replace('.', '-').replace(':', '_')
+        return (
+            host.replace("https://", "")
+            .replace("http://", "")
+            .replace(".", "-")
+            .replace(":", "_")
+        )
 
     def get_available_namespaces(self, client):
-        v1_namespace = client.resources.get(api_version='v1', kind='Namespace')
+        v1_namespace = client.resources.get(api_version="v1", kind="Namespace")
         try:
             obj = v1_namespace.get()
         except DynamicApiError as exc:
             self.display.debug(exc)
-            raise K8sInventoryException('Error fetching Namespace list: %s' % format_dynamic_api_exc(exc))
+            raise K8sInventoryException(
+                "Error fetching Namespace list: %s" % format_dynamic_api_exc(exc)
+            )
         return [namespace.metadata.name for namespace in obj.items]
 
     def get_pods_for_namespace(self, client, name, namespace):
-        v1_pod = client.resources.get(api_version='v1', kind='Pod')
+        v1_pod = client.resources.get(api_version="v1", kind="Pod")
         try:
             obj = v1_pod.get(namespace=namespace)
         except DynamicApiError as exc:
             self.display.debug(exc)
-            raise K8sInventoryException('Error fetching Pod list: %s' % format_dynamic_api_exc(exc))
+            raise K8sInventoryException(
+                "Error fetching Pod list: %s" % format_dynamic_api_exc(exc)
+            )
 
-        namespace_group = 'namespace_{0}'.format(namespace)
-        namespace_pods_group = '{0}_pods'.format(namespace_group)
+        namespace_group = "namespace_{0}".format(namespace)
+        namespace_pods_group = "{0}_pods".format(namespace_group)
 
         self.inventory.add_group(name)
         self.inventory.add_group(namespace_group)
@@ -230,12 +251,14 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
         for pod in obj.items:
             pod_name = pod.metadata.name
             pod_groups = []
-            pod_annotations = {} if not pod.metadata.annotations else dict(pod.metadata.annotations)
+            pod_annotations = (
+                {} if not pod.metadata.annotations else dict(pod.metadata.annotations)
+            )
 
             if pod.metadata.labels:
                 # create a group for each label_value
                 for key, value in pod.metadata.labels:
-                    group_name = 'label_{0}_{1}'.format(key, value)
+                    group_name = "label_{0}_{1}".format(key, value)
                     if group_name not in pod_groups:
                         pod_groups.append(group_name)
                     self.inventory.add_group(group_name)
@@ -248,7 +271,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
 
             for container in pod.status.containerStatuses:
                 # add each pod_container to the namespace group, and to each label_value group
-                container_name = '{0}_{1}'.format(pod.metadata.name, container.name)
+                container_name = "{0}_{1}".format(pod.metadata.name, container.name)
                 self.inventory.add_host(container_name)
                 self.inventory.add_child(namespace_pods_group, container_name)
                 if pod_groups:
@@ -256,46 +279,85 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
                         self.inventory.add_child(group, container_name)
 
                 # Add hostvars
-                self.inventory.set_variable(container_name, 'object_type', 'pod')
-                self.inventory.set_variable(container_name, 'labels', pod_labels)
-                self.inventory.set_variable(container_name, 'annotations', pod_annotations)
-                self.inventory.set_variable(container_name, 'cluster_name', pod.metadata.clusterName)
-                self.inventory.set_variable(container_name, 'pod_node_name', pod.spec.nodeName)
-                self.inventory.set_variable(container_name, 'pod_name', pod.spec.name)
-                self.inventory.set_variable(container_name, 'pod_host_ip', pod.status.hostIP)
-                self.inventory.set_variable(container_name, 'pod_phase', pod.status.phase)
-                self.inventory.set_variable(container_name, 'pod_ip', pod.status.podIP)
-                self.inventory.set_variable(container_name, 'pod_self_link', pod.metadata.selfLink)
-                self.inventory.set_variable(container_name, 'pod_resource_version', pod.metadata.resourceVersion)
-                self.inventory.set_variable(container_name, 'pod_uid', pod.metadata.uid)
-                self.inventory.set_variable(container_name, 'container_name', container.image)
-                self.inventory.set_variable(container_name, 'container_image', container.image)
+                self.inventory.set_variable(container_name, "object_type", "pod")
+                self.inventory.set_variable(container_name, "labels", pod_labels)
+                self.inventory.set_variable(
+                    container_name, "annotations", pod_annotations
+                )
+                self.inventory.set_variable(
+                    container_name, "cluster_name", pod.metadata.clusterName
+                )
+                self.inventory.set_variable(
+                    container_name, "pod_node_name", pod.spec.nodeName
+                )
+                self.inventory.set_variable(container_name, "pod_name", pod.spec.name)
+                self.inventory.set_variable(
+                    container_name, "pod_host_ip", pod.status.hostIP
+                )
+                self.inventory.set_variable(
+                    container_name, "pod_phase", pod.status.phase
+                )
+                self.inventory.set_variable(container_name, "pod_ip", pod.status.podIP)
+                self.inventory.set_variable(
+                    container_name, "pod_self_link", pod.metadata.selfLink
+                )
+                self.inventory.set_variable(
+                    container_name, "pod_resource_version", pod.metadata.resourceVersion
+                )
+                self.inventory.set_variable(container_name, "pod_uid", pod.metadata.uid)
+                self.inventory.set_variable(
+                    container_name, "container_name", container.image
+                )
+                self.inventory.set_variable(
+                    container_name, "container_image", container.image
+                )
                 if container.state.running:
-                    self.inventory.set_variable(container_name, 'container_state', 'Running')
+                    self.inventory.set_variable(
+                        container_name, "container_state", "Running"
+                    )
                 if container.state.terminated:
-                    self.inventory.set_variable(container_name, 'container_state', 'Terminated')
+                    self.inventory.set_variable(
+                        container_name, "container_state", "Terminated"
+                    )
                 if container.state.waiting:
-                    self.inventory.set_variable(container_name, 'container_state', 'Waiting')
-                self.inventory.set_variable(container_name, 'container_ready', container.ready)
-                self.inventory.set_variable(container_name, 'ansible_remote_tmp', '/tmp/')
-                self.inventory.set_variable(container_name, 'ansible_connection', self.connection_plugin)
-                self.inventory.set_variable(container_name, 'ansible_{0}_pod'.format(self.transport),
-                                            pod_name)
-                self.inventory.set_variable(container_name, 'ansible_{0}_container'.format(self.transport),
-                                            container.name)
-                self.inventory.set_variable(container_name, 'ansible_{0}_namespace'.format(self.transport),
-                                            namespace)
+                    self.inventory.set_variable(
+                        container_name, "container_state", "Waiting"
+                    )
+                self.inventory.set_variable(
+                    container_name, "container_ready", container.ready
+                )
+                self.inventory.set_variable(
+                    container_name, "ansible_remote_tmp", "/tmp/"
+                )
+                self.inventory.set_variable(
+                    container_name, "ansible_connection", self.connection_plugin
+                )
+                self.inventory.set_variable(
+                    container_name, "ansible_{0}_pod".format(self.transport), pod_name
+                )
+                self.inventory.set_variable(
+                    container_name,
+                    "ansible_{0}_container".format(self.transport),
+                    container.name,
+                )
+                self.inventory.set_variable(
+                    container_name,
+                    "ansible_{0}_namespace".format(self.transport),
+                    namespace,
+                )
 
     def get_services_for_namespace(self, client, name, namespace):
-        v1_service = client.resources.get(api_version='v1', kind='Service')
+        v1_service = client.resources.get(api_version="v1", kind="Service")
         try:
             obj = v1_service.get(namespace=namespace)
         except DynamicApiError as exc:
             self.display.debug(exc)
-            raise K8sInventoryException('Error fetching Service list: %s' % format_dynamic_api_exc(exc))
+            raise K8sInventoryException(
+                "Error fetching Service list: %s" % format_dynamic_api_exc(exc)
+            )
 
-        namespace_group = 'namespace_{0}'.format(namespace)
-        namespace_services_group = '{0}_services'.format(namespace_group)
+        namespace_group = "namespace_{0}".format(namespace)
+        namespace_services_group = "{0}_services".format(namespace_group)
 
         self.inventory.add_group(name)
         self.inventory.add_group(namespace_group)
@@ -305,15 +367,21 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
 
         for service in obj.items:
             service_name = service.metadata.name
-            service_labels = {} if not service.metadata.labels else dict(service.metadata.labels)
-            service_annotations = {} if not service.metadata.annotations else dict(service.metadata.annotations)
+            service_labels = (
+                {} if not service.metadata.labels else dict(service.metadata.labels)
+            )
+            service_annotations = (
+                {}
+                if not service.metadata.annotations
+                else dict(service.metadata.annotations)
+            )
 
             self.inventory.add_host(service_name)
 
             if service.metadata.labels:
                 # create a group for each label_value
                 for key, value in service.metadata.labels:
-                    group_name = 'label_{0}_{1}'.format(key, value)
+                    group_name = "label_{0}_{1}".format(key, value)
                     self.inventory.add_group(group_name)
                     self.inventory.add_child(group_name, service_name)
 
@@ -322,42 +390,75 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleM
             except AnsibleError:
                 raise
 
-            ports = [{'name': port.name,
-                      'port': port.port,
-                      'protocol': port.protocol,
-                      'targetPort': port.targetPort,
-                      'nodePort': port.nodePort} for port in service.spec.ports or []]
+            ports = [
+                {
+                    "name": port.name,
+                    "port": port.port,
+                    "protocol": port.protocol,
+                    "targetPort": port.targetPort,
+                    "nodePort": port.nodePort,
+                }
+                for port in service.spec.ports or []
+            ]
 
             # add hostvars
-            self.inventory.set_variable(service_name, 'object_type', 'service')
-            self.inventory.set_variable(service_name, 'labels', service_labels)
-            self.inventory.set_variable(service_name, 'annotations', service_annotations)
-            self.inventory.set_variable(service_name, 'cluster_name', service.metadata.clusterName)
-            self.inventory.set_variable(service_name, 'ports', ports)
-            self.inventory.set_variable(service_name, 'type', service.spec.type)
-            self.inventory.set_variable(service_name, 'self_link', service.metadata.selfLink)
-            self.inventory.set_variable(service_name, 'resource_version', service.metadata.resourceVersion)
-            self.inventory.set_variable(service_name, 'uid', service.metadata.uid)
+            self.inventory.set_variable(service_name, "object_type", "service")
+            self.inventory.set_variable(service_name, "labels", service_labels)
+            self.inventory.set_variable(
+                service_name, "annotations", service_annotations
+            )
+            self.inventory.set_variable(
+                service_name, "cluster_name", service.metadata.clusterName
+            )
+            self.inventory.set_variable(service_name, "ports", ports)
+            self.inventory.set_variable(service_name, "type", service.spec.type)
+            self.inventory.set_variable(
+                service_name, "self_link", service.metadata.selfLink
+            )
+            self.inventory.set_variable(
+                service_name, "resource_version", service.metadata.resourceVersion
+            )
+            self.inventory.set_variable(service_name, "uid", service.metadata.uid)
 
             if service.spec.externalTrafficPolicy:
-                self.inventory.set_variable(service_name, 'external_traffic_policy',
-                                            service.spec.externalTrafficPolicy)
+                self.inventory.set_variable(
+                    service_name,
+                    "external_traffic_policy",
+                    service.spec.externalTrafficPolicy,
+                )
             if service.spec.externalIPs:
-                self.inventory.set_variable(service_name, 'external_ips', service.spec.externalIPs)
+                self.inventory.set_variable(
+                    service_name, "external_ips", service.spec.externalIPs
+                )
 
             if service.spec.externalName:
-                self.inventory.set_variable(service_name, 'external_name', service.spec.externalName)
+                self.inventory.set_variable(
+                    service_name, "external_name", service.spec.externalName
+                )
 
             if service.spec.healthCheckNodePort:
-                self.inventory.set_variable(service_name, 'health_check_node_port',
-                                            service.spec.healthCheckNodePort)
+                self.inventory.set_variable(
+                    service_name,
+                    "health_check_node_port",
+                    service.spec.healthCheckNodePort,
+                )
             if service.spec.loadBalancerIP:
-                self.inventory.set_variable(service_name, 'load_balancer_ip',
-                                            service.spec.loadBalancerIP)
+                self.inventory.set_variable(
+                    service_name, "load_balancer_ip", service.spec.loadBalancerIP
+                )
             if service.spec.selector:
-                self.inventory.set_variable(service_name, 'selector', dict(service.spec.selector))
+                self.inventory.set_variable(
+                    service_name, "selector", dict(service.spec.selector)
+                )
 
-            if hasattr(service.status.loadBalancer, 'ingress') and service.status.loadBalancer.ingress:
-                load_balancer = [{'hostname': ingress.hostname,
-                                  'ip': ingress.ip} for ingress in service.status.loadBalancer.ingress]
-                self.inventory.set_variable(service_name, 'load_balancer', load_balancer)
+            if (
+                hasattr(service.status.loadBalancer, "ingress")
+                and service.status.loadBalancer.ingress
+            ):
+                load_balancer = [
+                    {"hostname": ingress.hostname, "ip": ingress.ip}
+                    for ingress in service.status.loadBalancer.ingress
+                ]
+                self.inventory.set_variable(
+                    service_name, "load_balancer", load_balancer
+                )

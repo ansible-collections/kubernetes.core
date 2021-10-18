@@ -17,7 +17,7 @@ import re
 
 class Selector(object):
 
-    equality_based_operators = ('==', '!=', '=')
+    equality_based_operators = ("==", "!=", "=")
 
     def __init__(self, data):
         self._operator = None
@@ -27,18 +27,23 @@ class Selector(object):
             for op in self.equality_based_operators:
                 idx = no_whitespace_data.find(op)
                 if idx != -1:
-                    self._operator = "in" if op == '==' or op == '=' else "notin"
+                    self._operator = "in" if op == "==" or op == "=" else "notin"
                     self._key = no_whitespace_data[0:idx]
+                    # fmt: off
                     self._data = [no_whitespace_data[idx + len(op):]]
+                    # fmt: on
                     break
 
     def parse_set_based_requirement(self, data):
-        m = re.match(r'( *)([a-z0-9A-Z][a-z0-9A-Z\._-]*[a-z0-9A-Z])( +)(notin|in)( +)\((.*)\)( *)', data)
+        m = re.match(
+            r"( *)([a-z0-9A-Z][a-z0-9A-Z\._-]*[a-z0-9A-Z])( +)(notin|in)( +)\((.*)\)( *)",
+            data,
+        )
         if m:
             self._set_based_requirement = True
             self._key = m.group(2)
             self._operator = m.group(4)
-            self._data = [x.replace(' ', '') for x in m.group(6).split(',') if x != '']
+            self._data = [x.replace(" ", "") for x in m.group(6).split(",") if x != ""]
             return True
         elif all(x not in data for x in self.equality_based_operators):
             self._key = data.rstrip(" ").lstrip(" ")
@@ -54,18 +59,21 @@ class Selector(object):
         elif self._operator == "notin":
             return self._key not in labels or labels.get(self._key) not in self._data
         else:
-            return self._key not in labels if self._operator == "!" else self._key in labels
+            return (
+                self._key not in labels
+                if self._operator == "!"
+                else self._key in labels
+            )
 
 
 class LabelSelectorFilter(object):
-
     def __init__(self, label_selectors):
         self.selectors = [Selector(data) for data in label_selectors]
 
     def isMatching(self, definition):
-        if "metadata" not in definition or "labels" not in definition['metadata']:
+        if "metadata" not in definition or "labels" not in definition["metadata"]:
             return False
-        labels = definition['metadata']['labels']
+        labels = definition["metadata"]["labels"]
         if not isinstance(labels, dict):
             return None
         return all(sel.isMatch(labels) for sel in self.selectors)

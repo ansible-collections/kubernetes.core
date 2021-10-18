@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 module: k8s_info
 
 short_description: Describe Kubernetes (K8s) objects
@@ -52,9 +52,9 @@ requirements:
   - "python >= 3.6"
   - "kubernetes >= 12.0.0"
   - "PyYAML >= 3.11"
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Get an existing Service object
   kubernetes.core.k8s_info:
     api_version: v1
@@ -109,9 +109,9 @@ EXAMPLES = r'''
     namespace: default
     wait_sleep: 10
     wait_timeout: 360
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 api_found:
   description:
   - Whether the specified api_version and kind were successfully mapped to an existing API on the targeted cluster.
@@ -144,12 +144,17 @@ resources:
       description: Current status details for the object.
       returned: success
       type: dict
-'''
+"""
 
 import copy
 
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_SPEC, WAIT_ARG_SPEC)
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    AUTH_ARG_SPEC,
+    WAIT_ARG_SPEC,
+)
 
 
 def execute_module(module, k8s_ansible_mixin):
@@ -174,11 +179,11 @@ def argspec():
     args.update(
         dict(
             kind=dict(required=True),
-            api_version=dict(default='v1', aliases=['api', 'version']),
+            api_version=dict(default="v1", aliases=["api", "version"]),
             name=dict(),
             namespace=dict(),
-            label_selectors=dict(type='list', elements='str', default=[]),
-            field_selectors=dict(type='list', elements='str', default=[]),
+            label_selectors=dict(type="list", elements="str", default=[]),
+            field_selectors=dict(type="list", elements="str", default=[]),
         )
     )
     return args
@@ -187,12 +192,14 @@ def argspec():
 def main():
     module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin, get_api_client)
+        K8sAnsibleMixin,
+        get_api_client,
+    )
 
     k8s_ansible_mixin = K8sAnsibleMixin(module)
     k8s_ansible_mixin.client = get_api_client(module=module)
     execute_module(module, k8s_ansible_mixin)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

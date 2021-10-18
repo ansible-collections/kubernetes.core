@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: helm_plugin_info
 short_description: Gather information about Helm plugins
@@ -27,18 +27,18 @@ options:
     type: str
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Gather Helm plugin info
   kubernetes.core.helm_plugin_info:
 
 - name: Gather Helm env plugin info
   kubernetes.core.helm_plugin_info:
     plugin_name: env
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 stdout:
   type: str
   description: Full `helm` command stdout, in case you want to display it or examine the event log
@@ -68,7 +68,7 @@ rc:
   description: Helm plugin command return code
   returned: always
   sample: 1
-'''
+"""
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
@@ -80,39 +80,57 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            binary_path=dict(type='path'),
-            plugin_name=dict(type='str',),
+            binary_path=dict(type="path"),
+            plugin_name=dict(type="str",),
             # Helm options
-            context=dict(type='str', aliases=['kube_context'], fallback=(env_fallback, ['K8S_AUTH_CONTEXT'])),
-            kubeconfig=dict(type='path', aliases=['kubeconfig_path'], fallback=(env_fallback, ['K8S_AUTH_KUBECONFIG'])),
-
+            context=dict(
+                type="str",
+                aliases=["kube_context"],
+                fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
+            ),
+            kubeconfig=dict(
+                type="path",
+                aliases=["kubeconfig_path"],
+                fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
+            ),
             # Generic auth key
-            host=dict(type='str', fallback=(env_fallback, ['K8S_AUTH_HOST'])),
-            ca_cert=dict(type='path', aliases=['ssl_ca_cert'], fallback=(env_fallback, ['K8S_AUTH_SSL_CA_CERT'])),
-            validate_certs=dict(type='bool', default=True, aliases=['verify_ssl'], fallback=(env_fallback, ['K8S_AUTH_VERIFY_SSL'])),
-            api_key=dict(type='str', no_log=True, fallback=(env_fallback, ['K8S_AUTH_API_KEY']))
+            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
+            ca_cert=dict(
+                type="path",
+                aliases=["ssl_ca_cert"],
+                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
+            ),
+            validate_certs=dict(
+                type="bool",
+                default=True,
+                aliases=["verify_ssl"],
+                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
+            ),
+            api_key=dict(
+                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
+            ),
         ),
         mutually_exclusive=[
             ("context", "ca_cert"),
             ("context", "validate_certs"),
             ("kubeconfig", "ca_cert"),
-            ("kubeconfig", "validate_certs")
+            ("kubeconfig", "validate_certs"),
         ],
         supports_check_mode=True,
     )
 
-    bin_path = module.params.get('binary_path')
+    bin_path = module.params.get("binary_path")
 
     if bin_path is not None:
         helm_cmd_common = bin_path
     else:
-        helm_cmd_common = 'helm'
+        helm_cmd_common = "helm"
 
     helm_cmd_common = module.get_bin_path(helm_cmd_common, required=True)
 
     helm_cmd_common += " plugin"
 
-    plugin_name = module.params.get('plugin_name')
+    plugin_name = module.params.get("plugin_name")
 
     plugin_list = []
 
@@ -123,21 +141,13 @@ def main():
     for line in out:
         if plugin_name is None:
             plugin_list.append(
-                {
-                    "name": line[0],
-                    "version": line[1],
-                    "description": line[2],
-                }
+                {"name": line[0], "version": line[1], "description": line[2]}
             )
             continue
 
         if plugin_name == line[0]:
             plugin_list.append(
-                {
-                    "name": line[0],
-                    "version": line[1],
-                    "description": line[2],
-                }
+                {"name": line[0], "version": line[1], "description": line[2]}
             )
             break
 
@@ -151,5 +161,5 @@ def main():
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

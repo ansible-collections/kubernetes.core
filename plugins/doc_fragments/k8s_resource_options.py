@@ -5,13 +5,14 @@
 
 # Options for providing an object configuration
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
 class ModuleDocFragment(object):
 
-    DOCUMENTATION = r'''
+    DOCUMENTATION = r"""
 options:
   resource_definition:
     description:
@@ -30,4 +31,4 @@ options:
       I(resource_definition). See Examples below.
     - Mutually exclusive with I(template) in case of M(k8s) module.
     type: path
-'''
+"""

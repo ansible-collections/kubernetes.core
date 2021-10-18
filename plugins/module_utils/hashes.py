@@ -15,7 +15,8 @@
 # Implement ConfigMapHash and SecretHash equivalents
 # Based on https://github.com/kubernetes/kubernetes/pull/49961
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import json
@@ -23,6 +24,7 @@ import hashlib
 
 try:
     import string
+
     maketrans = string.maketrans
 except AttributeError:
     maketrans = str.maketrans
@@ -44,21 +46,21 @@ def sorted_dict(unsorted_dict):
 
 def generate_hash(resource):
     # Get name from metadata
-    metada = resource.get('metadata', {})
-    key = 'name'
-    resource['name'] = metada.get('name', '')
-    generate_name = metada.get('generateName', '')
-    if resource['name'] == '' and generate_name:
-        del(resource['name'])
-        key = 'generateName'
-        resource['generateName'] = generate_name
-    if resource['kind'] == 'ConfigMap':
-        marshalled = marshal(sorted_dict(resource), ['data', 'kind', key])
-        del(resource[key])
+    metada = resource.get("metadata", {})
+    key = "name"
+    resource["name"] = metada.get("name", "")
+    generate_name = metada.get("generateName", "")
+    if resource["name"] == "" and generate_name:
+        del resource["name"]
+        key = "generateName"
+        resource["generateName"] = generate_name
+    if resource["kind"] == "ConfigMap":
+        marshalled = marshal(sorted_dict(resource), ["data", "kind", key])
+        del resource[key]
         return encode(marshalled)
-    if resource['kind'] == 'Secret':
-        marshalled = marshal(sorted_dict(resource), ['data', 'kind', key, 'type'])
-        del(resource[key])
+    if resource["kind"] == "Secret":
+        marshalled = marshal(sorted_dict(resource), ["data", "kind", key, "type"])
+        del resource[key]
         return encode(marshalled)
     raise NotImplementedError
 
@@ -67,8 +69,10 @@ def marshal(data, keys):
     ordered = OrderedDict()
     for key in keys:
         ordered[key] = data.get(key, "")
-    return json.dumps(ordered, separators=(',', ':')).encode('utf-8')
+    return json.dumps(ordered, separators=(",", ":")).encode("utf-8")
 
 
 def encode(resource):
-    return hashlib.sha256(resource).hexdigest()[:10].translate(maketrans("013ae", "ghkmt"))
+    return (
+        hashlib.sha256(resource).hexdigest()[:10].translate(maketrans("013ae", "ghkmt"))
+    )

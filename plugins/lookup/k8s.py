@@ -3,11 +3,11 @@
 #
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
     lookup: k8s
 
     short_description: Query the K8s API
@@ -117,7 +117,7 @@ DOCUMENTATION = '''
       - "python >= 3.6"
       - "kubernetes >= 12.0.0"
       - "PyYAML >= 3.11"
-'''
+"""
 
 EXAMPLES = """
 - name: Fetch a list of namespaces
@@ -187,11 +187,15 @@ from ansible.errors import AnsibleError
 from ansible.module_utils.common._collections_compat import KeysView
 from ansible.plugins.lookup import LookupBase
 
-from ansible_collections.kubernetes.core.plugins.module_utils.common import K8sAnsibleMixin, get_api_client
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+    K8sAnsibleMixin,
+    get_api_client,
+)
 
 
 try:
     from kubernetes.dynamic.exceptions import NotFoundError
+
     HAS_K8S_MODULE_HELPER = True
     k8s_import_exception = None
 except ImportError as e:
@@ -200,12 +204,13 @@ except ImportError as e:
 
 
 class KubernetesLookup(K8sAnsibleMixin):
-
     def __init__(self):
 
         if not HAS_K8S_MODULE_HELPER:
             raise Exception(
-                "Requires the Kubernetes Python client. Try `pip install kubernetes`. Detail: {0}".format(k8s_import_exception)
+                "Requires the Kubernetes Python client. Try `pip install kubernetes`. Detail: {0}".format(
+                    k8s_import_exception
+                )
             )
 
         self.kind = None
@@ -226,31 +231,33 @@ class KubernetesLookup(K8sAnsibleMixin):
         self.params = kwargs
         self.client = get_api_client(**kwargs)
 
-        cluster_info = kwargs.get('cluster_info')
-        if cluster_info == 'version':
+        cluster_info = kwargs.get("cluster_info")
+        if cluster_info == "version":
             return [self.client.version]
-        if cluster_info == 'api_groups':
+        if cluster_info == "api_groups":
             if isinstance(self.client.resources.api_groups, KeysView):
                 return [list(self.client.resources.api_groups)]
             return [self.client.resources.api_groups]
 
-        self.kind = kwargs.get('kind')
-        self.name = kwargs.get('resource_name')
-        self.namespace = kwargs.get('namespace')
-        self.api_version = kwargs.get('api_version', 'v1')
-        self.label_selector = kwargs.get('label_selector')
-        self.field_selector = kwargs.get('field_selector')
-        self.include_uninitialized = kwargs.get('include_uninitialized', False)
+        self.kind = kwargs.get("kind")
+        self.name = kwargs.get("resource_name")
+        self.namespace = kwargs.get("namespace")
+        self.api_version = kwargs.get("api_version", "v1")
+        self.label_selector = kwargs.get("label_selector")
+        self.field_selector = kwargs.get("field_selector")
+        self.include_uninitialized = kwargs.get("include_uninitialized", False)
 
-        resource_definition = kwargs.get('resource_definition')
-        src = kwargs.get('src')
+        resource_definition = kwargs.get("resource_definition")
+        src = kwargs.get("src")
         if src:
             resource_definition = self.load_resource_definitions(src)[0]
         if resource_definition:
-            self.kind = resource_definition.get('kind', self.kind)
-            self.api_version = resource_definition.get('apiVersion', self.api_version)
-            self.name = resource_definition.get('metadata', {}).get('name', self.name)
-            self.namespace = resource_definition.get('metadata', {}).get('namespace', self.namespace)
+            self.kind = resource_definition.get("kind", self.kind)
+            self.api_version = resource_definition.get("apiVersion", self.api_version)
+            self.name = resource_definition.get("metadata", {}).get("name", self.name)
+            self.namespace = resource_definition.get("metadata", {}).get(
+                "namespace", self.namespace
+            )
 
         if not self.kind:
             raise AnsibleError(
@@ -260,17 +267,21 @@ class KubernetesLookup(K8sAnsibleMixin):
 
         resource = self.find_resource(self.kind, self.api_version, fail=True)
         try:
-            k8s_obj = resource.get(name=self.name, namespace=self.namespace, label_selector=self.label_selector, field_selector=self.field_selector)
+            k8s_obj = resource.get(
+                name=self.name,
+                namespace=self.namespace,
+                label_selector=self.label_selector,
+                field_selector=self.field_selector,
+            )
         except NotFoundError:
             return []
 
         if self.name:
             return [k8s_obj.to_dict()]
 
-        return k8s_obj.to_dict().get('items')
+        return k8s_obj.to_dict().get("items")
 
 
 class LookupModule(LookupBase):
-
     def run(self, terms, variables=None, **kwargs):
         return KubernetesLookup().run(terms, variables=variables, **kwargs)

@@ -17,9 +17,7 @@ def test_encode_stringdata_modifies_definition():
         "apiVersion": "v1",
         "kind": "Secret",
         "type": "Opaque",
-        "stringData": {
-            "mydata": "ansiβle"
-        }
+        "stringData": {"mydata": "ansiβle"},
     }
     res = _encode_stringdata(definition)
     assert "stringData" not in res
@@ -31,9 +29,7 @@ def test_encode_stringdata_does_not_modify_data():
         "apiVersion": "v1",
         "kind": "Secret",
         "type": "Opaque",
-        "data": {
-            "mydata": "Zm9vYmFy"
-        }
+        "data": {"mydata": "Zm9vYmFy"},
     }
     res = _encode_stringdata(definition)
     assert res["data"]["mydata"] == "Zm9vYmFy"

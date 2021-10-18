@@ -5,13 +5,14 @@
 
 # Options used by scale modules.
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
 class ModuleDocFragment(object):
 
-    DOCUMENTATION = r'''
+    DOCUMENTATION = r"""
 options:
   replicas:
     description:
@@ -46,4 +47,4 @@ options:
     default: 5
     type: int
     version_added: 2.0.0
-'''
+"""

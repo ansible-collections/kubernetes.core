@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 
 module: k8s_drain
 
@@ -83,9 +83,9 @@ options:
 requirements:
   - python >= 3.6
   - kubernetes >= 12.0.0
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Drain node "foo", even if there are pods not managed by a ReplicationController, Job, or DaemonSet on it.
   kubernetes.core.k8s_drain:
     state: drain
@@ -109,20 +109,24 @@ EXAMPLES = r'''
     state: cordon
     name: foo
 
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 result:
   description:
   - The node status and the number of pods deleted.
   returned: success
   type: str
-'''
+"""
 import copy
 from datetime import datetime
 import time
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import AUTH_ARG_SPEC
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    AUTH_ARG_SPEC,
+)
 from ansible.module_utils._text import to_native
 
 try:
@@ -144,7 +148,7 @@ def filter_pods(pods, force, ignore_daemonset):
             continue
 
         # Any finished pod can be deleted
-        if pod.status.phase in ('Succeeded', 'Failed'):
+        if pod.status.phase in ("Succeeded", "Failed"):
             to_delete.append((pod.metadata.namespace, pod.metadata.name))
             continue
 
@@ -167,19 +171,29 @@ def filter_pods(pods, force, ignore_daemonset):
 
     warnings, errors = [], []
     if unmanaged:
-        pod_names = ','.join([pod[0] + "/" + pod[1] for pod in unmanaged])
+        pod_names = ",".join([pod[0] + "/" + pod[1] for pod in unmanaged])
         if not force:
-            errors.append("cannot delete Pods not managed by ReplicationController, ReplicaSet, Job,"
-                          " DaemonSet or StatefulSet (use option force set to yes): {0}.".format(pod_names))
+            errors.append(
+                "cannot delete Pods not managed by ReplicationController, ReplicaSet, Job,"
+                " DaemonSet or StatefulSet (use option force set to yes): {0}.".format(
+                    pod_names
+                )
+            )
         else:
             # Pod not managed will be deleted as 'force' is true
-            warnings.append("Deleting Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: {0}.".format(pod_names))
+            warnings.append(
+                "Deleting Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: {0}.".format(
+                    pod_names
+                )
+            )
             to_delete += unmanaged
 
     # mirror pods warning
     if mirror:
-        pod_names = ','.join([pod[0] + "/" + pod[1] for pod in mirror])
-        warnings.append("cannot delete mirror Pods using API server: {0}.".format(pod_names))
+        pod_names = ",".join([pod[0] + "/" + pod[1] for pod in mirror])
+        warnings.append(
+            "cannot delete mirror Pods using API server: {0}.".format(pod_names)
+        )
 
     # local storage
     if localStorage:
@@ -187,19 +201,24 @@ def filter_pods(pods, force, ignore_daemonset):
 
     # DaemonSet managed Pods
     if daemonSet:
-        pod_names = ','.join([pod[0] + "/" + pod[1] for pod in daemonSet])
+        pod_names = ",".join([pod[0] + "/" + pod[1] for pod in daemonSet])
         if not ignore_daemonset:
-            errors.append("cannot delete DaemonSet-managed Pods (use option ignore_daemonset set to yes): {0}.".format(pod_names))
+            errors.append(
+                "cannot delete DaemonSet-managed Pods (use option ignore_daemonset set to yes): {0}.".format(
+                    pod_names
+                )
+            )
         else:
             warnings.append("Ignoring DaemonSet-managed Pods: {0}.".format(pod_names))
     return to_delete, warnings, errors
 
 
 class K8sDrainAnsible(object):
-
     def __init__(self, module):
         from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-            K8sAnsibleMixin, get_api_client)
+            K8sAnsibleMixin,
+            get_api_client,
+        )
 
         self._module = module
         self._k8s_ansible_mixin = K8sAnsibleMixin(module)
@@ -215,17 +234,25 @@ class K8sDrainAnsible(object):
         self._k8s_ansible_mixin.warn = self._module.warn
         self._k8s_ansible_mixin.warnings = []
 
-        self._api_instance = core_v1_api.CoreV1Api(self._k8s_ansible_mixin.client.client)
+        self._api_instance = core_v1_api.CoreV1Api(
+            self._k8s_ansible_mixin.client.client
+        )
         self._k8s_ansible_mixin.check_library_version()
 
         # delete options
-        self._drain_options = module.params.get('delete_options', {})
+        self._drain_options = module.params.get("delete_options", {})
         self._delete_options = None
-        if self._drain_options.get('terminate_grace_period'):
+        if self._drain_options.get("terminate_grace_period"):
             self._delete_options = {}
-            self._delete_options.update({'apiVersion': 'v1'})
-            self._delete_options.update({'kind': 'DeleteOptions'})
-            self._delete_options.update({'gracePeriodSeconds': self._drain_options.get('terminate_grace_period')})
+            self._delete_options.update({"apiVersion": "v1"})
+            self._delete_options.update({"kind": "DeleteOptions"})
+            self._delete_options.update(
+                {
+                    "gracePeriodSeconds": self._drain_options.get(
+                        "terminate_grace_period"
+                    )
+                }
+            )
 
         self._changed = False
 
@@ -241,13 +268,17 @@ class K8sDrainAnsible(object):
             if not pod:
                 pod = pods.pop()
             try:
-                response = self._api_instance.read_namespaced_pod(namespace=pod[0], name=pod[1])
+                response = self._api_instance.read_namespaced_pod(
+                    namespace=pod[0], name=pod[1]
+                )
                 if not response:
                     pod = None
                 time.sleep(wait_sleep)
             except ApiException as exc:
                 if exc.reason != "Not Found":
-                    self._module.fail_json(msg="Exception raised: {0}".format(exc.reason))
+                    self._module.fail_json(
+                        msg="Exception raised: {0}".format(exc.reason)
+                    )
                 pod = None
             except Exception as e:
                 self._module.fail_json(msg="Exception raised: {0}".format(to_native(e)))
@@ -257,37 +288,50 @@ class K8sDrainAnsible(object):
 
     def evict_pods(self, pods):
         for namespace, name in pods:
-            definition = {
-                'metadata': {
-                    'name': name,
-                    'namespace': namespace
-                }
-            }
+            definition = {"metadata": {"name": name, "namespace": namespace}}
             if self._delete_options:
-                definition.update({'delete_options': self._delete_options})
+                definition.update({"delete_options": self._delete_options})
             try:
-                if self._drain_options.get('disable_eviction'):
+                if self._drain_options.get("disable_eviction"):
                     body = V1DeleteOptions(**definition)
-                    self._api_instance.delete_namespaced_pod(name=name, namespace=namespace, body=body)
+                    self._api_instance.delete_namespaced_pod(
+                        name=name, namespace=namespace, body=body
+                    )
                 else:
                     body = V1beta1Eviction(**definition)
-                    self._api_instance.create_namespaced_pod_eviction(name=name, namespace=namespace, body=body)
+                    self._api_instance.create_namespaced_pod_eviction(
+                        name=name, namespace=namespace, body=body
+                    )
                 self._changed = True
             except ApiException as exc:
                 if exc.reason != "Not Found":
-                    self._module.fail_json(msg="Failed to delete pod {0}/{1} due to: {2}".format(namespace, name, exc.reason))
+                    self._module.fail_json(
+                        msg="Failed to delete pod {0}/{1} due to: {2}".format(
+                            namespace, name, exc.reason
+                        )
+                    )
             except Exception as exc:
-                self._module.fail_json(msg="Failed to delete pod {0}/{1} due to: {2}".format(namespace, name, to_native(exc)))
+                self._module.fail_json(
+                    msg="Failed to delete pod {0}/{1} due to: {2}".format(
+                        namespace, name, to_native(exc)
+                    )
+                )
 
     def delete_or_evict_pods(self, node_unschedulable):
         # Mark node as unschedulable
         result = []
         if not node_unschedulable:
             self.patch_node(unschedulable=True)
-            result.append("node {0} marked unschedulable.".format(self._module.params.get('name')))
+            result.append(
+                "node {0} marked unschedulable.".format(self._module.params.get("name"))
+            )
             self._changed = True
         else:
-            result.append("node {0} already marked unschedulable.".format(self._module.params.get('name')))
+            result.append(
+                "node {0} already marked unschedulable.".format(
+                    self._module.params.get("name")
+                )
+            )
 
         def _revert_node_patch():
             if self._changed:
@@ -295,77 +339,109 @@ class K8sDrainAnsible(object):
                 self.patch_node(unschedulable=False)
 
         try:
-            field_selector = "spec.nodeName={name}".format(name=self._module.params.get('name'))
-            pod_list = self._api_instance.list_pod_for_all_namespaces(field_selector=field_selector)
+            field_selector = "spec.nodeName={name}".format(
+                name=self._module.params.get("name")
+            )
+            pod_list = self._api_instance.list_pod_for_all_namespaces(
+                field_selector=field_selector
+            )
             # Filter pods
-            force = self._drain_options.get('force', False)
-            ignore_daemonset = self._drain_options.get('ignore_daemonsets', False)
-            pods, warnings, errors = filter_pods(pod_list.items, force, ignore_daemonset)
+            force = self._drain_options.get("force", False)
+            ignore_daemonset = self._drain_options.get("ignore_daemonsets", False)
+            pods, warnings, errors = filter_pods(
+                pod_list.items, force, ignore_daemonset
+            )
             if errors:
                 _revert_node_patch()
-                self._module.fail_json(msg="Pod deletion errors: {0}".format(" ".join(errors)))
+                self._module.fail_json(
+                    msg="Pod deletion errors: {0}".format(" ".join(errors))
+                )
         except ApiException as exc:
             if exc.reason != "Not Found":
                 _revert_node_patch()
-                self._module.fail_json(msg="Failed to list pod from node {name} due to: {reason}".format(
-                                       name=self._module.params.get('name'), reason=exc.reason), status=exc.status)
+                self._module.fail_json(
+                    msg="Failed to list pod from node {name} due to: {reason}".format(
+                        name=self._module.params.get("name"), reason=exc.reason
+                    ),
+                    status=exc.status,
+                )
             pods = []
         except Exception as exc:
             _revert_node_patch()
-            self._module.fail_json(msg="Failed to list pod from node {name} due to: {error}".format(
-                                   name=self._module.params.get('name'), error=to_native(exc)))
+            self._module.fail_json(
+                msg="Failed to list pod from node {name} due to: {error}".format(
+                    name=self._module.params.get("name"), error=to_native(exc)
+                )
+            )
 
         # Delete Pods
         if pods:
             self.evict_pods(pods)
             number_pod = len(pods)
-            if self._drain_options.get('wait_timeout') is not None:
-                warn = self.wait_for_pod_deletion(pods,
-                                                  self._drain_options.get('wait_timeout'),
-                                                  self._drain_options.get('wait_sleep'))
+            if self._drain_options.get("wait_timeout") is not None:
+                warn = self.wait_for_pod_deletion(
+                    pods,
+                    self._drain_options.get("wait_timeout"),
+                    self._drain_options.get("wait_sleep"),
+                )
                 if warn:
                     warnings.append(warn)
             result.append("{0} Pod(s) deleted from node.".format(number_pod))
         if warnings:
-            return dict(result=' '.join(result), warnings=warnings)
-        return dict(result=' '.join(result))
+            return dict(result=" ".join(result), warnings=warnings)
+        return dict(result=" ".join(result))
 
     def patch_node(self, unschedulable):
 
-        body = {
-            'spec': {'unschedulable': unschedulable}
-        }
+        body = {"spec": {"unschedulable": unschedulable}}
         try:
-            self._api_instance.patch_node(name=self._module.params.get('name'), body=body)
+            self._api_instance.patch_node(
+                name=self._module.params.get("name"), body=body
+            )
         except Exception as exc:
-            self._module.fail_json(msg="Failed to patch node due to: {0}".format(to_native(exc)))
+            self._module.fail_json(
+                msg="Failed to patch node due to: {0}".format(to_native(exc))
+            )
 
     def execute_module(self):
 
-        state = self._module.params.get('state')
-        name = self._module.params.get('name')
+        state = self._module.params.get("state")
+        name = self._module.params.get("name")
         try:
             node = self._api_instance.read_node(name=name)
         except ApiException as exc:
             if exc.reason == "Not Found":
                 self._module.fail_json(msg="Node {0} not found.".format(name))
-            self._module.fail_json(msg="Failed to retrieve node '{0}' due to: {1}".format(name, exc.reason), status=exc.status)
+            self._module.fail_json(
+                msg="Failed to retrieve node '{0}' due to: {1}".format(
+                    name, exc.reason
+                ),
+                status=exc.status,
+            )
         except Exception as exc:
-            self._module.fail_json(msg="Failed to retrieve node '{0}' due to: {1}".format(name, to_native(exc)))
+            self._module.fail_json(
+                msg="Failed to retrieve node '{0}' due to: {1}".format(
+                    name, to_native(exc)
+                )
+            )
 
         result = {}
         if state == "cordon":
             if node.spec.unschedulable:
-                self._module.exit_json(result="node {0} already marked unschedulable.".format(name))
+                self._module.exit_json(
+                    result="node {0} already marked unschedulable.".format(name)
+                )
             self.patch_node(unschedulable=True)
-            result['result'] = "node {0} marked unschedulable.".format(name)
+            result["result"] = "node {0} marked unschedulable.".format(name)
             self._changed = True
 
         elif state == "uncordon":
             if not node.spec.unschedulable:
-                self._module.exit_json(result="node {0} already marked schedulable.".format(name))
+                self._module.exit_json(
+                    result="node {0} already marked schedulable.".format(name)
+                )
             self.patch_node(unschedulable=False)
-            result['result'] = "node {0} marked schedulable.".format(name)
+            result["result"] = "node {0} marked schedulable.".format(name)
             self._changed = True
 
         else:
@@ -384,16 +460,16 @@ def argspec():
             state=dict(default="drain", choices=["cordon", "drain", "uncordon"]),
             name=dict(required=True),
             delete_options=dict(
-                type='dict',
+                type="dict",
                 default={},
                 options=dict(
-                    terminate_grace_period=dict(type='int'),
-                    force=dict(type='bool', default=False),
-                    ignore_daemonsets=dict(type='bool', default=False),
-                    disable_eviction=dict(type='bool', default=False),
-                    wait_timeout=dict(type='int'),
-                    wait_sleep=dict(type='int', default=5),
-                )
+                    terminate_grace_period=dict(type="int"),
+                    force=dict(type="bool", default=False),
+                    ignore_daemonsets=dict(type="bool", default=False),
+                    disable_eviction=dict(type="bool", default=False),
+                    wait_timeout=dict(type="int"),
+                    wait_sleep=dict(type="int", default=5),
+                ),
             ),
         )
     )
@@ -407,5 +483,5 @@ def main():
     k8s_drain.execute_module()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

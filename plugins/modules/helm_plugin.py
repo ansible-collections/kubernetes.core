@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: helm_plugin
 short_description: Manage Helm plugins
@@ -50,9 +50,9 @@ options:
     version_added: "2.3.0"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Install Helm env plugin
   kubernetes.core.helm_plugin:
     plugin_path: https://github.com/adamreese/helm-env
@@ -78,9 +78,9 @@ EXAMPLES = r'''
   kubernetes.core.helm_plugin:
     plugin_name: secrets
     state: latest
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 stdout:
   type: str
   description: Full `helm` command stdout, in case you want to display it or examine the event log
@@ -106,33 +106,53 @@ rc:
   description: Helm plugin command return code
   returned: always
   sample: 1
-'''
+"""
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     run_helm,
     get_helm_plugin_list,
-    parse_helm_plugin_list
+    parse_helm_plugin_list,
 )
 
 
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            binary_path=dict(type='path'),
-            state=dict(type='str', default='present', choices=['present', 'absent', 'latest']),
-            plugin_path=dict(type='str',),
-            plugin_name=dict(type='str',),
-            plugin_version=dict(type='str',),
+            binary_path=dict(type="path"),
+            state=dict(
+                type="str", default="present", choices=["present", "absent", "latest"]
+            ),
+            plugin_path=dict(type="str",),
+            plugin_name=dict(type="str",),
+            plugin_version=dict(type="str",),
             # Helm options
-            context=dict(type='str', aliases=['kube_context'], fallback=(env_fallback, ['K8S_AUTH_CONTEXT'])),
-            kubeconfig=dict(type='path', aliases=['kubeconfig_path'], fallback=(env_fallback, ['K8S_AUTH_KUBECONFIG'])),
-
+            context=dict(
+                type="str",
+                aliases=["kube_context"],
+                fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
+            ),
+            kubeconfig=dict(
+                type="path",
+                aliases=["kubeconfig_path"],
+                fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
+            ),
             # Generic auth key
-            host=dict(type='str', fallback=(env_fallback, ['K8S_AUTH_HOST'])),
-            ca_cert=dict(type='path', aliases=['ssl_ca_cert'], fallback=(env_fallback, ['K8S_AUTH_SSL_CA_CERT'])),
-            validate_certs=dict(type='bool', default=True, aliases=['verify_ssl'], fallback=(env_fallback, ['K8S_AUTH_VERIFY_SSL'])),
-            api_key=dict(type='str', no_log=True, fallback=(env_fallback, ['K8S_AUTH_API_KEY']))
+            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
+            ca_cert=dict(
+                type="path",
+                aliases=["ssl_ca_cert"],
+                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
+            ),
+            validate_certs=dict(
+                type="bool",
+                default=True,
+                aliases=["verify_ssl"],
+                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
+            ),
+            api_key=dict(
+                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
+            ),
         ),
         supports_check_mode=True,
         required_if=[
@@ -141,37 +161,37 @@ def main():
             ("state", "latest", ("plugin_name",)),
         ],
         mutually_exclusive=[
-            ('plugin_name', 'plugin_path'),
+            ("plugin_name", "plugin_path"),
             ("context", "ca_cert"),
             ("context", "validate_certs"),
             ("kubeconfig", "ca_cert"),
-            ("kubeconfig", "validate_certs")
+            ("kubeconfig", "validate_certs"),
         ],
     )
 
-    bin_path = module.params.get('binary_path')
-    state = module.params.get('state')
+    bin_path = module.params.get("binary_path")
+    state = module.params.get("state")
 
     if bin_path is not None:
         helm_cmd_common = bin_path
     else:
-        helm_cmd_common = 'helm'
+        helm_cmd_common = "helm"
 
     helm_cmd_common = module.get_bin_path(helm_cmd_common, required=True)
 
     helm_cmd_common += " plugin"
 
-    if state == 'present':
-        helm_cmd_common += " install %s" % module.params.get('plugin_path')
-        plugin_version = module.params.get('plugin_version')
+    if state == "present":
+        helm_cmd_common += " install %s" % module.params.get("plugin_path")
+        plugin_version = module.params.get("plugin_version")
         if plugin_version is not None:
             helm_cmd_common += " --version=%s" % plugin_version
         if not module.check_mode:
             rc, out, err = run_helm(module, helm_cmd_common, fails_on_error=False)
         else:
-            rc, out, err = (0, '', '')
+            rc, out, err = (0, "", "")
 
-        if rc == 1 and 'plugin already exists' in err:
+        if rc == 1 and "plugin already exists" in err:
             module.exit_json(
                 failed=False,
                 changed=False,
@@ -179,7 +199,7 @@ def main():
                 command=helm_cmd_common,
                 stdout=out,
                 stderr=err,
-                rc=rc
+                rc=rc,
             )
         elif rc == 0:
             module.exit_json(
@@ -199,8 +219,8 @@ def main():
                 stderr=err,
                 rc=rc,
             )
-    elif state == 'absent':
-        plugin_name = module.params.get('plugin_name')
+    elif state == "absent":
+        plugin_name = module.params.get("plugin_name")
         rc, output, err = get_helm_plugin_list(module, helm_bin=helm_cmd_common)
         out = parse_helm_plugin_list(module, output=output.splitlines())
 
@@ -212,7 +232,7 @@ def main():
                 command=helm_cmd_common + " list",
                 stdout=output,
                 stderr=err,
-                rc=rc
+                rc=rc,
             )
 
         found = False
@@ -228,14 +248,14 @@ def main():
                 command=helm_cmd_common + " list",
                 stdout=output,
                 stderr=err,
-                rc=rc
+                rc=rc,
             )
 
         helm_uninstall_cmd = "%s uninstall %s" % (helm_cmd_common, plugin_name)
         if not module.check_mode:
             rc, out, err = run_helm(module, helm_uninstall_cmd, fails_on_error=False)
         else:
-            rc, out, err = (0, '', '')
+            rc, out, err = (0, "", "")
 
         if rc == 0:
             module.exit_json(
@@ -244,7 +264,7 @@ def main():
                 command=helm_uninstall_cmd,
                 stdout=out,
                 stderr=err,
-                rc=rc
+                rc=rc,
             )
         module.fail_json(
             msg="Failed to get Helm plugin uninstall",
@@ -253,8 +273,8 @@ def main():
             stderr=err,
             rc=rc,
         )
-    elif state == 'latest':
-        plugin_name = module.params.get('plugin_name')
+    elif state == "latest":
+        plugin_name = module.params.get("plugin_name")
         rc, output, err = get_helm_plugin_list(module, helm_bin=helm_cmd_common)
         out = parse_helm_plugin_list(module, output=output.splitlines())
 
@@ -266,7 +286,7 @@ def main():
                 command=helm_cmd_common + " list",
                 stdout=output,
                 stderr=err,
-                rc=rc
+                rc=rc,
             )
 
         found = False
@@ -282,14 +302,14 @@ def main():
                 command=helm_cmd_common + " list",
                 stdout=output,
                 stderr=err,
-                rc=rc
+                rc=rc,
             )
 
         helm_update_cmd = "%s update %s" % (helm_cmd_common, plugin_name)
         if not module.check_mode:
             rc, out, err = run_helm(module, helm_update_cmd, fails_on_error=False)
         else:
-            rc, out, err = (0, '', '')
+            rc, out, err = (0, "", "")
 
         if rc == 0:
             module.exit_json(
@@ -298,7 +318,7 @@ def main():
                 command=helm_update_cmd,
                 stdout=out,
                 stderr=err,
-                rc=rc
+                rc=rc,
             )
         module.fail_json(
             msg="Failed to get Helm plugin update",
@@ -309,5 +329,5 @@ def main():
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
