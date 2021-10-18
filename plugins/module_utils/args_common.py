@@ -29,6 +29,7 @@ AUTH_ARG_SPEC = {
     "client_cert": {"type": "path", "aliases": ["cert_file"]},
     "client_key": {"type": "path", "aliases": ["key_file"]},
     "proxy": {"type": "str"},
+    "no_proxy": {"type": "str"},
     "proxy_headers": {"type": "dict", "options": AUTH_PROXY_HEADERS_SPEC},
     "persist_config": {"type": "bool"},
 }
@@ -61,6 +62,7 @@ AUTH_ARG_MAP = {
     "cert_file": "client_cert",
     "key_file": "client_key",
     "proxy": "proxy",
+    "no_proxy": "no_proxy",
     "proxy_headers": "proxy_headers",
     "persist_config": "persist_config",
 }
