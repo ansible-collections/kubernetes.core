@@ -161,7 +161,7 @@ def if_failed(function):
                 ", ".join(
                     map(
                         lambda t: "%s" % t["key"],
-                        _get_intersection((*args)),
+                        _get_intersection(*args),
                     )
                 )
             )
@@ -294,8 +294,8 @@ class K8sTaintAnsible:
 
         def _ensure_effect_defined(a):
             return all(
-                l.get("effect") in ("NoExecute", "NoSchedule", "PreferNoSchedule")
-                for l in a
+                elem.get("effect") in ("NoExecute", "NoSchedule", "PreferNoSchedule")
+                for elem in a
             )
 
         if state == "present":
