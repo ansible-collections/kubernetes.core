@@ -5,6 +5,14 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.2.1
+======
+
+Bugfixes
+--------
+
+- common - Ensure the label_selectors parameter of _wait_for method is optional.
+
 v2.2.0
 ======
 

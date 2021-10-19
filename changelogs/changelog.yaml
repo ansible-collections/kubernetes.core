@@ -486,3 +486,11 @@ releases:
         name: kustomize
         namespace: null
     release_date: '2021-09-15'
+  2.2.1:
+    changes:
+      bugfixes:
+      - common - Ensure the label_selectors parameter of _wait_for method is optional.
+    fragments:
+    - 0-copy_ignore_txt.yml
+    - _wait_for_label_selector_optional.yaml
+    release_date: '2021-10-18'
