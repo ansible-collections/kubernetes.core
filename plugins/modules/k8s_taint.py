@@ -158,12 +158,7 @@ def if_failed(function):
             result["result"] = "node/{0} already has ".format(
                 self.module.params.get("name")
             ) + "{0} taint(s) with same effect(s) and overwrite is false".format(
-                ", ".join(
-                    map(
-                        lambda t: "%s" % t["key"],
-                        _get_intersection(*args),
-                    )
-                )
+                ", ".join(map(lambda t: "%s" % t["key"], _get_intersection(*args),))
             )
 
             self.module.exit_json(changed=self.changed, **result)
@@ -319,10 +314,7 @@ class K8sTaintAnsible:
 
 
 def main():
-    module = AnsibleModule(
-        argument_spec=argspec(),
-        supports_check_mode=True,
-    )
+    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True,)
     k8s_taint = K8sTaintAnsible(module)
     k8s_taint.execute_module()
 
