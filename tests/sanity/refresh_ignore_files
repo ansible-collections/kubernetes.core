@@ -20,17 +20,17 @@ skip_list = [
     "metaclass-boilerplate!skip",  # Py2 only
 ]
 
-for version in ["2.9", "2.10", "2.11", "2.12"]:
+for version in ["2.9", "2.10", "2.11", "2.12", "2.13"]:
     ignore_file = ignore_dir / f"ignore-{version}.txt"
     ignore_content = ignore_file.read_text().split("\n")
     ignore_content.append(f"tests/sanity/refresh_ignore_files shebang!skip")
 
-    for f in module_dir.glob("*.py"):
+    for f in module_dir.glob("**/*.py"):
         if f.is_symlink():
             continue
         for test in skip_list:
             ignore_content.append(f"{f} {test}")
-    for f in module_utils_dir.glob("*.py"):
+    for f in module_utils_dir.glob("**/*.py"):
         if f.is_symlink():
             continue
         for test in skip_list:
