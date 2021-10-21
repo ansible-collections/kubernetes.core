@@ -2,3 +2,4 @@ kubernetes-validate
 coverage==4.5.4
 pytest
 pytest-xdist
+pytest-mock
