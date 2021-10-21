@@ -1,4 +1,3 @@
-import traceback
 from distutils.version import LooseVersion
 from typing import Optional
 
