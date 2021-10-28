@@ -172,6 +172,8 @@ class ActionModule(ActionBase):
             "community.okd.k8s",
             "redhat.openshift.k8s",
             "community.kubernetes.k8s",
+            "openshift_adm_groups_sync",
+            "community.okd.openshift_adm_groups_sync",
         ):
             raise AnsibleActionFail(
                 "'template' is only a supported parameter for the 'k8s' module."
