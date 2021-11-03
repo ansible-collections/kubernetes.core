@@ -295,3 +295,17 @@ tests/unit/module_utils/test_resource.py future-import-boilerplate!skip
 tests/unit/module_utils/test_resource.py metaclass-boilerplate!skip
 tests/unit/module_utils/test_selector.py future-import-boilerplate!skip
 tests/unit/module_utils/test_selector.py metaclass-boilerplate!skip
+plugins/module_utils/selector.py future-import-boilerplate!skip
+plugins/module_utils/selector.py metaclass-boilerplate!skip
+plugins/lookup/kustomize.py future-import-boilerplate!skip
+plugins/lookup/kustomize.py metaclass-boilerplate!skip
+molecule/default/roles/helm/library/helm_test_version.py metaclass-boilerplate!skip
+molecule/default/roles/helm/library/helm_test_version.py future-import-boilerplate!skip
+molecule/default/roles/helm/library/helm_test_version.py shebang
+plugins/module_utils/k8s/client.py compile-2.6!skip
+plugins/module_utils/k8s/client.py compile-2.7!skip
+plugins/module_utils/k8s/client.py compile-3.5!skip
+plugins/module_utils/k8s/client.py future-import-boilerplate!skip
+plugins/module_utils/k8s/client.py metaclass-boilerplate!skip
+tests/unit/module_utils/test_client.py future-import-boilerplate!skip
+tests/unit/module_utils/test_client.py metaclass-boilerplate!skip
