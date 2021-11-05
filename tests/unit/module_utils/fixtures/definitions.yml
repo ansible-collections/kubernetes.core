@@ -1,0 +1,11 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: foo
+  namespace: bar
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: foo
+  namespace: bar
