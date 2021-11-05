@@ -1,5 +1,5 @@
 import os
-from typing import cast, Dict, Iterable, List, Mapping, MutableMapping, Optional, Union
+from typing import cast, Dict, Iterable, List, Optional, Union
 
 from ansible.module_utils.six import string_types
 
