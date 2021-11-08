@@ -212,6 +212,13 @@ def get_api_client(module=None, **kwargs):
         # Removing trailing slashes if any from hostname
         auth["host"] = auth.get("host").rstrip("/")
 
+    if auth_set("no_proxy"):
+        if LooseVersion(kubernetes.__version__) < LooseVersion("19.15.0"):
+            _raise_or_fail(
+                Exception("kubernetes >= 19.15.0 is required to use no_proxy feature."),
+                "Failed to set no_proxy due to: %s",
+            )
+
     if auth_set("username", "password", "host") or auth_set("api_key", "host"):
         # We have enough in the parameters to authenticate, no need to load incluster or kubeconfig
         pass
