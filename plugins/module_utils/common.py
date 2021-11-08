@@ -361,13 +361,20 @@ class K8sAnsibleMixin(object):
             return (datetime.now() - start).seconds
 
         def result_empty(result):
-            return result is None or result.kind.endswith("List") and not result.get("items")
+            return (
+                result is None
+                or result.kind.endswith("List")
+                and not result.get("items")
+            )
 
         while result_empty(result) and _elapsed() < wait_timeout:
             try:
-                result = resource.get(name=name, namespace=namespace,
-                                      label_selector=','.join(label_selectors),
-                                      field_selector=','.join(field_selectors))
+                result = resource.get(
+                    name=name,
+                    namespace=namespace,
+                    label_selector=",".join(label_selectors),
+                    field_selector=",".join(field_selectors),
+                )
             except NotFoundError:
                 pass
             if not result_empty(result):
