@@ -360,21 +360,28 @@ class K8sAnsibleMixin(object):
         def _elapsed():
             return (datetime.now() - start).seconds
 
-        if result is None:
-            while _elapsed() < wait_timeout:
-                try:
-                    result = resource.get(
-                        name=name,
-                        namespace=namespace,
-                        label_selector=",".join(label_selectors),
-                        field_selector=",".join(field_selectors),
-                    )
-                    break
-                except NotFoundError:
-                    pass
-                time.sleep(wait_sleep)
-            if result is None:
-                return dict(resources=[], api_found=True)
+        def result_empty(result):
+            return (
+                result is None
+                or result.kind.endswith("List")
+                and not result.get("items")
+            )
+
+        while result_empty(result) and _elapsed() < wait_timeout:
+            try:
+                result = resource.get(
+                    name=name,
+                    namespace=namespace,
+                    label_selector=",".join(label_selectors),
+                    field_selector=",".join(field_selectors),
+                )
+            except NotFoundError:
+                pass
+            if not result_empty(result):
+                break
+            time.sleep(wait_sleep)
+        if result_empty(result):
+            return dict(resources=[], api_found=True)
 
         if isinstance(result, ResourceInstance):
             satisfied_by = []

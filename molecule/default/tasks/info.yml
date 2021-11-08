@@ -199,6 +199,38 @@
         that:
           - "{{ lookup('pipe', 'date +%s') }} - {{ start }} > 30"
 
+    - name: Create simple pod
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: wait-pod-1
+            namespace: "{{ wait_namespace }}"
+          spec:
+            containers:
+              - image: busybox
+                name: busybox
+                command:
+                  - /bin/sh
+                  - -c
+                  - while true; do sleep 5; done
+
+    - name: Wait for multiple non-existent pods to be created
+      k8s_info:
+        kind: Pod
+        namespace: "{{ wait_namespace }}"
+        label_selectors:
+          - thislabel=doesnotexist
+        wait: yes
+        wait_timeout: 10
+      register: result
+
+    - name: Assert no pods were found
+      assert:
+        that:
+          - not result.resources
+
   vars:
     k8s_pod_name: pod-info-1
 
