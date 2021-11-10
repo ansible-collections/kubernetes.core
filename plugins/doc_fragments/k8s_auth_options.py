@@ -77,6 +77,14 @@ options:
     - The URL of an HTTP proxy to use for the connection. Can also be specified via K8S_AUTH_PROXY environment variable.
     - Please note that this module does not pick up typical proxy settings from the environment (e.g. HTTP_PROXY).
     type: str
+  no_proxy:
+    description:
+    - The comma separated list of hosts/domains/IP/CIDR that shouldn't go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.
+    - Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).
+    - This feature requires kubernetes>=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.
+    - example value is "localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    type: str
+    version_added: 2.3.0
   proxy_headers:
     description:
     - The Header used for the HTTP proxy.
