@@ -65,6 +65,12 @@ options:
     default: present
     aliases: [ state ]
     type: str
+  pass_credentials:
+    description:
+      - Pass credentials to all domains.
+    required: false
+    default: false
+    type: boolean
 """
 
 EXAMPLES = r"""
@@ -157,13 +163,16 @@ def get_repository_status(module, command, repository_name):
 
 # Install repository
 def install_repository(
-    command, repository_name, repository_url, repository_username, repository_password
+    command, repository_name, repository_url, repository_username, repository_password, pass_credentials
 ):
     install_command = command + " repo add " + repository_name + " " + repository_url
 
     if repository_username is not None and repository_password is not None:
         install_command += " --username=" + repository_username
         install_command += " --password=" + repository_password
+
+    if pass_credentials:
+        install_command += " --pass-credentials"
 
     return install_command
 
@@ -188,6 +197,7 @@ def main():
             repo_state=dict(
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
+            pass_credentials=dict(type="bool", default=False)
         ),
         required_together=[["repo_username", "repo_password"]],
         required_if=[("repo_state", "present", ["repo_url"])],
@@ -205,6 +215,7 @@ def main():
     repo_username = module.params.get("repo_username")
     repo_password = module.params.get("repo_password")
     repo_state = module.params.get("repo_state")
+    pass_credentials = module.params.get("pass_credentials")
 
     if bin_path is not None:
         helm_cmd = bin_path
@@ -219,7 +230,7 @@ def main():
     elif repo_state == "present":
         if repository_status is None:
             helm_cmd = install_repository(
-                helm_cmd, repo_name, repo_url, repo_username, repo_password
+                helm_cmd, repo_name, repo_url, repo_username, repo_password, pass_credentials
             )
             changed = True
         elif repository_status["url"] != repo_url:
