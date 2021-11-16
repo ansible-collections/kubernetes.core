@@ -242,3 +242,11 @@ plugins/modules/k8s_cp.py import-2.7!skip
 plugins/module_utils/selector.py future-import-boilerplate!skip
 plugins/module_utils/selector.py metaclass-boilerplate!skip
 molecule/default/roles/helm/library/helm_test_version.py shebang
+plugins/modules/k8s_taint.py compile-2.7!skip
+plugins/modules/k8s_taint.py compile-3.5!skip
+plugins/modules/k8s_taint.py future-import-boilerplate!skip
+plugins/modules/k8s_taint.py import-2.7!skip
+plugins/modules/k8s_taint.py import-3.5!skip
+plugins/modules/k8s_taint.py metaclass-boilerplate!skip
+plugins/modules/k8s_taint.py validate-modules:parameter-type-not-in-doc
+plugins/modules/k8s_taint.py validate-modules:return-syntax-error

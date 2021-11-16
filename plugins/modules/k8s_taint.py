@@ -98,7 +98,7 @@ EXAMPLES = r"""
 RETURN = r"""
 result:
     description:
-        -  Shows if the node has been successfully tainted/untained.
+        - The tainted Node object.
     returned: success
     type: complex
     contains:
@@ -127,11 +127,15 @@ result:
 import copy
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils._text import to_native
 
+from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+    K8sAnsibleMixin,
+    get_api_client,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
 )
-from ansible.module_utils._text import to_native
 
 try:
     from kubernetes.client.api import core_v1_api
@@ -171,11 +175,6 @@ def argspec():
 
 class K8sTaintAnsible:
     def __init__(self, module):
-        from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-            K8sAnsibleMixin,
-            get_api_client,
-        )
-
         self.module = module
         self.k8s_ansible_mixin = K8sAnsibleMixin(module=self.module)
         self.k8s_ansible_mixin.client = get_api_client(module=self.module)
