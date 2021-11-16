@@ -1,0 +1,10 @@
+- project:
+    name: github.com/ansible-collections/kubernetes.core
+    check:
+      jobs:
+        - network-ee-sanity-tests:
+            voting: false
+    gate:
+      jobs:
+        - network-ee-sanity-tests:
+            voting: false
