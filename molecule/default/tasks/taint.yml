@@ -270,7 +270,7 @@
       search_effect: "{{ item.effect }}"
       all_taints: "{{ taint_patch_2 }}"
     with_items: "{{ _result.result.spec.taints }}"
-  
+
   - name: Remove taint from node (idempotency)
     kubernetes.core.k8s_taint:
       state: absent
@@ -282,7 +282,7 @@
     assert:
       that:
       - not _result.changed
-  
+
   - name: Remove nonexistent taint from node
     kubernetes.core.k8s_taint:
       state: absent
