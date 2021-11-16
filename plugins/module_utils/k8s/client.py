@@ -1,8 +1,11 @@
+# Copyright: (c) 2021, Red Hat | Ansible
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 import os
-import traceback
 import hashlib
 from distutils.version import LooseVersion
-from typing import Any, Dict, Optional
+from time import strftime
+from typing import Any, Dict, List, Optional
 
 from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native
@@ -14,25 +17,21 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
 )
 
 try:
-    import kubernetes
-except ImportError:
-    # Handled in module setup
-    pass
-
-IMP_K8S_CLIENT = None
-try:
     from ansible_collections.kubernetes.core.plugins.module_utils import (
         k8sdynamicclient,
     )
     from ansible_collections.kubernetes.core.plugins.module_utils.client.discovery import (
         LazyDiscoverer,
     )
+except ImportError:
+    # Handled in module setup
+    pass
 
-    IMP_K8S_CLIENT = True
-except ImportError as e:
-    IMP_K8S_CLIENT = False
-    k8s_client_import_exception = e
-    IMP_K8S_CLIENT_ERR = traceback.format_exc()
+try:
+    import kubernetes
+except ImportError:
+    # Handled in module setup
+    pass
 
 try:
     import urllib3
@@ -42,16 +41,12 @@ except ImportError:
     # Handled in module setup
     pass
 
+
 module = None
+_pool = {}
 
 
-def _raise_or_fail(exc, msg):
-    if module:
-        module.fail_json(msg=msg % to_native(exc))
-    raise exc
-
-
-def _requires_kubernetes_at_least(version):
+def _requires_kubernetes_at_least(version: str):
     if module:
         module.requires("kubernetes", version)
     else:
@@ -62,7 +57,7 @@ def _requires_kubernetes_at_least(version):
 
 
 def _create_auth_spec(module=None, **kwargs) -> Dict:
-    auth = {}
+    auth: Dict = {}
     # If authorization variables aren't defined, look for them in environment variables
     for true_name, arg_name in AUTH_ARG_MAP.items():
         if module and module.params.get(arg_name) is not None:
@@ -127,7 +122,7 @@ def _create_configuration(auth: Dict):
         try:
             _load_config(auth)
         except Exception as err:
-            _raise_or_fail(err, "Failed to load kubeconfig due to %s")
+            raise err
 
     else:
         # First try to do incluster config, then kubeconfig
@@ -137,7 +132,7 @@ def _create_configuration(auth: Dict):
             try:
                 _load_config(auth)
             except Exception as err:
-                _raise_or_fail(err, "Failed to load kubeconfig due to %s")
+                raise err
 
     # Override any values in the default configuration with Ansible parameters
     # As of kubernetes-client v12.0.0, get_default_copy() is required here
@@ -179,22 +174,24 @@ def _configuration_digest(configuration) -> str:
     return digest
 
 
+def cache(func):
+    def wrapper(*args):
+        digest = _configuration_digest(*args)
+        if digest in _pool:
+            client = _pool[digest]
+            return client
+        else:
+            client = func(*args)
+            _pool[digest] = client
+
+    return wrapper
+
+
+@cache
 def create_api_client(configuration):
-    digest = _configuration_digest(configuration)
-    if digest in get_api_client._pool:
-        client = get_api_client._pool[digest]
-        return client
-
-    try:
-        client = k8sdynamicclient.K8SDynamicClient(
-            kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer
-        )
-    except Exception as err:
-        _raise_or_fail(err, "Failed to get client due to %s")
-
-    get_api_client._pool[digest] = client
-
-    return client
+    return k8sdynamicclient.K8SDynamicClient(
+        kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer
+    )
 
 
 class K8SClient:
@@ -204,43 +201,14 @@ class K8SClient:
     If there is a need for other methods or attributes to be proxied, they can be added here.
     """
 
-    def __init__(self, configuration, client, resources, dry_run: bool = False) -> None:
+    def __init__(self, configuration, client, dry_run: bool = False) -> None:
         self.configuration = configuration
         self.client = client
-        self.resources = resources
         self.dry_run = dry_run
 
     @property
-    def configuration(self) -> None:
-        return self._configuration
-
-    @configuration.setter
-    def configuration(self, value):
-        self._configuration = value
-
-    @property
-    def client(self):
-        return self._client
-
-    @client.setter
-    def client(self, value) -> None:
-        self._client = value
-
-    @property
-    def resources(self):
-        return self._resources
-
-    @resources.setter
-    def resources(self, value) -> None:
-        self._resources = value
-
-    @property
-    def dry_run(self) -> bool:
-        return self._dry_run
-
-    @dry_run.setter
-    def dry_run(self, value: bool) -> None:
-        self._dry_run = value
+    def resources(self) -> List[Any]:
+        return self.client.resources
 
     def _ensure_dry_run(self, params: Dict) -> Dict:
         if self.dry_run:
@@ -271,16 +239,6 @@ class K8SClient:
         return resource.patch(definition, **self._ensure_dry_run(params))
 
 
-def set_cache_attribute(**func_attrs):
-    def wrapper(func):
-        for attr, value in func_attrs.items():
-            setattr(func, attr, value)
-        return func
-
-    return wrapper
-
-
-@set_cache_attribute(_pool={})
 def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
     auth_spec = _create_auth_spec(module, **kwargs)
     configuration = _create_configuration(auth_spec)
@@ -289,8 +247,7 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
     k8s_client = K8SClient(
         configuration=configuration,
         client=client,
-        resources=client.resources,
         dry_run=module.params.get("dry_run", False),
     )
 
-    return k8s_client
+    return k8s_client.client
