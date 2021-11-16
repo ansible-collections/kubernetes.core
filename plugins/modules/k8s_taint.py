@@ -146,11 +146,7 @@ except ImportError:
 
 
 def _equal_dicts(a, b):
-    ignore_keys = ("time_added", "value")
-    ka = set(a).difference(ignore_keys)
-    kb = set(b).difference(ignore_keys)
-
-    return all(a[k] == b[k] for k in ka if k in kb)
+    return all([ a[x] == b[x] for x in ('effect', 'key') ])
 
 
 def _get_difference(a, b):
@@ -233,7 +229,7 @@ class K8sTaintAnsible:
         name = self.module.params.get("name")
 
         node = self.get_node(name)
-        existing_taints = node.spec.to_dict()["taints"] or []
+        existing_taints = node.spec.to_dict().get("taints") or []
 
         diff = _get_difference(taints, existing_taints)
 
