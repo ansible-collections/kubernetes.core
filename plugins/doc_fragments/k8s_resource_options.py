@@ -29,6 +29,6 @@ options:
     - Reads from the local file system. To read from the Ansible controller's file system, including vaulted files, use the file lookup
       plugin or template lookup plugin, combined with the from_yaml filter, and pass the result to
       I(resource_definition). See Examples below.
-    - Mutually exclusive with I(template) in case of M(k8s) module.
+    - Mutually exclusive with I(template) in case of M(kubernetes.core.k8s) module.
     type: path
 """
