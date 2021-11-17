@@ -70,35 +70,35 @@ EXAMPLES = r"""
     state: present
     name: foo
     taints:
-        - effect: NoExecute
-          key: "key1"
+    - effect: NoExecute
+      key: "key1"
 
 - name: Taint node "foo"
   kubernetes.core.k8s_taint:
     state: present
     name: foo
     taints:
-        - effect: NoExecute
-          key: "key1"
-          value: "value1"
-        - effect: NoSchedule
-          key: "key1"
-          value: "value1"
+    - effect: NoExecute
+      key: "key1"
+      value: "value1"
+    - effect: NoSchedule
+      key: "key1"
+      value: "value1"
 
 - name: Remove taint from "foo".
   kubernetes.core.k8s_taint:
     state: absent
     name: foo
     taints:
-        - effect: NoExecute
-          key: "key1"
-          value: "value1"
+    - effect: NoExecute
+      key: "key1"
+      value: "value1"
 """
 
 RETURN = r"""
 result:
     description:
-        - The tainted Node object.
+        - The tainted Node object. Will be empty in the case of a deletion.
     returned: success
     type: complex
     contains:
@@ -146,13 +146,32 @@ except ImportError:
 
 
 def _equal_dicts(a, b):
-    return all([ a[x] == b[x] for x in ('effect', 'key') ])
+    keys = ["key", "effect"]
+    if "effect" not in set(a).intersection(b):
+        keys.remove("effect")
+
+    return all((a[x] == b[x] for x in keys))
 
 
 def _get_difference(a, b):
     return [
         a_item for a_item in a if not any(_equal_dicts(a_item, b_item) for b_item in b)
     ]
+
+
+def _update_exists(a, b):
+    return any(
+        (
+            True
+            if any(
+                _equal_dicts(a_item, b_item)
+                and a_item.get("value") != b_item.get("value")
+                for b_item in b
+            )
+            else False
+            for a_item in a
+        )
+    )
 
 
 def argspec():
@@ -230,37 +249,50 @@ class K8sTaintAnsible:
 
         node = self.get_node(name)
         existing_taints = node.spec.to_dict().get("taints") or []
-
         diff = _get_difference(taints, existing_taints)
 
         if state == "present":
-            if not diff:
-                result["result"] = node.to_dict()
-                self.module.exit_json(changed=self.changed, **result)
-            else:
+            if diff:
+                # There are new taints to be added
+                self.changed = True
                 if self.module.check_mode:
-                    self.changed = True
                     self.module.exit_json(changed=self.changed, **result)
 
-                if not self.module.params.get("overwrite"):
+                if self.module.params.get("overwrite"):
+                    # Patch with the new taints
+                    result["result"] = self.patch_node(taints=taints)
+                    self.module.exit_json(changed=self.changed, **result)
+
+                if _update_exists(existing_taints, taints):
+                    # If there are also taints to be updated
+                    result["result"] = self.patch_node(
+                        taints=[*_get_difference(existing_taints, taints), *taints]
+                    )
+                else:
+                    # Nothing to be updated, but only to be added
                     result["result"] = self.patch_node(
                         taints=[*existing_taints, *taints]
                     )
+            else:
+                # No new taints to be added, but maybe there is something to be updated
+                if _update_exists(existing_taints, taints):
+                    self.changed = True
+                    if self.module.check_mode:
+                        self.module.exit_json(changed=self.changed, **result)
+                    result["result"] = self.patch_node(
+                        taints=[*_get_difference(existing_taints, taints), *taints]
+                    )
                 else:
-                    result["result"] = self.patch_node(taints=taints)
-
-                self.changed = True
-
+                    result["result"] = node.to_dict()
         elif state == "absent":
+            # Nothing to be removed
             if not existing_taints:
                 result["result"] = node.to_dict()
             if not diff:
                 self.changed = True
                 if self.module.check_mode:
                     self.module.exit_json(changed=self.changed, **result)
-                result["result"] = self.patch_node(
-                    taints=_get_difference(existing_taints, taints)
-                )
+                self.patch_node(taints=_get_difference(existing_taints, taints))
 
         self.module.exit_json(changed=self.changed, **result)
 
