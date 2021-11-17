@@ -174,13 +174,15 @@ def _configuration_digest(configuration) -> str:
 
 def cache(func):
     def wrapper(*args):
+        client = None
         digest = _configuration_digest(*args)
         if digest in _pool:
             client = _pool[digest]
-            return client
         else:
             client = func(*args)
             _pool[digest] = client
+
+        return client
 
     return wrapper
 
