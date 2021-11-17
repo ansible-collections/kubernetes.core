@@ -71,6 +71,7 @@ options:
     required: false
     default: false
     type: boolean
+    version_added: 2.3.0
 """
 
 EXAMPLES = r"""
@@ -197,7 +198,7 @@ def main():
             repo_state=dict(
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
-            pass_credentials=dict(type="bool", default=False)
+            pass_credentials=dict(type="bool", default=False),
         ),
         required_together=[["repo_username", "repo_password"]],
         required_if=[("repo_state", "present", ["repo_url"])],
