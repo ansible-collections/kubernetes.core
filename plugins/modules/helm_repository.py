@@ -164,7 +164,12 @@ def get_repository_status(module, command, repository_name):
 
 # Install repository
 def install_repository(
-    command, repository_name, repository_url, repository_username, repository_password, pass_credentials
+    command,
+    repository_name,
+    repository_url,
+    repository_username,
+    repository_password,
+    pass_credentials
 ):
     install_command = command + " repo add " + repository_name + " " + repository_url
 
@@ -231,7 +236,12 @@ def main():
     elif repo_state == "present":
         if repository_status is None:
             helm_cmd = install_repository(
-                helm_cmd, repo_name, repo_url, repo_username, repo_password, pass_credentials
+                helm_cmd,
+                repo_name,
+                repo_url,
+                repo_username,
+                repo_password,
+                pass_credentials
             )
             changed = True
         elif repository_status["url"] != repo_url:
