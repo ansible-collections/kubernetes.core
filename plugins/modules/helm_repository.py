@@ -70,7 +70,7 @@ options:
       - Pass credentials to all domains.
     required: false
     default: false
-    type: boolean
+    type: bool
     version_added: 2.3.0
 """
 

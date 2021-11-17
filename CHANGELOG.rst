@@ -4,14 +4,6 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
-v2.3.0
-======
-
-Minor Changes
--------------
-
-- helm_repository - add support for pass-credentials cli parameter (https://github.com/ansible-collections/kubernetes.core/pull/282).
-
 v2.2.0
 ======
 
