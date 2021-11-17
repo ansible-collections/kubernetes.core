@@ -4,11 +4,9 @@
 import os
 import hashlib
 from distutils.version import LooseVersion
-from time import strftime
 from typing import Any, Dict, List, Optional
 
 from ansible.module_utils.six import iteritems, string_types
-from ansible.module_utils._text import to_native
 
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_MAP,
