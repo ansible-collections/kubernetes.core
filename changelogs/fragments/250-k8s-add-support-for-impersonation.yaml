@@ -1,0 +1,2 @@
+minor_changes:
+  - k8s - add support for user impersonation. (https://github.com/ansible-collections/kubernetes/core/issues/40).

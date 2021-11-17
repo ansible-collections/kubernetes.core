@@ -205,6 +205,14 @@
       tags:
         - always
 
+    - name: Include user_impersonation.yml
+      include_tasks:
+        file: tasks/user_impersonation.yml
+        apply:
+          tags: [ user_impersonation, k8s ]
+      tags:
+        - always
+
   roles:
     - role: helm
       tags:
