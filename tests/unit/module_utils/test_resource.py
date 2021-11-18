@@ -30,9 +30,9 @@ def test_create_definitions_loads_from_file():
     current = Path(os.path.dirname(os.path.abspath(__file__)))
     params = {"src": current / "fixtures/definitions.yml"}
     results = create_definitions(params)
-    assert len(results) == 2
-    assert results[0].kind == "Pod"
-    assert results[1].kind == "ConfigMap"
+    assert len(results) == 3
+    assert results[0].kind == "Namespace"
+    assert results[1].kind == "Pod"
 
 
 def test_create_definitions_loads_from_params():
@@ -160,8 +160,8 @@ def test_from_yaml_loads_dictionary():
 def test_from_file_loads_definitions():
     current = Path(os.path.dirname(os.path.abspath(__file__)))
     result = list(from_file(current / "fixtures/definitions.yml"))
-    assert result[0]["kind"] == "Pod"
-    assert result[1]["kind"] == "ConfigMap"
+    assert result[0]["kind"] == "Namespace"
+    assert result[1]["kind"] == "Pod"
 
 
 def test_flatten_list_kind_flattens():

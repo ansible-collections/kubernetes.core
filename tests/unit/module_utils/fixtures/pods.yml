@@ -1,0 +1,63 @@
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  namespace: test-1
+  name: pod-1
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+status:
+  containerStatuses:
+    - name: busybox
+      ready: true
+  conditions:
+    - type: "www.example.com/gate"
+      status: "True"
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  namespace: test-1
+  name: pod-2
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  namespace: test-1
+  name: pod-3
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+status:
+  phase: Pending
+  conditions:
+    - type: "www.example.com/gate"
+      status: "Unknown"
+  containerStatuses:
+    - name: busybox
+      ready: true
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  namespace: test-1
+  name: pod-4
+spec:
+  containers:
+    - image: busybox
+      name: busybox
+status:
+  phase: Pending
+  conditions:
+    - type: "www.example.com/other"
+      status: "Unknown"
+  containerStatuses:
+    - name: busybox
+      ready: true
