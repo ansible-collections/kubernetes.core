@@ -427,19 +427,7 @@
     kubernetes.core.k8s_taint:
       state: absent
       name: "{{ node_to_taint }}"
-      taints: "{{ taint_patch_1 }}"
-    ignore_errors: true
-
-  - name: Remove taints
-    kubernetes.core.k8s_taint:
-      state: absent
-      name: "{{ node_to_taint }}"
-      taints: [ "{{ taint_patch_2[1] }}" ]
-    ignore_errors: true
-
-  - name: Remove taints
-    kubernetes.core.k8s_taint:
-      state: absent
-      name: "{{ node_to_taint }}"
-      taints: "{{ taint_patch_3 }}"
+      taints:
+      - key: "key1"
+      - key: "key2"
     ignore_errors: true
