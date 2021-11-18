@@ -1,0 +1,15 @@
+- job:
+    name: ansible-test-redhat-openshift-sanity
+    run: playbooks/downstream_sanity.yaml
+
+- project:
+    name: github.com/ansible-collections/community.okd
+    check:
+      jobs:
+        - ansible-test-redhat-openshift-sanity:
+            voting: false
+    gate:
+      jobs:
+        - ansible-test-redhat-openshift-sanity:
+            voting: false
+dddd
