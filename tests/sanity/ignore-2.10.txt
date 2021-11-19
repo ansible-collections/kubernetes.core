@@ -295,3 +295,10 @@ tests/unit/module_utils/test_resource.py future-import-boilerplate!skip
 tests/unit/module_utils/test_resource.py metaclass-boilerplate!skip
 tests/unit/module_utils/test_selector.py future-import-boilerplate!skip
 tests/unit/module_utils/test_selector.py metaclass-boilerplate!skip
+plugins/module_utils/k8s/client.py compile-2.6!skip
+plugins/module_utils/k8s/client.py compile-2.7!skip
+plugins/module_utils/k8s/client.py compile-3.5!skip
+plugins/module_utils/k8s/client.py future-import-boilerplate!skip
+plugins/module_utils/k8s/client.py metaclass-boilerplate!skip
+tests/unit/module_utils/test_client.py future-import-boilerplate!skip
+tests/unit/module_utils/test_client.py metaclass-boilerplate!skip

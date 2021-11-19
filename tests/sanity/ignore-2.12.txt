@@ -285,3 +285,8 @@ plugins/modules/k8s_service.py validate-modules:parameter-type-not-in-doc
 plugins/modules/k8s_service.py validate-modules:return-syntax-error
 tests/sanity/refresh_ignore_files shebang!skip
 tests/unit/module_utils/fixtures/definitions.yml yamllint!skip
+plugins/module_utils/k8s/client.py compile-2.6!skip
+plugins/module_utils/k8s/client.py compile-2.7!skip
+plugins/module_utils/k8s/client.py compile-3.5!skip
+plugins/module_utils/k8s/client.py future-import-boilerplate!skip
+plugins/module_utils/k8s/client.py metaclass-boilerplate!skip
