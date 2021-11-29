@@ -197,6 +197,7 @@ def filter_pods(pods, force, ignore_daemonset):
 
     # local storage
     if localStorage:
+        pod_names = ",".join([pod[0] + "/" + pod[1] for pod in localStorage])
         errors.append("cannot delete Pods with local storage: {0}.".format(pod_names))
 
     # DaemonSet managed Pods
