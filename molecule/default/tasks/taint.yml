@@ -136,52 +136,52 @@
       that:
       - _result.resources | list | length == 0
 
-  - name: Taint node with overwrite=true (check_mode)
+  - name: Taint node with replace=true (check_mode)
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
       taints: "{{ taint_patch_1}}"
-      overwrite: true
+      replace: true
     check_mode: true
     register: _result
 
-  - name: Assert that node has been tainted (overwrite=true)
+  - name: Assert that node has been tainted (replace=true)
     assert:
       that:
       - not _result.changed
 
-  - name: Taint node with overwrite=true
+  - name: Taint node with replace=true
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
       taints: "{{ taint_patch_1}}"
-      overwrite: true
+      replace: true
     register: _result
 
-  - name: Assert that node has been tainted (overwrite=true)
+  - name: Assert that node has been tainted (replace=true)
     assert:
       that:
       - not _result.changed
 
-  - name: Taint again node with overwrite=true (check_mode)
+  - name: Taint again node with replace=true (check_mode)
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
       taints: "{{ taint_patch_1 }}"
-      overwrite: true
+      replace: true
     check_mode: true
     register: _result
 
-  - name: Assert that node has been tainted (overwrite=true) - (check_mode)
+  - name: Assert that node has been tainted (replace=true) - (check_mode)
     assert:
       that:
       - not _result.changed
 
-  - name: Taint again node with overwrite=true
+  - name: Taint again node with replace=true
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
       taints: "{{ taint_patch_1 }}"
-      overwrite: true
+      replace: true
     register: _result
 
-  - name: Assert that node has been tainted (overwrite=true)
+  - name: Assert that node has been tainted (replace=true)
     assert:
       that:
       - not _result.changed
@@ -408,6 +408,26 @@
       all_taints: "{{ left_taint_patch_2 }} + {{ left_taint_patch_3 }}"
     with_items: "{{ _result.resources[0].spec.taints }}"
 
+  - name: Remove taints (including non existing ones)
+    kubernetes.core.k8s_taint:
+      state: absent
+      name: "{{ node_to_taint }}"
+      taints:
+      - key: "key1"
+      - key: "key2"
+      - key: "key3"
+
+  - name: Get node taints
+    kubernetes.core.k8s_info:
+      kind: node
+      name: "{{ node_to_taint }}"
+    register: _result
+
+  - name: Assert that taints have been removed
+    assert:
+      that:
+      - _result.resources | selectattr('spec.taints', 'undefined')
+
   always:
   - name: Delete Pods
     kubernetes.core.k8s:
@@ -430,4 +450,5 @@
       taints:
       - key: "key1"
       - key: "key2"
+      - key: "key3"
     ignore_errors: true

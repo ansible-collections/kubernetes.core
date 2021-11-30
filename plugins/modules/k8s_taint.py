@@ -53,9 +53,9 @@ options:
                     - Required when I(state=present).
                 type: str
                 choices: [ NoSchedule, NoExecute, PreferNoSchedule ]
-    overwrite:
+    replace:
         description:
-            - If true, allow taints to be overwritten, otherwise reject taint updates that overwrite existing taints.
+            - If C(true), allow taints to be replaced.
         required: false
         default: false
         type: bool
@@ -159,16 +159,18 @@ def _get_difference(a, b):
     ]
 
 
+def _get_intersection(a, b):
+    return [a_item for a_item in a if any(_equal_dicts(a_item, b_item) for b_item in b)]
+
+
 def _update_exists(a, b):
     return any(
         (
-            True
-            if any(
+            any(
                 _equal_dicts(a_item, b_item)
                 and a_item.get("value") != b_item.get("value")
                 for b_item in b
             )
-            else False
             for a_item in a
         )
     )
@@ -181,7 +183,7 @@ def argspec():
             state=dict(type="str", choices=["present", "absent"], default="present"),
             name=dict(type="str", required=True),
             taints=dict(type="list", required=True, elements="dict"),
-            overwrite=dict(type="bool", default=False),
+            replace=dict(type="bool", default=False),
         )
     )
 
@@ -258,7 +260,7 @@ class K8sTaintAnsible:
                 if self.module.check_mode:
                     self.module.exit_json(changed=self.changed, **result)
 
-                if self.module.params.get("overwrite"):
+                if self.module.params.get("replace"):
                     # Patch with the new taints
                     result["result"] = self.patch_node(taints=taints)
                     self.module.exit_json(changed=self.changed, **result)
@@ -293,6 +295,14 @@ class K8sTaintAnsible:
                 if self.module.check_mode:
                     self.module.exit_json(changed=self.changed, **result)
                 self.patch_node(taints=_get_difference(existing_taints, taints))
+            else:
+                if _get_intersection(existing_taints, taints):
+                    self.changed = True
+                    if self.module.check_mode:
+                        self.module.exit_json(changed=self.changed, **result)
+                    self.patch_node(taints=_get_difference(existing_taints, taints))
+                else:
+                    self.module.exit_json(changed=self.changed, **result)
 
         self.module.exit_json(changed=self.changed, **result)
 
