@@ -455,16 +455,10 @@
             kind: ConfigMap
           register: configmap_info
 
-        - name: create list of all configmaps name
-          set_fact:
-            configmap_list: "{{ configmap_list | default([]) + [configmap_info.resources[item].metadata.name] }}"
-          loop: "{{ range(0, configmap_info.resources | length) }}"
-
         - assert:
             that:
-              - configmap_list | length == 3
-              - configmap_list[1] == "test-configmap-1"
-              - configmap_list[2] == "test-configmap-2"
+              - configmap_info.resources[1].metadata.name == "test-configmap-1"
+              - configmap_info.resources[2].metadata.name == "test-configmap-2"
 
       module_defaults:
         group/k8s:
