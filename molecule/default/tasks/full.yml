@@ -429,25 +429,23 @@
     # test setting module defaults for community.kubernetes.k8s_info
     - block:
         - name: Create a namespace
-          k8s:
+          kubernetes.core.k8s:
             name: test-namespace-module-defaults
             kind: Namespace
           register: output
 
         - name: Create a ConfigMap
-          k8s:
+          kubernetes.core.k8s:
             kind: ConfigMap
             name: test-configmap-1
-            namespace: test-namespace-module-defaults
             definition:
               data:
                 key1: value1
 
         - name: Create another ConfigMap
-          k8s:
+          kubernetes.core.k8s:
             kind: ConfigMap
             name: test-configmap-2
-            namespace: test-namespace-module-defaults
             definition:
               data:
                 key2: value2
@@ -455,9 +453,6 @@
         - name: Get list of all ConfigMaps in namespace specified in module_defaults
           community.kubernetes.k8s_info:
             kind: ConfigMap
-          module_defaults:
-            group/k8s:
-              namespace: test-namespace-module-defaults
           register: configmap_info
 
         - name: create list of all configmaps name
@@ -465,22 +460,15 @@
             configmap_list: "{{ configmap_list | default([]) + [configmap_info.resources[item].metadata.name] }}"
           loop: "{{ range(0, configmap_info.resources | length) }}"
 
-        - name: Get list of all ConfigMaps
-          community.kubernetes.k8s_info:
-            kind: ConfigMap
-          register: configmap_all_info
-
-        - name: create list of all configmaps name
-          set_fact:
-            configmap_all_list: "{{ configmap_all_list | default([]) + [configmap_all_info.resources[item].metadata.name] }}"
-          loop: "{{ range(0, configmap_all_info.resources | length) }}"
-
         - assert:
             that:
               - configmap_list | length == 3
-              - configmap_list != configmap_all_list
               - configmap_list[1] == "test-configmap-1"
               - configmap_list[2] == "test-configmap-2"
+
+      module_defaults:
+        group/k8s:
+          namespace: test-namespace-module-defaults
 
   always:
     - name: Delete all namespaces
