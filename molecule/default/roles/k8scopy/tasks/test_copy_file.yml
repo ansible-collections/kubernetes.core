@@ -64,7 +64,7 @@
 
   - assert:
       that:
-        - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
+      - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
 
   - name: Generate tempfile
     tempfile:
@@ -92,7 +92,7 @@
 
   - assert:
       that:
-        - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
+      - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
 
   # zip files
   - name: copy zip file into remote pod
