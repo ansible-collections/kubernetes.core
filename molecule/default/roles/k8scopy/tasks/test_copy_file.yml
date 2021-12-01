@@ -34,50 +34,65 @@
       kubectl_path: "{{ kubectl_path }}"
 
   # Binary file
-  - name: Generate random content
-    set_fact:
-      hello_arg: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=16') }}"
+
+  - name: Create temp binary file
+    tempfile:
+      state: file
+    register: binfile
+
+  - name: Generate random binary content
+    command: dd if=/dev/urandom of={{ binfile.path }} bs=1M count=1
 
   - name: Copy executable into Pod
     k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/hello.exe
-      local_path: files/hello
+      local_path: "{{ binfile.path }}"
       state: to_pod
 
-  - name: Compare executable
-    kubectl_file_compare:
-      namespace: '{{ copy_namespace }}'
-      pod: '{{ pod_with_one_container.name }}'
-      remote_path: /tmp/hello.exe
-      local_path: "{{ role_path }}/files/hello"
-      kubectl_path: "{{ kubectl_path }}"
-      args:
-      - "{{ hello_arg }}"
+  - name: Get remote hash
+    kubernetes.core.k8s_exec:
+      namespace: "{{ copy_namespace }}"
+      pod: "{{ pod_with_one_container.name }}"
+      command: sha256sum -b /tmp/hello.exe
+    register: remote_hash
+
+  - name: Get local hash
+    command: sha256sum -b {{ binfile.path }}
+    register: local_hash
+
+  - assert:
+      that:
+        - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
+
+  - name: Generate tempfile
+    tempfile:
+      state: file
+    register: binfile
 
   - name: Copy executable from Pod
     k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/hello.exe
-      local_path: /tmp/hello
+      local_path: "{{ binfile.path }}"
       state: from_pod
 
-  - name: update executable permission
-    file:
-      path: /tmp/hello
-      mode: '0755'
+  - name: Get remote hash
+    kubernetes.core.k8s_exec:
+      namespace: "{{ copy_namespace }}"
+      pod: "{{ pod_with_one_container.name }}"
+      command: sha256sum -b /tmp/hello.exe
+    register: remote_hash
 
-  - name: Compare executable
-    kubectl_file_compare:
-      namespace: '{{ copy_namespace }}'
-      pod: '{{ pod_with_one_container.name }}'
-      remote_path: /tmp/hello.exe
-      local_path: /tmp/hello
-      kubectl_path: "{{ kubectl_path }}"
-      args:
-      - "{{ hello_arg }}"
+  - name: Get local hash
+    command: sha256sum -b {{ binfile.path }}
+    register: local_hash
+
+  - assert:
+      that:
+        - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
 
   # zip files
   - name: copy zip file into remote pod
