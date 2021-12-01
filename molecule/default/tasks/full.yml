@@ -467,6 +467,8 @@
         group/kubernetes.core.k8s:
           namespace: test-namespace-module-defaults
 
+      when: ansible_version.full >= "2.12.0"
+
   always:
     - name: Delete all namespaces
       k8s:
