@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - remove binary file from k8s_cp test suite (https://github.com/ansible-collections/kubernetes.core/pull/298).
