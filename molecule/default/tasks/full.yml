@@ -426,7 +426,7 @@
         that:
           - result.resources[0].data.testkey == "{{ cmap_data.stdout | b64encode }}"
 
-    # test setting module defaults for community.kubernetes.k8s_info
+    # test setting module defaults for kubernetes.core.k8s_info
     - block:
         - name: Create a namespace
           kubernetes.core.k8s:
@@ -451,17 +451,20 @@
                 key2: value2
 
         - name: Get list of all ConfigMaps in namespace specified in module_defaults
-          community.kubernetes.k8s_info:
+          kubernetes.core.k8s_info:
             kind: ConfigMap
           register: configmap_info
 
-        - assert:
+        - name: assert that the ConfigMaps are created in and info is retrieved for namespace specified in module_defaults
+          assert:
             that:
               - configmap_info.resources[1].metadata.name == "test-configmap-1"
+              - configmap_info.resources[1].metadata.namespace == "test-namespace-module-defaults"
               - configmap_info.resources[2].metadata.name == "test-configmap-2"
+              - configmap_info.resources[2].metadata.namespace == "test-namespace-module-defaults"
 
       module_defaults:
-        group/k8s:
+        group/kubernetes.core.k8s:
           namespace: test-namespace-module-defaults
 
   always:
