@@ -9,7 +9,7 @@ action_groups:
   k8s:
     - k8s
     - k8s_exec
-    - k8s_facts
+    # - k8s_facts
     - k8s_info
     - k8s_log
     - k8s_scale
