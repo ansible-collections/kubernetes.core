@@ -426,6 +426,49 @@
         that:
           - result.resources[0].data.testkey == "{{ cmap_data.stdout | b64encode }}"
 
+    # test setting module defaults for kubernetes.core.k8s_info
+    - block:
+        - name: Create a namespace
+          kubernetes.core.k8s:
+            name: test-namespace-module-defaults
+            kind: Namespace
+          register: output
+
+        - name: Create a ConfigMap
+          kubernetes.core.k8s:
+            kind: ConfigMap
+            name: test-configmap-1
+            definition:
+              data:
+                key1: value1
+
+        - name: Create another ConfigMap
+          kubernetes.core.k8s:
+            kind: ConfigMap
+            name: test-configmap-2
+            definition:
+              data:
+                key2: value2
+
+        - name: Get list of all ConfigMaps in namespace specified in module_defaults
+          kubernetes.core.k8s_info:
+            kind: ConfigMap
+          register: configmap_info
+
+        - name: assert that the ConfigMaps are created in and info is retrieved for namespace specified in module_defaults
+          assert:
+            that:
+              - configmap_info.resources[1].metadata.name == "test-configmap-1"
+              - configmap_info.resources[1].metadata.namespace == "test-namespace-module-defaults"
+              - configmap_info.resources[2].metadata.name == "test-configmap-2"
+              - configmap_info.resources[2].metadata.namespace == "test-namespace-module-defaults"
+
+      module_defaults:
+        group/kubernetes.core.k8s:
+          namespace: test-namespace-module-defaults
+
+      when: ansible_version.full is version("2.12", ">=")
+
   always:
     - name: Delete all namespaces
       k8s:
@@ -459,4 +502,8 @@
             apiVersion: v1
             metadata:
               name: testing6
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: test-namespace-module-defaults
       ignore_errors: yes
