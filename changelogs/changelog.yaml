@@ -494,3 +494,10 @@ releases:
     - 0-copy_ignore_txt.yml
     - _wait_for_label_selector_optional.yaml
     release_date: '2021-10-18'
+  2.2.2:
+    changes:
+      bugfixes:
+      - remove binary file from k8s_cp test suite (https://github.com/ansible-collections/kubernetes.core/pull/298).
+    fragments:
+    - 298-remove-binary-file.yaml
+    release_date: '2021-12-07'

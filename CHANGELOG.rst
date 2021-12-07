@@ -5,6 +5,14 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.2.2
+======
+
+Bugfixes
+--------
+
+- remove binary file from k8s_cp test suite (https://github.com/ansible-collections/kubernetes.core/pull/298).
+
 v2.2.1
 ======
 
