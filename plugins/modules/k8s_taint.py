@@ -265,16 +265,9 @@ class K8sTaintAnsible:
                     result["result"] = self.patch_node(taints=taints)
                     self.module.exit_json(changed=self.changed, **result)
 
-                if _update_exists(existing_taints, taints):
-                    # If there are also taints to be updated
-                    result["result"] = self.patch_node(
-                        taints=[*_get_difference(existing_taints, taints), *taints]
-                    )
-                else:
-                    # Nothing to be updated, but only to be added
-                    result["result"] = self.patch_node(
-                        taints=[*existing_taints, *taints]
-                    )
+                result["result"] = self.patch_node(
+                    taints=[*_get_difference(existing_taints, taints), *taints]
+                )
             else:
                 # No new taints to be added, but maybe there is something to be updated
                 if _update_exists(existing_taints, taints):
