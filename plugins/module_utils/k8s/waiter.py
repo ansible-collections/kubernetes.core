@@ -1,6 +1,6 @@
 import time
 from functools import partial
-from typing import Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ansible.module_utils.parsing.convert_bool import boolean
 
@@ -8,6 +8,9 @@ try:
     from kubernetes.dynamic.exceptions import NotFoundError
     from kubernetes.dynamic.resource import Resource, ResourceField, ResourceInstance
 except ImportError:
+    # These are defined only for the sake of Ansible's checked import requirement
+    Resource = Any  # type: ignore
+    ResourceInstance = Any  # type: ignore
     pass
 
 
