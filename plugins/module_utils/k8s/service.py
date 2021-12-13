@@ -14,7 +14,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
     get_waiter,
 )
 
-from ansible.module_utils._text import to_native, to_bytes, to_text
+from ansible.module_utils._text import to_native
 from ansible.module_utils.common.dict_transformations import dict_merge
 
 try:
@@ -27,9 +27,16 @@ try:
         ForbiddenError,
         MethodNotAllowedError,
     )
-    from kubernetes.dynamic.resource import Resource, ResourceInstance
 except ImportError:
     # Handled in module setup
+    pass
+
+try:
+    from kubernetes.dynamic.resource import Resource, ResourceInstance
+except ImportError:
+    # These are defined only for the sake of Ansible's checked import requirement
+    Resource = Any  # type: ignore
+    ResourceInstance = Any  # type: ignore
     pass
 
 try:
@@ -518,11 +525,7 @@ class K8sService:
                 "merge",
             ]:
                 k8s_obj, error = self.patch_resource(
-                    resource,
-                    definition,
-                    name,
-                    namespace,
-                    merge_type=merge_type,
+                    resource, definition, name, namespace, merge_type=merge_type,
                 )
                 if not error:
                     break
