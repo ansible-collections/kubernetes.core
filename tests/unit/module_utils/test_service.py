@@ -82,19 +82,6 @@ def test_diff_objects_meta_diff():
     }
 
 
-def test_find_resource():
-    mock_pod_resource = Resource(
-        api_version="v1", kind="Pod", namespaced=False, preferred=True, prefix="api"
-    )
-    spec = {"resources.get.side_effect": [mock_pod_resource]}
-    client = Mock(**spec)
-    svc = K8sService(client, Mock())
-    resource = svc.find_resource("Pod", "v1")
-
-    assert isinstance(resource, Resource)
-    assert resource.to_dict().items() <= mock_pod_resource.to_dict().items()
-
-
 def test_diff_objects_spec_diff():
     pod_definition_updated = {
         "apiVersion": "v1",
@@ -120,6 +107,19 @@ def test_diff_objects_spec_diff():
     assert match is False
     assert diff["before"]["spec"] == pod_definition["spec"]
     assert diff["after"]["spec"] == pod_definition_updated["spec"]
+
+
+def test_find_resource():
+    mock_pod_resource = Resource(
+        api_version="v1", kind="Pod", namespaced=False, preferred=True, prefix="api"
+    )
+    spec = {"resources.get.side_effect": [mock_pod_resource]}
+    client = Mock(**spec)
+    svc = K8sService(client, Mock())
+    resource = svc.find_resource("Pod", "v1")
+
+    assert isinstance(resource, Resource)
+    assert resource.to_dict().items() <= mock_pod_resource.to_dict().items()
 
 
 def test_service_delete_existing_resource(mock_pod_resource_instance):
@@ -305,6 +305,39 @@ def test_service_apply_existing_resource_no_apply(mock_pod_resource_instance):
     assert results["result"] == {}
 
 
+def test_service_apply_existing_resource_filtered_labels(mock_pod_resource_instance):
+    spec = {"apply.side_effect": [mock_pod_resource_instance]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {"apply": True, "label_selectors": "environment==production"}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    results = svc.apply(Mock(), pod_definition, mock_pod_resource_instance)
+
+    assert isinstance(results, dict)
+    assert results["changed"] is False
+    assert results["result"] == {}
+    assert "filtered by label_selectors" in results["msg"]
+
+
+def test_service_apply_existing_resource_no_filtered_labels(
+    mock_pod_resource_instance, mock_pod_updated_resource_instance
+):
+    spec = {"apply.side_effect": [mock_pod_updated_resource_instance]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {"apply": True, "label_selectors": ["app!=mongo"]}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    results = svc.apply(Mock(), pod_definition_updated, mock_pod_resource_instance)
+
+    assert isinstance(results, dict)
+    assert results["changed"] is True
+    assert results["result"] == pod_definition_updated
+    assert results["diff"]["before"] is not {}
+    assert results["diff"]["after"] is not {}
+
+
 def test_service_replace_existing_resource_no_diff(mock_pod_resource_instance):
     spec = {"replace.side_effect": [mock_pod_resource_instance]}
     client = Mock(**spec)
@@ -320,7 +353,7 @@ def test_service_replace_existing_resource_no_diff(mock_pod_resource_instance):
     assert results["result"] == pod_definition
 
 
-def test_service_replace_existing_resource_(
+def test_service_replace_existing_resource(
     mock_pod_resource_instance, mock_pod_updated_resource_instance
 ):
     spec = {"replace.side_effect": [mock_pod_updated_resource_instance]}

@@ -271,10 +271,10 @@ class K8sService:
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
         wait_condition = None
-        if self.params.get("wait_condition") and self.params["wait_condition"].get(
-            "type"
-        ):
-            wait_condition = self.params["wait_condition"]
+        if self.module.params.get("wait_condition") and self.module.params[
+            "wait_condition"
+        ].get("type"):
+            wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
 
         if self.module.check_mode and not self.client.dry_run:
@@ -355,10 +355,10 @@ class K8sService:
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_condition = None
-        if self.params.get("wait_condition") and self.params["wait_condition"].get(
-            "type"
-        ):
-            wait_condition = self.params["wait_condition"]
+        if self.module.params.get("wait_condition") and self.module.params[
+            "wait_condition"
+        ].get("type"):
+            wait_condition = self.module.params["wait_condition"]
         wait_timeout = self.module.params.get("wait_timeout")
         results = {"changed": False, "result": {}}
 
@@ -440,10 +440,10 @@ class K8sService:
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
         wait_condition = None
-        if self.params.get("wait_condition") and self.params["wait_condition"].get(
-            "type"
-        ):
-            wait_condition = self.params["wait_condition"]
+        if self.module.params.get("wait_condition") and self.module.params[
+            "wait_condition"
+        ].get("type"):
+            wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
         match = False
         diffs = []
@@ -509,10 +509,10 @@ class K8sService:
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
         wait_condition = None
-        if self.params.get("wait_condition") and self.params["wait_condition"].get(
-            "type"
-        ):
-            wait_condition = self.params["wait_condition"]
+        if self.module.params.get("wait_condition") and self.module.params[
+            "wait_condition"
+        ].get("type"):
+            wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
         match = False
         diffs = []
@@ -572,11 +572,6 @@ class K8sService:
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
-        wait_condition = None
-        if self.params.get("wait_condition") and self.params["wait_condition"].get(
-            "type"
-        ):
-            wait_condition = self.params["wait_condition"]
         results = {"changed": False, "result": {}}
         params = {}
 
