@@ -47,13 +47,13 @@ except ImportError:
     from ansible.module_utils.common.dict_transformations import recursive_diff
 
 
-def encode_stringdata(definition: Dict) -> Dict:
-    if definition["kind"] == "Secret" and "stringData" in definition:
-        for k, v in definition["stringData"].items():
-            encoded = base64.b64encode(to_bytes(v))
-            definition.setdefault("data", {})[k] = to_text(encoded)
-        del definition["stringData"]
-    return definition
+try:
+    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+        _encode_stringdata,
+    )
+except ImportError:
+    # Handled in module setup
+    pass
 
 
 def build_error_msg(kind: str, name: str, msg: str) -> str:
@@ -99,9 +99,9 @@ class K8sService:
         resource = self.find_resource(
             "ProjectRequest", definition["apiVersion"], fail=True
         )
-        if not self.check_mode:
+        if not self.module.check_mode:
             try:
-                k8s_obj = resource.create(definition)
+                k8s_obj = self.client.create(resource, definition)
                 results["result"] = k8s_obj.to_dict()
             except DynamicApiError as exc:
                 self.module.fail_json(
@@ -111,7 +111,6 @@ class K8sService:
                     reason=exc.reason,
                 )
         results["changed"] = True
-        results["method"] = "create"
 
         return results
 
@@ -167,7 +166,6 @@ class K8sService:
             if merge_type:
                 params["content_type"] = "application/{0}-patch+json".format(merge_type)
             k8s_obj = self.client.patch(resource, definition, **params).to_dict()
-            match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
             error = {}
             return k8s_obj, {}
         except DynamicApiError as exc:
@@ -202,7 +200,10 @@ class K8sService:
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
         label_selectors = self.module.params.get("label_selectors")
-        results = {"changed": False, "result": {}}
+        results = {
+            "changed": False,
+            "result": {},
+        }
         existing = None
 
         try:
@@ -253,7 +254,6 @@ class K8sService:
             )
             return results
 
-        results["result"] = "find"
         if existing:
             results["result"] = existing.to_dict()
 
@@ -269,7 +269,7 @@ class K8sService:
         results = {"changed": False, "result": {}}
 
         if self.module.check_mode and not self.client.dry_run:
-            k8s_obj = encode_stringdata(definition)
+            k8s_obj = _encode_stringdata(definition)
         else:
             params = {}
             if self.module.check_mode:
@@ -304,7 +304,7 @@ class K8sService:
                 msg = "Failed to create object: {0}".format(exc)
                 if self.warnings:
                     msg += "\n" + "\n    ".join(self.warnings)
-                result["error"] = dict(
+                results["error"] = dict(
                     msg=build_error_msg(definition["kind"], origin_name, msg),
                     error="",
                     status="",
@@ -322,7 +322,6 @@ class K8sService:
             )
 
         results["changed"] = True
-        results["method"] = "create"
 
         if not success:
             msg = "Resource creation timed out"
@@ -360,7 +359,7 @@ class K8sService:
                 return results
         if apply:
             if self.module.check_mode and not self.client.dry_run:
-                ignored, patch = apply_object(resource, encode_stringdata(definition))
+                ignored, patch = apply_object(resource, _encode_stringdata(definition))
                 if existing:
                     k8s_obj = dict_merge(existing.to_dict(), patch)
                 else:
@@ -389,7 +388,7 @@ class K8sService:
             results["result"] = k8s_obj
 
             if wait and not self.module.check_mode:
-                success, results["result"], results["duration"] = self.wait(
+                success, results["result"], results["duration"] = self.waiter.wait(
                     definition, wait_timeout, wait_sleep,
                 )
 
@@ -403,8 +402,6 @@ class K8sService:
 
             if self.module._diff:
                 results["diff"] = diffs
-
-            results["method"] = "apply"
 
             if not success:
                 msg = "Resource apply timed out"
@@ -430,8 +427,7 @@ class K8sService:
         diffs = []
 
         if self.module.check_mode and not self.module.client.dry_run:
-            k8s_obj = encode_stringdata(definition)
-            results["result"] = k8s_obj
+            k8s_obj = _encode_stringdata(definition)
         else:
             params = {}
             if self.module.check_mode:
@@ -463,11 +459,10 @@ class K8sService:
 
         if wait and not self.module.check_mode:
             success, results["result"], results["duration"] = self.waiter.wait(
-                definition, wait_timeout, wait_sleep,
+                definition, wait_timeout, wait_sleep
             )
         match, diffs = self.diff_objects(existing.to_dict(), results["result"])
         results["changed"] = not match
-        results["method"] = "replace"
 
         if self.module._diff:
             results["diff"] = diffs
@@ -495,7 +490,7 @@ class K8sService:
         diffs = []
 
         if self.module.check_mode and not self.module.client.dry_run:
-            k8s_obj = dict_merge(existing.to_dict(), encode_stringdata(definition))
+            k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
         else:
             for merge_type in self.module.params.get("merge_type") or [
                 "strategic-merge",
@@ -528,7 +523,6 @@ class K8sService:
 
         match, diffs = self.diff_objects(existing.to_dict(), results["result"])
         results["changed"] = not match
-        results["method"] = "patch"
 
         if self.module._diff:
             results["diff"] = diffs
@@ -549,11 +543,11 @@ class K8sService:
         existing: Optional[ResourceInstance] = None,
     ) -> Dict:
         delete_options = self.module.params.get("delete_options")
+        origin_name = definition["metadata"].get("name")
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
         results = {"changed": False, "result": {}}
-        results["method"] = "delete"
         params = {}
 
         def _empty_resource_list() -> bool:
@@ -594,8 +588,8 @@ class K8sService:
                     return results
 
                 if wait and not self.module.check_mode:
-                    success, resource, duration = self.wait(
-                        definition, wait_timeout, wait_sleep,
+                    success, resource, duration = self.waiter.wait(
+                        definition, wait_timeout, wait_sleep
                     )
                     results["duration"] = duration
                     if not success:

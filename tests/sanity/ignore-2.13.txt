@@ -225,3 +225,5 @@ plugins/module_utils/k8s/client.py compile-2.7!skip
 plugins/module_utils/k8s/client.py compile-3.5!skip
 plugins/module_utils/k8s/client.py future-import-boilerplate!skip
 plugins/module_utils/k8s/client.py metaclass-boilerplate!skip
+plugins/module_utils/k8s/service.py future-import-boilerplate!skip
+plugins/module_utils/k8s/service.py metaclass-boilerplate!skip
