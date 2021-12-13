@@ -225,3 +225,7 @@ plugins/module_utils/k8s/client.py compile-2.7!skip
 plugins/module_utils/k8s/client.py compile-3.5!skip
 plugins/module_utils/k8s/client.py future-import-boilerplate!skip
 plugins/module_utils/k8s/client.py metaclass-boilerplate!skip
+plugins/module_utils/k8s/waiter.py future-import-boilerplate!skip
+plugins/module_utils/k8s/waiter.py metaclass-boilerplate!skip
+tests/unit/module_utils/fixtures/deployments.yml yamllint!skip
+tests/unit/module_utils/fixtures/pods.yml yamllint!skip

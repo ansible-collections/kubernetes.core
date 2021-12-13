@@ -296,3 +296,9 @@ plugins/module_utils/k8s/client.py future-import-boilerplate!skip
 plugins/module_utils/k8s/client.py metaclass-boilerplate!skip
 tests/unit/module_utils/test_client.py future-import-boilerplate!skip
 tests/unit/module_utils/test_client.py metaclass-boilerplate!skip
+plugins/module_utils/k8s/waiter.py future-import-boilerplate!skip
+plugins/module_utils/k8s/waiter.py metaclass-boilerplate!skip
+tests/unit/module_utils/test_waiter.py future-import-boilerplate!skip
+tests/unit/module_utils/test_waiter.py metaclass-boilerplate!skip
+tests/unit/module_utils/fixtures/deployments.yml yamllint!skip
+tests/unit/module_utils/fixtures/pods.yml yamllint!skip
