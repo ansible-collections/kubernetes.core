@@ -1,9 +1,7 @@
 # Copyright: (c) 2021, Red Hat | Ansible
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-import os
-import sys
-import base64
+
 from typing import Any, Dict, Optional, Tuple
 
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
@@ -11,6 +9,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
+    get_waiter,
 )
 
 from ansible.module_utils._text import to_native, to_bytes, to_text
@@ -65,10 +66,9 @@ class K8sService:
     This class has the primary purpose is to perform work on the cluster (e.g., create, apply, replace, update, delete).
     """
 
-    def __init__(self, client, module, waiter) -> None:
+    def __init__(self, client, module) -> None:
         self.client = client
         self.module = module
-        self.waiter = waiter
         self.warnings = []
 
     def find_resource(
@@ -117,7 +117,6 @@ class K8sService:
     def diff_objects(self, existing: Dict, new: Dict) -> Tuple[bool, Dict]:
         result = dict()
         diff = recursive_diff(existing, new)
-
         if not diff:
             return True, result
 
@@ -148,7 +147,6 @@ class K8sService:
         self,
         resource: Resource,
         definition: Dict,
-        existing: ResourceInstance,
         name: str,
         namespace: str,
         merge_type: str = None,
@@ -266,6 +264,11 @@ class K8sService:
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
+        wait_condition = None
+        if self.params.get("wait_condition") and self.params["wait_condition"].get(
+            "type"
+        ):
+            wait_condition = self.params["wait_condition"]
         results = {"changed": False, "result": {}}
 
         if self.module.check_mode and not self.client.dry_run:
@@ -317,7 +320,8 @@ class K8sService:
 
         if wait and not self.module.check_mode:
             definition["metadata"].update({"name": k8s_obj["metadata"]["name"]})
-            success, results["result"], results["duration"] = self.waiter.wait(
+            waiter = get_waiter(self.client, resource, condition=wait_condition)
+            success, results["result"], results["duration"] = waiter.wait(
                 definition, wait_timeout, wait_sleep,
             )
 
@@ -344,8 +348,14 @@ class K8sService:
         namespace = definition["metadata"].get("namespace")
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
+        wait_condition = None
+        if self.params.get("wait_condition") and self.params["wait_condition"].get(
+            "type"
+        ):
+            wait_condition = self.params["wait_condition"]
         wait_timeout = self.module.params.get("wait_timeout")
         results = {"changed": False, "result": {}}
+
         if label_selectors:
             filter_selector = LabelSelectorFilter(label_selectors)
             if not filter_selector.isMatching(definition):
@@ -388,7 +398,8 @@ class K8sService:
             results["result"] = k8s_obj
 
             if wait and not self.module.check_mode:
-                success, results["result"], results["duration"] = self.waiter.wait(
+                waiter = get_waiter(self.client, resource, condition=wait_condition)
+                success, results["result"], results["duration"] = waiter.wait(
                     definition, wait_timeout, wait_sleep,
                 )
 
@@ -422,6 +433,11 @@ class K8sService:
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
+        wait_condition = None
+        if self.params.get("wait_condition") and self.params["wait_condition"].get(
+            "type"
+        ):
+            wait_condition = self.params["wait_condition"]
         results = {"changed": False, "result": {}}
         match = False
         diffs = []
@@ -458,7 +474,8 @@ class K8sService:
         results["result"] = k8s_obj
 
         if wait and not self.module.check_mode:
-            success, results["result"], results["duration"] = self.waiter.wait(
+            waiter = get_waiter(self.client, resource, condition=wait_condition)
+            success, results["result"], results["duration"] = waiter.wait(
                 definition, wait_timeout, wait_sleep
             )
         match, diffs = self.diff_objects(existing.to_dict(), results["result"])
@@ -485,6 +502,11 @@ class K8sService:
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
+        wait_condition = None
+        if self.params.get("wait_condition") and self.params["wait_condition"].get(
+            "type"
+        ):
+            wait_condition = self.params["wait_condition"]
         results = {"changed": False, "result": {}}
         match = False
         diffs = []
@@ -517,7 +539,8 @@ class K8sService:
         results["result"] = k8s_obj
 
         if wait and not self.module.check_mode:
-            success, results["result"], results["duration"] = self.waiter.wait(
+            waiter = get_waiter(self.client, resource, condition=wait_condition)
+            success, results["result"], results["duration"] = waiter.wait(
                 definition, wait_timeout, wait_sleep,
             )
 
@@ -543,10 +566,16 @@ class K8sService:
         existing: Optional[ResourceInstance] = None,
     ) -> Dict:
         delete_options = self.module.params.get("delete_options")
+        label_selectors = self.module.params.get("label_selectors")
         origin_name = definition["metadata"].get("name")
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
+        wait_condition = None
+        if self.params.get("wait_condition") and self.params["wait_condition"].get(
+            "type"
+        ):
+            wait_condition = self.params["wait_condition"]
         results = {"changed": False, "result": {}}
         params = {}
 
@@ -588,8 +617,12 @@ class K8sService:
                     return results
 
                 if wait and not self.module.check_mode:
-                    success, resource, duration = self.waiter.wait(
-                        definition, wait_timeout, wait_sleep
+                    waiter = get_waiter(self.client, resource, state="absent")
+                    success, resource, duration = waiter.wait(
+                        definition,
+                        wait_timeout,
+                        wait_sleep,
+                        label_selectors=label_selectors,
                     )
                     results["duration"] = duration
                     if not success:
