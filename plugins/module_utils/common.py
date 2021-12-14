@@ -496,7 +496,7 @@ class K8sAnsibleMixin(object):
         if not os.path.exists(path):
             self.fail(msg="Error accessing {0}. Does the file exist?".format(path))
         try:
-            with open(path, "r") as f:
+            with open(path, "rb") as f:
                 result = list(yaml.safe_load_all(f))
         except (IOError, yaml.YAMLError) as exc:
             self.fail(msg="Error loading resource_definition: {0}".format(exc))
