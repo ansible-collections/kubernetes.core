@@ -403,8 +403,8 @@ def validate_spec():
 
 def server_apply_spec():
     return dict(
-        field_manager=dict(type='str'),
-        force_conflicts=dict(type='bool', default=False),
+        field_manager=dict(type="str"),
+        force_conflicts=dict(type="bool", default=False),
     )
 
 
@@ -413,7 +413,6 @@ def argspec():
     argument_spec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
     argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
     argument_spec.update(copy.deepcopy(WAIT_ARG_SPEC))
-<<<<<<< HEAD
     argument_spec["merge_type"] = dict(
         type="list", elements="str", choices=["json", "merge", "strategic-merge"]
     )
@@ -431,20 +430,9 @@ def argspec():
     argument_spec["force"] = dict(type="bool", default=False)
     argument_spec["label_selectors"] = dict(type="list", elements="str")
     argument_spec["generate_name"] = dict()
-=======
-    argument_spec['merge_type'] = dict(type='list', elements='str', choices=['json', 'merge', 'strategic-merge'])
-    argument_spec['validate'] = dict(type='dict', default=None, options=validate_spec())
-    argument_spec['append_hash'] = dict(type='bool', default=False)
-    argument_spec['apply'] = dict(type='bool', default=False)
-    argument_spec['template'] = dict(type='raw', default=None)
-    argument_spec['delete_options'] = dict(type='dict', default=None, options=copy.deepcopy(DELETE_OPTS_ARG_SPEC))
-    argument_spec['continue_on_error'] = dict(type='bool', default=False)
-    argument_spec['state'] = dict(default='present', choices=['present', 'absent', 'patched'])
-    argument_spec['force'] = dict(type='bool', default=False)
-    argument_spec['label_selectors'] = dict(type='list', elements='str')
-    argument_spec['generate_name'] = dict()
-    argument_spec['server_side_apply'] = dict(type='dict', default=None, options=server_apply_spec())
->>>>>>> 96e1b3a (add support for Server Side apply)
+    argument_spec["server_side_apply"] = dict(
+        type="dict", default=None, options=server_apply_spec()
+    )
 
     return argument_spec
 

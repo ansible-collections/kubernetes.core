@@ -490,7 +490,7 @@ class K8sAnsibleMixin(object):
                         self.params.pop(alias)
 
     def load_resource_definitions(self, src):
-        """ Load the requested src path """
+        """Load the requested src path"""
         result = None
         path = os.path.normpath(src)
         if not os.path.exists(path):
@@ -1029,6 +1029,7 @@ class K8sAnsibleMixin(object):
                             namespace=namespace,
                         )
                     )
+
                     return result
             if apply:
                 if self.check_mode and not self.supports_dry_run:
@@ -1046,15 +1047,21 @@ class K8sAnsibleMixin(object):
                             params["dry_run"] = "All"
                         if server_side_apply:
                             params["server_side"] = True
-                            if LooseVersion(kubernetes.__version__) <= LooseVersion("18.20.0"):
+                            if LooseVersion(kubernetes.__version__) <= LooseVersion(
+                                "18.20.0"
+                            ):
                                 msg = "kubernetes > 18.20.0 is required to use server side apply."
                                 if continue_on_error:
                                     result["error"] = dict(msg=msg)
                                     return result
                                 else:
-                                    self.fail_json(msg=msg, version=kubernetes.__version__)
+                                    self.fail_json(
+                                        msg=msg, version=kubernetes.__version__
+                                    )
                             if not server_side_apply.get("field_manager"):
-                                self.fail(msg="field_manager is required to use server side apply.")
+                                self.fail(
+                                    msg="field_manager is required to use server side apply."
+                                )
                             params.update(server_side_apply)
                         k8s_obj = resource.apply(
                             definition, namespace=namespace, **params

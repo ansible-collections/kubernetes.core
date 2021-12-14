@@ -133,11 +133,13 @@ def k8s_apply(resource, definition, **kwargs):
     if server_side:
         body = json.dumps(definition).encode()
         # server_side_apply is forces content_type to 'application/apply-patch+yaml'
-        return resource.server_side_apply(body=body,
-                                          name=definition['metadata']['name'],
-                                          namespace=definition['metadata'].get('namespace'),
-                                          force_conflicts=kwargs.get("force_conflicts"),
-                                          field_manager=kwargs.get("field_manager"))
+        return resource.server_side_apply(
+            body=body,
+            name=definition["metadata"]["name"],
+            namespace=definition["metadata"].get("namespace"),
+            force_conflicts=kwargs.get("force_conflicts"),
+            field_manager=kwargs.get("field_manager"),
+        )
     if not existing:
         return resource.create(
             body=desired, namespace=definition["metadata"].get("namespace"), **kwargs
