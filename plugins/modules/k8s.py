@@ -170,8 +170,8 @@ options:
         - A conflict is a special status error that occurs when an Server Side Apply operation tries to change a field,
           which another user also claims to manage.
         - When set to True, server-side apply will force the changes against conflicts.
-      type: bool
-      default: False
+        type: bool
+        default: False
 
 requirements:
   - "python >= 3.6"
@@ -403,7 +403,7 @@ def validate_spec():
 
 def server_apply_spec():
     return dict(
-        field_manager=dict(type="str"),
+        field_manager=dict(type="str", required=True),
         force_conflicts=dict(type="bool", default=False),
     )
 
