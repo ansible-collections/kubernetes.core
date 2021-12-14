@@ -917,7 +917,7 @@
       assert:
         that:
           - result is failed
-          - result.msg == "field_manager is required to use server side apply."
+          - '"field_manager" in result.msg'
 
     - name: Create Configmap using server side apply
       k8s:
