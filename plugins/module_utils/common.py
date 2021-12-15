@@ -1047,10 +1047,10 @@ class K8sAnsibleMixin(object):
                             params["dry_run"] = "All"
                         if server_side_apply:
                             params["server_side"] = True
-                            if LooseVersion(kubernetes.__version__) <= LooseVersion(
-                                "18.20.0"
+                            if LooseVersion(kubernetes.__version__) < LooseVersion(
+                                "19.15.0"
                             ):
-                                msg = "kubernetes > 18.20.0 is required to use server side apply."
+                                msg = "kubernetes >= 19.15.0 is required to use server side apply."
                                 if continue_on_error:
                                     result["error"] = dict(msg=msg)
                                     return result
