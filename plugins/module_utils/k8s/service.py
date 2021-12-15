@@ -77,7 +77,6 @@ class K8sService:
     def __init__(self, client, module) -> None:
         self.client = client
         self.module = module
-        self.warnings = []
 
     def find_resource(
         self, kind: str, api_version: str, fail: bool = False
@@ -176,7 +175,6 @@ class K8sService:
             if merge_type:
                 params["content_type"] = "application/{0}-patch+json".format(merge_type)
             k8s_obj = self.client.patch(resource, definition, **params).to_dict()
-            error = {}
             return k8s_obj, {}
         except DynamicApiError as exc:
             msg = "Failed to patch object: {0}".format(exc.body)
