@@ -296,3 +296,5 @@ tests/unit/module_utils/fixtures/deployments.yml yamllint!skip
 tests/unit/module_utils/fixtures/pods.yml yamllint!skip
 plugins/module_utils/k8s/service.py future-import-boilerplate!skip
 plugins/module_utils/k8s/service.py metaclass-boilerplate!skip
+plugins/module_utils/k8s/exceptions.py future-import-boilerplate!skip
+plugins/module_utils/k8s/exceptions.py metaclass-boilerplate!skip

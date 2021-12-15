@@ -7,11 +7,12 @@ from typing import Any, Dict, Optional, Tuple
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
     generate_hash,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
-    LabelSelectorFilter,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     get_waiter,
+)
+
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
 )
 
 from ansible.module_utils._text import to_native
@@ -112,8 +113,13 @@ class K8sService:
                 results["result"] = k8s_obj.to_dict()
             except DynamicApiError as exc:
                 msg = "Failed to create object: {0}".format(exc.body)
-                results["error"] = dict(
-                    msg=msg, error=to_native(exc), status=exc.status, reason=exc.reason,
+                raise CoreException(
+                    dict(
+                        msg=msg,
+                        error=to_native(exc),
+                        status=exc.status,
+                        reason=exc.reason,
+                    )
                 )
 
         results["changed"] = True
@@ -174,28 +180,26 @@ class K8sService:
             return k8s_obj, {}
         except DynamicApiError as exc:
             msg = "Failed to patch object: {0}".format(exc.body)
-            if self.warnings:
-                msg += "\n" + "\n    ".join(self.warnings)
-            error = dict(
-                msg=msg,
-                error=exc.status,
-                status=exc.status,
-                reason=exc.reason,
-                warnings=self.warnings,
+            raise CoreException(
+                dict(
+                    msg=msg,
+                    error=exc.status,
+                    status=exc.status,
+                    reason=exc.reason,
+                    warnings=self.warnings,
+                )
             )
-            return None, error
         except Exception as exc:
             msg = "Failed to patch object: {0}".format(exc)
-            if self.warnings:
-                msg += "\n" + "\n    ".join(self.warnings)
-            error = dict(
-                msg=msg,
-                error=to_native(exc),
-                status="",
-                reason="",
-                warnings=self.warnings,
+            raise CoreException(
+                dict(
+                    msg=msg,
+                    error=to_native(exc),
+                    status="",
+                    reason="",
+                    warnings=self.warnings,
+                )
             )
-            return None, error
 
     def retrieve(self, resource: Resource, definition: Dict) -> Dict:
         state = self.module.params.get("state", None)
@@ -229,34 +233,38 @@ class K8sService:
                 and state != "absent"
             ):
                 return self.create_project_request(definition)
+
             msg = "Failed to retrieve requested object: {0}".format(exc.body)
-            results["error"] = dict(
-                msg=build_error_msg(definition["kind"], origin_name, msg),
-                error=exc.status,
-                status=exc.status,
-                reason=exc.reason,
+            raise CoreException(
+                dict(
+                    msg=build_error_msg(definition["kind"], origin_name, msg),
+                    error=exc.status,
+                    status=exc.status,
+                    reason=exc.reason,
+                )
             )
-            return results
         except DynamicApiError as exc:
             msg = "Failed to retrieve requested object: {0}".format(exc.body)
-            results["error"] = dict(
-                msg=build_error_msg(definition["kind"], origin_name, msg),
-                error=exc.status,
-                status=exc.status,
-                reason=exc.reason,
+            raise CoreException(
+                dict(
+                    msg=build_error_msg(definition["kind"], origin_name, msg),
+                    error=exc.status,
+                    status=exc.status,
+                    reason=exc.reason,
+                )
             )
-            return results
         except ValueError as value_exc:
             msg = "Failed to retrieve requested object: {0}".format(
                 to_native(value_exc)
             )
-            results["error"] = dict(
-                msg=build_error_msg(definition["kind"], origin_name, msg),
-                error="",
-                status="",
-                reason="",
+            raise CoreException(
+                dict(
+                    msg=build_error_msg(definition["kind"], origin_name, msg),
+                    error="",
+                    status="",
+                    reason="",
+                )
             )
-            return results
 
         if existing:
             results["result"] = existing.to_dict()
@@ -300,26 +308,24 @@ class K8sService:
                 return results
             except DynamicApiError as exc:
                 msg = "Failed to create object: {0}".format(exc.body)
-                if self.warnings:
-                    msg += "\n" + "\n    ".join(self.warnings)
-                results["error"] = dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg),
-                    error=exc.status,
-                    status=exc.status,
-                    reason=exc.reason,
+                raise CoreException(
+                    dict(
+                        msg=build_error_msg(definition["kind"], origin_name, msg),
+                        error=exc.status,
+                        status=exc.status,
+                        reason=exc.reason,
+                    )
                 )
-                return results
             except Exception as exc:
                 msg = "Failed to create object: {0}".format(exc)
-                if self.warnings:
-                    msg += "\n" + "\n    ".join(self.warnings)
-                results["error"] = dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg),
-                    error="",
-                    status="",
-                    reason="",
+                raise CoreException(
+                    dict(
+                        msg=build_error_msg(definition["kind"], origin_name, msg),
+                        error="",
+                        status="",
+                        reason="",
+                    )
                 )
-                return results
 
         success = True
         results["result"] = k8s_obj
@@ -335,10 +341,11 @@ class K8sService:
 
         if not success:
             msg = "Resource creation timed out"
-            results["error"] = dict(
-                msg=build_error_msg(definition["kind"], origin_name, msg), **results
+            raise CoreException(
+                dict(
+                    msg=build_error_msg(definition["kind"], origin_name, msg), **results
+                )
             )
-            return results
 
         return results
 
@@ -349,7 +356,6 @@ class K8sService:
         existing: Optional[ResourceInstance] = None,
     ) -> Dict:
         apply = self.module.params.get("apply", False)
-        label_selectors = self.module.params.get("label_selectors")
         origin_name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
         wait = self.module.params.get("wait")
@@ -362,17 +368,6 @@ class K8sService:
         wait_timeout = self.module.params.get("wait_timeout")
         results = {"changed": False, "result": {}}
 
-        if label_selectors:
-            filter_selector = LabelSelectorFilter(label_selectors)
-            if not filter_selector.isMatching(definition):
-                results["changed"] = False
-                results["msg"] = (
-                    "resource 'kind={kind},name={name},namespace={namespace}' "
-                    "filtered by label_selectors.".format(
-                        kind=definition["kind"], name=origin_name, namespace=namespace,
-                    )
-                )
-                return results
         if apply:
             if self.module.check_mode and not self.client.dry_run:
                 ignored, patch = apply_object(resource, _encode_stringdata(definition))
@@ -390,15 +385,14 @@ class K8sService:
                     ).to_dict()
                 except DynamicApiError as exc:
                     msg = "Failed to apply object: {0}".format(exc.body)
-                    if self.warnings:
-                        msg += "\n" + "\n    ".join(self.warnings)
-                    results["error"] = dict(
-                        msg=build_error_msg(definition["kind"], origin_name, msg),
-                        error=exc.status,
-                        status=exc.status,
-                        reason=exc.reason,
+                    raise CoreException(
+                        dict(
+                            msg=build_error_msg(definition["kind"], origin_name, msg),
+                            error=exc.status,
+                            status=exc.status,
+                            reason=exc.reason,
+                        )
                     )
-                    return results
 
             success = True
             results["result"] = k8s_obj
@@ -422,10 +416,12 @@ class K8sService:
 
             if not success:
                 msg = "Resource apply timed out"
-                results["error"] = dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg), **results
+                raise CoreException(
+                    dict(
+                        msg=build_error_msg(definition["kind"], origin_name, msg),
+                        **results
+                    )
                 )
-                return results
 
         return results
 
@@ -465,15 +461,14 @@ class K8sService:
                 ).to_dict()
             except DynamicApiError as exc:
                 msg = "Failed to replace object: {0}".format(exc.body)
-                if self.warnings:
-                    msg += "\n" + "\n    ".join(self.warnings)
-                results["error"] = dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg),
-                    error=exc.status,
-                    status=exc.status,
-                    reason=exc.reason,
+                raise CoreException(
+                    dict(
+                        msg=build_error_msg(definition["kind"], origin_name, msg),
+                        error=exc.status,
+                        status=exc.status,
+                        reason=exc.reason,
+                    )
                 )
-                return results
 
         match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
         success = True
@@ -492,10 +487,11 @@ class K8sService:
 
         if not success:
             msg = "Resource replacement timed out"
-            results["error"] = dict(
-                msg=build_error_msg(definition["kind"], origin_name, msg), **results
+            raise CoreException(
+                dict(
+                    msg=build_error_msg(definition["kind"], origin_name, msg), **results
+                )
             )
-            return results
 
         return results
 
@@ -529,12 +525,6 @@ class K8sService:
                 )
                 if not error:
                     break
-            if error:
-                results["error"] = error
-                results["error"]["msg"] = build_error_msg(
-                    definition["kind"], origin_name, results["error"].get("msg")
-                )
-                return results
 
         success = True
         results["result"] = k8s_obj
@@ -553,10 +543,11 @@ class K8sService:
 
         if not success:
             msg = "Resource update timed out"
-            results["error"] = dict(
-                msg=build_error_msg(definition["kind"], origin_name, msg), **results
+            raise CoreException(
+                dict(
+                    msg=build_error_msg(definition["kind"], origin_name, msg), **results
+                )
             )
-            return results
 
         return results
 
@@ -604,13 +595,14 @@ class K8sService:
                     results["result"] = k8s_obj.to_dict()
                 except DynamicApiError as exc:
                     msg = "Failed to delete object: {0}".format(exc.body)
-                    results["error"] = dict(
-                        msg=build_error_msg(definition["kind"], origin_name, msg),
-                        error=exc.status,
-                        status=exc.status,
-                        reason=exc.reason,
+                    raise CoreException(
+                        dict(
+                            msg=build_error_msg(definition["kind"], origin_name, msg),
+                            error=exc.status,
+                            status=exc.status,
+                            reason=exc.reason,
+                        )
                     )
-                    return results
 
                 if wait and not self.module.check_mode:
                     waiter = get_waiter(self.client, resource, state="absent")
@@ -623,10 +615,13 @@ class K8sService:
                     results["duration"] = duration
                     if not success:
                         msg = "Resource deletion timed out"
-                        results["error"] = dict(
-                            msg=build_error_msg(definition["kind"], origin_name, msg),
-                            **results
+                        raise CoreException(
+                            dict(
+                                msg=build_error_msg(
+                                    definition["kind"], origin_name, msg
+                                ),
+                                **results
+                            )
                         )
-                        return results
 
                 return results

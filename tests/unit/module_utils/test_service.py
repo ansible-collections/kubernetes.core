@@ -7,10 +7,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
     K8sService,
 )
 
-from kubernetes.dynamic.exceptions import (
-    NotFoundError,
-    ForbiddenError,
-)
+from kubernetes.dynamic.exceptions import NotFoundError
 
 pod_definition = {
     "apiVersion": "v1",
@@ -173,21 +170,6 @@ def test_service_create_resource(mock_pod_resource_instance):
     assert results["result"] == pod_definition
 
 
-def test_service_create_resource_failed():
-    spec = {"create.side_effect": [Exception(Mock())]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {}
-    module.check_mode = False
-    svc = K8sService(client, module)
-    results = svc.create(Mock(), pod_definition)
-
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == {}
-    assert "Failed to create object" in results["error"]["msg"]
-
-
 def test_service_create_resource_check_mode():
     client = Mock()
     client.dry_run = False
@@ -226,20 +208,6 @@ def test_service_retrieve_no_existing_resource():
     assert isinstance(results, dict)
     assert results["changed"] is False
     assert results["result"] == {}
-
-
-def test_service_retrieve_existing_error():
-    spec = {"get.side_effect": [ForbiddenError(Mock())]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {}
-    svc = K8sService(client, module)
-    results = svc.retrieve(Mock(), pod_definition)
-
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == {}
-    assert "Failed to retrieve requested object" in results["error"]["msg"]
 
 
 def test_create_project_request():
@@ -303,39 +271,6 @@ def test_service_apply_existing_resource_no_apply(mock_pod_resource_instance):
     assert isinstance(results, dict)
     assert results["changed"] is False
     assert results["result"] == {}
-
-
-def test_service_apply_existing_resource_filtered_labels(mock_pod_resource_instance):
-    spec = {"apply.side_effect": [mock_pod_resource_instance]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {"apply": True, "label_selectors": "environment==production"}
-    module.check_mode = False
-    svc = K8sService(client, module)
-    results = svc.apply(Mock(), pod_definition, mock_pod_resource_instance)
-
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == {}
-    assert "filtered by label_selectors" in results["msg"]
-
-
-def test_service_apply_existing_resource_no_filtered_labels(
-    mock_pod_resource_instance, mock_pod_updated_resource_instance
-):
-    spec = {"apply.side_effect": [mock_pod_updated_resource_instance]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {"apply": True, "label_selectors": ["app!=mongo"]}
-    module.check_mode = False
-    svc = K8sService(client, module)
-    results = svc.apply(Mock(), pod_definition_updated, mock_pod_resource_instance)
-
-    assert isinstance(results, dict)
-    assert results["changed"] is True
-    assert results["result"] == pod_definition_updated
-    assert results["diff"]["before"] is not {}
-    assert results["diff"]["after"] is not {}
 
 
 def test_service_replace_existing_resource_no_diff(mock_pod_resource_instance):
