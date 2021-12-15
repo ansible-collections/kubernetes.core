@@ -156,7 +156,7 @@ options:
     description:
     - When this option is set, apply runs in the server instead of the client.
     - Ignored if C(apply) is not set or is set to False.
-    - This option requires "kubernetes > 18.20.0".
+    - This option requires "kubernetes >= 19.15.0".
     type: dict
     version_added: 2.3.0
     suboptions:
