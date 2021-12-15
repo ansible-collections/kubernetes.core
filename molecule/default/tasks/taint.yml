@@ -227,10 +227,6 @@
       that:
       - _result.changed
 
-  - name: Display all taints
-    debug:
-      msg: "{{ taint_patch_1 }} + {{ taint_patch_2 }}"
-
   - name: Add other taints to node
     kubernetes.core.k8s_taint:
       name: "{{ node_to_taint }}"
