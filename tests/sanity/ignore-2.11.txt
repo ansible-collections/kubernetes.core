@@ -311,3 +311,5 @@ tests/unit/module_utils/test_service.py future-import-boilerplate!skip
 tests/unit/module_utils/test_service.py metaclass-boilerplate!skip
 plugins/module_utils/k8s/exceptions.py future-import-boilerplate!skip
 plugins/module_utils/k8s/exceptions.py metaclass-boilerplate!skip
+plugins/module_utils/k8s/runner.py future-import-boilerplate!skip
+plugins/module_utils/k8s/runner.py metaclass-boilerplate!skip
