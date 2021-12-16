@@ -341,3 +341,33 @@ def test_service_update_existing_resource_no_diff(mock_pod_updated_resource_inst
     assert results["changed"] is False
     assert results["result"] == pod_definition_updated
     assert results["diff"] == {}
+
+
+def test_service_find(mock_pod_resource_instance):
+    spec = {"get.side_effect": [mock_pod_resource_instance]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    results = svc.find("Pod", "v1", name="foo", namespace="foo")
+
+    assert isinstance(results, dict)
+    assert results["api_found"] is True
+    assert results["resources"] is not []
+    assert len(results["resources"]) == 1
+    assert results["resources"][0] == pod_definition
+
+
+def test_service_find_error():
+    spec = {"get.side_effect": [NotFoundError(Mock())]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    results = svc.find("Pod", "v1", name="foo", namespace="foo")
+
+    assert isinstance(results, dict)
+    assert results["api_found"] is True
+    assert results["resources"] == []

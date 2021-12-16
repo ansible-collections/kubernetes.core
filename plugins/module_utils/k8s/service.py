@@ -1,8 +1,9 @@
 # Copyright: (c) 2021, Red Hat | Ansible
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-
-from typing import Any, Dict, Optional, Tuple
+import time
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
     generate_hash,
@@ -13,9 +14,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
 
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    ResourceTimeout,
 )
 
-from ansible.module_utils._text import to_native
 from ansible.module_utils.common.dict_transformations import dict_merge
 
 try:
@@ -23,10 +24,10 @@ try:
         NotFoundError,
         ResourceNotFoundError,
         ResourceNotUniqueError,
-        DynamicApiError,
         ConflictError,
         ForbiddenError,
         MethodNotAllowedError,
+        BadRequestError,
     )
 except ImportError:
     # Handled in module setup
@@ -65,10 +66,6 @@ except ImportError:
     pass
 
 
-def build_error_msg(kind: str, name: str, msg: str) -> str:
-    return "%s %s: %s" % (kind, name, msg)
-
-
 class K8sService:
     """A Service class for K8S modules.
     This class has the primary purpose is to perform work on the cluster (e.g., create, apply, replace, update, delete).
@@ -94,7 +91,7 @@ class K8sService:
             )
         except (ResourceNotFoundError, ResourceNotUniqueError):
             if fail:
-                self.module.fail_json(
+                self.module.fail(
                     msg="Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]".format(
                         api_version, kind
                     )
@@ -110,16 +107,10 @@ class K8sService:
             try:
                 k8s_obj = self.client.create(resource, definition)
                 results["result"] = k8s_obj.to_dict()
-            except DynamicApiError as exc:
-                msg = "Failed to create object: {0}".format(exc.body)
-                raise CoreException(
-                    dict(
-                        msg=msg,
-                        error=to_native(exc),
-                        status=exc.status,
-                        reason=exc.reason,
-                    )
-                )
+            except Exception as e:
+                reason = e.body if hasattr(e, "body") else e
+                msg = "Failed to create object: {0}".format(reason)
+                raise CoreException(msg) from e
 
         results["changed"] = True
 
@@ -176,32 +167,13 @@ class K8sService:
                 params["content_type"] = "application/{0}-patch+json".format(merge_type)
             k8s_obj = self.client.patch(resource, definition, **params).to_dict()
             return k8s_obj, {}
-        except DynamicApiError as exc:
-            msg = "Failed to patch object: {0}".format(exc.body)
-            raise CoreException(
-                dict(
-                    msg=msg,
-                    error=exc.status,
-                    status=exc.status,
-                    reason=exc.reason,
-                    warnings=self.warnings,
-                )
-            )
-        except Exception as exc:
-            msg = "Failed to patch object: {0}".format(exc)
-            raise CoreException(
-                dict(
-                    msg=msg,
-                    error=to_native(exc),
-                    status="",
-                    reason="",
-                    warnings=self.warnings,
-                )
-            )
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to patch object: {0}".format(reason)
+            raise CoreException(msg) from e
 
     def retrieve(self, resource: Resource, definition: Dict) -> Dict:
         state = self.module.params.get("state", None)
-        origin_name = definition["metadata"].get("name")
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
@@ -225,49 +197,129 @@ class K8sService:
             existing = self.client.get(resource, **params)
         except (NotFoundError, MethodNotAllowedError):
             pass
-        except ForbiddenError as exc:
+        except ForbiddenError as e:
             if (
                 definition["kind"] in ["Project", "ProjectRequest"]
                 and state != "absent"
             ):
                 return self.create_project_request(definition)
-
-            msg = "Failed to retrieve requested object: {0}".format(exc.body)
-            raise CoreException(
-                dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg),
-                    error=exc.status,
-                    status=exc.status,
-                    reason=exc.reason,
-                )
-            )
-        except DynamicApiError as exc:
-            msg = "Failed to retrieve requested object: {0}".format(exc.body)
-            raise CoreException(
-                dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg),
-                    error=exc.status,
-                    status=exc.status,
-                    reason=exc.reason,
-                )
-            )
-        except ValueError as value_exc:
-            msg = "Failed to retrieve requested object: {0}".format(
-                to_native(value_exc)
-            )
-            raise CoreException(
-                dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg),
-                    error="",
-                    status="",
-                    reason="",
-                )
-            )
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to retrieve requested object: {0}".format(reason)
+            raise CoreException(msg) from e
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to retrieve requested object: {0}".format(reason)
+            raise CoreException(msg) from e
 
         if existing:
             results["result"] = existing.to_dict()
 
         return results
+
+    def find(
+        self,
+        kind: str,
+        api_version: str,
+        name: str = None,
+        namespace: Optional[str] = None,
+        label_selectors: Optional[List[str]] = None,
+        field_selectors: Optional[List[str]] = None,
+        wait: Optional[bool] = False,
+        wait_sleep: Optional[int] = 5,
+        wait_timeout: Optional[int] = 120,
+        state: Optional[str] = "present",
+        condition: Optional[Dict] = None,
+    ) -> Dict:
+        resource = self.find_resource(kind, api_version)
+        api_found = bool(resource)
+        if not api_found:
+            return dict(
+                resources=[],
+                msg='Failed to find API for resource with apiVersion "{0}" and kind "{1}"'.format(
+                    api_version, kind
+                ),
+                api_found=False,
+            )
+
+        if not label_selectors:
+            label_selectors = []
+        if not field_selectors:
+            field_selectors = []
+
+        result = None
+
+        try:
+            result = self.client.get(
+                resource,
+                **dict(
+                    name=name,
+                    namespace=namespace,
+                    label_selector=",".join(label_selectors),
+                    field_selector=",".join(field_selectors),
+                )
+            )
+        except BadRequestError:
+            return dict(resources=[], api_found=True)
+        except NotFoundError:
+            if not wait or name is None:
+                return dict(resources=[], api_found=True)
+
+        if not wait:
+            result = result.to_dict()
+            if "items" in result:
+                return dict(resources=result["items"], api_found=True)
+            return dict(resources=[result], api_found=True)
+
+        start = datetime.now()
+
+        def _elapsed():
+            return (datetime.now() - start).seconds
+
+        if result is None:
+            while _elapsed() < wait_timeout:
+                try:
+                    result = self.client.get(
+                        resource,
+                        **dict(
+                            name=name,
+                            namespace=namespace,
+                            label_selector=",".join(label_selectors),
+                            field_selector=",".join(field_selectors),
+                        )
+                    )
+                    break
+                except NotFoundError:
+                    pass
+                time.sleep(wait_sleep)
+            if result is None:
+                return dict(resources=[], api_found=True)
+
+        if isinstance(result, ResourceInstance):
+            satisfied_by = []
+            # We have a list of ResourceInstance
+            resource_list = result.get("items", [])
+            if not resource_list:
+                resource_list = [result]
+
+            for resource_instance in resource_list:
+                waiter = get_waiter(
+                    self.client, resource_instance, state=state, condition=condition
+                )
+                success, res, duration = waiter.wait(
+                    resource_instance, wait_timeout, wait_sleep
+                )
+                if not success:
+                    raise CoreException(
+                        "Failed to gather information about %s(s) even"
+                        " after waiting for %s seconds" % (res.get("kind"), duration)
+                    )
+                satisfied_by.append(res)
+            return dict(resources=satisfied_by, api_found=True)
+        result = result.to_dict()
+
+        if "items" in result:
+            return dict(resources=result["items"], api_found=True)
+        return dict(resources=[result], api_found=True)
 
     def create(self, resource: Resource, definition: Dict) -> Dict:
         origin_name = definition["metadata"].get("name")
@@ -304,26 +356,10 @@ class K8sService:
                     )
                 )
                 return results
-            except DynamicApiError as exc:
-                msg = "Failed to create object: {0}".format(exc.body)
-                raise CoreException(
-                    dict(
-                        msg=build_error_msg(definition["kind"], origin_name, msg),
-                        error=exc.status,
-                        status=exc.status,
-                        reason=exc.reason,
-                    )
-                )
-            except Exception as exc:
-                msg = "Failed to create object: {0}".format(exc)
-                raise CoreException(
-                    dict(
-                        msg=build_error_msg(definition["kind"], origin_name, msg),
-                        error="",
-                        status="",
-                        reason="",
-                    )
-                )
+            except Exception as e:
+                reason = e.body if hasattr(e, "body") else e
+                msg = "Failed to create object: {0}".format(reason)
+                raise CoreException(msg) from e
 
         success = True
         results["result"] = k8s_obj
@@ -338,11 +374,11 @@ class K8sService:
         results["changed"] = True
 
         if not success:
-            msg = "Resource creation timed out"
-            raise CoreException(
-                dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg), **results
-                )
+            raise ResourceTimeout(
+                '"{0}" "{1}": Resource creation timed out'.format(
+                    definition["kind"], origin_name
+                ),
+                **results
             )
 
         return results
@@ -381,16 +417,10 @@ class K8sService:
                     k8s_obj = self.client.apply(
                         resource, definition, namespace=namespace, **params
                     ).to_dict()
-                except DynamicApiError as exc:
-                    msg = "Failed to apply object: {0}".format(exc.body)
-                    raise CoreException(
-                        dict(
-                            msg=build_error_msg(definition["kind"], origin_name, msg),
-                            error=exc.status,
-                            status=exc.status,
-                            reason=exc.reason,
-                        )
-                    )
+                except Exception as e:
+                    reason = e.body if hasattr(e, "body") else e
+                    msg = "Failed to apply object: {0}".format(reason)
+                    raise CoreException(msg) from e
 
             success = True
             results["result"] = k8s_obj
@@ -413,12 +443,11 @@ class K8sService:
                 results["diff"] = diffs
 
             if not success:
-                msg = "Resource apply timed out"
-                raise CoreException(
-                    dict(
-                        msg=build_error_msg(definition["kind"], origin_name, msg),
-                        **results
-                    )
+                raise ResourceTimeout(
+                    '"{0}" "{1}": Resource apply timed out'.format(
+                        definition["kind"], origin_name
+                    ),
+                    **results
                 )
 
         return results
@@ -457,16 +486,10 @@ class K8sService:
                     append_hash=append_hash,
                     **params
                 ).to_dict()
-            except DynamicApiError as exc:
-                msg = "Failed to replace object: {0}".format(exc.body)
-                raise CoreException(
-                    dict(
-                        msg=build_error_msg(definition["kind"], origin_name, msg),
-                        error=exc.status,
-                        status=exc.status,
-                        reason=exc.reason,
-                    )
-                )
+            except Exception as e:
+                reason = e.body if hasattr(e, "body") else e
+                msg = "Failed to replace object: {0}".format(reason)
+                raise CoreException(msg) from e
 
         match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
         success = True
@@ -484,11 +507,11 @@ class K8sService:
             results["diff"] = diffs
 
         if not success:
-            msg = "Resource replacement timed out"
-            raise CoreException(
-                dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg), **results
-                )
+            raise ResourceTimeout(
+                '"{0}" "{1}": Resource replacement timed out'.format(
+                    definition["kind"], origin_name
+                ),
+                **results
             )
 
         return results
@@ -540,11 +563,11 @@ class K8sService:
             results["diff"] = diffs
 
         if not success:
-            msg = "Resource update timed out"
-            raise CoreException(
-                dict(
-                    msg=build_error_msg(definition["kind"], origin_name, msg), **results
-                )
+            raise ResourceTimeout(
+                '"{0}" "{1}": Resource update timed out'.format(
+                    definition["kind"], origin_name
+                ),
+                **results
             )
 
         return results
@@ -591,16 +614,10 @@ class K8sService:
                 try:
                     k8s_obj = self.client.delete(resource, **params)
                     results["result"] = k8s_obj.to_dict()
-                except DynamicApiError as exc:
-                    msg = "Failed to delete object: {0}".format(exc.body)
-                    raise CoreException(
-                        dict(
-                            msg=build_error_msg(definition["kind"], origin_name, msg),
-                            error=exc.status,
-                            status=exc.status,
-                            reason=exc.reason,
-                        )
-                    )
+                except Exception as e:
+                    reason = e.body if hasattr(e, "body") else e
+                    msg = "Failed to delete object: {0}".format(reason)
+                    raise CoreException(msg) from e
 
                 if wait and not self.module.check_mode:
                     waiter = get_waiter(self.client, resource, state="absent")
@@ -612,14 +629,11 @@ class K8sService:
                     )
                     results["duration"] = duration
                     if not success:
-                        msg = "Resource deletion timed out"
-                        raise CoreException(
-                            dict(
-                                msg=build_error_msg(
-                                    definition["kind"], origin_name, msg
-                                ),
-                                **results
-                            )
+                        raise ResourceTimeout(
+                            '"{0}" "{1}": Resource deletion timed out'.format(
+                                definition["kind"], origin_name
+                            ),
+                            **results
                         )
 
                 return results
