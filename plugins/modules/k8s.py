@@ -152,6 +152,26 @@ options:
     - mutually exclusive with C(name).
     type: str
     version_added: 2.3.0
+  server_side_apply:
+    description:
+    - When this option is set, apply runs in the server instead of the client.
+    - Ignored if C(apply) is not set or is set to False.
+    - This option requires "kubernetes >= 19.15.0".
+    type: dict
+    version_added: 2.3.0
+    suboptions:
+      field_manager:
+        type: str
+        description:
+        - Name of the manager used to track field ownership.
+        required: True
+      force_conflicts:
+        description:
+        - A conflict is a special status error that occurs when an Server Side Apply operation tries to change a field,
+          which another user also claims to manage.
+        - When set to True, server-side apply will force the changes against conflicts.
+        type: bool
+        default: False
 
 requirements:
   - "python >= 3.6"
@@ -302,6 +322,19 @@ EXAMPLES = r"""
         - name: py
           image: python:3.7-alpine
           imagePullPolicy: IfNotPresent
+
+# Server side apply
+- name: Create configmap using server side apply
+  kubernetes.core.k8s:
+    namespace: testing
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: my-configmap
+    apply: yes
+    server_side_apply:
+      field_manager: ansible
 """
 
 RETURN = r"""
@@ -368,6 +401,13 @@ def validate_spec():
     )
 
 
+def server_apply_spec():
+    return dict(
+        field_manager=dict(type="str", required=True),
+        force_conflicts=dict(type="bool", default=False),
+    )
+
+
 def argspec():
     argument_spec = copy.deepcopy(NAME_ARG_SPEC)
     argument_spec.update(copy.deepcopy(RESOURCE_ARG_SPEC))
@@ -390,6 +430,9 @@ def argspec():
     argument_spec["force"] = dict(type="bool", default=False)
     argument_spec["label_selectors"] = dict(type="list", elements="str")
     argument_spec["generate_name"] = dict()
+    argument_spec["server_side_apply"] = dict(
+        type="dict", default=None, options=server_apply_spec()
+    )
 
     return argument_spec
 
