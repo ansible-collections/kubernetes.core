@@ -148,17 +148,14 @@ resources:
 
 import copy
 
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
-    AnsibleModule,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
     WAIT_ARG_SPEC,
 )
 
 
-def execute_module(module, k8s_ansible_mixin):
-    facts = k8s_ansible_mixin.kubernetes_facts(
+def run_module(module, svc):
+    info = svc.find(
         module.params["kind"],
         module.params["api_version"],
         name=module.params["name"],
@@ -170,7 +167,7 @@ def execute_module(module, k8s_ansible_mixin):
         wait_timeout=module.params["wait_timeout"],
         condition=module.params["wait_condition"],
     )
-    module.exit_json(changed=False, **facts)
+    module.exit_json(changed=False, **info)
 
 
 def argspec():
@@ -190,15 +187,20 @@ def argspec():
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+        AnsibleK8SModule,
+    )
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
         get_api_client,
     )
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+        K8sService,
+    )
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    module = AnsibleK8SModule(argument_spec=argspec(), supports_check_mode=True)
+    client = get_api_client(module)
+    svc = K8sService(client, module)
+    run_module(module, svc)
 
 
 if __name__ == "__main__":
