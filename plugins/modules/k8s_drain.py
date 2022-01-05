@@ -64,6 +64,12 @@ options:
             - Ignore DaemonSet-managed pods.
             type: bool
             default: False
+        delete_emptydir_data:
+            description:
+            - Continue even if there are pods using emptyDir (local data that will be deleted when the node is drained).
+            type: bool
+            default: False
+            version_added: 2.3.0
         disable_eviction:
             description:
             - Forces drain to use delete rather than evict.
@@ -138,7 +144,7 @@ except ImportError:
     pass
 
 
-def filter_pods(pods, force, ignore_daemonset):
+def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
     k8s_kind_mirror = "kubernetes.io/config.mirror"
     daemonSet, unmanaged, mirror, localStorage, to_delete = [], [], [], [], []
     for pod in pods:
@@ -153,7 +159,6 @@ def filter_pods(pods, force, ignore_daemonset):
             continue
 
         # Pod with local storage cannot be deleted
-        # TODO: support new option delete-emptydatadir in order to allow deletion of such pod
         if pod.spec.volumes and any(vol.empty_dir for vol in pod.spec.volumes):
             localStorage.append((pod.metadata.namespace, pod.metadata.name))
             continue
@@ -198,7 +203,14 @@ def filter_pods(pods, force, ignore_daemonset):
     # local storage
     if localStorage:
         pod_names = ",".join([pod[0] + "/" + pod[1] for pod in localStorage])
-        errors.append("cannot delete Pods with local storage: {0}.".format(pod_names))
+        if not delete_emptydir_data:
+            errors.append(
+                "cannot delete Pods with local storage: {0}.".format(pod_names)
+            )
+        else:
+            warnings.append("Deleting Pods with local storage: {0}.".format(pod_names))
+            for pod in localStorage:
+                to_delete.append((pod[0], pod[1]))
 
     # DaemonSet managed Pods
     if daemonSet:
@@ -349,8 +361,11 @@ class K8sDrainAnsible(object):
             # Filter pods
             force = self._drain_options.get("force", False)
             ignore_daemonset = self._drain_options.get("ignore_daemonsets", False)
+            delete_emptydir_data = self._drain_options.get(
+                "delete_emptydir_data", False
+            )
             pods, warnings, errors = filter_pods(
-                pod_list.items, force, ignore_daemonset
+                pod_list.items, force, ignore_daemonset, delete_emptydir_data
             )
             if errors:
                 _revert_node_patch()
@@ -467,6 +482,7 @@ def argspec():
                     terminate_grace_period=dict(type="int"),
                     force=dict(type="bool", default=False),
                     ignore_daemonsets=dict(type="bool", default=False),
+                    delete_emptydir_data=dict(type="bool", default=False),
                     disable_eviction=dict(type="bool", default=False),
                     wait_timeout=dict(type="int"),
                     wait_sleep=dict(type="int", default=5),
