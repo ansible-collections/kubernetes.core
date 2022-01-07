@@ -52,20 +52,10 @@
 
     - name: Check if helm diff check is correct
       vars:
-        expected: "\u001b[0;33mhelm, test-chart-another-configmap, ConfigMap (v1) has been added:\u001b[0m\n\
-          \u001b[0;31m- \u001b[0m\n\
-          \u001b[0;32m+ # Source: test-chart/templates/anothermap.yaml\u001b[0m\n\
-          \u001b[0;32m+ # BEGIN ANSIBLE MANAGED BLOCK\u001b[0m\n\
-          \u001b[0;32m+ apiVersion: v1\u001b[0m\n\
-          \u001b[0;32m+ kind: ConfigMap\u001b[0m\n\
-          \u001b[0;32m+ metadata:\u001b[0m\n\
-          \u001b[0;32m+   name: test-chart-another-configmap\u001b[0m\n\
-          \u001b[0;32m+ data:\u001b[0m\n\
-          \u001b[0;32m+   foo: bar\u001b[0m\n\
-          \u001b[0;32m+ # END ANSIBLE MANAGED BLOCK\u001b[0m"
+        foo_bar_value: "+   foo: bar"
       assert:
         that:
-          - expected == diff_result.diff.prepared
+          - foo_bar_value in diff_result.diff.prepared
 
     - name: Upgrade local chart with modifications
       helm:
