@@ -39,7 +39,6 @@ except ImportError:
     # These are defined only for the sake of Ansible's checked import requirement
     Resource = Any  # type: ignore
     ResourceInstance = Any  # type: ignore
-    pass
 
 try:
     from ansible_collections.kubernetes.core.plugins.module_utils.apply import (
