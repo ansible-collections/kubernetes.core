@@ -46,8 +46,7 @@ def validate(client, module, resource):
         module.fail_json(
             msg="\n".join([_prepend_resource_info(resource, error) for error in errors])
         )
-    else:
-        return [_prepend_resource_info(resource, msg) for msg in warnings + errors]
+    return [_prepend_resource_info(resource, msg) for msg in warnings + errors]
 
 
 def run_module(module) -> None:
