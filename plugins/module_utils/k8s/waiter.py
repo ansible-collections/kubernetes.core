@@ -128,17 +128,23 @@ class Waiter:
 
     def wait(
         self,
-        definition: Dict,
+        name: str,
+        namespace: str,
         timeout: int,
         sleep: int,
         label_selectors: Optional[List[str]] = None,
+        field_selectors: Optional[List[str]] = None,
     ) -> Tuple[bool, Optional[Dict], int]:
         params = {
-            "name": definition["metadata"].get("name"),
-            "namespace": definition["metadata"].get("namespace"),
+            "name": name,
+            "namespace": namespace,
         }
         if label_selectors:
             params["label_selector"] = ",".join(label_selectors)
+
+        if field_selectors:
+            params["field_selector"] = ",".join(field_selectors)
+
         instance: Optional[Dict] = None
         response = None
         elapsed = 0

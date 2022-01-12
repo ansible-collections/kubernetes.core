@@ -83,7 +83,10 @@ def test_waiter_waits_for_missing_resource():
     client = Mock(**spec)
     resource = Mock()
     result, instance, elapsed = Waiter(client, resource, exists).wait(
-        RESOURCES[0], 3, 1
+        RESOURCES[0]["metadata"].get("name"),
+        RESOURCES[0]["metadata"].get("namespace"),
+        timeout=3,
+        sleep=1,
     )
     assert result is False
     assert instance is None
@@ -95,7 +98,12 @@ def test_waiter_waits_for_resource_to_exist(resource, expected):
     result = resource.to_dict()
     spec = {"get.side_effect": [NotFoundError(Mock()), resource, resource, resource]}
     client = Mock(**spec)
-    success, instance, elapsed = Waiter(client, Mock(), exists).wait(result, 3, 1)
+    success, instance, elapsed = Waiter(client, Mock(), exists).wait(
+        result["metadata"].get("name"),
+        result["metadata"].get("namespace"),
+        timeout=3,
+        sleep=1,
+    )
     assert success is expected
     assert instance == result
     assert abs(elapsed - 2) <= 1

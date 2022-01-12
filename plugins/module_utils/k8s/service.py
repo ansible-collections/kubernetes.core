@@ -8,7 +8,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
     generate_hash,
 )
+
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
+    Waiter,
+    exists,
+    resource_absent,
     get_waiter,
 )
 
@@ -76,7 +80,7 @@ class K8sService:
 
     def find_resource(
         self, kind: str, api_version: str, fail: bool = False
-    ) -> Optional[Any]:
+    ) -> Optional[ResourceInstance]:
         for attribute in ["kind", "name", "singular_name"]:
             try:
                 return self.client.resources.get(
@@ -90,10 +94,9 @@ class K8sService:
             )
         except (ResourceNotFoundError, ResourceNotUniqueError):
             if fail:
-                self.module.fail(
-                    msg="Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]".format(
-                        api_version, kind
-                    )
+                raise CoreException(
+                    "Failed to find exact match for %s.%s by [kind, name, singularName, shortNames]"
+                    % (api_version, kind)
                 )
 
     def create_project_request(self, definition: Dict) -> Dict:
@@ -116,7 +119,7 @@ class K8sService:
         return results
 
     def diff_objects(self, existing: Dict, new: Dict) -> Tuple[bool, Dict]:
-        result = dict()
+        result: Dict = dict()
         diff = recursive_diff(existing, new)
         if not diff:
             return True, result
@@ -151,7 +154,7 @@ class K8sService:
         name: str,
         namespace: str,
         merge_type: str = None,
-    ) -> Tuple[bool, Dict]:
+    ) -> Dict:
         if merge_type == "json":
             self.module.deprecate(
                 msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
@@ -164,8 +167,7 @@ class K8sService:
                 params["dry_run"] = "All"
             if merge_type:
                 params["content_type"] = "application/{0}-patch+json".format(merge_type)
-            k8s_obj = self.client.patch(resource, definition, **params).to_dict()
-            return k8s_obj, {}
+            return self.client.patch(resource, definition, **params).to_dict()
         except Exception as e:
             reason = e.body if hasattr(e, "body") else e
             msg = "Failed to patch object: {0}".format(reason)
@@ -245,80 +247,61 @@ class K8sService:
         if not field_selectors:
             field_selectors = []
 
-        result = None
+        result = {"resources": [], "api_found": True}
 
+        # With a timeout of 0 the waiter will do a single check and return, effectively not waiting.
+        if not wait:
+            wait_timeout = 0
+
+        if state == "present":
+            predicate = exists
+        else:
+            predicate = resource_absent
+
+        waiter = Waiter(self.client, resource, predicate)
+
+        # This is an initial check to get the resource or resources that we then need to wait on individually.
         try:
-            result = self.client.get(
-                resource,
-                **dict(
-                    name=name,
-                    namespace=namespace,
-                    label_selector=",".join(label_selectors),
-                    field_selector=",".join(field_selectors),
-                )
+            success, resources, duration = waiter.wait(
+                name=name,
+                namespace=namespace,
+                timeout=wait_timeout,
+                sleep=wait_sleep,
+                label_selectors=label_selectors,
+                field_selectors=field_selectors,
             )
         except BadRequestError:
-            return dict(resources=[], api_found=True)
-        except NotFoundError:
-            if not wait or name is None:
-                return dict(resources=[], api_found=True)
+            return result
+
+        # There is either no result or there is a List resource with no items
+        if (
+            not resources
+            or resources["kind"].endswith("List")
+            and not resources.get("items")
+        ):
+            return result
+
+        instances = resources.get("items") or [resources]
 
         if not wait:
-            result = result.to_dict()
-            if "items" in result:
-                return dict(resources=result["items"], api_found=True)
-            return dict(resources=[result], api_found=True)
+            result["resources"] = instances
+            return result
 
-        start = datetime.now()
-
-        def _elapsed():
-            return (datetime.now() - start).seconds
-
-        if result is None:
-            while _elapsed() < wait_timeout:
-                try:
-                    result = self.client.get(
-                        resource,
-                        **dict(
-                            name=name,
-                            namespace=namespace,
-                            label_selector=",".join(label_selectors),
-                            field_selector=",".join(field_selectors),
-                        )
-                    )
-                    break
-                except NotFoundError:
-                    pass
-                time.sleep(wait_sleep)
-            if result is None:
-                return dict(resources=[], api_found=True)
-
-        if isinstance(result, ResourceInstance):
-            satisfied_by = []
-            # We have a list of ResourceInstance
-            resource_list = result.get("items", [])
-            if not resource_list:
-                resource_list = [result]
-
-            for resource_instance in resource_list:
-                waiter = get_waiter(
-                    self.client, resource_instance, state=state, condition=condition
+        # Now wait for the specified state of any resource instances we have found.
+        waiter = get_waiter(self.client, resource, state=state, condition=condition)
+        for instance in instances:
+            name = instance["metadata"].get("name")
+            namespace = instance["metadata"].get("namespace")
+            success, res, duration = waiter.wait(
+                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep
+            )
+            if not success:
+                raise CoreException(
+                    "Failed to gather information about %s(s) even"
+                    " after waiting for %s seconds" % (res.get("kind"), duration)
                 )
-                success, res, duration = waiter.wait(
-                    resource_instance, wait_timeout, wait_sleep
-                )
-                if not success:
-                    raise CoreException(
-                        "Failed to gather information about %s(s) even"
-                        " after waiting for %s seconds" % (res.get("kind"), duration)
-                    )
-                satisfied_by.append(res)
-            return dict(resources=satisfied_by, api_found=True)
-        result = result.to_dict()
-
-        if "items" in result:
-            return dict(resources=result["items"], api_found=True)
-        return dict(resources=[result], api_found=True)
+            result["resources"].append(res)
+        return result
 
     def create(self, resource: Resource, definition: Dict) -> Dict:
         origin_name = definition["metadata"].get("name")
@@ -367,7 +350,7 @@ class K8sService:
             definition["metadata"].update({"name": k8s_obj["metadata"]["name"]})
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                definition, wait_timeout, wait_sleep,
+                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep,
             )
 
         results["changed"] = True
@@ -390,6 +373,7 @@ class K8sService:
     ) -> Dict:
         apply = self.module.params.get("apply", False)
         origin_name = definition["metadata"].get("name")
+        name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
@@ -427,7 +411,10 @@ class K8sService:
             if wait and not self.module.check_mode:
                 waiter = get_waiter(self.client, resource, condition=wait_condition)
                 success, results["result"], results["duration"] = waiter.wait(
-                    definition, wait_timeout, wait_sleep,
+                    name=name,
+                    namespace=namespace,
+                    timeout=wait_timeout,
+                    sleep=wait_sleep,
                 )
 
             if existing:
@@ -467,8 +454,6 @@ class K8sService:
         ].get("type"):
             wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
-        match = False
-        diffs = []
 
         if self.module.check_mode and not self.module.client.dry_run:
             k8s_obj = _encode_stringdata(definition)
@@ -497,7 +482,7 @@ class K8sService:
         if wait and not self.module.check_mode:
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                definition, wait_timeout, wait_sleep
+                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep,
             )
         match, diffs = self.diff_objects(existing.to_dict(), results["result"])
         results["changed"] = not match
@@ -530,8 +515,6 @@ class K8sService:
         ].get("type"):
             wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
-        match = False
-        diffs = []
 
         if self.module.check_mode and not self.module.client.dry_run:
             k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
@@ -540,11 +523,9 @@ class K8sService:
                 "strategic-merge",
                 "merge",
             ]:
-                k8s_obj, error = self.patch_resource(
+                k8s_obj = self.patch_resource(
                     resource, definition, name, namespace, merge_type=merge_type,
                 )
-                if not error:
-                    break
 
         success = True
         results["result"] = k8s_obj
@@ -552,7 +533,7 @@ class K8sService:
         if wait and not self.module.check_mode:
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                definition, wait_timeout, wait_sleep,
+                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep,
             )
 
         match, diffs = self.diff_objects(existing.to_dict(), results["result"])
@@ -580,6 +561,8 @@ class K8sService:
         delete_options = self.module.params.get("delete_options")
         label_selectors = self.module.params.get("label_selectors")
         origin_name = definition["metadata"].get("name")
+        name = definition["metadata"].get("name")
+        namespace = definition["metadata"].get("namespace")
         wait = self.module.params.get("wait")
         wait_sleep = self.module.params.get("wait_sleep")
         wait_timeout = self.module.params.get("wait_timeout")
@@ -621,9 +604,10 @@ class K8sService:
                 if wait and not self.module.check_mode:
                     waiter = get_waiter(self.client, resource, state="absent")
                     success, resource, duration = waiter.wait(
-                        definition,
-                        wait_timeout,
-                        wait_sleep,
+                        name=name,
+                        namespace=namespace,
+                        timeout=wait_timeout,
+                        sleep=wait_sleep,
                         label_selectors=label_selectors,
                     )
                     results["duration"] = duration
