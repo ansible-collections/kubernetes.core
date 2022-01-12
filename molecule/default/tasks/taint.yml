@@ -241,7 +241,7 @@
     vars:
       search_key: "{{ item.key}}"
       search_effect: "{{ item.effect }}"
-      all_taints: "{{ taint_patch_1 }} + {{ taint_patch_2 }}"
+      all_taints: "{{ taint_patch_1 + taint_patch_2 }}"
     with_items: "{{ _result.result.spec.taints }}"
 
   - name: Remove taints from node (check_mode)
@@ -323,7 +323,7 @@
     vars:
       search_key: "{{ item.key}}"
       search_effect: "{{ item.effect }}"
-      all_taints: "{{ taint_patch_1 }} + {{ taint_patch_2 }}"
+      all_taints: "{{ taint_patch_1 + taint_patch_2 }}"
     with_items: "{{ _result.result.spec.taints }}"
 
   - name: Add other taints and update
@@ -340,7 +340,7 @@
     vars:
       search_key: "{{ item.key}}"
       search_effect: "{{ item.effect }}"
-      all_taints: "{{ taint_patch_3 }} + {{ taint_patch_2 }}"
+      all_taints: "{{ taint_patch_3 + taint_patch_2 }}"
     with_items: "{{ _result.result.spec.taints }}"
 
   - name: Remove taint using key:effect
@@ -373,7 +373,7 @@
     vars:
       search_key: "{{ item.key}}"
       search_effect: "{{ item.effect }}"
-      all_taints: "{{ taint_patch_3 }} + {{ left_taint_patch_2 }}"
+      all_taints: "{{ taint_patch_3 + left_taint_patch_2 }}"
     with_items: "{{ _result.resources[0].spec.taints }}"
 
   - name: Remove taint using key
@@ -405,7 +405,7 @@
     vars:
       search_key: "{{ item.key}}"
       search_effect: "{{ item.effect }}"
-      all_taints: "{{ left_taint_patch_2 }} + {{ left_taint_patch_3 }}"
+      all_taints: "{{ left_taint_patch_2 + left_taint_patch_3 }}"
     with_items: "{{ _result.resources[0].spec.taints }}"
 
   - name: Remove taints (including non existing ones)
