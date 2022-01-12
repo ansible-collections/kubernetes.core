@@ -128,10 +128,10 @@ class Waiter:
 
     def wait(
         self,
-        name: str,
-        namespace: str,
         timeout: int,
         sleep: int,
+        name: Optional[str] = None,
+        namespace: Optional[str] = None,
         label_selectors: Optional[List[str]] = None,
         field_selectors: Optional[List[str]] = None,
     ) -> Tuple[bool, Optional[Dict], int]:

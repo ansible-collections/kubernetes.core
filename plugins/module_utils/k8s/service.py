@@ -263,10 +263,10 @@ class K8sService:
         # This is an initial check to get the resource or resources that we then need to wait on individually.
         try:
             success, resources, duration = waiter.wait(
-                name=name,
-                namespace=namespace,
                 timeout=wait_timeout,
                 sleep=wait_sleep,
+                name=name,
+                namespace=namespace,
                 label_selectors=label_selectors,
                 field_selectors=field_selectors,
             )
@@ -293,7 +293,7 @@ class K8sService:
             name = instance["metadata"].get("name")
             namespace = instance["metadata"].get("namespace")
             success, res, duration = waiter.wait(
-                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep
+                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
             )
             if not success:
                 raise CoreException(
@@ -350,7 +350,7 @@ class K8sService:
             definition["metadata"].update({"name": k8s_obj["metadata"]["name"]})
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep,
+                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
             )
 
         results["changed"] = True
@@ -411,10 +411,10 @@ class K8sService:
             if wait and not self.module.check_mode:
                 waiter = get_waiter(self.client, resource, condition=wait_condition)
                 success, results["result"], results["duration"] = waiter.wait(
-                    name=name,
-                    namespace=namespace,
                     timeout=wait_timeout,
                     sleep=wait_sleep,
+                    name=name,
+                    namespace=namespace,
                 )
 
             if existing:
@@ -482,7 +482,7 @@ class K8sService:
         if wait and not self.module.check_mode:
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep,
+                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
             )
         match, diffs = self.diff_objects(existing.to_dict(), results["result"])
         results["changed"] = not match
@@ -533,7 +533,7 @@ class K8sService:
         if wait and not self.module.check_mode:
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                name=name, namespace=namespace, timeout=wait_timeout, sleep=wait_sleep,
+                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
             )
 
         match, diffs = self.diff_objects(existing.to_dict(), results["result"])
@@ -604,10 +604,10 @@ class K8sService:
                 if wait and not self.module.check_mode:
                     waiter = get_waiter(self.client, resource, state="absent")
                     success, resource, duration = waiter.wait(
-                        name=name,
-                        namespace=namespace,
                         timeout=wait_timeout,
                         sleep=wait_sleep,
+                        name=name,
+                        namespace=namespace,
                         label_selectors=label_selectors,
                     )
                     results["duration"] = duration
