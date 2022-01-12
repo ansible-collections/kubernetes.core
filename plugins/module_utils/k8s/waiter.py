@@ -135,10 +135,14 @@ class Waiter:
         label_selectors: Optional[List[str]] = None,
         field_selectors: Optional[List[str]] = None,
     ) -> Tuple[bool, Optional[Dict], int]:
-        params = {
-            "name": name,
-            "namespace": namespace,
-        }
+        params = {}
+
+        if name:
+            params["name"] = name
+
+        if namespace:
+            params["namespace"] = namespace
+
         if label_selectors:
             params["label_selector"] = ",".join(label_selectors)
 
