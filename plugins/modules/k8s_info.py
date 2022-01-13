@@ -148,14 +148,26 @@ resources:
 
 import copy
 
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
     WAIT_ARG_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
 
 
-def run_module(module, svc):
-    info = svc.find(
+def execute_module(module, svc):
+    facts = svc.find(
         module.params["kind"],
         module.params["api_version"],
         name=module.params["name"],
@@ -167,7 +179,7 @@ def run_module(module, svc):
         wait_timeout=module.params["wait_timeout"],
         condition=module.params["wait_condition"],
     )
-    module.exit_json(changed=False, **info)
+    module.exit_json(changed=False, **facts)
 
 
 def argspec():
@@ -187,20 +199,12 @@ def argspec():
 
 
 def main():
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
-        AnsibleK8SModule,
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
     )
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
-        get_api_client,
-    )
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
-        K8sService,
-    )
-
-    module = AnsibleK8SModule(argument_spec=argspec(), supports_check_mode=True)
     client = get_api_client(module)
     svc = K8sService(client, module)
-    run_module(module, svc)
+    execute_module(module, svc)
 
 
 if __name__ == "__main__":
