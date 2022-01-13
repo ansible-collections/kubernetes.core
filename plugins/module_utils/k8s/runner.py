@@ -20,27 +20,18 @@ from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
 )
 
-try:
-    from kubernetes.dynamic.exceptions import KubernetesValidateMissing
-except ImportError:
-    # Handled in module setup
-    pass
-
 
 def validate(client, module, resource):
     def _prepend_resource_info(resource, msg):
         return "%s %s: %s" % (resource["kind"], resource["metadata"]["name"], msg)
 
-    try:
-        warnings, errors = client.validate(
-            resource,
-            module.params["validate"].get("version"),
-            module.params["validate"].get("strict"),
-        )
-    except KubernetesValidateMissing:
-        module.fail_json(
-            msg="kubernetes-validate python library is required to validate resources"
-        )
+    module.requires("kubernetes-validate")
+
+    warnings, errors = client.validate(
+        resource,
+        module.params["validate"].get("version"),
+        module.params["validate"].get("strict"),
+    )
 
     if errors and module.params["validate"]["fail_on_error"]:
         module.fail_json(
