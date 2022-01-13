@@ -416,6 +416,24 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>timeout</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>A Go duration (described here <em>https://pkg.go.dev/time#ParseDuration</em>) value to wait for Kubernetes commands to complete. This defaults to 5m0s.</div>
+                        <div>similar to <code>wait_timeout</code> but does not required <code>wait</code> to be activated.</div>
+                        <div>Mutually exclusive with <code>wait_timeout</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>update_repo_cache</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -429,7 +447,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Run <code>helm repo update</code> before the operation. Can be run as part of the package installation or as a separate step.</div>
+                        <div>Run <code>helm repo update</code> before the operation. Can be run as part of the package installation or as a separate step (see Examples).</div>
                 </td>
             </tr>
             <tr>
@@ -490,7 +508,8 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Wait until all Pods, PVCs, Services, and minimum number of Pods of a Deployment are in a ready state before marking the release as successful.</div>
+                        <div>When <em>release_state</em> is set to <code>present</code>, wait until all Pods, PVCs, Services, and minimum number of Pods of a Deployment are in a ready state before marking the release as successful.</div>
+                        <div>When <em>release_state</em> is set to <code>absent</code>, will wait until all the resources are deleted before returning. It will wait for as long as <em>wait_timeout</em>. This feature requires helm&gt;=3.7.0. Added in version 2.3.0.</div>
                 </td>
             </tr>
             <tr>
@@ -506,6 +525,7 @@ Parameters
                 </td>
                 <td>
                         <div>Timeout when wait option is enabled (helm2 is a number of seconds, helm3 is a duration).</div>
+                        <div>The use of <em>wait_timeout</em> to wait for kubernetes commands to complete has been deprecated and will be removed after 2022-12-01.</div>
                 </td>
             </tr>
     </table>
@@ -560,6 +580,13 @@ Examples
         name: test
         state: absent
         wait: true
+
+    - name: Separately update the repository cache
+      kubernetes.core.helm:
+        name: dummy
+        namespace: kube-system
+        state: absent
+        update_repo_cache: true
 
     # From git
     - name: Git clone stable repo on HEAD

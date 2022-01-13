@@ -87,7 +87,7 @@ options:
     version_added: '1.1.0'
   update_repo_cache:
     description:
-      - Run C(helm repo update) before the operation. Can be run as part of the package installation or as a separate step.
+      - Run C(helm repo update) before the operation. Can be run as part of the package installation or as a separate step (see Examples).
     default: false
     type: bool
 
@@ -204,6 +204,13 @@ EXAMPLES = r"""
     name: test
     state: absent
     wait: true
+
+- name: Separately update the repository cache
+  kubernetes.core.helm:
+    name: dummy
+    namespace: kube-system
+    state: absent
+    update_repo_cache: true
 
 # From git
 - name: Git clone stable repo on HEAD
