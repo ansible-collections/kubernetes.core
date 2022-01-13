@@ -250,4 +250,4 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
         dry_run=module.params.get("dry_run", False),
     )
 
-    return k8s_client.client
+    return k8s_client
