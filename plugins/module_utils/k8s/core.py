@@ -15,6 +15,7 @@ class AnsibleK8SModule:
 
     default_settings = {
         "check_k8s": True,
+        "check_pyyaml": True,
         "module_class": AnsibleModule,
     }
 
@@ -32,6 +33,9 @@ class AnsibleK8SModule:
         if self.settings["check_k8s"]:
             self.requires("kubernetes")
             self.has_at_least("kubernetes", "12.0.0", warn=True)
+
+        if self.settings["check_pyyaml"]:
+            self.requires("pyyaml")
 
     @property
     def check_mode(self):

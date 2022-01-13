@@ -144,13 +144,23 @@ from select import select
 from abc import ABCMeta, abstractmethod
 import tarfile
 
-# from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_native
-from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-    K8sAnsibleMixin,
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import (
+    CoreException,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
+
+from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
 )
@@ -524,11 +534,16 @@ class K8SCopyToPod(K8SCopy):
             )
 
 
-def check_pod(k8s_ansible_mixin, module):
-    resource = k8s_ansible_mixin.find_resource("Pod", None, True)
+def check_pod(svc):
+    module = svc.module
     namespace = module.params.get("namespace")
     name = module.params.get("pod")
     container = module.params.get("container")
+
+    try:
+        resource = svc.find_resource("Pod", None, True)
+    except CoreException as e:
+        module.fail_json(msg=e)
 
     def _fail(exc):
         arg = {}
@@ -544,7 +559,7 @@ def check_pod(k8s_ansible_mixin, module):
         module.fail_json(msg=msg, **arg)
 
     try:
-        result = resource.get(name=name, namespace=namespace)
+        result = svc.client.get(resource, name=name, namespace=namespace)
         containers = [
             c["name"] for c in result.to_dict()["status"]["containerStatuses"]
         ]
@@ -556,18 +571,9 @@ def check_pod(k8s_ansible_mixin, module):
 
 
 def execute_module(module):
-
-    k8s_ansible_mixin = K8sAnsibleMixin(module, pyyaml_required=False)
-    k8s_ansible_mixin.check_library_version()
-
-    k8s_ansible_mixin.module = module
-    k8s_ansible_mixin.argspec = module.argument_spec
-    k8s_ansible_mixin.params = k8s_ansible_mixin.module.params
-    k8s_ansible_mixin.fail_json = k8s_ansible_mixin.module.fail_json
-    k8s_ansible_mixin.fail = k8s_ansible_mixin.module.fail_json
-
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    containers = check_pod(k8s_ansible_mixin, module)
+    client = get_api_client(module=module)
+    svc = K8sService(client, module)
+    containers = check_pod(svc)
     if len(containers) > 1 and module.params.get("container") is None:
         module.fail_json(
             msg="Pod contains more than 1 container, option 'container' should be set"
@@ -576,7 +582,7 @@ def execute_module(module):
     try:
         load_class = {"to_pod": K8SCopyToPod, "from_pod": K8SCopyFromPod}
         state = module.params.get("state")
-        k8s_copy = load_class.get(state)(module, k8s_ansible_mixin.client)
+        k8s_copy = load_class.get(state)(module, client.client)
         k8s_copy.run()
     except Exception as e:
         module.fail_json("Failed to copy object due to: {0}".format(to_native(e)))
@@ -597,7 +603,9 @@ def main():
     }
     argument_spec["no_preserve"] = {"type": "bool", "default": False}
 
-    module = AnsibleModule(
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule,
+        check_pyyaml=False,
         argument_spec=argument_spec,
         mutually_exclusive=[("local_path", "content")],
         required_if=[("state", "from_pod", ["local_path"])],
