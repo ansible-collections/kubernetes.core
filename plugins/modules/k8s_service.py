@@ -144,11 +144,6 @@ result:
 
 import copy
 
-from collections import defaultdict
-
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
-    AnsibleModule,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
     COMMON_ARG_SPEC,
@@ -173,19 +168,6 @@ SERVICE_ARG_SPEC = {
 }
 
 
-def merge_dicts(x, y):
-    for k in set(x.keys()).union(y.keys()):
-        if k in x and k in y:
-            if isinstance(x[k], dict) and isinstance(y[k], dict):
-                yield (k, dict(merge_dicts(x[k], y[k])))
-            else:
-                yield (k, y[k])
-        elif k in x:
-            yield (k, x[k])
-        else:
-            yield (k, y[k])
-
-
 def argspec():
     """ argspec property builder """
     argument_spec = copy.deepcopy(AUTH_ARG_SPEC)
@@ -195,51 +177,20 @@ def argspec():
     return argument_spec
 
 
-def execute_module(module, k8s_ansible_mixin):
-    """ Module execution """
-    k8s_ansible_mixin.set_resource_definitions(module)
-
-    api_version = "v1"
-    selector = module.params.get("selector")
-    service_type = module.params.get("type")
-    ports = module.params.get("ports")
-
-    definition = defaultdict(defaultdict)
-
-    definition["kind"] = "Service"
-    definition["apiVersion"] = api_version
-
-    def_spec = definition["spec"]
-    def_spec["type"] = service_type
-    def_spec["ports"] = ports
-    def_spec["selector"] = selector
-
-    def_meta = definition["metadata"]
-    def_meta["name"] = module.params.get("name")
-    def_meta["namespace"] = module.params.get("namespace")
-
-    # 'resource_definition:' has lower priority than module parameters
-    definition = dict(
-        merge_dicts(k8s_ansible_mixin.resource_definitions[0], definition)
-    )
-
-    resource = k8s_ansible_mixin.find_resource("Service", api_version, fail=True)
-    definition = k8s_ansible_mixin.set_defaults(resource, definition)
-    result = k8s_ansible_mixin.perform_action(resource, definition)
-
-    module.exit_json(**result)
-
-
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+        AnsibleK8SModule,
+    )
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
+        run_module,
     )
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    module = AnsibleK8SModule(
+        argument_spec=argspec(),
+        supports_check_mode=True,
+    )
+
+    run_module(module)
 
 
 if __name__ == "__main__":
