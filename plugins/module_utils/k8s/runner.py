@@ -77,7 +77,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     state = params.get("state", None)
     result = {}
 
-    resource = svc.find_resource(definition)
+    resource = svc.find_resource(definition["kind"], definition["apiVersion"])
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":

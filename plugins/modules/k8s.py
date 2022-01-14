@@ -348,12 +348,21 @@ result:
 
 import copy
 
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
     WAIT_ARG_SPEC,
     NAME_ARG_SPEC,
     RESOURCE_ARG_SPEC,
     DELETE_OPTS_ARG_SPEC,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
+    run_module,
 )
 
 
@@ -400,14 +409,8 @@ def main():
         ("name", "generate_name"),
     ]
 
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
-        AnsibleK8SModule,
-    )
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
-        run_module,
-    )
-
     module = AnsibleK8SModule(
+        module_class=AnsibleModule,
         argument_spec=argspec(),
         mutually_exclusive=mutually_exclusive,
         supports_check_mode=True,
