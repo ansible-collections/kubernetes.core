@@ -77,7 +77,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     state = params.get("state", None)
     result = {}
 
-    resource = svc.find_resource(definition["kind"], definition["apiVersion"])
+    resource = svc.find_resource(definition.get("kind"), definition.get("apiVersion"))
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
@@ -91,7 +91,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                 result["msg"] = (
                     "resource 'kind={kind},name={name},namespace={namespace}' "
                     "filtered by label_selectors.".format(
-                        kind=definition["kind"], name=origin_name, namespace=namespace,
+                        kind=definition.get("kind"), name=origin_name, namespace=namespace,
                     )
                 )
                 return result
