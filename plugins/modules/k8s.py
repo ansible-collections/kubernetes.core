@@ -365,6 +365,13 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import 
     run_module,
 )
 
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
+    run_module,
+)
+
 
 def validate_spec():
     return dict(
