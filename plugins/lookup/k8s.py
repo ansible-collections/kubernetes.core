@@ -183,15 +183,31 @@ RETURN = """
         type: complex
 """
 
+import os
+
 from ansible.errors import AnsibleError
 from ansible.module_utils.common._collections_compat import KeysView
-from ansible.plugins.lookup import LookupBase
+from ansible.module_utils.common.validation import check_type_bool
 
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     K8sAnsibleMixin,
     get_api_client,
 )
 
+try:
+    enable_turbo_mode = check_type_bool(os.environ.get("ENABLE_TURBO_MODE"))
+except TypeError:
+    enable_turbo_mode = False
+
+if enable_turbo_mode:
+    try:
+        from ansible_collections.cloud.common.plugins.plugin_utils.turbo.lookup import (
+            TurboLookupBase as LookupBase,
+        )
+    except ImportError:
+        from ansible.plugins.lookup import LookupBase  # noqa: F401
+else:
+    from ansible.plugins.lookup import LookupBase  # noqa: F401
 
 try:
     from kubernetes.dynamic.exceptions import NotFoundError
@@ -283,5 +299,7 @@ class KubernetesLookup(K8sAnsibleMixin):
 
 
 class LookupModule(LookupBase):
-    def run(self, terms, variables=None, **kwargs):
+    def _run(self, terms, variables=None, **kwargs):
         return KubernetesLookup().run(terms, variables=variables, **kwargs)
+
+    run = _run if not hasattr(LookupBase, "run_on_daemon") else LookupBase.run_on_daemon
