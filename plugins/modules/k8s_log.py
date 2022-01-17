@@ -121,11 +121,21 @@ import copy
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
-from ansible.module_utils.six import PY2
-
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
     NAME_ARG_SPEC,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
 )
 
 
@@ -143,32 +153,30 @@ def argspec():
     return args
 
 
-def execute_module(module, k8s_ansible_mixin):
-    name = module.params.get("name")
-    namespace = module.params.get("namespace")
-    label_selector = ",".join(module.params.get("label_selectors", {}))
+def execute_module(svc, params):
+    name = params.get("name")
+    namespace = params.get("namespace")
+    label_selector = ",".join(params.get("label_selectors", {}))
     if name and label_selector:
-        module.fail(msg="Only one of name or label_selectors can be provided")
+        raise CoreException("Only one of name or label_selectors can be provided")
 
-    resource = k8s_ansible_mixin.find_resource(
-        module.params["kind"], module.params["api_version"], fail=True
-    )
-    v1_pods = k8s_ansible_mixin.find_resource("Pod", "v1", fail=True)
+    resource = svc.find_resource(params["kind"], params["api_version"], fail=True)
+    v1_pods = svc.find_resource("Pod", "v1", fail=True)
 
     if "log" not in resource.subresources:
         if not name:
-            module.fail(
-                msg="name must be provided for resources that do not support the log subresource"
+            raise CoreException(
+                "name must be provided for resources that do not support the log subresource"
             )
         instance = resource.get(name=name, namespace=namespace)
-        label_selector = ",".join(extract_selectors(module, instance))
+        label_selector = ",".join(extract_selectors(instance))
         resource = v1_pods
 
     if label_selector:
         instances = v1_pods.get(namespace=namespace, label_selector=label_selector)
         if not instances.items:
-            module.fail(
-                msg="No pods in namespace {0} matched selector {1}".format(
+            raise CoreException(
+                "No pods in namespace {0} matched selector {1}".format(
                     namespace, label_selector
                 )
             )
@@ -177,28 +185,29 @@ def execute_module(module, k8s_ansible_mixin):
         resource = v1_pods
 
     kwargs = {}
-    if module.params.get("container"):
-        kwargs["query_params"] = dict(container=module.params["container"])
+    if params.get("container"):
+        kwargs["query_params"] = {"container": params["container"]}
 
-    if module.params.get("since_seconds"):
+    if params.get("since_seconds"):
         kwargs.setdefault("query_params", {}).update(
-            {"sinceSeconds": module.params["since_seconds"]}
+            {"sinceSeconds": params["since_seconds"]}
         )
 
-    log = serialize_log(
-        resource.log.get(name=name, namespace=namespace, serialize=False, **kwargs)
+    response = resource.log.get(
+        name=name, namespace=namespace, serialize=False, **kwargs
     )
+    log = response.data.decode("utf8")
 
-    module.exit_json(changed=False, log=log, log_lines=log.split("\n"))
+    return {"changed": False, "log": log, "log_lines": log.split("\n")}
 
 
-def extract_selectors(module, instance):
+def extract_selectors(instance):
     # Parses selectors on an object based on the specifications documented here:
     # https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
     selectors = []
     if not instance.spec.selector:
-        module.fail(
-            msg="{0} {1} does not support the log subresource directly, and no Pod selector was found on the object".format(
+        raise CoreException(
+            "{0} {1} does not support the log subresource directly, and no Pod selector was found on the object".format(
                 "/".join(instance.group, instance.apiVersion), instance.kind
             )
         )
@@ -232,8 +241,8 @@ def extract_selectors(module, instance):
                     )
                 )
             else:
-                module.fail(
-                    msg="The k8s_log module does not support the {0} matchExpression operator".format(
+                raise CoreException(
+                    "The k8s_log module does not support the {0} matchExpression operator".format(
                         operator.lower()
                     )
                 )
@@ -241,22 +250,18 @@ def extract_selectors(module, instance):
     return selectors
 
 
-def serialize_log(response):
-    if PY2:
-        return response.data
-    return response.data.decode("utf8")
-
-
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
     )
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    try:
+        client = get_api_client(module=module)
+        svc = K8sService(client, module)
+        result = execute_module(svc, module.params)
+        module.exit_json(**result)
+    except CoreException as e:
+        module.fail_json(msg=e)
 
 
 if __name__ == "__main__":
