@@ -169,7 +169,7 @@ For documentation on how to use individual modules and other content included in
 ## Ansible Turbo mode Tech Preview
 
 
-The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection. By default, this feature is disabled. To enable Turbo mode, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. For example:
+The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection. By default, this feature is disabled. To enable Turbo mode for modules, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. For example:
 
 ```yaml
 ---
@@ -179,6 +179,9 @@ The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview
   tasks:
     ...
 ```
+
+To enable Turbo mode for k8s lookup plugin, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. This is not working when
+defined in the playbook using `environment` keyword as above, you must set it using `export ENABLE_TURBO_MODE=1`.
 
 Please read more about Ansible Turbo mode - [here](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/ansible_turbo_mode.rst).
 
