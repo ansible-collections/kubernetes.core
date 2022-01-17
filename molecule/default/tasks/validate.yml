@@ -209,7 +209,7 @@
         - name: assert that task failed with proper message
           assert:
             that:
-              - '"kubernetes >= 17.17.0 is required" in _result.msg'
+              - '"kubernetes >= 17.17.0 is required" in _result.module_stderr'
       when:
         - _stat.stat.exists
         - _stat.stat.readable
