@@ -136,6 +136,12 @@ from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule impo
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
 from ansible.module_utils._text import to_native
 
 try:
@@ -244,30 +250,9 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
 
 
 class K8sDrainAnsible(object):
-    def __init__(self, module):
-        from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-            K8sAnsibleMixin,
-            get_api_client,
-        )
-
+    def __init__(self, module, client):
         self._module = module
-        self._k8s_ansible_mixin = K8sAnsibleMixin(module)
-        self._k8s_ansible_mixin.client = get_api_client(module=self._module)
-
-        self._k8s_ansible_mixin.module = self._module
-        self._k8s_ansible_mixin.argspec = self._module.argument_spec
-        self._k8s_ansible_mixin.check_mode = self._module.check_mode
-        self._k8s_ansible_mixin.params = self._module.params
-        self._k8s_ansible_mixin.fail_json = self._module.fail_json
-        self._k8s_ansible_mixin.fail = self._module.fail_json
-        self._k8s_ansible_mixin.exit_json = self._module.exit_json
-        self._k8s_ansible_mixin.warn = self._module.warn
-        self._k8s_ansible_mixin.warnings = []
-
-        self._api_instance = core_v1_api.CoreV1Api(
-            self._k8s_ansible_mixin.client.client
-        )
-        self._k8s_ansible_mixin.check_library_version()
+        self._api_instance = core_v1_api.CoreV1Api(client.client)
 
         # delete options
         self._drain_options = module.params.get("delete_options", {})
@@ -503,7 +488,7 @@ def argspec():
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec())
+    module = AnsibleK8SModule(module_class=AnsibleModule, argument_spec=argspec())
 
     if not HAS_EVICTION_API:
         module.fail_json(
@@ -512,7 +497,8 @@ def main():
             error=to_native(k8s_import_exception),
         )
 
-    k8s_drain = K8sDrainAnsible(module)
+    client = get_api_client(module=module)
+    k8s_drain = K8sDrainAnsible(module, client.client)
     k8s_drain.execute_module()
 
 
