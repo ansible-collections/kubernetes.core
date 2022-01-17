@@ -144,11 +144,21 @@ result:
 
 import copy
 
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
     COMMON_ARG_SPEC,
     RESOURCE_ARG_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
+    run_module,
+)
+
 
 SERVICE_ARG_SPEC = {
     "apply": {"type": "bool", "default": False},
@@ -178,16 +188,8 @@ def argspec():
 
 
 def main():
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
-        AnsibleK8SModule,
-    )
-    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
-        run_module,
-    )
-
     module = AnsibleK8SModule(
-        argument_spec=argspec(),
-        supports_check_mode=True,
+        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True,
     )
 
     run_module(module)
