@@ -177,11 +177,7 @@ class K8sService:
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
         label_selectors = self.module.params.get("label_selectors")
-        results = {
-            "changed": False,
-            "result": {},
-        }
-        existing = None
+        result = None
 
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
@@ -193,7 +189,7 @@ class K8sService:
                 params["namespace"] = namespace
             if label_selectors:
                 params["label_selector"] = ",".join(label_selectors)
-            existing = self.client.get(resource, **params)
+            result = self.client.get(resource, **params)
         except (NotFoundError, MethodNotAllowedError):
             pass
         except ForbiddenError as e:
@@ -210,10 +206,7 @@ class K8sService:
             msg = "Failed to retrieve requested object: {0}".format(reason)
             raise CoreException(msg) from e
 
-        if existing:
-            results["result"] = existing.to_dict()
-
-        return results
+        return result
 
     def find(
         self,
@@ -581,6 +574,15 @@ class K8sService:
             if self.module.check_mode and not self.client.dry_run:
                 return results
             else:
+                if name:
+                    params["name"] = name
+
+                if namespace:
+                    params["namespace"] = namespace
+
+                if label_selectors:
+                    params["label_selector"] = ",".join(label_selectors)
+
                 if delete_options:
                     body = {
                         "apiVersion": "v1",
