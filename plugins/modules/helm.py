@@ -315,7 +315,9 @@ command:
 
 import tempfile
 import traceback
-from distutils.version import LooseVersion
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
 
 try:
     import yaml
