@@ -501,3 +501,20 @@ releases:
     fragments:
     - 298-remove-binary-file.yaml
     release_date: '2021-12-07'
+  2.2.3:
+    changes:
+      bugfixes:
+      - k8s_drain - fix error caused by accessing an undefined variable when pods
+        have local storage (https://github.com/ansible-collections/kubernetes.core/issues/292).
+      - k8s_info - don't wait on empty List resources (https://github.com/ansible-collections/kubernetes.core/pull/253).
+      - module_utils.common - change default opening mode to read-bytes to avoid bad
+        interpretation of non ascii characters and strings, often present in 3rd party
+        manifests.
+      minor_changes:
+      - Add integration test to check handling of module_defaults
+        (https://github.com/ansible-collections/kubernetes.core/pull/296).
+    fragments:
+    - 253-dont-wait-on-list-resources.yaml
+    - 295-fix-k8s-drain-variable-declaration.yaml
+    - 308-fix-for-common-non-ascii-characters-in-resources.yaml
+    release_date: '2022-01-18'
