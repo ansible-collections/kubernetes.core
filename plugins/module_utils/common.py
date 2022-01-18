@@ -25,11 +25,21 @@ import traceback
 import sys
 import hashlib
 from datetime import datetime
-from distutils.version import LooseVersion
 
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (AUTH_ARG_MAP, AUTH_ARG_SPEC, AUTH_PROXY_HEADERS_SPEC)
-from ansible_collections.kubernetes.core.plugins.module_utils.hashes import generate_hash
-from ansible_collections.kubernetes.core.plugins.module_utils.selector import LabelSelectorFilter
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    AUTH_ARG_MAP,
+    AUTH_ARG_SPEC,
+    AUTH_PROXY_HEADERS_SPEC,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
+    generate_hash,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
+    LabelSelectorFilter,
+)
 
 from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils.six import iteritems, string_types
