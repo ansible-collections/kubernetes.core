@@ -171,13 +171,13 @@ class K8sService:
             msg = "Failed to patch object: {0}".format(reason)
             raise CoreException(msg) from e
 
-    def retrieve(self, resource: Resource, definition: Dict) -> Dict:
+    def retrieve(self, resource: Resource, definition: Dict) -> ResourceInstance:
         state = self.module.params.get("state", None)
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
         label_selectors = self.module.params.get("label_selectors")
-        result = None
+        existing: ResourceInstance = None
 
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
@@ -189,7 +189,7 @@ class K8sService:
                 params["namespace"] = namespace
             if label_selectors:
                 params["label_selector"] = ",".join(label_selectors)
-            result = self.client.get(resource, **params)
+            existing = self.client.get(resource, **params)
         except (NotFoundError, MethodNotAllowedError):
             pass
         except ForbiddenError as e:
@@ -206,7 +206,7 @@ class K8sService:
             msg = "Failed to retrieve requested object: {0}".format(reason)
             raise CoreException(msg) from e
 
-        return result
+        return existing
 
     def find(
         self,
@@ -351,7 +351,7 @@ class K8sService:
                 '"{0}" "{1}": Resource creation timed out'.format(
                     definition["kind"], origin_name
                 ),
-                **results
+                results,
             )
 
         return results
@@ -424,7 +424,7 @@ class K8sService:
                     '"{0}" "{1}": Resource apply timed out'.format(
                         definition["kind"], origin_name
                     ),
-                    **results
+                    results,
                 )
 
         return results
@@ -486,7 +486,7 @@ class K8sService:
                 '"{0}" "{1}": Resource replacement timed out'.format(
                     definition["kind"], origin_name
                 ),
-                **results
+                results,
             )
 
         return results
@@ -538,7 +538,7 @@ class K8sService:
                 '"{0}" "{1}": Resource update timed out'.format(
                     definition["kind"], origin_name
                 ),
-                **results
+                results,
             )
 
         return results
@@ -616,7 +616,7 @@ class K8sService:
                             '"{0}" "{1}": Resource deletion timed out'.format(
                                 definition["kind"], origin_name
                             ),
-                            **results
+                            results,
                         )
 
                 return results

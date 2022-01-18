@@ -3,6 +3,8 @@
 
 from typing import Dict
 
+from ansible.module_utils._text import to_native
+
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
@@ -61,7 +63,8 @@ def run_module(module) -> None:
             if module.params.get("continue_on_error"):
                 result = {"error": "{0}".format(e)}
             else:
-                module.fail_json(msg=e)
+                module.fail_json(msg=to_native(e))
+
         if module.warnings:
             result["warnings"] = module.warnings
 
