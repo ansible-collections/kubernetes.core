@@ -136,10 +136,19 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     AUTH_ARG_SPEC,
     WAIT_ARG_SPEC,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
-    K8sAnsibleMixin,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
+    get_waiter,
+)
+
 
 try:
     from kubernetes.dynamic.exceptions import DynamicApiError
@@ -185,7 +194,7 @@ def json_patch(existing, patch):
         return None, error
 
 
-def execute_module(k8s_module, module):
+def execute_module(module, svc):
     kind = module.params.get("kind")
     api_version = module.params.get("api_version")
     name = module.params.get("name")
@@ -200,19 +209,15 @@ def execute_module(k8s_module, module):
         "type"
     ):
         wait_condition = module.params["wait_condition"]
-    # definition is needed for wait
-    definition = {
-        "kind": kind,
-        "metadata": {"name": name, "namespace": namespace},
-    }
 
     def build_error_msg(kind, name, msg):
         return "%s %s: %s" % (kind, name, msg)
 
-    resource = k8s_module.find_resource(kind, api_version, fail=True)
+    client = svc.client
+    resource = svc.find_resource(kind, api_version, fail=True)
 
     try:
-        existing = resource.get(name=name, namespace=namespace)
+        existing = client.get(resource, name=name, namespace=namespace)
     except DynamicApiError as exc:
         msg = "Failed to retrieve requested object: {0}".format(exc.body)
         module.fail_json(
@@ -227,7 +232,7 @@ def execute_module(k8s_module, module):
             msg=build_error_msg(kind, name, msg), error="", status="", reason=""
         )
 
-    if module.check_mode and not k8s_module.supports_dry_run:
+    if module.check_mode and not client.dry_run:
         obj, error = json_patch(existing.to_dict(), patch)
         if error:
             module.fail_json(**error)
@@ -236,7 +241,8 @@ def execute_module(k8s_module, module):
         if module.check_mode:
             params["dry_run"] = "All"
         try:
-            obj = resource.patch(
+            obj = client.patch(
+                resource,
                 patch,
                 name=name,
                 namespace=namespace,
@@ -255,10 +261,11 @@ def execute_module(k8s_module, module):
     success = True
     result = {"result": obj}
     if wait and not module.check_mode:
-        success, result["result"], result["duration"] = k8s_module.wait(
-            resource, definition, wait_sleep, wait_timeout, condition=wait_condition
+        waiter = get_waiter(client, resource, condition=wait_condition)
+        success, result["result"], result["duration"] = waiter.wait(
+            wait_timeout, wait_sleep, name, namespace
         )
-    match, diffs = k8s_module.diff_objects(existing.to_dict(), obj)
+    match, diffs = svc.diff_objects(existing.to_dict(), obj)
     result["changed"] = not match
     if module._diff:
         result["diff"] = diffs
@@ -274,13 +281,12 @@ def main():
     args = copy.deepcopy(AUTH_ARG_SPEC)
     args.update(copy.deepcopy(WAIT_ARG_SPEC))
     args.update(JSON_PATCH_ARGS)
-    module = AnsibleModule(argument_spec=args, supports_check_mode=True)
-    k8s_module = K8sAnsibleMixin(module)
-    k8s_module.params = module.params
-    k8s_module.check_library_version()
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule, argument_spec=args, supports_check_mode=True
+    )
     client = get_api_client(module)
-    k8s_module.client = client
-    execute_module(k8s_module, module)
+    svc = K8sService(client, module)
+    execute_module(module, svc)
 
 
 if __name__ == "__main__":
