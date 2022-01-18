@@ -144,6 +144,8 @@ result:
 
 import copy
 
+from collections import defaultdict
+
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
@@ -155,8 +157,18 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
-    run_module,
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import validate
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
+    create_definitions,
 )
 
 
@@ -178,6 +190,19 @@ SERVICE_ARG_SPEC = {
 }
 
 
+def merge_dicts(x, y):
+    for k in set(x.keys()).union(y.keys()):
+        if k in x and k in y:
+            if isinstance(x[k], dict) and isinstance(y[k], dict):
+                yield (k, dict(merge_dicts(x[k], y[k])))
+            else:
+                yield (k, y[k])
+        elif k in x:
+            yield (k, x[k])
+        else:
+            yield (k, y[k])
+
+
 def argspec():
     """ argspec property builder """
     argument_spec = copy.deepcopy(AUTH_ARG_SPEC)
@@ -187,12 +212,66 @@ def argspec():
     return argument_spec
 
 
+def perform_action(svc, module, definition):
+    result = {}
+    module.warnings = []
+
+    if module.params["validate"] is not None:
+        module.warnings = validate(svc.client, module, definition)
+
+    try:
+        result = perform_action(svc, definition, module.params)
+    except CoreException as e:
+        if module.warnings:
+            e["msg"] += "\n" + "\n    ".join(module.warnings)
+        module.fail_json(msg=e)
+
+    if module.warnings:
+        result["warnings"] = module.warnings
+
+    return result
+
+
+def execute_module(svc):
+    """ Module execution """
+    module = svc.module
+    api_version = "v1"
+    selector = module.params.get("selector")
+    service_type = module.params.get("type")
+    ports = module.params.get("ports")
+
+    definition = defaultdict(defaultdict)
+
+    definition["kind"] = "Service"
+    definition["apiVersion"] = api_version
+
+    def_spec = definition["spec"]
+    def_spec["type"] = service_type
+    def_spec["ports"] = ports
+    def_spec["selector"] = selector
+
+    def_meta = definition["metadata"]
+    def_meta["name"] = module.params.get("name")
+    def_meta["namespace"] = module.params.get("namespace")
+
+    definitions = create_definitions(module.params)
+
+    # 'resource_definition:' has lower priority than module parameters
+    definition = dict(merge_dicts(definitions[0], definition))
+    resource = svc.find_resource("Service", api_version, fail=True)
+    result = perform_action(svc, resource, definition)
+
+    module.exit_json(**result)
+
+
 def main():
     module = AnsibleK8SModule(
         module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True,
     )
 
-    run_module(module)
+    client = get_api_client(module=module)
+    svc = K8sService(client, module)
+    execute_module(svc)
 
 
 if __name__ == "__main__":
