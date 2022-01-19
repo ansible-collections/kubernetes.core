@@ -175,6 +175,7 @@ class K8sService:
         state = self.module.params.get("state", None)
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
+        generate_name = definition["metadata"].get("generateName")
         namespace = definition["metadata"].get("namespace")
         label_selectors = self.module.params.get("label_selectors")
         existing: ResourceInstance = None
@@ -182,14 +183,23 @@ class K8sService:
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
             if append_hash and definition["kind"] in ["ConfigMap", "Secret"]:
-                name = "%s-%s" % (name, generate_hash(definition))
-                definition["metadata"]["name"] = name
-            params = dict(name=name)
+                if name:
+                    name = "%s-%s" % (name, generate_hash(definition))
+                    definition["metadata"]["name"] = name
+                elif generate_name:
+                    definition["metadata"]["generateName"] = "%s-%s" % (
+                        generate_name,
+                        generate_hash(definition),
+                    )
+            params = {}
+            if name:
+                params["name"] = name
             if namespace:
                 params["namespace"] = namespace
             if label_selectors:
                 params["label_selector"] = ",".join(label_selectors)
-            existing = self.client.get(resource, **params)
+            if "name" in params or "label_selector" in params:
+                existing = self.client.get(resource, **params)
         except (NotFoundError, MethodNotAllowedError):
             pass
         except ForbiddenError as e:

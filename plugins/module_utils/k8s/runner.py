@@ -78,9 +78,15 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     namespace = definition["metadata"].get("namespace")
     label_selectors = params.get("label_selectors")
     state = params.get("state", None)
+    kind = definition.get("kind")
+    api_version = definition.get("apiVersion")
     result = {}
 
-    resource = svc.find_resource(definition["kind"], definition["apiVersion"])
+    if kind and kind.endswith("List"):
+        resource = svc.find_resource(kind, api_version, fail=False)
+    else:
+        resource = svc.find_resource(kind, api_version, fail=True)
+
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
@@ -94,7 +100,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                 result["msg"] = (
                     "resource 'kind={kind},name={name},namespace={namespace}' "
                     "filtered by label_selectors.".format(
-                        kind=definition["kind"], name=origin_name, namespace=namespace,
+                        kind=kind, name=origin_name, namespace=namespace,
                     )
                 )
                 return result
