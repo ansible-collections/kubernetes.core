@@ -163,10 +163,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import 
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import validate
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
-    CoreException,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
     create_definitions,
 )
@@ -212,22 +208,28 @@ def argspec():
     return argument_spec
 
 
-def perform_action(svc, module, definition):
+def perform_action(svc, resource, definition, params):
+    state = params.get("state", None)
     result = {}
-    module.warnings = []
 
-    if module.params["validate"] is not None:
-        module.warnings = validate(svc.client, module, definition)
+    existing = svc.retrieve(resource, definition)
 
-    try:
-        result = perform_action(svc, definition, module.params)
-    except CoreException as e:
-        if module.warnings:
-            e["msg"] += "\n" + "\n    ".join(module.warnings)
-        module.fail_json(msg=e)
-
-    if module.warnings:
-        result["warnings"] = module.warnings
+    if state == "absent":
+        result = svc.delete(resource, definition, existing)
+        result["method"] = "delete"
+    else:
+        if params.get("apply"):
+            result = svc.apply(resource, definition, existing)
+            result["method"] = "apply"
+        elif not existing:
+            result = svc.create(resource, definition)
+            result["method"] = "create"
+        elif params.get("force", False):
+            result = svc.replace(resource, definition, existing)
+            result["method"] = "replace"
+        else:
+            result = svc.update(resource, definition, existing)
+            result["method"] = "update"
 
     return result
 
@@ -259,7 +261,8 @@ def execute_module(svc):
     # 'resource_definition:' has lower priority than module parameters
     definition = dict(merge_dicts(definitions[0], definition))
     resource = svc.find_resource("Service", api_version, fail=True)
-    result = perform_action(svc, resource, definition)
+
+    result = perform_action(svc, resource, definition, module.params)
 
     module.exit_json(**result)
 
