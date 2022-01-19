@@ -143,6 +143,14 @@ result:
 
 import copy
 
+try:
+    from kubernetes.dynamic.exceptions import NotFoundError
+except ImportError:
+    # Handled in module setup
+    pass
+
+from ansible.module_utils._text import to_native
+
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
@@ -206,11 +214,6 @@ def execute_module(client, module):
     resource = svc.find_resource(
         module.params.get("kind"), module.params.get("api_version"), fail=True
     )
-
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        NotFoundError,
-    )
-
     multiple_scale = False
     try:
         existing = resource.get(
@@ -286,9 +289,18 @@ def execute_module(client, module):
                     existing.spec.parallelism = replicas
                     result = resource.patch(existing.to_dict()).to_dict()
                 else:
-                    result = scale(
-                        svc, resource, existing, replicas, wait, wait_time, wait_sleep,
-                    )
+                    try:
+                        result = scale(
+                            svc,
+                            resource,
+                            existing,
+                            replicas,
+                            wait,
+                            wait_time,
+                            wait_sleep,
+                        )
+                    except CoreException as e:
+                        module.fail_json(msg=to_native(e))
                     changed = changed or result["changed"]
         else:
             name = existing.metadata.name
