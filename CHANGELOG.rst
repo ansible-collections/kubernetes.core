@@ -5,6 +5,21 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.2.3
+======
+
+Bugfixes
+--------
+
+- k8s_drain - fix error caused by accessing an undefined variable when pods have local storage (https://github.com/ansible-collections/kubernetes.core/issues/292).
+- k8s_info - don't wait on empty List resources (https://github.com/ansible-collections/kubernetes.core/pull/253).
+- module_utils.common - change default opening mode to read-bytes to avoid bad interpretation of non ascii characters and strings, often present in 3rd party manifests.
+
+Minor Changes
+-------------
+
+- Add integration test to check handling of module_defaults (https://github.com/ansible-collections/kubernetes.core/pull/296).
+
 v2.2.2
 ======
 
