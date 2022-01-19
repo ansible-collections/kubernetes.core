@@ -144,9 +144,7 @@ from select import select
 from abc import ABCMeta, abstractmethod
 import tarfile
 
-from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
-    AnsibleModule,
-)
+from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
