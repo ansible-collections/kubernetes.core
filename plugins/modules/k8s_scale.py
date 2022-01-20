@@ -175,7 +175,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     get_waiter,
 )
-
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
+    create_definitions,
+)
 
 SCALE_ARG_SPEC = {
     "replicas": {"type": "int", "required": True},
@@ -188,17 +190,19 @@ SCALE_ARG_SPEC = {
 
 
 def execute_module(client, module):
-    namespace = module.params.get("namespace")
-    name = module.params.get("name")
     current_replicas = module.params.get("current_replicas")
     replicas = module.params.get("replicas")
     resource_version = module.params.get("resource_version")
-
+    definitions = create_definitions(module.params)
+    definition = definitions[0]
+    name = definition["metadata"].get("name")
+    namespace = definition["metadata"].get("namespace")
+    api_version = definition["apiVersion"]
+    kind = definition["kind"]
     label_selectors = module.params.get("label_selectors")
     if not label_selectors:
         label_selectors = []
     continue_on_error = module.params.get("continue_on_error")
-
     wait = module.params.get("wait")
     wait_time = module.params.get("wait_timeout")
     wait_sleep = module.params.get("wait_sleep")
@@ -211,9 +215,7 @@ def execute_module(client, module):
         return_attributes["duration"] = 0
 
     svc = K8sService(client, module)
-    resource = svc.find_resource(
-        module.params.get("kind"), module.params.get("api_version"), fail=True
-    )
+    resource = svc.find_resource(kind, api_version, fail=True)
     multiple_scale = False
     try:
         existing = resource.get(
@@ -285,12 +287,13 @@ def execute_module(client, module):
 
         if existing_count != replicas:
             if not module.check_mode:
-                if module.params["kind"] == "job":
+                if kind == "Job":
                     existing.spec.parallelism = replicas
-                    result = resource.patch(existing.to_dict()).to_dict()
+                    result = client.patch(resource, existing.to_dict()).to_dict()
                 else:
                     try:
                         result = scale(
+                            client,
                             svc,
                             resource,
                             existing,
@@ -305,7 +308,7 @@ def execute_module(client, module):
         else:
             name = existing.metadata.name
             namespace = existing.metadata.namespace
-            existing = resource.get(name=name, namespace=namespace)
+            existing = client.get(resource, name=name, namespace=namespace)
             result = {"changed": False, "result": existing.to_dict()}
             if module._diff:
                 result["diff"] = {}
@@ -331,7 +334,7 @@ def argspec():
 
 
 def scale(
-    svc, resource, existing_object, replicas, wait, wait_time, wait_sleep,
+    client, svc, resource, existing_object, replicas, wait, wait_time, wait_sleep,
 ):
     module = svc.module
     name = existing_object.metadata.name
@@ -349,7 +352,7 @@ def scale(
         "spec": {"replicas": replicas},
     }
 
-    existing = resource.get(name=name, namespace=namespace)
+    existing = client.get(resource, name=name, namespace=namespace)
 
     try:
         resource.scale.patch(body=scale_obj)
@@ -358,7 +361,7 @@ def scale(
         msg = "Scale request failed: {0}".format(reason)
         raise CoreException(msg) from e
 
-    k8s_obj = resource.get(name=name, namespace=namespace).to_dict()
+    k8s_obj = client.get(resource, name=name, namespace=namespace).to_dict()
     match, diffs = svc.diff_objects(existing.to_dict(), k8s_obj)
     result = dict()
     result["result"] = k8s_obj
