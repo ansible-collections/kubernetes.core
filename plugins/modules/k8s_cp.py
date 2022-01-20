@@ -541,7 +541,7 @@ def check_pod(svc):
     try:
         resource = svc.find_resource("Pod", None, True)
     except CoreException as e:
-        module.fail_json(msg=e)
+        module.fail_json(msg=to_native(e))
 
     def _fail(exc):
         arg = {}
