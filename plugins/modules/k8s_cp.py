@@ -142,6 +142,16 @@ import copy
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
+
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
 )
@@ -171,23 +181,9 @@ def argspec():
 
 
 def execute_module(module):
-
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
-    )
-
-    k8s_ansible_mixin = K8sAnsibleMixin(module, pyyaml_required=False)
-    k8s_ansible_mixin.check_library_version()
-
-    k8s_ansible_mixin.module = module
-    k8s_ansible_mixin.argspec = module.argument_spec
-    k8s_ansible_mixin.params = k8s_ansible_mixin.module.params
-    k8s_ansible_mixin.fail_json = k8s_ansible_mixin.module.fail_json
-    k8s_ansible_mixin.fail = k8s_ansible_mixin.module.fail_json
-
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    containers = check_pod(k8s_ansible_mixin, module)
+    client = get_api_client(module=module)
+    svc = K8sService(client, module)
+    containers = check_pod(svc)
     if len(containers) > 1 and module.params.get("container") is None:
         module.fail_json(
             msg="Pod contains more than 1 container, option 'container' should be set"
@@ -195,9 +191,9 @@ def execute_module(module):
 
     state = module.params.get("state")
     if state == "to_pod":
-        k8s_copy = K8SCopyToPod(module, k8s_ansible_mixin.client)
+        k8s_copy = K8SCopyToPod(module, client)
     else:
-        k8s_copy = K8SCopyFromPod(module, k8s_ansible_mixin.client)
+        k8s_copy = K8SCopyFromPod(module, client)
 
     try:
         k8s_copy.run()
@@ -206,8 +202,10 @@ def execute_module(module):
 
 
 def main():
-    module = AnsibleModule(
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule,
         argument_spec=argspec(),
+        check_pyyaml=False,
         mutually_exclusive=[("local_path", "content")],
         required_if=[("state", "from_pod", ["local_path"])],
         required_one_of=[["local_path", "content"]],
