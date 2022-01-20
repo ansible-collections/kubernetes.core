@@ -3,6 +3,7 @@ from typing import Optional
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.basic import missing_required_lib
+from ansible.module_utils.common.text.converters import to_text
 
 
 class AnsibleK8SModule:
@@ -64,67 +65,84 @@ class AnsibleK8SModule:
     def fail_json(self, *args, **kwargs):
         return self._module.fail_json(*args, **kwargs)
 
-    def _gather_versions(self) -> dict:
-        versions = {}
-        try:
-            import jsonpatch
-
-            versions["jsonpatch"] = jsonpatch.__version__
-        except ImportError:
-            pass
-
-        try:
-            import kubernetes
-
-            versions["kubernetes"] = kubernetes.__version__
-        except ImportError:
-            pass
-
-        try:
-            import yaml
-
-            versions["pyyaml"] = yaml.__version__
-        except ImportError:
-            pass
-
-        return versions
-
     def has_at_least(
         self, dependency: str, minimum: Optional[str] = None, warn: bool = False
     ) -> bool:
-        """Check if a specific dependency is present at a minimum version.
-
-        If a minimum version is not specified it will check only that the
-        dependency is present. Additionally, if ``warn`` is ``True``, a warning
-        will be emitted if the actual version is less than the specified
-        minimum version.
-        """
-        dependencies = self._gather_versions()
-        current = dependencies.get(dependency)
-        if current is not None:
-            if minimum is None:
-                return True
-            supported = LooseVersion(current) >= LooseVersion(minimum)
-            if not supported and warn:
-                self.warn(
-                    "{0}<{1} is not supported or tested. Some features may not work.".format(
-                        dependency, minimum
-                    )
+        supported = has_at_least(dependency, minimum)
+        if not supported and warn:
+            self.warn(
+                "{0}<{1} is not supported or tested. Some features may not work.".format(
+                    dependency, minimum
                 )
-            return supported
-        return False
+            )
+        return supported
 
-    def requires(self, dependency: str, minimum: Optional[str] = None) -> None:
-        """Fail if a specific dependency is not present at a minimum version.
+    def requires(
+        self,
+        dependency: str,
+        minimum: Optional[str] = None,
+        reason: Optional[str] = None,
+    ) -> None:
+        try:
+            requires(dependency, minimum)
+        except Exception as e:
+            self.fail_json(msg=to_text(e))
 
-        If a minimum version is not specified it will require only that the
-        dependency is present. This function calls ``fail_json()`` when the
-        dependency is not found at the required version and will stop module
-        execution.
-        """
-        if not self.has_at_least(dependency, minimum):
-            if minimum is not None:
-                lib = "{0}>={1}".format(dependency, minimum)
-            else:
-                lib = dependency
-            self._module.fail_json(msg=missing_required_lib(lib))
+
+def gather_versions() -> dict:
+    versions = {}
+    try:
+        import jsonpatch
+
+        versions["jsonpatch"] = jsonpatch.__version__
+    except ImportError:
+        pass
+
+    try:
+        import kubernetes
+
+        versions["kubernetes"] = kubernetes.__version__
+    except ImportError:
+        pass
+
+    try:
+        import yaml
+
+        versions["pyyaml"] = yaml.__version__
+    except ImportError:
+        pass
+
+    return versions
+
+
+def has_at_least(dependency: str, minimum: Optional[str] = None) -> bool:
+    """Check if a specific dependency is present at a minimum version.
+
+    If a minimum version is not specified it will check only that the
+    dependency is present.
+    """
+    dependencies = gather_versions()
+    current = dependencies.get(dependency)
+    if current is not None:
+        if minimum is None:
+            return True
+        supported = LooseVersion(current) >= LooseVersion(minimum)
+        return supported
+    return False
+
+
+def requires(
+    dependency: str, minimum: Optional[str] = None, reason: Optional[str] = None
+) -> None:
+    """Fail if a specific dependency is not present at a minimum version.
+
+    If a minimum version is not specified it will require only that the
+    dependency is present. This function raises an exception when the
+    dependency is not found at the required version.
+    """
+    if not has_at_least(dependency, minimum):
+        if minimum is not None:
+            lib = "{0}>={1}".format(dependency, minimum)
+        else:
+            lib = dependency
+        raise Exception(missing_required_lib(lib, reason=reason))
