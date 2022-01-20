@@ -84,7 +84,7 @@ class AnsibleK8SModule:
         reason: Optional[str] = None,
     ) -> None:
         try:
-            requires(dependency, minimum)
+            requires(dependency, minimum, reason=reason)
         except Exception as e:
             self.fail_json(msg=to_text(e))
 
