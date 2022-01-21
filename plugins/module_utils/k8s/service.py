@@ -517,7 +517,7 @@ class K8sService:
             wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
 
-        if self.module.check_mode and not self.module.client.dry_run:
+        if self.module.check_mode and not self.client.dry_run:
             k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
         else:
             for merge_type in self.module.params.get("merge_type") or [

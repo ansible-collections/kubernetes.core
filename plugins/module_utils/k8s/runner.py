@@ -70,6 +70,9 @@ def run_module(module) -> None:
 
         results.append(result)
 
+    if len(results) == 1:
+        module.exit_json(**results[0])
+
     module.exit_json(result=results)
 
 
