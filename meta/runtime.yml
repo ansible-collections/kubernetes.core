@@ -17,37 +17,6 @@ action_groups:
     - k8s_drain
 
 plugin_routing:
-  action:
-    helm:
-      redirect: kubernetes.core.k8s_info
-    helm_info:
-      redirect: kubernetes.core.k8s_info
-    helm_plugin:
-      redirect: kubernetes.core.k8s_info
-    helm_plugin_info:
-      redirect: kubernetes.core.k8s_info
-    helm_repository:
-      redirect: kubernetes.core.k8s_info
-    k8s:
-      redirect: kubernetes.core.k8s_info
-    k8s_cluster_info:
-      redirect: kubernetes.core.k8s_info
-    k8s_cp:
-      redirect: kubernetes.core.k8s_info
-    k8s_drain:
-      redirect: kubernetes.core.k8s_info
-    k8s_event_info:
-      redirect: kubernetes.core.k8s_info
-    k8s_exec:
-      redirect: kubernetes.core.k8s_info
-    k8s_log:
-      redirect: kubernetes.core.k8s_info
-    k8s_rollback:
-      redirect: kubernetes.core.k8s_info
-    k8s_scale:
-      redirect: kubernetes.core.k8s_info
-    k8s_service:
-      redirect: kubernetes.core.k8s_info
   inventory:
     openshift:
       redirect: community.okd.openshift
