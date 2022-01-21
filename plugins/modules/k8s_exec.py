@@ -218,7 +218,7 @@ def main():
     )
 
     client = get_api_client(module)
-    execute_module(module, client)
+    execute_module(module, client.client)
 
 
 if __name__ == "__main__":
