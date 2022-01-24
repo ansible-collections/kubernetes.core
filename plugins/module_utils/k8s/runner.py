@@ -17,7 +17,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
 )
-
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
 )
@@ -85,11 +84,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     api_version = definition.get("apiVersion")
     result = {}
 
-    if kind and kind.endswith("List"):
-        resource = svc.find_resource(kind, api_version, fail=False)
-    else:
-        resource = svc.find_resource(kind, api_version, fail=True)
-
+    resource = svc.find_resource(kind, api_version, fail=True)
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
