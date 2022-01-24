@@ -201,7 +201,7 @@
         - name: assert that task failed with proper message
           assert:
             that:
-              - '"kubernetes >= 17.17.0 is required" in _result.module_stderr'
+              - '"This is required to use in-memory config." in _result.msg'
       when:
         - _stat.stat.exists
         - _stat.stat.readable
