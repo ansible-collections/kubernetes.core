@@ -529,6 +529,7 @@ class K8sService:
                     k8s_obj = self.patch_resource(
                         resource, definition, name, namespace, merge_type=merge_type,
                     )
+                    exception = None
                 except CoreException as e:
                     exception = e
                     continue
