@@ -520,13 +520,21 @@ class K8sService:
         if self.module.check_mode and not self.client.dry_run:
             k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
         else:
+            exception = None
             for merge_type in self.module.params.get("merge_type") or [
                 "strategic-merge",
                 "merge",
             ]:
-                k8s_obj = self.patch_resource(
-                    resource, definition, name, namespace, merge_type=merge_type,
-                )
+                try:
+                    k8s_obj = self.patch_resource(
+                        resource, definition, name, namespace, merge_type=merge_type,
+                    )
+                except CoreException as e:
+                    exception = e
+                    continue
+                break
+            if exception:
+                raise exception
 
         success = True
         results["result"] = k8s_obj

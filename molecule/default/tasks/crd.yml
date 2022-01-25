@@ -30,7 +30,7 @@
     - name: Assert that recreating crd is as expected
       assert:
         that:
-          - recreate_crd is failed
+          - recreate_crd is not failed
 
     - block:
         - name: Recreate custom resource definition with merge_type
