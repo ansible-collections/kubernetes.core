@@ -154,6 +154,19 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     COMMON_ARG_SPEC,
     RESOURCE_ARG_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
+    create_definitions,
+)
+
 
 SERVICE_ARG_SPEC = {
     "apply": {"type": "bool", "default": False},
@@ -195,10 +208,35 @@ def argspec():
     return argument_spec
 
 
-def execute_module(module, k8s_ansible_mixin):
-    """ Module execution """
-    k8s_ansible_mixin.set_resource_definitions(module)
+def perform_action(svc, resource, definition, params):
+    state = params.get("state", None)
+    result = {}
 
+    existing = svc.retrieve(resource, definition)
+
+    if state == "absent":
+        result = svc.delete(resource, definition, existing)
+        result["method"] = "delete"
+    else:
+        if params.get("apply"):
+            result = svc.apply(resource, definition, existing)
+            result["method"] = "apply"
+        elif not existing:
+            result = svc.create(resource, definition)
+            result["method"] = "create"
+        elif params.get("force", False):
+            result = svc.replace(resource, definition, existing)
+            result["method"] = "replace"
+        else:
+            result = svc.update(resource, definition, existing)
+            result["method"] = "update"
+
+    return result
+
+
+def execute_module(svc):
+    """ Module execution """
+    module = svc.module
     api_version = "v1"
     selector = module.params.get("selector")
     service_type = module.params.get("type")
@@ -218,28 +256,25 @@ def execute_module(module, k8s_ansible_mixin):
     def_meta["name"] = module.params.get("name")
     def_meta["namespace"] = module.params.get("namespace")
 
-    # 'resource_definition:' has lower priority than module parameters
-    definition = dict(
-        merge_dicts(k8s_ansible_mixin.resource_definitions[0], definition)
-    )
+    definitions = create_definitions(module.params)
 
-    resource = k8s_ansible_mixin.find_resource("Service", api_version, fail=True)
-    definition = k8s_ansible_mixin.set_defaults(resource, definition)
-    result = k8s_ansible_mixin.perform_action(resource, definition)
+    # 'resource_definition:' has lower priority than module parameters
+    definition = dict(merge_dicts(definitions[0], definition))
+    resource = svc.find_resource("Service", api_version, fail=True)
+
+    result = perform_action(svc, resource, definition, module.params)
 
     module.exit_json(**result)
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True,
     )
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    client = get_api_client(module=module)
+    svc = K8sService(client, module)
+    execute_module(svc)
 
 
 if __name__ == "__main__":
