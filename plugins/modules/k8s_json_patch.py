@@ -143,7 +143,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
-    K8sService,
+    diff_objects,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     get_waiter,
@@ -194,7 +194,7 @@ def json_patch(existing, patch):
         return None, error
 
 
-def execute_module(module, svc):
+def execute_module(module, client):
     kind = module.params.get("kind")
     api_version = module.params.get("api_version")
     name = module.params.get("name")
@@ -213,8 +213,7 @@ def execute_module(module, svc):
     def build_error_msg(kind, name, msg):
         return "%s %s: %s" % (kind, name, msg)
 
-    client = svc.client
-    resource = svc.find_resource(kind, api_version, fail=True)
+    resource = client.resource(kind, api_version)
 
     try:
         existing = client.get(resource, name=name, namespace=namespace)
@@ -265,7 +264,7 @@ def execute_module(module, svc):
         success, result["result"], result["duration"] = waiter.wait(
             wait_timeout, wait_sleep, name, namespace
         )
-    match, diffs = svc.diff_objects(existing.to_dict(), obj)
+    match, diffs = diff_objects(existing.to_dict(), obj)
     result["changed"] = not match
     if module._diff:
         result["diff"] = diffs
@@ -285,8 +284,7 @@ def main():
         module_class=AnsibleModule, argument_spec=args, supports_check_mode=True
     )
     client = get_api_client(module)
-    svc = K8sService(client, module)
-    execute_module(module, svc)
+    execute_module(module, client)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
 
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
-    ResourceTimeout,
 )
 
 from ansible.module_utils.common.dict_transformations import dict_merge
@@ -78,24 +77,41 @@ class K8sService:
 
     def find_resource(
         self, kind: str, api_version: str, fail: bool = False
-    ) -> Optional[ResourceInstance]:
-        for attribute in ["kind", "name", "singular_name"]:
-            try:
-                return self.client.resources.get(
-                    **{"api_version": api_version, attribute: kind}
-                )
-            except (ResourceNotFoundError, ResourceNotUniqueError):
-                pass
+    ) -> Optional[Resource]:
         try:
-            return self.client.resources.get(
-                api_version=api_version, short_names=[kind]
-            )
+            return self.client.resource(kind, api_version)
         except (ResourceNotFoundError, ResourceNotUniqueError):
             if fail:
                 raise CoreException(
                     "Failed to find exact match for %s.%s by [kind, name, singularName, shortNames]"
                     % (api_version, kind)
                 )
+
+    def wait(
+        self, resource: Resource, instance: Dict
+    ) -> Tuple[bool, Optional[Dict], int]:
+        wait_sleep = self.module.params.get("wait_sleep")
+        wait_timeout = self.module.params.get("wait_timeout")
+        wait_condition = None
+        if self.module.params.get("wait_condition") and self.module.params[
+            "wait_condition"
+        ].get("type"):
+            wait_condition = self.module.params["wait_condition"]
+        state = "present"
+        if self.module.params.get("state") == "absent":
+            state = "absent"
+        label_selectors = self.module.params.get("label_selectors")
+
+        waiter = get_waiter(
+            self.client, resource, condition=wait_condition, state=state
+        )
+        return waiter.wait(
+            timeout=wait_timeout,
+            sleep=wait_sleep,
+            name=instance["metadata"].get("name"),
+            namespace=instance["metadata"].get("namespace"),
+            label_selectors=label_selectors,
+        )
 
     def create_project_request(self, definition: Dict) -> Dict:
         definition["kind"] = "ProjectRequest"
@@ -115,35 +131,6 @@ class K8sService:
         results["changed"] = True
 
         return results
-
-    def diff_objects(self, existing: Dict, new: Dict) -> Tuple[bool, Dict]:
-        result: Dict = dict()
-        diff = recursive_diff(existing, new)
-        if not diff:
-            return True, result
-
-        result["before"] = diff[0]
-        result["after"] = diff[1]
-
-        # If only metadata.generation and metadata.resourceVersion changed, ignore it
-        ignored_keys = set(["generation", "resourceVersion"])
-
-        if list(result["after"].keys()) != ["metadata"] or list(
-            result["before"].keys()
-        ) != ["metadata"]:
-            return False, result
-
-        if not set(result["after"]["metadata"].keys()).issubset(ignored_keys):
-            return False, result
-        if not set(result["before"]["metadata"].keys()).issubset(ignored_keys):
-            return False, result
-
-        if hasattr(self.module, "warn"):
-            self.module.warn(
-                "No meaningful diff was generated, but the API may not be idempotent (only metadata.generation or metadata.resourceVersion were changed)"
-            )
-
-        return True, result
 
     def patch_resource(
         self,
@@ -305,17 +292,8 @@ class K8sService:
         return result
 
     def create(self, resource: Resource, definition: Dict) -> Dict:
-        origin_name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
         name = definition["metadata"].get("name")
-        wait = self.module.params.get("wait")
-        wait_sleep = self.module.params.get("wait_sleep")
-        wait_timeout = self.module.params.get("wait_timeout")
-        wait_condition = None
-        if self.module.params.get("wait_condition") and self.module.params[
-            "wait_condition"
-        ].get("type"):
-            wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
 
         if self.module.check_mode and not self.client.dry_run:
@@ -343,30 +321,7 @@ class K8sService:
                 reason = e.body if hasattr(e, "body") else e
                 msg = "Failed to create object: {0}".format(reason)
                 raise CoreException(msg) from e
-
-        success = True
-        results["result"] = k8s_obj
-
-        if wait and not self.module.check_mode:
-            waiter = get_waiter(self.client, resource, condition=wait_condition)
-            success, results["result"], results["duration"] = waiter.wait(
-                timeout=wait_timeout,
-                sleep=wait_sleep,
-                name=k8s_obj["metadata"]["name"],
-                namespace=namespace,
-            )
-
-        results["changed"] = True
-
-        if not success:
-            raise ResourceTimeout(
-                '"{0}" "{1}": Resource creation timed out'.format(
-                    definition["kind"], origin_name
-                ),
-                results,
-            )
-
-        return results
+        return k8s_obj
 
     def apply(
         self,
@@ -374,89 +329,34 @@ class K8sService:
         definition: Dict,
         existing: Optional[ResourceInstance] = None,
     ) -> Dict:
-        apply = self.module.params.get("apply", False)
-        origin_name = definition["metadata"].get("name")
-        name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
-        wait = self.module.params.get("wait")
-        wait_sleep = self.module.params.get("wait_sleep")
-        wait_condition = None
-        if self.module.params.get("wait_condition") and self.module.params[
-            "wait_condition"
-        ].get("type"):
-            wait_condition = self.module.params["wait_condition"]
-        wait_timeout = self.module.params.get("wait_timeout")
-        results = {"changed": False, "result": {}}
 
-        if apply:
-            if self.module.check_mode and not self.client.dry_run:
-                ignored, patch = apply_object(resource, _encode_stringdata(definition))
-                if existing:
-                    k8s_obj = dict_merge(existing.to_dict(), patch)
-                else:
-                    k8s_obj = patch
-            else:
-                try:
-                    params = {}
-                    if self.module.check_mode:
-                        params["dry_run"] = "All"
-                    k8s_obj = self.client.apply(
-                        resource, definition, namespace=namespace, **params
-                    ).to_dict()
-                except Exception as e:
-                    reason = e.body if hasattr(e, "body") else e
-                    msg = "Failed to apply object: {0}".format(reason)
-                    raise CoreException(msg) from e
-
-            success = True
-            results["result"] = k8s_obj
-
-            if wait and not self.module.check_mode:
-                waiter = get_waiter(self.client, resource, condition=wait_condition)
-                success, results["result"], results["duration"] = waiter.wait(
-                    timeout=wait_timeout,
-                    sleep=wait_sleep,
-                    name=name,
-                    namespace=namespace,
-                )
-
+        if self.module.check_mode and not self.client.dry_run:
+            ignored, patch = apply_object(resource, _encode_stringdata(definition))
             if existing:
-                existing = existing.to_dict()
+                k8s_obj = dict_merge(existing.to_dict(), patch)
             else:
-                existing = {}
-
-            match, diffs = self.diff_objects(existing, results["result"])
-            results["changed"] = not match
-
-            if self.module._diff:
-                results["diff"] = diffs
-
-            if not success:
-                raise ResourceTimeout(
-                    '"{0}" "{1}": Resource apply timed out'.format(
-                        definition["kind"], origin_name
-                    ),
-                    results,
-                )
-
-        return results
+                k8s_obj = patch
+        else:
+            try:
+                params = {}
+                if self.module.check_mode:
+                    params["dry_run"] = "All"
+                k8s_obj = self.client.apply(
+                    resource, definition, namespace=namespace, **params
+                ).to_dict()
+            except Exception as e:
+                reason = e.body if hasattr(e, "body") else e
+                msg = "Failed to apply object: {0}".format(reason)
+                raise CoreException(msg) from e
+        return k8s_obj
 
     def replace(
         self, resource: Resource, definition: Dict, existing: ResourceInstance,
     ) -> Dict:
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
-        origin_name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
-        wait = self.module.params.get("wait")
-        wait_sleep = self.module.params.get("wait_sleep")
-        wait_timeout = self.module.params.get("wait_timeout")
-        wait_condition = None
-        if self.module.params.get("wait_condition") and self.module.params[
-            "wait_condition"
-        ].get("type"):
-            wait_condition = self.module.params["wait_condition"]
-        results = {"changed": False, "result": {}}
 
         if self.module.check_mode and not self.module.client.dry_run:
             k8s_obj = _encode_stringdata(definition)
@@ -477,47 +377,13 @@ class K8sService:
                 reason = e.body if hasattr(e, "body") else e
                 msg = "Failed to replace object: {0}".format(reason)
                 raise CoreException(msg) from e
-
-        match, diffs = self.diff_objects(existing.to_dict(), k8s_obj)
-        success = True
-        results["result"] = k8s_obj
-
-        if wait and not self.module.check_mode:
-            waiter = get_waiter(self.client, resource, condition=wait_condition)
-            success, results["result"], results["duration"] = waiter.wait(
-                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
-            )
-        match, diffs = self.diff_objects(existing.to_dict(), results["result"])
-        results["changed"] = not match
-
-        if self.module._diff:
-            results["diff"] = diffs
-
-        if not success:
-            raise ResourceTimeout(
-                '"{0}" "{1}": Resource replacement timed out'.format(
-                    definition["kind"], origin_name
-                ),
-                results,
-            )
-
-        return results
+        return k8s_obj
 
     def update(
         self, resource: Resource, definition: Dict, existing: ResourceInstance
     ) -> Dict:
         name = definition["metadata"].get("name")
-        origin_name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
-        wait = self.module.params.get("wait")
-        wait_sleep = self.module.params.get("wait_sleep")
-        wait_timeout = self.module.params.get("wait_timeout")
-        wait_condition = None
-        if self.module.params.get("wait_condition") and self.module.params[
-            "wait_condition"
-        ].get("type"):
-            wait_condition = self.module.params["wait_condition"]
-        results = {"changed": False, "result": {}}
 
         if self.module.check_mode and not self.client.dry_run:
             k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
@@ -538,31 +404,7 @@ class K8sService:
                 break
             if exception:
                 raise exception
-
-        success = True
-        results["result"] = k8s_obj
-
-        if wait and not self.module.check_mode:
-            waiter = get_waiter(self.client, resource, condition=wait_condition)
-            success, results["result"], results["duration"] = waiter.wait(
-                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
-            )
-
-        match, diffs = self.diff_objects(existing.to_dict(), results["result"])
-        results["changed"] = not match
-
-        if self.module._diff:
-            results["diff"] = diffs
-
-        if not success:
-            raise ResourceTimeout(
-                '"{0}" "{1}": Resource update timed out'.format(
-                    definition["kind"], origin_name
-                ),
-                results,
-            )
-
-        return results
+        return k8s_obj
 
     def delete(
         self,
@@ -572,72 +414,65 @@ class K8sService:
     ) -> Dict:
         delete_options = self.module.params.get("delete_options")
         label_selectors = self.module.params.get("label_selectors")
-        origin_name = definition["metadata"].get("name")
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
-        wait = self.module.params.get("wait")
-        wait_sleep = self.module.params.get("wait_sleep")
-        wait_timeout = self.module.params.get("wait_timeout")
-        results = {"changed": False, "result": {}}
         params = {}
 
-        def _empty_resource_list() -> bool:
-            if existing and existing.kind.endswith("List"):
-                return existing.items == []
-            return False
+        if not exists(existing):
+            return {}
 
-        if not existing or _empty_resource_list():
-            # The object already does not exist
-            return results
-        else:
-            # Delete the object
-            results["changed"] = True
-            if self.module.check_mode and not self.client.dry_run:
-                return results
-            else:
-                if name:
-                    params["name"] = name
+        # Delete the object
+        if self.module.check_mode and not self.client.dry_run:
+            return {}
 
-                if namespace:
-                    params["namespace"] = namespace
+        if name:
+            params["name"] = name
 
-                if label_selectors:
-                    params["label_selector"] = ",".join(label_selectors)
+        if namespace:
+            params["namespace"] = namespace
 
-                if delete_options:
-                    body = {
-                        "apiVersion": "v1",
-                        "kind": "DeleteOptions",
-                    }
-                    body.update(delete_options)
-                    params["body"] = body
+        if label_selectors:
+            params["label_selector"] = ",".join(label_selectors)
 
-                if self.module.check_mode:
-                    params["dry_run"] = "All"
-                try:
-                    k8s_obj = self.client.delete(resource, **params)
-                    results["result"] = k8s_obj.to_dict()
-                except Exception as e:
-                    reason = e.body if hasattr(e, "body") else e
-                    msg = "Failed to delete object: {0}".format(reason)
-                    raise CoreException(msg) from e
+        if delete_options:
+            body = {
+                "apiVersion": "v1",
+                "kind": "DeleteOptions",
+            }
+            body.update(delete_options)
+            params["body"] = body
 
-                if wait and not self.module.check_mode:
-                    waiter = get_waiter(self.client, resource, state="absent")
-                    success, resource, duration = waiter.wait(
-                        timeout=wait_timeout,
-                        sleep=wait_sleep,
-                        name=name,
-                        namespace=namespace,
-                        label_selectors=label_selectors,
-                    )
-                    results["duration"] = duration
-                    if not success:
-                        raise ResourceTimeout(
-                            '"{0}" "{1}": Resource deletion timed out'.format(
-                                definition["kind"], origin_name
-                            ),
-                            results,
-                        )
+        if self.module.check_mode:
+            params["dry_run"] = "All"
+        try:
+            k8s_obj = self.client.delete(resource, **params).to_dict()
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to delete object: {0}".format(reason)
+            raise CoreException(msg) from e
+        return k8s_obj
 
-                return results
+
+def diff_objects(existing: Dict, new: Dict) -> Tuple[bool, Dict]:
+    result = {}
+    diff = recursive_diff(existing, new)
+    if not diff:
+        return True, result
+
+    result["before"] = diff[0]
+    result["after"] = diff[1]
+
+    if list(result["after"].keys()) != ["metadata"] or list(
+        result["before"].keys()
+    ) != ["metadata"]:
+        return False, result
+
+    # If only metadata.generation and metadata.resourceVersion changed, ignore it
+    ignored_keys = set(["generation", "resourceVersion"])
+
+    if not set(result["after"]["metadata"].keys()).issubset(ignored_keys):
+        return False, result
+    if not set(result["before"]["metadata"].keys()).issubset(ignored_keys):
+        return False, result
+
+    return True, result

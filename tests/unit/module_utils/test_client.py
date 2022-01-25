@@ -43,7 +43,10 @@ _temp_files = []
 
 def _remove_temp_file():
     for f in _temp_files:
-        os.remove(f)
+        try:
+            os.remove(f)
+        except FileNotFoundError:
+            pass
 
 
 def _create_temp_file(content=""):
