@@ -239,17 +239,6 @@
           - resource.result.results | selectattr('changed') | list | length == 1
           - resource.result.results | selectattr('error', 'defined') | list | length == 1
 
-    - name: Remove Pod (Cleanup)
-      kubernetes.core.k8s:
-        api_version: v1
-        kind: Pod
-        name: "pod-{{ item }}"
-        namespace: "{{ template_namespace }}"
-        state: absent
-        wait: yes
-      ignore_errors: yes
-      loop: "{{ range(1, 12) | list }}"
-
   always:
     - name: Remove namespace (Cleanup)
       kubernetes.core.k8s:
