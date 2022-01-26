@@ -43,6 +43,7 @@ def validate(client, module, resource):
 
 def run_module(module) -> None:
     results = []
+    changed = False
 
     client = get_api_client(module)
     svc = K8sService(client, module)
@@ -67,12 +68,13 @@ def run_module(module) -> None:
         if module.warnings:
             result["warnings"] = module.warnings
 
+        changed = changed or result["changed"]
         results.append(result)
 
     if len(results) == 1:
         module.exit_json(**results[0])
 
-    module.exit_json(result=results)
+    module.exit_json(**{"changed": changed, "result": {"results": results}})
 
 
 def perform_action(svc, definition: Dict, params: Dict) -> Dict:
