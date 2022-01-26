@@ -1,6 +1,7 @@
 # Copyright: (c) 2021, Red Hat | Ansible
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+from http import client
 import os
 import hashlib
 from distutils.version import LooseVersion
@@ -215,8 +216,10 @@ class K8SClient:
             params["dry_run"] = True
         return params
 
-    def validate(self, resource, **params):
-        pass
+    def validate(
+        self, resource, version: Optional[str] = None, strict: Optional[bool] = False
+    ):
+        return self.client.validate(resource, version, strict)
 
     def get(self, resource, **params):
         return resource.get(**params)

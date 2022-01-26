@@ -87,6 +87,13 @@ class AnsibleK8SModule:
         except ImportError:
             pass
 
+        try:
+            import kubernetes_validate
+
+            versions["kubernetes-validate"] = kubernetes_validate.__version__
+        except ImportError:
+            pass
+
         return versions
 
     def has_at_least(

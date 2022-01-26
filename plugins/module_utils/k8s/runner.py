@@ -53,7 +53,7 @@ def run_module(module) -> None:
     for definition in definitions:
         module.warnings = []
 
-        if module.params["validate"] is not None:
+        if module.params.get("validate") is not None:
             module.warnings = validate(client, module, definition)
 
         try:
