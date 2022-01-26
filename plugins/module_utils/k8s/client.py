@@ -4,7 +4,6 @@
 from http import client
 import os
 import hashlib
-from distutils.version import LooseVersion
 from typing import Any, Dict, List, Optional
 
 from ansible.module_utils.six import iteritems, string_types
@@ -14,6 +13,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     AUTH_ARG_SPEC,
     AUTH_PROXY_HEADERS_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import requires
 
 try:
     from ansible_collections.kubernetes.core.plugins.module_utils import (
@@ -41,18 +41,7 @@ except ImportError:
     pass
 
 
-module = None
 _pool = {}
-
-
-def _requires_kubernetes_at_least(version: str):
-    if module:
-        module.requires("kubernetes", version)
-    else:
-        if LooseVersion(kubernetes.__version__) < LooseVersion(version):
-            raise Exception(
-                f"kubernetes >= {version} is required to use in-memory kubeconfig."
-            )
 
 
 def _create_auth_spec(module=None, **kwargs) -> Dict:
@@ -98,7 +87,6 @@ def _load_config(auth: Dict) -> None:
         if isinstance(kubeconfig, string_types):
             kubernetes.config.load_kube_config(config_file=kubeconfig, **optional_arg)
         elif isinstance(kubeconfig, dict):
-            _requires_kubernetes_at_least("17.17.0")
             kubernetes.config.load_kube_config_from_dict(
                 config_dict=kubeconfig, **optional_arg
             )
@@ -244,6 +232,11 @@ class K8SClient:
 
 def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
     auth_spec = _create_auth_spec(module, **kwargs)
+    if isinstance(auth_spec.get("kubeconfig"), dict):
+        if module:
+            module.requires("kubernetes", "17.17.0", "to use in-memory config")
+        else:
+            requires("kubernetes", "17.17.0", "to use in-memory config")
     configuration = _create_configuration(auth_spec)
     client = create_api_client(configuration)
 
