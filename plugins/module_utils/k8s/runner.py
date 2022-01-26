@@ -44,6 +44,7 @@ def validate(client, module, resource):
 def run_module(module) -> None:
     results = []
     changed = False
+    result = {"changed": changed, "result": {}}
 
     client = get_api_client(module)
     svc = K8sService(client, module)
@@ -61,14 +62,14 @@ def run_module(module) -> None:
             if module.warnings:
                 e["msg"] += "\n" + "\n    ".join(module.warnings)
             if module.params.get("continue_on_error"):
-                result = {"error": "{0}".format(e)}
+                result["error"] = dict(msg="{0}".format(e))
             else:
                 module.fail_json(msg=to_native(e))
 
         if module.warnings:
             result["warnings"] = module.warnings
 
-        changed = changed or result["changed"]
+        changed |= result["changed"]
         results.append(result)
 
     if len(results) == 1:
@@ -84,7 +85,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     state = params.get("state", None)
     kind = definition.get("kind")
     api_version = definition.get("apiVersion")
-    result = {}
+    result = {"changed": False, "result": {}}
 
     resource = svc.find_resource(kind, api_version, fail=True)
     existing = svc.retrieve(resource, definition)
