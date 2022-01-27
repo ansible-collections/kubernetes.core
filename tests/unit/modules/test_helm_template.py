@@ -28,9 +28,9 @@ def test_template_with_release_values_and_values_files():
     parser.add_argument('NAME', nargs='?', default="release-name")
     parser.add_argument('CHART', nargs='+')
     parser.add_argument('-f', action='append')
-    
+
     rv = {
-        "v1" : {
+        "v1": {
             "enabled": True
         }
     }
@@ -38,14 +38,13 @@ def test_template_with_release_values_and_values_files():
         "values1.yml",
         "values2.yml"
     ]
-
     mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, release_values=rv, values_files=vf)
-   
+
     args, unknown = parser.parse_known_args(mytemplate.split())
-    
+
     # helm_template writes release_values to temporary file with changing name
-    # these tests should insure 
-    # - correct order values_files 
+    # these tests should insure
+    # - correct order values_files
     # - unknown being included as last
     assert args.f[0] == "values1.yml"
     assert args.f[1] == "values2.yml"
