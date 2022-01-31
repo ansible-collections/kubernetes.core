@@ -72,6 +72,31 @@ options:
     default: false
     type: bool
     version_added: 2.3.0
+  host:
+    description:
+    - Provide a URL for accessing the API. Can also be specified via C(K8S_AUTH_HOST) environment variable.
+    type: str
+    version_added: "2.3.0"
+  api_key:
+    description:
+    - Token used to authenticate with the API. Can also be specified via C(K8S_AUTH_API_KEY) environment variable.
+    type: str
+    version_added: "2.3.0"
+  validate_certs:
+    description:
+    - Whether or not to verify the API server's SSL certificates. Can also be specified via C(K8S_AUTH_VERIFY_SSL)
+      environment variable.
+    type: bool
+    aliases: [ verify_ssl ]
+    default: True
+    version_added: "2.3.0"
+  ca_cert:
+    description:
+    - Path to a CA certificate used to authenticate with the API. The full certificate chain must be provided to
+      avoid certificate validation errors. Can also be specified via C(K8S_AUTH_SSL_CA_CERT) environment variable.
+    type: path
+    aliases: [ ssl_ca_cert ]
+    version_added: "2.3.0"
 """
 
 EXAMPLES = r"""
@@ -129,7 +154,7 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import AnsibleModule, env_fallback, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
@@ -204,6 +229,22 @@ def main():
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
             pass_credentials=dict(type="bool", default=False),
+            # Generic auth key
+            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
+            ca_cert=dict(
+                type="path",
+                aliases=["ssl_ca_cert"],
+                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
+            ),
+            validate_certs=dict(
+                type="bool",
+                default=True,
+                aliases=["verify_ssl"],
+                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
+            ),
+            api_key=dict(
+                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
+            ),
         ),
         required_together=[["repo_username", "repo_password"]],
         required_if=[("repo_state", "present", ["repo_url"])],
