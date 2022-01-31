@@ -350,7 +350,10 @@ class K8sService:
         if wait and not self.module.check_mode:
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                timeout=wait_timeout, sleep=wait_sleep, name=k8s_obj["metadata"]["name"], namespace=namespace,
+                timeout=wait_timeout,
+                sleep=wait_sleep,
+                name=k8s_obj["metadata"]["name"],
+                namespace=namespace,
             )
 
         results["changed"] = True
