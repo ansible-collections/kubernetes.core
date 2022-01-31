@@ -44,30 +44,31 @@ def validate(client, module, resource):
 def run_module(module) -> None:
     results = []
     changed = False
-    result = {"changed": changed, "result": {}}
-
     client = get_api_client(module)
     svc = K8sService(client, module)
     definitions = create_definitions(module.params)
 
     for definition in definitions:
-        module.warnings = []
+        result = {"changed": False, "result": {}, "warnings": []}
+        warnings = []
 
         if module.params.get("validate") is not None:
-            module.warnings = validate(client, module, definition)
+            warnings = validate(client, module, definition)
 
         try:
             result = perform_action(svc, definition, module.params)
         except CoreException as e:
-            if module.warnings:
-                e["msg"] += "\n" + "\n    ".join(module.warnings)
+            msg = to_native(e)
+            if warnings:
+                msg += "\n" + "\n    ".join(warnings)
             if module.params.get("continue_on_error"):
-                result["error"] = dict(msg="{0}".format(e))
+                result["error"] = {"msg": msg}
             else:
-                module.fail_json(msg=to_native(e))
+                module.fail_json(msg=msg)
 
-        if module.warnings:
-            result["warnings"] = module.warnings
+        if warnings:
+            result.setdefault("warnings", [])
+            result["warnings"] += warnings
 
         changed |= result["changed"]
         results.append(result)
@@ -88,6 +89,8 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     result = {"changed": False, "result": {}}
 
     resource = svc.find_resource(kind, api_version, fail=True)
+    definition["kind"] = resource.kind
+    definition["apiVersion"] = resource.group_version
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
@@ -110,6 +113,14 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             result = svc.apply(resource, definition, existing)
             result["method"] = "apply"
         elif not existing:
+            if state == "patched":
+                result.setdefault("warnings", []).append(
+                    "resource 'kind={kind},name={name}' was not found but will not be "
+                    "created as 'state' parameter has been set to '{state}'".format(
+                        kind=kind, name=definition["metadata"].get("name"), state=state
+                    )
+                )
+                return result
             result = svc.create(resource, definition)
             result["method"] = "create"
         elif params.get("force", False):
