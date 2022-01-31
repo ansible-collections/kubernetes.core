@@ -213,6 +213,15 @@
       tags:
         - always
 
+    - name: Include secret.yml
+      include_tasks:
+        file: tasks/secret.yml
+        apply:
+          tags: [ secret, k8s ]
+      tags:
+        - always
+
+
   roles:
     - role: helm
       tags:

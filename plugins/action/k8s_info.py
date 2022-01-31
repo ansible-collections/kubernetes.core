@@ -252,6 +252,17 @@ class ActionModule(ActionBase):
             new_module_args.pop("template")
         new_module_args["definition"] = result_template
 
+    def find_file(self, path):
+
+        if os.path.exists(path):
+            return path
+
+        try:
+            # find in expected paths
+            return self._find_needle("files", path)
+        except AnsibleError:
+            raise AnsibleActionFail("%s does not exist in local filesystem" % path)
+
     def get_file_realpath(self, local_path):
         # local_path is only supported by k8s_cp module.
         if self._task.action not in (
@@ -263,16 +274,38 @@ class ActionModule(ActionBase):
                 "'local_path' is only supported parameter for 'k8s_cp' module."
             )
 
-        if os.path.exists(local_path):
-            return local_path
+        return self.find_file(local_path)
 
-        try:
-            # find in expected paths
-            return self._find_needle("files", local_path)
-        except AnsibleError:
+    def get_secret_files_realpath(
+        self, tls_certificate, from_path, remote_transport, new_module_args
+    ):
+        # This is only supported by k8s_secret module
+        if self._task.action not in (
+            "k8s_secret",
+            "kubernetes.core.k8s_secret",
+            "community.okd.k8s_secret",
+            "redhat.openshift.k8s_secret",
+            "community.kubernetes.k8s_secret",
+        ):
             raise AnsibleActionFail(
-                "%s does not exist in local filesystem" % local_path
+                "'tls_certificate' and 'from_path' are only supported parameters for the 'kubernetes.core.k8s_secret' module."
             )
+
+        if tls_certificate and not remote_transport:
+            new_module_args["tls_certificate"]["certificate"] = self.find_file(
+                tls_certificate.get("certificate")
+            )
+            new_module_args["tls_certificate"]["private_key"] = self.find_file(
+                tls_certificate.get("private_key")
+            )
+
+        if from_path and not remote_transport:
+            if isinstance(from_path, dict):
+                file_path = from_path.get("path")
+                if file_path:
+                    new_module_args["from_path"]["path"] = self.find_file(file_path)
+            elif isinstance(from_path, string_types):
+                new_module_args["from_path"] = self.find_file(from_path)
 
     def get_kubeconfig(self, kubeconfig, remote_transport, new_module_args):
         if isinstance(kubeconfig, string_types):
@@ -295,7 +328,7 @@ class ActionModule(ActionBase):
             )
 
     def run(self, tmp=None, task_vars=None):
-        """ handler for k8s options """
+        """handler for k8s options"""
         if task_vars is None:
             task_vars = dict()
 
@@ -352,8 +385,15 @@ class ActionModule(ActionBase):
 
         local_path = self._task.args.get("local_path")
         state = self._task.args.get("state", None)
-        if local_path and state == "to_pod":
+        if local_path and state == "to_pod" and not remote_transport:
             new_module_args["local_path"] = self.get_file_realpath(local_path)
+
+        tls_certificate = self._task.args.get("tls_certificate")
+        from_path = self._task.args.get("from_path")
+        if tls_certificate or from_path:
+            self.get_secret_files_realpath(
+                tls_certificate, from_path, remote_transport, new_module_args
+            )
 
         # Execute the k8s_* module.
         module_return = self._execute_module(
