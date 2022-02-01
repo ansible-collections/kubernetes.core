@@ -668,7 +668,8 @@ def main():
     skip_crds = module.params.get("skip_crds")
     history_max = module.params.get("history_max")
     timeout = module.params.get("timeout")
-
+    kubeconfig = module.params.get("kubeconfig")
+    
     if bin_path is not None:
         helm_cmd_common = bin_path
     else:
@@ -677,6 +678,9 @@ def main():
     if update_repo_cache:
         run_repo_update(module, helm_cmd_common)
 
+    if kubeconfig:
+        helm_cmd_common += " --kubeconfig " + kubeconfig
+        
     # Get real/deployed release status
     release_status = get_release_status(module, helm_cmd_common, release_name)
 
