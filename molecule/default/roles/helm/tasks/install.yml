@@ -13,3 +13,7 @@
   delay: 5
   register: result
   until: result is not failed
+
+- name: Install selinux_please_lie_to_me
+  command: pip install selinux_please_lie_to_me
+  become: true
