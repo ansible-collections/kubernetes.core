@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/ansible-collections/kubernetes.core/workflows/CI/badge.svg?event=push)](https://github.com/ansible-collections/kubernetes.core/actions) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://codecov.io/gh/ansible-collections/kubernetes.core)
 
-This repository hosts the `kubernetes.core` (formerly known as `community.kubernetes`) Ansible Collection.
+ This repository hosts the `kubernetes.core` (formerly known as `community.kubernetes`) Ansible Collection.
 
 The collection includes a variety of Ansible content to help automate the management of applications in Kubernetes and OpenShift clusters, as well as the provisioning and maintenance of clusters themselves.
 
