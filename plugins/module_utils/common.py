@@ -366,9 +366,8 @@ class K8sAnsibleMixin(object):
             prefix=prefix, api_version=api_version, short_names=[kind]
         )
 
-
     def find_resource(self, kind, api_version, fail=False):
-        msg="Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]".format(
+        msg = "Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]".format(
             api_version, kind
         )
         try:
@@ -377,7 +376,7 @@ class K8sAnsibleMixin(object):
         except ResourceNotUniqueError:
             # No point trying again as we'll just get the same error
             if fail:
-                self.fail(msg)
+                self.fail(msg=msg)
             else:
                 return None
         except ResourceNotFoundError:
@@ -389,8 +388,7 @@ class K8sAnsibleMixin(object):
             return self._find_resource_with_prefix(None, kind, api_version)
         except (ResourceNotFoundError, ResourceNotUniqueError):
             if fail:
-                self.fail(msg)
-
+                self.fail(msg=msg)
 
     def kubernetes_facts(
         self,
