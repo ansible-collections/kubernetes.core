@@ -56,6 +56,9 @@
         wait: yes
       register: job
 
+    - debug:
+        msg: "{{ job }}"
+
     - name: Assert job's pod is running
       assert:
         that: job.resources[0].status.phase == "Running"
