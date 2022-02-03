@@ -354,25 +354,43 @@ class K8sAnsibleMixin(object):
         if pyyaml_required and not HAS_YAML:
             module.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
 
-    def find_resource(self, kind, api_version, fail=False):
+    def _find_resource_with_prefix(self, prefix, kind, api_version):
         for attribute in ["kind", "name", "singular_name"]:
             try:
                 return self.client.resources.get(
-                    **{"api_version": api_version, attribute: kind}
+                    **{"prefix": prefix, "api_version": api_version, attribute: kind}
                 )
             except (ResourceNotFoundError, ResourceNotUniqueError):
                 pass
+        return self.client.resources.get(
+            prefix=prefix, api_version=api_version, short_names=[kind]
+        )
+
+
+    def find_resource(self, kind, api_version, fail=False):
+        msg="Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]".format(
+            api_version, kind
+        )
         try:
-            return self.client.resources.get(
-                api_version=api_version, short_names=[kind]
-            )
+            if api_version == "v1":
+                return self._find_resource_with_prefix("api", kind, api_version)
+        except ResourceNotUniqueError:
+            # No point trying again as we'll just get the same error
+            if fail:
+                self.fail(msg)
+            else:
+                return None
+        except ResourceNotFoundError:
+            pass
+        # The second check without a prefix is maintained for backwards compatibility.
+        # If we are here, it's probably because the resource really doesn't exist or
+        # the wrong api_version has been specified, for example, v1.DaemonSet.
+        try:
+            return self._find_resource_with_prefix(None, kind, api_version)
         except (ResourceNotFoundError, ResourceNotUniqueError):
             if fail:
-                self.fail(
-                    msg="Failed to find exact match for {0}.{1} by [kind, name, singularName, shortNames]".format(
-                        api_version, kind
-                    )
-                )
+                self.fail(msg)
+
 
     def kubernetes_facts(
         self,
