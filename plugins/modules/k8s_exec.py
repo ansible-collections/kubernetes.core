@@ -40,27 +40,28 @@ options:
     description:
     - The URL of an HTTP proxy to use for the connection.
     - Can also be specified via I(K8S_AUTH_PROXY) environment variable.
-    - Please note that this module does not pick up typical proxy settings from the environment (e.g. HTTP_PROXY).
+    - Please note that this module does not pick up typical proxy settings from the environment (for example, HTTP_PROXY).
     type: str
   namespace:
     description:
-    - The pod namespace name
+    - The pod namespace name.
     type: str
     required: yes
   pod:
     description:
-    - The pod name
+    - The pod name.
     type: str
     required: yes
   container:
     description:
     - The name of the container in the pod to connect to.
     - Defaults to only container if there is only one container in the pod.
+    - If not specified, will choose the first container from the given pod as kubectl cmdline does.
     type: str
     required: no
   command:
     description:
-    - The command to execute
+    - The command to execute.
     type: str
     required: yes
 """
@@ -84,6 +85,13 @@ EXAMPLES = r"""
   debug:
     msg: "cmd failed"
   when: command_status.rc != 0
+
+- name: Specify a container name to execute the command on
+  kubernetes.core.k8s_exec:
+    namespace: myproject
+    pod: busybox-test
+    container: manager
+    command: echo "hello"
 """
 
 RETURN = r"""
@@ -134,6 +142,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.common import (
 try:
     from kubernetes.client.apis import core_v1_api
     from kubernetes.stream import stream
+    from kubernetes.client.rest import ApiException
 except ImportError:
     # ImportError are managed by the common module already.
     pass
@@ -157,6 +166,19 @@ def execute_module(module, k8s_ansible_mixin):
     optional_kwargs = {}
     if module.params.get("container"):
         optional_kwargs["container"] = module.params["container"]
+    else:
+        # default to the first container available on pod
+        resp = None
+        try:
+            resp = api.read_namespaced_pod(
+                name=module.params["pod"], namespace=module.params["namespace"]
+            )
+        except ApiException:
+            pass
+
+        if resp and len(resp.spec.containers) >= 1:
+            optional_kwargs["container"] = resp.spec.containers[0].name
+
     try:
         resp = stream(
             api.connect_get_namespaced_pod_exec,

@@ -13,6 +13,21 @@
           - name: sleeper
             image: busybox
             command: ["sleep", "infinity"]
+    multi_container_pod_name: pod-2
+    multi_container_pod_definition:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: "{{ multi_container_pod_name }}"
+        namespace: "{{ exec_namespace }}"
+      spec:
+        containers:
+          - name: sleeper-1
+            image: busybox
+            command: ["sleep", "infinity"]
+          - name: sleeper-2
+            image: busybox
+            command: ["sleep", "infinity"]
 
   block:
     - name: "Ensure that {{ exec_namespace }} namespace exists"
@@ -56,6 +71,25 @@
         that:
           - command_status.rc != 0
           - command_status.return_code != 0
+
+    - name: Create a multi container pod
+      k8s:
+        definition: "{{ multi_container_pod_definition }}"
+        wait: yes
+        wait_sleep: 1
+        wait_timeout: 30
+
+    - name: Execute command on the first container of the pod
+      k8s_exec:
+        pod: "{{ multi_container_pod_name }}"
+        namespace: "{{ exec_namespace }}"
+        command: echo hello
+      register: output
+
+    - name: Assert k8s_exec output is correct
+      assert:
+        that:
+          - "'hello' in output.stdout"
 
   always:
     - name: "Cleanup namespace"
