@@ -110,6 +110,13 @@ def gather_versions() -> dict:
         pass
 
     try:
+        import kubernetes_validate
+
+        versions["kubernetes-validate"] = kubernetes_validate.__version__
+    except ImportError:
+        pass
+
+    try:
         import yaml
 
         versions["pyyaml"] = yaml.__version__

@@ -171,29 +171,35 @@ class K8sService:
             msg = "Failed to patch object: {0}".format(reason)
             raise CoreException(msg) from e
 
-    def retrieve(self, resource: Resource, definition: Dict) -> Dict:
+    def retrieve(self, resource: Resource, definition: Dict) -> ResourceInstance:
         state = self.module.params.get("state", None)
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
+        generate_name = definition["metadata"].get("generateName")
         namespace = definition["metadata"].get("namespace")
         label_selectors = self.module.params.get("label_selectors")
-        results = {
-            "changed": False,
-            "result": {},
-        }
-        existing = None
+        existing: ResourceInstance = None
 
         try:
             # ignore append_hash for resources other than ConfigMap and Secret
             if append_hash and definition["kind"] in ["ConfigMap", "Secret"]:
-                name = "%s-%s" % (name, generate_hash(definition))
-                definition["metadata"]["name"] = name
-            params = dict(name=name)
+                if name:
+                    name = "%s-%s" % (name, generate_hash(definition))
+                    definition["metadata"]["name"] = name
+                elif generate_name:
+                    definition["metadata"]["generateName"] = "%s-%s" % (
+                        generate_name,
+                        generate_hash(definition),
+                    )
+            params = {}
+            if name:
+                params["name"] = name
             if namespace:
                 params["namespace"] = namespace
             if label_selectors:
                 params["label_selector"] = ",".join(label_selectors)
-            existing = self.client.get(resource, **params)
+            if "name" in params or "label_selector" in params:
+                existing = self.client.get(resource, **params)
         except (NotFoundError, MethodNotAllowedError):
             pass
         except ForbiddenError as e:
@@ -210,10 +216,7 @@ class K8sService:
             msg = "Failed to retrieve requested object: {0}".format(reason)
             raise CoreException(msg) from e
 
-        if existing:
-            results["result"] = existing.to_dict()
-
-        return results
+        return existing
 
     def find(
         self,
@@ -345,10 +348,12 @@ class K8sService:
         results["result"] = k8s_obj
 
         if wait and not self.module.check_mode:
-            definition["metadata"].update({"name": k8s_obj["metadata"]["name"]})
             waiter = get_waiter(self.client, resource, condition=wait_condition)
             success, results["result"], results["duration"] = waiter.wait(
-                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
+                timeout=wait_timeout,
+                sleep=wait_sleep,
+                name=k8s_obj["metadata"]["name"],
+                namespace=namespace,
             )
 
         results["changed"] = True
@@ -358,7 +363,7 @@ class K8sService:
                 '"{0}" "{1}": Resource creation timed out'.format(
                     definition["kind"], origin_name
                 ),
-                **results
+                results,
             )
 
         return results
@@ -431,7 +436,7 @@ class K8sService:
                     '"{0}" "{1}": Resource apply timed out'.format(
                         definition["kind"], origin_name
                     ),
-                    **results
+                    results,
                 )
 
         return results
@@ -493,7 +498,7 @@ class K8sService:
                 '"{0}" "{1}": Resource replacement timed out'.format(
                     definition["kind"], origin_name
                 ),
-                **results
+                results,
             )
 
         return results
@@ -514,16 +519,25 @@ class K8sService:
             wait_condition = self.module.params["wait_condition"]
         results = {"changed": False, "result": {}}
 
-        if self.module.check_mode and not self.module.client.dry_run:
+        if self.module.check_mode and not self.client.dry_run:
             k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
         else:
+            exception = None
             for merge_type in self.module.params.get("merge_type") or [
                 "strategic-merge",
                 "merge",
             ]:
-                k8s_obj = self.patch_resource(
-                    resource, definition, name, namespace, merge_type=merge_type,
-                )
+                try:
+                    k8s_obj = self.patch_resource(
+                        resource, definition, name, namespace, merge_type=merge_type,
+                    )
+                    exception = None
+                except CoreException as e:
+                    exception = e
+                    continue
+                break
+            if exception:
+                raise exception
 
         success = True
         results["result"] = k8s_obj
@@ -545,7 +559,7 @@ class K8sService:
                 '"{0}" "{1}": Resource update timed out'.format(
                     definition["kind"], origin_name
                 ),
-                **results
+                results,
             )
 
         return results
@@ -581,6 +595,15 @@ class K8sService:
             if self.module.check_mode and not self.client.dry_run:
                 return results
             else:
+                if name:
+                    params["name"] = name
+
+                if namespace:
+                    params["namespace"] = namespace
+
+                if label_selectors:
+                    params["label_selector"] = ",".join(label_selectors)
+
                 if delete_options:
                     body = {
                         "apiVersion": "v1",
@@ -614,7 +637,7 @@ class K8sService:
                             '"{0}" "{1}": Resource deletion timed out'.format(
                                 definition["kind"], origin_name
                             ),
-                            **results
+                            results,
                         )
 
                 return results

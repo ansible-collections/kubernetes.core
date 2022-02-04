@@ -3,6 +3,8 @@
 
 from typing import Dict
 
+from ansible.module_utils._text import to_native
+
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
@@ -15,7 +17,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
 )
-
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
 )
@@ -42,32 +43,40 @@ def validate(client, module, resource):
 
 def run_module(module) -> None:
     results = []
-
+    changed = False
     client = get_api_client(module)
     svc = K8sService(client, module)
     definitions = create_definitions(module.params)
 
     for definition in definitions:
-        module.warnings = []
+        result = {"changed": False, "result": {}, "warnings": []}
+        warnings = []
 
-        if module.params["validate"] is not None:
-            module.warnings = validate(client, module, definition)
+        if module.params.get("validate") is not None:
+            warnings = validate(client, module, definition)
 
         try:
             result = perform_action(svc, definition, module.params)
         except CoreException as e:
-            if module.warnings:
-                e["msg"] += "\n" + "\n    ".join(module.warnings)
+            msg = to_native(e)
+            if warnings:
+                msg += "\n" + "\n    ".join(warnings)
             if module.params.get("continue_on_error"):
-                result = {"error": "{0}".format(e)}
+                result["error"] = {"msg": msg}
             else:
-                module.fail_json(msg=e)
-        if module.warnings:
-            result["warnings"] = module.warnings
+                module.fail_json(msg=msg)
 
+        if warnings:
+            result.setdefault("warnings", [])
+            result["warnings"] += warnings
+
+        changed |= result["changed"]
         results.append(result)
 
-    module.exit_json(**results)
+    if len(results) == 1:
+        module.exit_json(**results[0])
+
+    module.exit_json(**{"changed": changed, "result": {"results": results}})
 
 
 def perform_action(svc, definition: Dict, params: Dict) -> Dict:
@@ -75,9 +84,13 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     namespace = definition["metadata"].get("namespace")
     label_selectors = params.get("label_selectors")
     state = params.get("state", None)
-    result = {}
+    kind = definition.get("kind")
+    api_version = definition.get("apiVersion")
+    result = {"changed": False, "result": {}}
 
-    resource = svc.find_resource(definition)
+    resource = svc.find_resource(kind, api_version, fail=True)
+    definition["kind"] = resource.kind
+    definition["apiVersion"] = resource.group_version
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
@@ -91,7 +104,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                 result["msg"] = (
                     "resource 'kind={kind},name={name},namespace={namespace}' "
                     "filtered by label_selectors.".format(
-                        kind=definition["kind"], name=origin_name, namespace=namespace,
+                        kind=kind, name=origin_name, namespace=namespace,
                     )
                 )
                 return result
@@ -100,6 +113,14 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             result = svc.apply(resource, definition, existing)
             result["method"] = "apply"
         elif not existing:
+            if state == "patched":
+                result.setdefault("warnings", []).append(
+                    "resource 'kind={kind},name={name}' was not found but will not be "
+                    "created as 'state' parameter has been set to '{state}'".format(
+                        kind=kind, name=definition["metadata"].get("name"), state=state
+                    )
+                )
+                return result
             result = svc.create(resource, definition)
             result["method"] = "create"
         elif params.get("force", False):

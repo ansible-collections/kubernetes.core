@@ -5,7 +5,7 @@
     # This is a job definition that runs for 10 minutes and won't gracefully
     # shutdown. It allows us to test foreground vs background deletion.
     job_definition:
-      apiVersion: v1
+      apiVersion: batch/v1
       kind: Job
       metadata:
         name: "{{ gc_name }}"

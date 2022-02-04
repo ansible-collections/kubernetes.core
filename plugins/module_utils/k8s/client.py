@@ -203,8 +203,10 @@ class K8SClient:
             params["dry_run"] = True
         return params
 
-    def validate(self, resource, **params):
-        pass
+    def validate(
+        self, resource, version: Optional[str] = None, strict: Optional[bool] = False
+    ):
+        return self.client.validate(resource, version, strict)
 
     def get(self, resource, **params):
         return resource.get(**params)

@@ -97,6 +97,7 @@
   - name: patch service using json merge patch
     kubernetes.core.k8s:
       kind: Deployment
+      api_version: apps/v1
       namespace: "{{ k8s_patch_namespace }}"
       name: "{{ k8s_merge }}"
       merge_type:

@@ -192,9 +192,8 @@ def test_service_retrieve_existing_resource(mock_pod_resource_instance):
     svc = K8sService(client, module)
     results = svc.retrieve(Mock(), pod_definition)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == pod_definition
+    assert isinstance(results, ResourceInstance)
+    assert results.to_dict() == pod_definition
 
 
 def test_service_retrieve_no_existing_resource():
@@ -205,9 +204,7 @@ def test_service_retrieve_no_existing_resource():
     svc = K8sService(client, module)
     results = svc.retrieve(Mock(), pod_definition)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == {}
+    assert results is None
 
 
 def test_create_project_request():
