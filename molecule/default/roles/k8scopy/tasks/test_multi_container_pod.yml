@@ -18,7 +18,6 @@
     remote_path: /file_from_localhost.txt
     container: '{{ pod_with_two_container.container[0] }}'
     content: '{{ random_content }}'
-    kubectl_path: "{{ kubectl_path }}"
 
 - name: Assert that content has not been copied into second container
   kubectl_file_compare:
@@ -27,7 +26,6 @@
     remote_path: /file_from_localhost.txt
     container: '{{ pod_with_two_container.container[1] }}'
     content: '{{ random_content }}'
-    kubectl_path: "{{ kubectl_path }}"
   register: diff
   ignore_errors: true
 
@@ -52,7 +50,6 @@
     remote_path: /file_from_localhost_01.txt
     container: '{{ pod_with_two_container.container[0] }}'
     content: '{{ random_content }}-secondpod'
-    kubectl_path: "{{ kubectl_path }}"
   ignore_errors: true
   register: diff_1
 
@@ -68,4 +65,3 @@
     remote_path: /file_from_localhost_01.txt
     container: '{{ pod_with_two_container.container[1] }}'
     content: '{{ random_content }}-secondpod'
-    kubectl_path: "{{ kubectl_path }}"

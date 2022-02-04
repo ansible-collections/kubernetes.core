@@ -15,7 +15,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_file.txt
       content: "{{ lookup('file', 'simple_file.txt')}}"
-      kubectl_path: "{{ kubectl_path }}"
 
   - name: Copy simple text file from Pod
     k8s_cp:
@@ -31,7 +30,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_file.txt
       local_path: /tmp/copy_from_pod.txt
-      kubectl_path: "{{ kubectl_path }}"
 
   # Binary file
 
@@ -109,7 +107,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_zip_file.txt.gz
       local_path: '{{ role_path }}/files/simple_zip_file.txt.gz'
-      kubectl_path: "{{ kubectl_path }}"
 
   - name: copy zip file from pod into local filesystem
     k8s_cp:
@@ -125,7 +122,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_zip_file.txt.gz
       local_path: /tmp/copied_from_pod.txt.gz
-      kubectl_path: "{{ kubectl_path }}"
 
   # tar files
   - name: copy archive into remote pod
@@ -142,7 +138,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/archive.tar
       local_path: '{{ role_path }}/files/archive.tar'
-      kubectl_path: "{{ kubectl_path }}"
 
   - name: copy archive from remote pod into local filesystem
     k8s_cp:
@@ -158,7 +153,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/archive.tar
       local_path: /tmp/local_archive.tar
-      kubectl_path: "{{ kubectl_path }}"
 
   # Copy into Pod using content option
   - name: set content to be copied into Pod
@@ -179,7 +173,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /this_content.txt
       content: '{{ pod_content }}'
-      kubectl_path: "{{ kubectl_path }}"
 
   always:
   - name: Delete file created on Pod

@@ -11,5 +11,3 @@ pod_with_two_container:
   container:
   - container-10
   - container-11
-
-kubectl_path: /tmp/kubectl

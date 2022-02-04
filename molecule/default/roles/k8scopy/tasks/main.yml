@@ -1,15 +1,5 @@
 ---
 - block:
-    - name: Download kubeclt executable used to compare results
-      get_url:
-        url: https://dl.k8s.io/release/v1.21.3/bin/linux/amd64/kubectl
-        dest: "{{ kubectl_path }}"
-
-    - name: make kubectl executable
-      ansible.builtin.file:
-        path: "{{ kubectl_path }}"
-        mode: "+x"
-
     # Ensure namespace and create pod to perform tests on
     - name: Ensure namespace exists
       k8s:
@@ -32,11 +22,6 @@
     - include_tasks: test_copy_large_file.yml
 
   always:
-    - name: Remove kubectl executable
-      ansible.builtin.file:
-        path: "{{ kubectl_path }}"
-        state: absent
-      ignore_errors: true
 
     - name: Remove namespace
       k8s:
