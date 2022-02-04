@@ -157,7 +157,7 @@ class Waiter:
             try:
                 response = self.client.get(self.resource, **params)
             except NotFoundError:
-                pass
+                response = None
             if self.predicate(response):
                 break
         if response:

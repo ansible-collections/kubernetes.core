@@ -6,7 +6,7 @@
   block:
     - name: Ensure namespace exists
       kubernetes.core.k8s:
-        kind: namespace
+        kind: Namespace
         name: "{{ namespace }}"
 
     - name: Create a simple pod

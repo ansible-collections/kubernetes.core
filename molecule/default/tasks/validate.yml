@@ -50,7 +50,7 @@
     - assert:
         that:
           - k8s_no_validate is failed
-          - "k8s_no_validate.msg == 'kubernetes-validate python library is required to validate resources'"
+          - "'Failed to import the required Python library (kubernetes-validate)' in k8s_no_validate.msg"
 
     - file:
         path: "{{ virtualenv }}"
