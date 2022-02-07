@@ -36,7 +36,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_text_file.txt
       local_path: "{{ test_directory }}/large_text_file.txt"
-      kubectl_path: "{{ kubectl_path }}"
 
   - name: copy large file from Pod into local filesystem
     k8s_cp:
@@ -52,7 +51,6 @@
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_text_file.txt
       local_path: "{{ test_directory }}/large_text_file_from_pod.txt"
-      kubectl_path: "{{ kubectl_path }}"
 
   # Copy large binary file from/to local filesystem to Pod
   - name: copy large file into remote Pod
