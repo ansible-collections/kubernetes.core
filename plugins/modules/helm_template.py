@@ -152,15 +152,15 @@ def template(
     if output_dir:
         cmd += " --output-dir=" + output_dir
 
+    if values_files:
+        for values_file in values_files:
+            cmd += " -f=" + values_file
+
     if release_values:
         fd, path = tempfile.mkstemp(suffix=".yml")
         with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         cmd += " -f=" + path
-
-    if values_files:
-        for values_file in values_files:
-            cmd += " -f=" + values_file
 
     if include_crds:
         cmd += " --include-crds"
