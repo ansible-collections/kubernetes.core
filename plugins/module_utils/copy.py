@@ -13,6 +13,10 @@
 # limitations under the License.
 
 
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 import os
 from tempfile import TemporaryFile, NamedTemporaryFile
 from select import select
