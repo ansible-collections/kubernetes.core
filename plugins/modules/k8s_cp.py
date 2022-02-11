@@ -150,6 +150,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.copy import (
     K8SCopyToPod,
     check_pod,
 )
+from ansible.module_utils._text import to_native
 
 
 def argspec():
@@ -197,7 +198,11 @@ def execute_module(module):
         k8s_copy = K8SCopyToPod(module, k8s_ansible_mixin.client)
     else:
         k8s_copy = K8SCopyFromPod(module, k8s_ansible_mixin.client)
-    k8s_copy.run()
+
+    try:
+        k8s_copy.run()
+    except Exception as e:
+        module.fail_json("Failed to copy object due to: {0}".format(to_native(e)))
 
 
 def main():
