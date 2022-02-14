@@ -355,7 +355,7 @@ class Connection(ConnectionBase):
                 [
                     self._play_context.executable,
                     "-c",
-                    "dd of=%s bs=%s%s" % (out_path, BUFSIZE, count),
+                    "dd of=%s bs=%s%s && sleep 0" % (out_path, BUFSIZE, count),
                 ]
             )
             args = [to_bytes(i, errors="surrogate_or_strict") for i in args]
