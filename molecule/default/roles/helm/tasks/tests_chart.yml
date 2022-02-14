@@ -80,11 +80,21 @@
         namespace: "{{ helm_namespace }}"
       register: content_info
 
+    - name: Check helm_info content using release_state
+      helm_info:
+        binary_path: "{{ helm_binary }}"
+        name: test
+        namespace: "{{ helm_namespace }}"
+        release_state:
+          - deployed
+      register: release_state_content_info
+
     - name: "Assert that {{ chart_test }} is installed from {{ source }} with helm_info"
       assert:
         that:
           - content_info.status.chart == "{{ chart_test }}-{{ chart_test_version }}"
           - content_info.status.status | lower == 'deployed'
+          - release_state_content_info.status.status | lower == 'deployed'
 
     - name: Check idempotency
       helm:
