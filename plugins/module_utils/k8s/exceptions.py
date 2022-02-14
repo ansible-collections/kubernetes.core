@@ -7,4 +7,6 @@ class CoreException(Exception):
 
 
 class ResourceTimeout(CoreException):
-    pass
+    def __init__(self, message="", result=None):
+        self.result = result or {}
+        super().__init__(message)

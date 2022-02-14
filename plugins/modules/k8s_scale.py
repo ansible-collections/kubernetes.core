@@ -170,7 +170,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
     ResourceTimeout,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
-    K8sService,
+    diff_objects,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     get_waiter,
@@ -214,8 +214,7 @@ def execute_module(client, module):
     if wait:
         return_attributes["duration"] = 0
 
-    svc = K8sService(client, module)
-    resource = svc.find_resource(kind, api_version, fail=True)
+    resource = client.resource(kind, api_version)
     multiple_scale = False
     try:
         existing = resource.get(
@@ -297,7 +296,7 @@ def execute_module(client, module):
                 try:
                     result = scale(
                         client,
-                        svc,
+                        module,
                         resource,
                         existing,
                         replicas,
@@ -337,9 +336,8 @@ def argspec():
 
 
 def scale(
-    client, svc, resource, existing_object, replicas, wait, wait_time, wait_sleep,
+    client, module, resource, existing_object, replicas, wait, wait_time, wait_sleep,
 ):
-    module = svc.module
     name = existing_object.metadata.name
     namespace = existing_object.metadata.namespace
     kind = existing_object.kind
@@ -361,7 +359,6 @@ def scale(
     if module.check_mode:
         k8s_obj = copy.deepcopy(existing.to_dict())
         k8s_obj["spec"]["replicas"] = replicas
-        match, diffs = svc.diff_objects(existing.to_dict(), k8s_obj)
         if wait:
             result["duration"] = 0
         result["result"] = k8s_obj
@@ -383,7 +380,7 @@ def scale(
             if not success:
                 raise ResourceTimeout("Resource scaling timed out", **result)
 
-    match, diffs = svc.diff_objects(existing.to_dict(), k8s_obj)
+    match, diffs = diff_objects(existing.to_dict(), result["result"])
     result["changed"] = not match
     if module._diff:
         result["diff"] = diffs

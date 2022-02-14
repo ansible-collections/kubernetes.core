@@ -89,7 +89,7 @@ def test_waiter_waits_for_missing_resource():
         namespace=RESOURCES[0]["metadata"].get("namespace"),
     )
     assert result is False
-    assert instance is None
+    assert instance == {}
     assert abs(elapsed - 3) <= 1
 
 

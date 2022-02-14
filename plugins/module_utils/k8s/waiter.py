@@ -107,7 +107,7 @@ RESOURCE_PREDICATES = {
 
 
 def empty_list(resource: ResourceInstance) -> bool:
-    return resource.kind.endswith("List") and not resource.get("items")
+    return resource["kind"].endswith("List") and not resource.get("items")
 
 
 def clock(total: int, interval: int) -> Iterator[int]:
@@ -134,7 +134,7 @@ class Waiter:
         namespace: Optional[str] = None,
         label_selectors: Optional[List[str]] = None,
         field_selectors: Optional[List[str]] = None,
-    ) -> Tuple[bool, Optional[Dict], int]:
+    ) -> Tuple[bool, Dict, int]:
         params = {}
 
         if name:
@@ -149,7 +149,7 @@ class Waiter:
         if field_selectors:
             params["field_selector"] = ",".join(field_selectors)
 
-        instance: Optional[Dict] = None
+        instance = {}
         response = None
         elapsed = 0
         for i in clock(timeout, sleep):

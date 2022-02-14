@@ -27,9 +27,15 @@ except ImportError:
 
 try:
     import kubernetes
+    from kubernetes.dynamic.exceptions import (
+        ResourceNotFoundError,
+        ResourceNotUniqueError,
+    )
+    from kubernetes.dynamic.resource import Resource
 except ImportError:
-    # Handled in module setup
-    pass
+    # kubernetes import error is handled in module setup
+    # This is defined only for the sake of Ansible's checked import requirement
+    Resource = Any  # type: ignore
 
 try:
     import urllib3
@@ -197,6 +203,21 @@ class K8SClient:
     @property
     def resources(self) -> List[Any]:
         return self.client.resources
+
+    def resource(self, kind: str, api_version: str) -> Resource:
+        """Fetch a kubernetes client resource.
+
+        This will attempt to find a kubernetes resource trying, in order, kind,
+        name, singular_name and short_names.
+        """
+        for attribute in ["kind", "name", "singular_name"]:
+            try:
+                return self.client.resources.get(
+                    **{"api_version": api_version, attribute: kind}
+                )
+            except (ResourceNotFoundError, ResourceNotUniqueError):
+                pass
+        return self.client.resources.get(api_version=api_version, short_names=[kind])
 
     def _ensure_dry_run(self, params: Dict) -> Dict:
         if self.dry_run:

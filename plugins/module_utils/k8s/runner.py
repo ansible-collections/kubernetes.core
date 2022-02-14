@@ -13,10 +13,13 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource impor
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
+    diff_objects,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    ResourceTimeout,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import exists
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
 )
@@ -49,7 +52,7 @@ def run_module(module) -> None:
     definitions = create_definitions(module.params)
 
     for definition in definitions:
-        result = {"changed": False, "result": {}, "warnings": []}
+        result = {"changed": False, "result": {}}
         warnings = []
 
         if module.params.get("validate") is not None:
@@ -58,18 +61,21 @@ def run_module(module) -> None:
         try:
             result = perform_action(svc, definition, module.params)
         except CoreException as e:
-            msg = to_native(e)
+            try:
+                error = e.result
+            except AttributeError:
+                error = {}
+            error["msg"] = to_native(e)
             if warnings:
-                msg += "\n" + "\n    ".join(warnings)
+                error.setdefault("warnings", []).extend(warnings)
+
             if module.params.get("continue_on_error"):
-                result["error"] = {"msg": msg}
+                result["error"] = error
             else:
-                module.fail_json(msg=msg)
+                module.fail_json(**error)
 
         if warnings:
-            result.setdefault("warnings", [])
-            result["warnings"] += warnings
-
+            result.setdefault("warnings", []).extend(warnings)
         changed |= result["changed"]
         results.append(result)
 
@@ -86,7 +92,9 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     state = params.get("state", None)
     kind = definition.get("kind")
     api_version = definition.get("apiVersion")
+
     result = {"changed": False, "result": {}}
+    instance = {}
 
     resource = svc.find_resource(kind, api_version, fail=True)
     definition["kind"] = resource.kind
@@ -94,8 +102,10 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
-        result = svc.delete(resource, definition, existing)
+        instance = svc.delete(resource, definition, existing)
         result["method"] = "delete"
+        if exists(existing):
+            result["changed"] = True
     else:
         if label_selectors:
             filter_selector = LabelSelectorFilter(label_selectors)
@@ -110,7 +120,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                 return result
 
         if params.get("apply"):
-            result = svc.apply(resource, definition, existing)
+            instance = svc.apply(resource, definition, existing)
             result["method"] = "apply"
         elif not existing:
             if state == "patched":
@@ -121,13 +131,51 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                     )
                 )
                 return result
-            result = svc.create(resource, definition)
+            instance = svc.create(resource, definition)
             result["method"] = "create"
+            result["changed"] = True
         elif params.get("force", False):
-            result = svc.replace(resource, definition, existing)
+            instance = svc.replace(resource, definition, existing)
             result["method"] = "replace"
         else:
-            result = svc.update(resource, definition, existing)
+            instance = svc.update(resource, definition, existing)
             result["method"] = "update"
+
+    # If needed, wait and/or create diff
+    success = True
+
+    if result["method"] == "delete":
+        # wait logic is a bit different for delete as `instance` may be a status object
+        if params.get("wait") and not svc.module.check_mode:
+            success, waited, duration = svc.wait(resource, definition)
+            result["duration"] = duration
+    else:
+        if params.get("wait") and not svc.module.check_mode:
+            success, instance, duration = svc.wait(resource, instance)
+            result["duration"] = duration
+
+    if result["method"] not in ("create", "delete"):
+        if existing:
+            existing = existing.to_dict()
+        else:
+            existing = {}
+        match, diffs = diff_objects(existing, instance)
+        if match and diffs:
+            result.setdefault("warnings", []).append(
+                "No meaningful diff was generated, but the API may not be idempotent "
+                "(only metadata.generation or metadata.resourceVersion were changed)"
+            )
+        result["changed"] = not match
+        if svc.module._diff:
+            result["diff"] = diffs
+
+    result["result"] = instance
+    if not success:
+        raise ResourceTimeout(
+            '"{0}" "{1}": Timed out waiting on resource'.format(
+                definition["kind"], origin_name
+            ),
+            result,
+        )
 
     return result

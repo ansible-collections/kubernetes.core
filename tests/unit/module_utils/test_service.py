@@ -5,6 +5,7 @@ from kubernetes.dynamic.resource import ResourceInstance, Resource
 
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
+    diff_objects,
 )
 
 from kubernetes.dynamic.exceptions import NotFoundError
@@ -59,16 +60,14 @@ def mock_pod_updated_resource_instance():
 
 
 def test_diff_objects_no_diff():
-    svc = K8sService(Mock(), Mock())
-    match, diff = svc.diff_objects(pod_definition, pod_definition)
+    match, diff = diff_objects(pod_definition, pod_definition)
 
     assert match is True
     assert diff == {}
 
 
 def test_diff_objects_meta_diff():
-    svc = K8sService(Mock(), Mock())
-    match, diff = svc.diff_objects(pod_definition, pod_definition_updated)
+    match, diff = diff_objects(pod_definition, pod_definition_updated)
 
     assert match is False
     assert diff["before"] == {
@@ -98,8 +97,7 @@ def test_diff_objects_spec_diff():
             ]
         },
     }
-    svc = K8sService(Mock(), Mock())
-    match, diff = svc.diff_objects(pod_definition, pod_definition_updated)
+    match, diff = diff_objects(pod_definition, pod_definition_updated)
 
     assert match is False
     assert diff["before"]["spec"] == pod_definition["spec"]
@@ -110,7 +108,7 @@ def test_find_resource():
     mock_pod_resource = Resource(
         api_version="v1", kind="Pod", namespaced=False, preferred=True, prefix="api"
     )
-    spec = {"resources.get.side_effect": [mock_pod_resource]}
+    spec = {"resource.return_value": mock_pod_resource}
     client = Mock(**spec)
     svc = K8sService(client, Mock())
     resource = svc.find_resource("Pod", "v1")
@@ -122,38 +120,45 @@ def test_find_resource():
 def test_service_delete_existing_resource(mock_pod_resource_instance):
     spec = {"delete.side_effect": [mock_pod_resource_instance]}
     client = Mock(**spec)
-    module = Mock()
-    module.params = {}
-    module.check_mode = False
+    module = Mock(
+        params={"delete_options": {"gracePeriodSeconds": 2}}, check_mode=False
+    )
+    resource = Mock()
     svc = K8sService(client, module)
-    results = svc.delete(Mock(), pod_definition, mock_pod_resource_instance)
+    result = svc.delete(resource, pod_definition, mock_pod_resource_instance)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is True
-    assert results["result"] == pod_definition
+    assert isinstance(result, dict)
+    assert result == mock_pod_resource_instance.to_dict()
+    client.delete.assert_called_with(
+        resource,
+        name=pod_definition["metadata"]["name"],
+        namespace=pod_definition["metadata"]["namespace"],
+        body={"apiVersion": "v1", "kind": "DeleteOptions", "gracePeriodSeconds": 2},
+    )
 
 
 def test_service_delete_no_existing_resource():
     module = Mock()
     module.params = {}
     module.check_mode = False
-    svc = K8sService(Mock(), module)
-    results = svc.delete(Mock(), pod_definition)
+    client = Mock()
+    client.delete.return_value = mock_pod_resource_instance
+    svc = K8sService(client, module)
+    result = svc.delete(Mock(), pod_definition)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == {}
+    assert result == {}
+    client.delete.assert_not_called()
 
 
 def test_service_delete_existing_resource_check_mode(mock_pod_resource_instance):
-    module = Mock()
-    module.params = {"wait": False}
-    module.check_mode = True
-    svc = K8sService(Mock(), module)
-    results = svc.delete(Mock(), pod_definition, mock_pod_resource_instance)
+    module = Mock(params={}, check_mode=True)
+    client = Mock(dry_run=False)
+    client.delete.return_value = mock_pod_resource_instance
+    svc = K8sService(client, module)
+    result = svc.delete(Mock(), pod_definition, mock_pod_resource_instance)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is True
+    assert result == {}
+    client.delete.assert_not_called()
 
 
 def test_service_create_resource(mock_pod_resource_instance):
@@ -163,25 +168,20 @@ def test_service_create_resource(mock_pod_resource_instance):
     module.params = {}
     module.check_mode = False
     svc = K8sService(client, module)
-    results = svc.create(Mock(), pod_definition)
+    result = svc.create(Mock(), pod_definition)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is True
-    assert results["result"] == pod_definition
+    assert result == mock_pod_resource_instance.to_dict()
 
 
 def test_service_create_resource_check_mode():
-    client = Mock()
-    client.dry_run = False
-    module = Mock()
-    module.params = {}
-    module.check_mode = True
+    client = Mock(dry_run=False)
+    client.create.return_value = mock_pod_resource_instance
+    module = Mock(params={}, check_mode=True)
     svc = K8sService(client, module)
-    results = svc.create(Mock(), pod_definition)
+    result = svc.create(Mock(), pod_definition)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is True
-    assert results["result"] == pod_definition
+    assert result == pod_definition
+    client.create.assert_not_called()
 
 
 def test_service_retrieve_existing_resource(mock_pod_resource_instance):
@@ -227,117 +227,39 @@ def test_create_project_request():
 
 
 def test_service_apply_existing_resource(mock_pod_resource_instance):
-    spec = {"apply.side_effect": [ResourceInstance(None, pod_definition_updated)]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {"apply": True}
-    module.check_mode = False
-    svc = K8sService(client, module)
-    results = svc.apply(Mock(), pod_definition_updated, mock_pod_resource_instance)
-
-    assert isinstance(results, dict)
-    assert results["changed"] is True
-    assert results["diff"] is not {}
-    assert results["result"] == pod_definition_updated
-
-
-def test_service_apply_existing_resource_no_diff(mock_pod_resource_instance):
     spec = {"apply.side_effect": [mock_pod_resource_instance]}
     client = Mock(**spec)
     module = Mock()
     module.params = {"apply": True}
     module.check_mode = False
     svc = K8sService(client, module)
-    results = svc.apply(Mock(), pod_definition, mock_pod_resource_instance)
+    result = svc.apply(Mock(), pod_definition_updated, mock_pod_resource_instance)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["diff"] == {}
-    assert results["result"] == pod_definition
+    assert result == mock_pod_resource_instance.to_dict()
 
 
-def test_service_apply_existing_resource_no_apply(mock_pod_resource_instance):
-    spec = {"apply.side_effect": [mock_pod_resource_instance]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {"apply": False}
-    module.check_mode = False
-    svc = K8sService(client, module)
-    results = svc.apply(Mock(), pod_definition, mock_pod_resource_instance)
-
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == {}
-
-
-def test_service_replace_existing_resource_no_diff(mock_pod_resource_instance):
+def test_service_replace_existing_resource(mock_pod_resource_instance):
     spec = {"replace.side_effect": [mock_pod_resource_instance]}
     client = Mock(**spec)
     module = Mock()
     module.params = {}
     module.check_mode = False
     svc = K8sService(client, module)
-    results = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
+    result = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["diff"] == {}
-    assert results["result"] == pod_definition
+    assert result == mock_pod_resource_instance.to_dict()
 
 
-def test_service_replace_existing_resource(
-    mock_pod_resource_instance, mock_pod_updated_resource_instance
-):
-    spec = {"replace.side_effect": [mock_pod_updated_resource_instance]}
+def test_service_update_existing_resource(mock_pod_resource_instance):
+    spec = {"replace.side_effect": [mock_pod_resource_instance]}
     client = Mock(**spec)
     module = Mock()
     module.params = {}
     module.check_mode = False
     svc = K8sService(client, module)
-    results = svc.replace(Mock(), pod_definition_updated, mock_pod_resource_instance)
+    result = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
 
-    assert isinstance(results, dict)
-    assert results["changed"] is True
-    assert results["result"] == pod_definition_updated
-    assert results["diff"] != {}
-    assert results["diff"]["before"] is not {}
-    assert results["diff"]["after"] is not {}
-
-
-def test_service_update_existing_resource(
-    mock_pod_resource_instance, mock_pod_updated_resource_instance
-):
-    spec = {"replace.side_effect": [mock_pod_updated_resource_instance]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {}
-    module.check_mode = False
-    svc = K8sService(client, module)
-    results = svc.replace(Mock(), pod_definition_updated, mock_pod_resource_instance)
-
-    assert isinstance(results, dict)
-    assert results["changed"] is True
-    assert results["result"] == pod_definition_updated
-    assert results["diff"] != {}
-    assert results["diff"]["before"] is not {}
-    assert results["diff"]["after"] is not {}
-
-
-def test_service_update_existing_resource_no_diff(mock_pod_updated_resource_instance):
-    spec = {"replace.side_effect": [mock_pod_updated_resource_instance]}
-    client = Mock(**spec)
-    module = Mock()
-    module.params = {}
-    module.check_mode = False
-    svc = K8sService(client, module)
-    results = svc.replace(
-        Mock(), pod_definition_updated, mock_pod_updated_resource_instance
-    )
-
-    assert isinstance(results, dict)
-    assert results["changed"] is False
-    assert results["result"] == pod_definition_updated
-    assert results["diff"] == {}
+    assert result == mock_pod_resource_instance.to_dict()
 
 
 def test_service_find(mock_pod_resource_instance):
