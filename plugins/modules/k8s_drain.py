@@ -124,9 +124,12 @@ result:
   returned: success
   type: str
 """
+
 import copy
-from datetime import datetime
 import time
+import traceback
+
+from datetime import datetime
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
@@ -137,11 +140,25 @@ from ansible.module_utils._text import to_native
 
 try:
     from kubernetes.client.api import core_v1_api
-    from kubernetes.client.models import V1beta1Eviction, V1DeleteOptions
+    from kubernetes.client.models import V1DeleteOptions
     from kubernetes.client.exceptions import ApiException
 except ImportError:
     # ImportError are managed by the common module already.
     pass
+
+HAS_EVICTION_API = True
+k8s_import_exception = None
+K8S_IMP_ERR = None
+
+try:
+    from kubernetes.client.models import V1beta1Eviction as v1_eviction
+except ImportError:
+    try:
+        from kubernetes.client.models import V1Eviction as v1_eviction
+    except ImportError as e:
+        k8s_import_exception = e
+        K8S_IMP_ERR = traceback.format_exc()
+        HAS_EVICTION_API = False
 
 
 def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
@@ -311,7 +328,7 @@ class K8sDrainAnsible(object):
                         name=name, namespace=namespace, body=body
                     )
                 else:
-                    body = V1beta1Eviction(**definition)
+                    body = v1_eviction(**definition)
                     self._api_instance.create_namespaced_pod_eviction(
                         name=name, namespace=namespace, body=body
                     )
@@ -495,6 +512,13 @@ def argspec():
 
 def main():
     module = AnsibleModule(argument_spec=argspec())
+
+    if not HAS_EVICTION_API:
+        module.fail_json(
+            msg="The kubernetes Python library missing with V1Eviction API",
+            exception=K8S_IMP_ERR,
+            error=to_native(k8s_import_exception),
+        )
 
     k8s_drain = K8sDrainAnsible(module)
     k8s_drain.execute_module()
