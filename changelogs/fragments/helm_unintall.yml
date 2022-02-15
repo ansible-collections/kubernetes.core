@@ -1,0 +1,3 @@
+---
+bugfixes:
+- helm - use ``--all`` cmdline flag in helm command to list all releases (https://github.com/ansible-collections/kubernetes.core/issues/319).

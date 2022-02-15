@@ -354,7 +354,7 @@ def get_release_status(module, command, release_name):
     Get Release state from deployed release
     """
 
-    list_command = command + " list --output=yaml --filter " + release_name
+    list_command = command + " list --all --output=yaml --filter " + release_name
 
     rc, out, err = run_helm(module, list_command)
 
