@@ -1,4 +1,4 @@
-# Kubernetes Collection for Ansible
+ # Kubernetes Collection for Ansible
 
 [![CI](https://github.com/ansible-collections/kubernetes.core/workflows/CI/badge.svg?event=push)](https://github.com/ansible-collections/kubernetes.core/actions) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://codecov.io/gh/ansible-collections/kubernetes.core)
 
