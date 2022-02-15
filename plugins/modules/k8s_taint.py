@@ -139,7 +139,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
 
 try:
     from kubernetes.client.api import core_v1_api
-    from kubernetes.dynamic.exceptions import ApiException
+    from kubernetes.client.exceptions import ApiException
 except ImportError:
     # ImportError are managed by the common module already.
     pass
