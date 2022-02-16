@@ -42,7 +42,7 @@ options:
   release_state:
     description:
       - Show releases as per their states.
-      - Default value is C(deployed).
+      - Default value is C(deployed) and C(failed).
       - If set to C(all), show all releases without any filter applied.
       - If set to C(deployed), show deployed releases.
       - If set to C(failed), show failed releases.
