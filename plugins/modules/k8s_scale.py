@@ -236,7 +236,7 @@ def execute_module(
             module.exit_json(warning=warn, **return_attributes)
 
     for existing in existing_items:
-        if module.params["kind"] == "job":
+        if module.params["kind"].lower() == "job":
             existing_count = existing.spec.parallelism
         elif hasattr(existing.spec, "replicas"):
             existing_count = existing.spec.replicas
@@ -271,22 +271,25 @@ def execute_module(
             continue
 
         if existing_count != replicas:
-            if not module.check_mode:
-                if module.params["kind"] == "job":
-                    existing.spec.parallelism = replicas
-                    result = resource.patch(existing.to_dict()).to_dict()
+            if module.params["kind"].lower() == "job":
+                existing.spec.parallelism = replicas
+                result = {"changed": True}
+                if module.check_mode:
+                    result["result"] = existing.to_dict()
                 else:
-                    result = scale(
-                        module,
-                        k8s_ansible_mixin,
-                        resource,
-                        existing,
-                        replicas,
-                        wait,
-                        wait_time,
-                        wait_sleep,
-                    )
-                    changed = changed or result["changed"]
+                    result["result"] = resource.patch(existing.to_dict()).to_dict()
+            else:
+                result = scale(
+                    module,
+                    k8s_ansible_mixin,
+                    resource,
+                    existing,
+                    replicas,
+                    wait,
+                    wait_time,
+                    wait_sleep,
+                )
+                changed = changed or result["changed"]
         else:
             name = existing.metadata.name
             namespace = existing.metadata.namespace
@@ -342,25 +345,34 @@ def scale(
 
     existing = resource.get(name=name, namespace=namespace)
 
-    try:
-        resource.scale.patch(body=scale_obj)
-    except Exception as exc:
-        module.fail_json(msg="Scale request failed: {0}".format(exc))
-
-    k8s_obj = resource.get(name=name, namespace=namespace).to_dict()
-    match, diffs = k8s_ansible_mixin.diff_objects(existing.to_dict(), k8s_obj)
     result = dict()
-    result["result"] = k8s_obj
+    if module.check_mode:
+        k8s_obj = copy.deepcopy(existing.to_dict())
+        k8s_obj["spec"]["replicas"] = replicas
+        match, diffs = k8s_ansible_mixin.diff_objects(existing.to_dict(), k8s_obj)
+        if wait:
+            result["duration"] = 0
+        result["result"] = k8s_obj
+    else:
+        try:
+            resource.scale.patch(body=scale_obj)
+        except Exception as exc:
+            module.fail_json(msg="Scale request failed: {0}".format(exc))
+
+        k8s_obj = resource.get(name=name, namespace=namespace).to_dict()
+        result["result"] = k8s_obj
+        if wait and not module.check_mode:
+            success, result["result"], result["duration"] = k8s_ansible_mixin.wait(
+                resource, scale_obj, wait_sleep, wait_time
+            )
+            if not success:
+                module.fail_json(msg="Resource scaling timed out", **result)
+
+    match, diffs = k8s_ansible_mixin.diff_objects(existing.to_dict(), k8s_obj)
     result["changed"] = not match
     if module._diff:
         result["diff"] = diffs
 
-    if wait:
-        success, result["result"], result["duration"] = k8s_ansible_mixin.wait(
-            resource, scale_obj, wait_sleep, wait_time
-        )
-        if not success:
-            module.fail_json(msg="Resource scaling timed out", **result)
     return result
 
 

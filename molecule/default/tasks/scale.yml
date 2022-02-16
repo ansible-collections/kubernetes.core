@@ -45,6 +45,68 @@
         field_selectors:
           - status.phase=Running
 
+    - name: Scale the deployment (check_mode)
+      k8s_scale:
+        api_version: apps/v1
+        kind: Deployment
+        name: scale-deploy
+        namespace: "{{ scale_namespace }}"
+        replicas: 0
+        wait: yes
+      register: scale_down
+      check_mode: true
+
+    - name: Get pods in scale-deploy
+      k8s_info:
+        kind: Pod
+        label_selectors:
+          - app=scale-deploy
+        namespace: "{{ scale_namespace }}"
+        field_selectors:
+          - status.phase=Running
+      register: scale_down_deploy_pods
+      ignore_errors: true
+      until: scale_down_deploy_pods.resources | length == 0
+      retries: 6
+      delay: 5
+
+    - name: Ensure the deployment did not changed and pods are still running
+      assert:
+        that:
+          - scale_down is changed
+          - scale_down_deploy_pods.resources | length > 0
+
+    - name: Scale the deployment (check_mode) once again - validate idempotency
+      k8s_scale:
+        api_version: apps/v1
+        kind: Deployment
+        name: scale-deploy
+        namespace: "{{ scale_namespace }}"
+        replicas: 0
+        wait: yes
+      register: scale_down
+      check_mode: true
+
+    - name: Get pods in scale-deploy
+      k8s_info:
+        kind: Pod
+        label_selectors:
+          - app=scale-deploy
+        namespace: "{{ scale_namespace }}"
+        field_selectors:
+          - status.phase=Running
+      register: scale_down_deploy_pods
+      ignore_errors: true
+      until: scale_down_deploy_pods.resources | length == 0
+      retries: 6
+      delay: 5
+
+    - name: Ensure the deployment did not changed and pods are still running
+      assert:
+        that:
+          - scale_down is changed
+          - scale_down_deploy_pods.resources | length > 0
+
     - name: Scale the deployment
       k8s_scale:
         api_version: apps/v1
@@ -75,6 +137,22 @@
           - scale_down is changed
           - '"duration" in scale_down'
           - scale_down.diff
+
+    - name: Scale the deployment once again (idempotency)
+      k8s_scale:
+        api_version: apps/v1
+        kind: Deployment
+        name: scale-deploy
+        namespace: "{{ scale_namespace }}"
+        replicas: 0
+        wait: yes
+      register: scale_down_idempotency
+      diff: true
+
+    - name: Ensure that scale down did not took effect
+      assert:
+        that:
+          - scale_down_idempotency is not changed
 
     - name: Reapply the earlier deployment
       k8s:

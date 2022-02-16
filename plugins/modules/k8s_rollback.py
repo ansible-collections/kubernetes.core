@@ -115,11 +115,13 @@ def execute_module(module, k8s_ansible_mixin):
         module.params["field_selectors"],
     )
 
+    changed = False
     for resource in resources["resources"]:
         result = perform_action(module, k8s_ansible_mixin, resource)
+        changed = result["changed"] or changed
         results.append(result)
 
-    module.exit_json(**{"changed": True, "rollback_info": results})
+    module.exit_json(**{"changed": changed, "rollback_info": results})
 
 
 def perform_action(module, k8s_ansible_mixin, resource):
@@ -143,6 +145,13 @@ def perform_action(module, k8s_ansible_mixin, resource):
     prev_managed_resource = get_previous_revision(
         managed_resources["resources"], current_revision
     )
+    if not prev_managed_resource:
+        warn = "No rollout history found for resource %s/%s" % (
+            module.params["kind"],
+            resource["metadata"]["name"],
+        )
+        result = {"changed": False, "warnings": [warn]}
+        return result
 
     if module.params["kind"] == "Deployment":
         del prev_managed_resource["spec"]["template"]["metadata"]["labels"][
@@ -174,22 +183,24 @@ def perform_action(module, k8s_ansible_mixin, resource):
         api_target = "daemonsets"
         content_type = "application/strategic-merge-patch+json"
 
-    rollback = k8s_ansible_mixin.client.request(
-        "PATCH",
-        "/apis/{0}/namespaces/{1}/{2}/{3}".format(
-            module.params["api_version"],
-            module.params["namespace"],
-            api_target,
-            module.params["name"],
-        ),
-        body=resource_patch,
-        content_type=content_type,
-    )
+    rollback = resource
+    if not module.check_mode:
+        rollback = k8s_ansible_mixin.client.request(
+            "PATCH",
+            "/apis/{0}/namespaces/{1}/{2}/{3}".format(
+                module.params["api_version"],
+                module.params["namespace"],
+                api_target,
+                module.params["name"],
+            ),
+            body=resource_patch,
+            content_type=content_type,
+        ).to_dict()
 
     result = {"changed": True}
     result["method"] = "patch"
     result["body"] = resource_patch
-    result["resources"] = rollback.to_dict()
+    result["resources"] = rollback
     return result
 
 
