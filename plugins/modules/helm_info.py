@@ -39,15 +39,36 @@ options:
     required: true
     type: str
     aliases: [ namespace ]
+  release_state:
+    description:
+      - Show releases as per their states.
+      - Default value is C(deployed) and C(failed).
+      - If set to C(all), show all releases without any filter applied.
+      - If set to C(deployed), show deployed releases.
+      - If set to C(failed), show failed releases.
+      - If set to C(pending), show pending releases.
+      - If set to C(superseded), show superseded releases.
+      - If set to C(uninstalled), show uninstalled releases, if C(helm uninstall --keep-history) was used.
+      - If set to C(uninstalling), show releases that are currently being uninstalled.
+    type: list
+    elements: str
+    version_added: "2.3.0"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
 
 EXAMPLES = r"""
-- name: Deploy latest version of Grafana chart inside monitoring namespace
+- name: Gather information of Grafana chart inside monitoring namespace
   kubernetes.core.helm_info:
     name: test
     release_namespace: monitoring
+
+- name: Gather information about test-chart with pending state
+  kubernetes.core.helm_info:
+    name: test-chart
+    release_namespace: testenv
+    release_state:
+    - pending
 """
 
 RETURN = r"""
@@ -117,9 +138,24 @@ def get_release(state, release_name):
 
 
 # Get Release state from deployed release
-def get_release_status(module, command, release_name):
-    list_command = command + " list --output=yaml --filter " + release_name
+def get_release_status(module, command, release_name, release_state):
+    list_command = command + " list --output=yaml"
 
+    valid_release_states = [
+        "all",
+        "deployed",
+        "failed",
+        "pending",
+        "superseded",
+        "uninstalled",
+        "uninstalling",
+    ]
+
+    for local_release_state in release_state:
+        if local_release_state in valid_release_states:
+            list_command += " --%s" % local_release_state
+
+    list_command += " --filter " + release_name
     rc, out, err = run_helm(module, list_command)
 
     if rc != 0:
@@ -175,6 +211,7 @@ def main():
             api_key=dict(
                 type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
             ),
+            release_state=dict(type="list", default=[], elements="str"),
         ),
         mutually_exclusive=[
             ("context", "ca_cert"),
@@ -190,13 +227,16 @@ def main():
 
     bin_path = module.params.get("binary_path")
     release_name = module.params.get("release_name")
+    release_state = module.params.get("release_state")
 
     if bin_path is not None:
         helm_cmd_common = bin_path
     else:
         helm_cmd_common = module.get_bin_path("helm", required=True)
 
-    release_status = get_release_status(module, helm_cmd_common, release_name)
+    release_status = get_release_status(
+        module, helm_cmd_common, release_name, release_state
+    )
 
     if release_status is not None:
         module.exit_json(changed=False, status=release_status)
