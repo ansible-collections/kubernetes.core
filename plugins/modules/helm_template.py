@@ -57,6 +57,12 @@ options:
       - If the directory already exists, it will be overwritten.
     required: false
     type: path
+  release_namespace:
+    description:
+      - namespace scope for this request.
+    required: false
+    type: str
+    version_added: 2.4.0
   release_values:
     description:
         - Values to pass to chart.
@@ -64,6 +70,13 @@ options:
     default: {}
     aliases: [ values ]
     type: dict
+  show_only:
+    description:
+        - Only show manifests rendered from the given templates
+    required: false
+    type: list
+    elements: str
+    version_added: 2.4.0
   values_files:
     description:
         - Value files to pass to chart.
@@ -90,6 +103,24 @@ EXAMPLES = r"""
 - name: Render templates
   kubernetes.core.helm_template:
     chart_ref: stable/prometheus
+  register: result
+
+- name: Write templates to file
+  copy:
+    dest: myfile.yaml
+    content: "{{ result.stdout }}"
+
+- name: Render MutatingWebhooksConfiguration for revision tag "canary", rev "1-13-0"
+  kubernetes.core.helm_template:
+    chart_ref: istio/istiod
+    chart_version: "1.13.0"
+    release_namespace: "istio-system"
+    show_only:
+      - "templates/revision-tags.yaml"
+    release_values:
+      revision: "1-13-0"
+      revisionTags:
+        - "canary"
   register: result
 
 - name: Write templates to file
@@ -137,7 +168,9 @@ def template(
     chart_repo_url=None,
     chart_version=None,
     output_dir=None,
+    show_only=None,
     release_values=None,
+    release_namespace=None,
     values_files=None,
     include_crds=False,
 ):
@@ -152,9 +185,16 @@ def template(
     if output_dir:
         cmd += " --output-dir=" + output_dir
 
+    if show_only:
+        for template in show_only:
+            cmd += " -s " + template
+
     if values_files:
         for values_file in values_files:
             cmd += " -f=" + values_file
+
+    if release_namespace:
+        cmd += " -n " + release_namespace
 
     if release_values:
         fd, path = tempfile.mkstemp(suffix=".yml")
@@ -177,7 +217,9 @@ def main():
             chart_version=dict(type="str"),
             include_crds=dict(type="bool", default=False),
             output_dir=dict(type="path"),
+            release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
+            show_only=dict(type="list", default=[], elements="str"),
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
         ),
@@ -191,6 +233,8 @@ def main():
     chart_version = module.params.get("chart_version")
     include_crds = module.params.get("include_crds")
     output_dir = module.params.get("output_dir")
+    show_only = module.params.get("show_only")
+    release_namespace = module.params.get("release_namespace")
     release_values = module.params.get("release_values")
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
@@ -210,7 +254,9 @@ def main():
         chart_repo_url=chart_repo_url,
         chart_version=chart_version,
         output_dir=output_dir,
+        release_namespace=release_namespace,
         release_values=release_values,
+        show_only=show_only,
         values_files=values_files,
         include_crds=include_crds,
     )
