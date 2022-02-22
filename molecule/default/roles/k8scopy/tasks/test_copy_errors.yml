@@ -14,7 +14,7 @@
   assert:
     that:
       - copy_non_existent is failed
-      - copy_non_existent.msg == "this_file_does_not_exist does not exist in local filesystem"
+      - "'this_file_does_not_exist does not exist in local filesystem' in copy_non_existent.msg"
 
 # copy non-existent pod file should fail
 - name: copy of non-existent file from remote pod should fail
@@ -31,7 +31,7 @@
   assert:
     that:
       - copy_non_existent is failed
-      - copy_non_existent.msg == "/this_file_does_not_exist does not exist in remote pod filesystem"
+      - "'/this_file_does_not_exist does not exist in remote pod filesystem' in copy_non_existent.msg"
 
 # copy file into multiple container pod without specifying the container should fail
 - name: copy file into multiple container pod
