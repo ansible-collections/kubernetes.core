@@ -195,3 +195,5 @@ plugins/modules/k8s_taint.py import-2.7!skip
 plugins/modules/k8s_taint.py import-3.5!skip
 plugins/modules/k8s_taint.py metaclass-boilerplate!skip
 plugins/modules/k8s_taint.py validate-modules:return-syntax-error
+plugins/module_utils/copy.py future-import-boilerplate!skip
+plugins/module_utils/copy.py metaclass-boilerplate!skip
