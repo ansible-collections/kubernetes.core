@@ -72,7 +72,7 @@ options:
     type: dict
   show_only:
     description:
-        - Only show manifests rendered from the given templates
+        - Only show manifests rendered from the given templates.
     required: false
     type: list
     elements: str
