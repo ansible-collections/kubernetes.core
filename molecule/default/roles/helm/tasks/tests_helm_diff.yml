@@ -9,6 +9,7 @@
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
+        plugin_version: 3.4.0
 
     - name: Copy test chart
       copy:
@@ -159,6 +160,79 @@
     - assert:
         that:
           - install is not changed
+
+    # Test helm diff with chart_repo_url
+    - name: Define Redis chart values
+      set_fact:
+        redis_chart_values:
+          commonLabels:
+            phase: testing
+            company: RedHat
+          image:
+            tag: 6.2.6-debian-10-r135
+          architecture: standalone
+
+    - name: Install Redis chart
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_repo_url: https://charts.bitnami.com/bitnami
+        chart_ref: redis
+        namespace: "{{ helm_namespace }}"
+        name: redis-chart
+        chart_version: '16.0.0'
+        release_values: "{{ redis_chart_values }}"
+
+    - name: Upgrade Redis chart
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_repo_url: https://charts.bitnami.com/bitnami
+        chart_ref: redis
+        namespace: "{{ helm_namespace }}"
+        name: redis-chart
+        chart_version: '16.0.0'
+        release_values: "{{ redis_chart_values }}"
+      check_mode: yes
+      register: redis_upgrade
+
+    - name: Assert that module raised a warning
+      assert:
+        that:
+          - not redis_upgrade.changed
+          - redis_upgrade.warnings is defined
+          - redis_upgrade.warnings | length == 1
+          - redis_upgrade.warnings[0] == "The default idempotency check can fail to report changes in certain cases. Install helm diff >= 3.4.1 for better results."
+
+    - name: Uninstall helm diff
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: diff
+      ignore_errors: yes
+
+    - name: Install helm diff (version=3.4.1)
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: present
+        plugin_path: https://github.com/databus23/helm-diff
+        plugin_version: 3.4.1
+
+    - name: Upgrade Redis chart once again
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_repo_url: https://charts.bitnami.com/bitnami
+        chart_ref: redis
+        namespace: "{{ helm_namespace }}"
+        name: redis-chart
+        chart_version: '16.0.0'
+        release_values: "{{ redis_chart_values }}"
+      check_mode: yes
+      register: redis_upgrade_2
+
+    - name: Assert that module raised a warning
+      assert:
+        that:
+          - redis_upgrade_2.changed
+          - redis_upgrade_2.warnings is not defined
 
   always:
     - name: Remove chart directory

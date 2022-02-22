@@ -27,6 +27,10 @@ requirements:
 description:
   - Install, upgrade, delete packages with the Helm package manager.
 
+notes:
+  - The default idempotency check can fail to report changes when C(release_state) is set to C(present)
+    and C(chart_repo_url) is defined. Install helm diff >= 3.4.1 for better results.
+
 options:
   chart_ref:
     description:
@@ -495,9 +499,9 @@ def load_values_files(values_files):
     return values
 
 
-def has_plugin(command, plugin):
+def get_plugin_version(command, plugin):
     """
-    Check if helm plugin is installed.
+    Check if helm plugin is installed and return corresponding version
     """
 
     cmd = command + " plugin"
@@ -505,12 +509,12 @@ def has_plugin(command, plugin):
     out = parse_helm_plugin_list(module, output=output.splitlines())
 
     if not out:
-        return False
+        return None
 
     for line in out:
         if line[0] == plugin:
-            return True
-    return False
+            return line[1]
+    return None
 
 
 def helmdiff_check(
@@ -522,6 +526,7 @@ def helmdiff_check(
     values_files=None,
     chart_version=None,
     replace=False,
+    chart_repo_url=None,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -530,6 +535,8 @@ def helmdiff_check(
     cmd += " " + release_name
     cmd += " " + chart_ref
 
+    if chart_repo_url is not None:
+        cmd += " " + "--repo=" + chart_repo_url
     if chart_version is not None:
         cmd += " " + "--version=" + chart_version
     if not replace:
@@ -733,7 +740,14 @@ def main():
 
         else:
 
-            if has_plugin(helm_cmd_common, "diff") and not chart_repo_url:
+            helm_diff_version = get_plugin_version(helm_cmd_common, "diff")
+            if helm_diff_version and (
+                not chart_repo_url
+                or (
+                    chart_repo_url
+                    and LooseVersion(helm_diff_version) >= LooseVersion("3.4.1")
+                )
+            ):
                 (would_change, prepared) = helmdiff_check(
                     module,
                     helm_cmd_common,
@@ -743,13 +757,14 @@ def main():
                     values_files,
                     chart_version,
                     replace,
+                    chart_repo_url,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
             else:
                 module.warn(
                     "The default idempotency check can fail to report changes in certain cases. "
-                    "Install helm diff for better results."
+                    "Install helm diff >= 3.4.1 for better results."
                 )
                 would_change = default_check(
                     release_status, chart_info, release_values, values_files
