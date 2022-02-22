@@ -27,6 +27,10 @@ requirements:
 description:
   - Install, upgrade, delete packages with the Helm package manager.
 
+notes:
+  - The default idempotency check can fail to report changes when C(release_state) is set to C(present)
+    and C(chart_repo_url) is defined. Install helm diff >= 3.4.1 for better results.
+
 options:
   chart_ref:
     description:
