@@ -1,0 +1,108 @@
+---
+- block:
+  - set_fact:
+      kustomize_ns: "{{ test_namespace }}"
+
+  - name: create environment for test
+    block:
+
+    - name: Create temp directory
+      tempfile:
+        state: directory
+        suffix: .test
+      register: _tmp_dir
+
+    - set_fact:
+        tmp_dir_path: "{{ _tmp_dir.path }}"
+
+    - set_fact:
+        kustomize_dir: "{{ tmp_dir_path }}/kustomization"
+
+    - name: create kustomize directory
+      file:
+        path: "{{ kustomize_dir }}"
+        state: directory
+
+    - name: create kustomization file
+      copy:
+        content: '{{ item.content }}'
+        dest: '{{ item.dest }}'
+      with_items:
+      - content: |
+          configMapGenerator:
+          - name: test-confmap-
+            files:
+            - data.properties
+        dest: "{{ kustomize_dir }}/kustomization.yaml"
+      - content: "project=ansible"
+        dest: "{{ kustomize_dir }}/data.properties"
+
+    - name: copy script to install kustomize
+      get_url:
+        url: https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh
+        dest: "{{ tmp_dir_path }}"
+
+    - name: make script as executable
+      file:
+        path: "{{ tmp_dir_path }}/install_kustomize.sh"
+        mode: 0755
+
+    - name: Install kustomize
+      command: "{{ tmp_dir_path }}/install_kustomize.sh"
+      args:
+        chdir: "{{ tmp_dir_path }}"
+      register: _install
+
+    - set_fact:
+        kustomize_binary: "{{ _install.stdout | regex_search('kustomize installed to (.*)', '\\1') | list | join('') }}"
+        kubectl_release: "v1.22.0"
+        kubectl_binary: "{{ tmp_dir_path }}/kubectl"
+
+    - name: Install Kubectl
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_release }}/bin/linux/amd64/kubectl"
+        dest: "{{ kubectl_binary }}"
+      register: result
+      until: result is not failed
+      retries: 3
+      delay: 60
+      become: true
+
+    - name: Make kubectl as executable
+      ansible.builtin.file:
+        path: '{{ item }}'
+        mode: '0755'
+      become: true
+      with_items:
+      - "{{ kubectl_binary }}"
+
+    - name: Run lookup using kustomize binary
+      set_fact:
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', binary_path=kustomize_binary, dir=kustomize_dir) }}"
+
+    - name: Run lookup using kubectl binary
+      set_fact:
+        resource_kubectl: "{{ lookup('kubernetes.core.kustomize', binary_path=kubectl_binary, dir=kustomize_dir) }}"
+
+    - name: assert output are the same
+      assert:
+        that:
+        - resource_kubectl == resource_kustomize
+
+    - name: create kubernetes resource using lookup plugin
+      k8s:
+        namespace: "{{ kustomize_ns }}"
+        definition: "{{ lookup('kubernetes.core.kustomize', dir=kustomize_dir, opt_dirs=tmp_dir_path) }}"
+
+  always:
+  - name: Delete namespace
+    k8s:
+      kind: Namespace
+      name: "{{ kustomize_ns }}"
+      state: absent
+    ignore_errors: true
+
+  - name: Delete temporary directory
+    file:
+      state: absent
+      path: "{{ tmp_dir_path }}"

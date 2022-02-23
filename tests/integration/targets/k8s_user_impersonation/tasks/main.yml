@@ -1,0 +1,205 @@
+- block:
+  - set_fact:
+      test_ns: "{{ test_namespace }}"
+      pod_name: "impersonate-pod"
+      # this use will have authorization to list/create pods in the namespace
+      user_01: "authorized-sa-01"
+      # No authorization attached to this user, will use 'user_01' for impersonation
+      user_02: "unauthorize-sa-01"
+
+  - name: Get cluster information
+    kubernetes.core.k8s_cluster_info:
+    register: cluster_info
+    no_log: true
+
+  - set_fact:
+      cluster_host: "{{ cluster_info['connection']['host'] }}"
+
+  - name: Create Service account
+    kubernetes.core.k8s:
+      definition:
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: "{{ item }}"
+          namespace: "{{ test_ns }}"
+    with_items:
+    - "{{ user_01 }}"
+    - "{{ user_02 }}"
+
+  - name: Read Service Account - user_01
+    kubernetes.core.k8s_info:
+      kind: ServiceAccount
+      namespace: "{{ test_ns }}"
+      name: "{{ user_01 }}"
+    register: result
+
+  - name: Get secret details
+    kubernetes.core.k8s_info:
+      kind: Secret
+      namespace: '{{ test_ns }}'
+      name: '{{ result.resources[0].secrets[0].name }}'
+    no_log: true
+    register: _secret
+
+  - set_fact:
+      user_01_api_token: "{{ _secret.resources[0]['data']['token'] | b64decode }}"
+
+  - name: Read Service Account - user_02
+    kubernetes.core.k8s_info:
+      kind: ServiceAccount
+      namespace: "{{ test_ns }}"
+      name: "{{ user_02 }}"
+    register: result
+
+  - name: Get secret details
+    kubernetes.core.k8s_info:
+      kind: Secret
+      namespace: '{{ test_ns }}'
+      name: '{{ result.resources[0].secrets[0].name }}'
+    no_log: true
+    register: _secret
+
+  - set_fact:
+      user_02_api_token: "{{ _secret.resources[0]['data']['token'] | b64decode }}"
+
+  - name: Create Role to manage pod on the namespace
+    kubernetes.core.k8s:
+      namespace: "{{ test_ns }}"
+      definition:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: Role
+        metadata:
+          name: pod-manager
+        rules:
+        - apiGroups: [""]
+          resources: ["pods"]
+          verbs: ["create", "get", "delete", "list", "patch"]
+
+  - name: Attach Role to the user_01
+    kubernetes.core.k8s:
+      namespace: "{{ test_ns }}"
+      definition:
+        kind: RoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1
+        metadata:
+          name: pod-manager-binding
+        subjects:
+        - kind: ServiceAccount
+          name: "{{ user_01 }}"
+        roleRef:
+          kind: Role
+          name: pod-manager
+          apiGroup: rbac.authorization.k8s.io
+
+  - name: Create Pod using user_01 credentials
+    kubernetes.core.k8s:
+      api_key: "{{ user_01_api_token }}"
+      host: "{{ cluster_host }}"
+      validate_certs: no
+      namespace: "{{ test_ns }}"
+      name: "{{ pod_name }}"
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            test: "impersonate"
+        spec:
+          containers:
+          - name: c0
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+
+  - name: Delete Pod using user_02 credentials should failed
+    kubernetes.core.k8s:
+      api_key: "{{ user_02_api_token }}"
+      host: "{{ cluster_host }}"
+      validate_certs: no
+      namespace: "{{ test_ns }}"
+      name: "{{ pod_name }}"
+      kind: Pod
+      state: absent
+    register: delete_pod
+    ignore_errors: true
+
+  - name: Assert that operation has failed
+    assert:
+      that:
+      - delete_pod is failed
+      - delete_pod.reason == 'Forbidden'
+
+  - name: Delete Pod using user_02 credentials and impersonation to user_01
+    kubernetes.core.k8s:
+      api_key: "{{ user_02_api_token }}"
+      host: "{{ cluster_host }}"
+      validate_certs: no
+      impersonate_user: "system:serviceaccount:{{ test_ns }}:{{ user_01 }}"
+      namespace: "{{ test_ns }}"
+      name: "{{ pod_name }}"
+      kind: Pod
+      state: absent
+    ignore_errors: true
+    register: delete_pod_2
+
+  - name: Assert that operation has failed
+    assert:
+      that:
+      - delete_pod_2 is failed
+      - delete_pod_2.reason == 'Forbidden'
+      - '"cannot impersonate resource" in delete_pod_2.msg'
+
+  - name: Create Role to impersonate user_01
+    kubernetes.core.k8s:
+      namespace: "{{ test_ns }}"
+      definition:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: Role
+        metadata:
+          name: sa-impersonate
+        rules:
+        - apiGroups: [""]
+          resources:
+          - serviceaccounts
+          verbs:
+          - impersonate
+          resourceNames:
+          - "{{ user_01 }}"
+
+  - name: Attach Role to the user_02
+    kubernetes.core.k8s:
+      namespace: "{{ test_ns }}"
+      definition:
+        kind: RoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1
+        metadata:
+          name: sa-impersonate-binding
+        subjects:
+        - kind: ServiceAccount
+          name: "{{ user_02 }}"
+        roleRef:
+          kind: Role
+          name: sa-impersonate
+          apiGroup: rbac.authorization.k8s.io
+
+  - name: Delete Pod using user_02 credentials should succeed now
+    kubernetes.core.k8s:
+      api_key: "{{ user_02_api_token }}"
+      host: "{{ cluster_host }}"
+      validate_certs: no
+      impersonate_user: "system:serviceaccount:{{ test_ns }}:{{ user_01 }}"
+      namespace: "{{ test_ns }}"
+      name: "{{ pod_name }}"
+      kind: Pod
+      state: absent
+
+  always:
+  - name: Ensure namespace is deleted
+    kubernetes.core.k8s:
+      state: absent
+      kind: Namespace
+      name: "{{ test_ns }}"
+    ignore_errors: true

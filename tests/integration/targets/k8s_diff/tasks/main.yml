@@ -1,0 +1,148 @@
+---
+- block:
+  - set_fact:
+      diff_namespace: "{{ test_namespace }}"
+
+  # Using option 'apply' set to 'yes'
+  - name: Create Pod using apply and diff set to yes
+    k8s:
+      namespace: '{{ diff_namespace }}'
+      apply: yes
+      template: "pod.j2"
+    diff: yes
+    vars:
+      pod_name: "pod-apply"
+      pod_image: "busybox:1.32.0"
+    register: result
+
+  - name: check that result has diff attribute
+    assert:
+      that:
+      - result is changed
+      - result.diff is defined
+
+  - name: Update pod definition using apply and diff set to no
+    k8s:
+      namespace: '{{ diff_namespace }}'
+      apply: yes
+      template: "pod.j2"
+    diff: no
+    vars:
+      pod_name: "pod-apply"
+      pod_image: "busybox:1.33.0"
+    register: result
+
+  - name: check that output has no diff attribute
+    assert:
+      that:
+      - result is changed
+      - result.diff is not defined
+
+  # Using option 'state=patched'
+  - name: Create Pod using state=present and diff set to yes
+    k8s:
+      namespace: '{{ diff_namespace }}'
+      state: present
+      template: "pod.j2"
+    vars:
+      pod_name: "pod-patch"
+      pod_image: "busybox:1.32.0"
+    register: result
+
+  - name: Update pod definition using state=patched
+    k8s:
+      namespace: '{{ diff_namespace }}'
+      state: patched
+      template: "pod.j2"
+    diff: no
+    vars:
+      pod_name: "pod-patch"
+      pod_image: "busybox:1.33.0"
+      pod_label: "patching"
+    register: result
+
+  - name: check that output has no diff attribute
+    assert:
+      that:
+      - result is changed
+      - result.diff is not defined
+
+  - name: Update pod definition using state=patched and diff=yes
+    k8s:
+      namespace: '{{ diff_namespace }}'
+      state: patched
+      template: "pod.j2"
+    diff: yes
+    vars:
+      pod_name: "pod-patch"
+      pod_image: "busybox:1.33.0"
+      pod_label: "running"
+    register: result
+
+  - name: check that output has no diff attribute
+    assert:
+      that:
+      - result is changed
+      - result.diff is defined
+
+  # check diff mode using force=yes
+  - name: Create a ConfigMap
+    k8s:
+      kind: ConfigMap
+      name: '{{ diff_configmap }}'
+      namespace: '{{ diff_namespace }}'
+      definition:
+        data:
+          key: "initial value"
+    diff: yes
+    register: result
+
+  - name: check that output has no diff attribute
+    assert:
+      that:
+      - result is changed
+      - result.diff is not defined
+
+  - name: Update ConfigMap using force and diff=no
+    k8s:
+      kind: ConfigMap
+      name: '{{ diff_configmap }}'
+      namespace: '{{ diff_namespace }}'
+      force: yes
+      definition:
+        data:
+          key: "update value with diff=no"
+    diff: no
+    register: result
+
+  - name: check that output has no diff attribute
+    assert:
+      that:
+      - result is changed
+      - result.diff is not defined
+
+  - name: Update ConfigMap using force and diff=yes
+    k8s:
+      kind: ConfigMap
+      name: '{{ diff_configmap }}'
+      namespace: '{{ diff_namespace }}'
+      force: yes
+      definition:
+        data:
+          key: "update value with diff=yes"
+    diff: yes
+    register: result
+
+  - name: check that output has diff attribute
+    assert:
+      that:
+      - result is changed
+      - result.diff is defined
+
+  always:
+  - name: Ensure namespace is deleted
+    k8s:
+      state: absent
+      kind: Namespace
+      name: '{{ diff_namespace }}'
+    ignore_errors: true

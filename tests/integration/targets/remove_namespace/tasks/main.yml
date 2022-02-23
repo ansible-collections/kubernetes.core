@@ -1,0 +1,17 @@
+---
+- name: Delete existing namespace
+  kubernetes.core.k8s:
+    kind: Namespace
+    name: "{{ item }}"
+    state: absent
+    wait: yes
+  with_items: "{{ test_namespace }}"
+  when: test_namespace | type_debug == "list"
+
+- name: Delete existing namespace
+  kubernetes.core.k8s:
+    kind: Namespace
+    name: "{{ test_namespace }}"
+    state: absent
+    wait: yes
+  when: test_namespace | type_debug == "AnsibleUnicode"

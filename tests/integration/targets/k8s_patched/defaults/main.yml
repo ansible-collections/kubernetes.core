@@ -1,0 +1,4 @@
+---
+test_namespace:
+  - patched-namespace-1
+  - patched-namespace-2

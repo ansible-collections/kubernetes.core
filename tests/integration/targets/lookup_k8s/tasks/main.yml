@@ -1,0 +1,113 @@
+---
+- block:
+    - set_fact:
+        pre_test1: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+        pre_test2: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
+        pre_test3: "{{ query('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+        pre_test4: "{{ query('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
+
+    # https://github.com/ansible-collections/kubernetes.core/issues/147
+    - name: Create a namespace with label
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ test_namespace[0] }}"
+            labels:
+              namespace_label: "app_development"
+
+    - set_fact:
+        test1: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development', wantlist=True) }}"
+        test2: "{{ query('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+        test3: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0], wantlist=True) }}"
+        test4: "{{ query('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
+        test5: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+        test6: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
+        test7: "{{ lookup('kubernetes.core.k8s', kind='Ingress', api_version='networking.k8s.io/vINVALID', errors='ignore') }}"
+
+    - set_fact:
+        test8: "{{ lookup('kubernetes.core.k8s', kind='Ingress', api_version='networking.k8s.io/vINVALID') }}"
+      ignore_errors: true
+
+    - name: Assert that every test is passed
+      assert:
+        that:
+          # Before creating object
+          - pre_test1 is sequence and pre_test1 is not string
+          - pre_test1 | length == 0
+          - pre_test2 is sequence and pre_test2 is not string
+          - pre_test2 | length == 0
+          - pre_test3 is sequence and pre_test3 is not string
+          - pre_test3 | length == 0
+          - pre_test4 is sequence and pre_test4 is not string
+          - pre_test4 | length == 0
+          # After creating object
+          - test1 is sequence and test1 is not string
+          - test1 | length == 1
+          - test2 is sequence and test2 is not string
+          - test2 | length == 1
+          - test3 is sequence and test3 is not string
+          - test3 | length == 1
+          - test4 is sequence and test4 is not string
+          - test4 | length == 1
+          # Without wantlist=True lookup should return mapping
+          - test5 is mapping
+          - test6 is mapping
+          # errors='ignore'
+          - test7 is string
+          - test8 is not defined
+
+    - name: Create another namespace with label
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ test_namespace[1] }}"
+            labels:
+              namespace_label: "app_development"
+
+    - set_fact:
+        test1: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development', wantlist=True) }}"
+        test2: "{{ query('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+        test3: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0], wantlist=True) }}"
+        test4: "{{ query('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
+        test5: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[1], wantlist=True) }}"
+        test6: "{{ query('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[1]) }}"
+        test7: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
+        test8: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
+        test9: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[1]) }}"
+
+    - name: Assert that every test is passed after creating second object
+      assert:
+        that:
+          # After creating second object
+          - test1 is sequence and test1 is not string
+          - test1 | length == 2
+          - test2 is sequence and test2 is not string
+          - test2 | length == 2
+          - test3 is sequence and test3 is not string
+          - test3 | length == 1
+          - test4 is sequence and test4 is not string
+          - test4 | length == 1
+          - test5 is sequence and test5 is not string
+          - test5 | length == 1
+          - test6 is sequence and test6 is not string
+          - test6 | length == 1
+          # When label_selector is used it returns list irrespective of wantlist=True
+          - test7 is sequence and test7 is not string
+          # Without wantlist=True lookup should return mapping
+          - test8 is mapping
+          - test9 is mapping
+
+  always:
+    - name: Ensure that namespace is removed
+      k8s:
+        kind: Namespace
+        name: "app-development-{{ item }}"
+        state: absent
+      with_items:
+        - one
+        - two
+      ignore_errors: true

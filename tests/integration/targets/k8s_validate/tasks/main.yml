@@ -1,0 +1,232 @@
+- block:
+    - name: Create temp directory
+      tempfile:
+        state: directory
+        suffix: .test
+      register: remote_tmp_dir
+
+    - set_fact:
+        remote_tmp_dir: "{{ remote_tmp_dir.path }}"
+
+    - set_fact:
+        virtualenv: "{{ remote_tmp_dir }}/virtualenv"
+        virtualenv_command: "virtualenv --python {{ ansible_python_interpreter }}"
+
+    - set_fact:
+        virtualenv_interpreter: "{{ virtualenv }}/bin/python"
+
+    - pip:
+        name:
+          - kubernetes
+        virtualenv: "{{ virtualenv }}"
+        virtualenv_command: "{{ virtualenv_command }}"
+        virtualenv_site_packages: false
+
+    - name: Validate should fail gracefully without kubernetes-validate
+      k8s:
+        definition: &cmap
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: testmap
+            namespace: "{{ validate_namespace }}"
+          data:
+            mykey: myval
+        validate:
+          fail_on_error: true
+      ignore_errors: true
+      register: k8s_no_validate
+      vars:
+        ansible_python_interpreter: "{{ virtualenv_interpreter }}"
+
+    - assert:
+        that:
+          - k8s_no_validate is failed
+          - "k8s_no_validate.msg == 'kubernetes-validate python library is required to validate resources'"
+
+    - file:
+        path: "{{ virtualenv }}"
+        state: absent
+
+    - pip:
+        name:
+          - kubernetes
+          - kubernetes-validate
+        virtualenv: "{{ virtualenv }}"
+        virtualenv_command: "{{ virtualenv_command }}"
+        virtualenv_site_packages: false
+
+    - block:
+        - name: Simple ConfigMap should validate
+          k8s:
+            definition: *cmap
+            validate:
+              fail_on_error: true
+
+        - name: ConfigMap with extra properties should validate without strict
+          k8s:
+            definition:
+              <<: *cmap
+              extra: stuff
+            validate:
+              fail_on_error: true
+              strict: false
+
+        - name: ConfigMap with extra properties should not validate with strict
+          k8s:
+            definition:
+              <<: *cmap
+              extra: stuff
+            validate:
+              fail_on_error: true
+              strict: true
+          ignore_errors: true
+          register: result
+
+        - assert:
+            that:
+              - result is failed
+              - "\"('extra' was unexpected)\" is in result.msg"
+
+        - name: Property with invalid type should fail with strict
+          k8s:
+            definition:
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: testdeploy
+                namespace: "{{ validate_namespace }}"
+                labels:
+                  app: foo
+              spec:
+                replicas: lots
+                selector:
+                  matchLabels:
+                    app: foo
+                template:
+                  metadata:
+                    labels:
+                      app: foo
+                  spec:
+                    containers:
+                      - name: busybox
+                        image: busybox
+            validate:
+              fail_on_error: true
+              strict: false
+          ignore_errors: true
+          register: result
+
+        - assert:
+            that:
+              - result is failed
+              - result.status is not defined
+              - "\"'lots' is not of type 'integer'\" in result.msg"
+
+        - name: Create CRD
+          k8s:
+            definition: &crd
+              apiVersion: apiextensions.k8s.io/v1
+              kind: CustomResourceDefinition
+              metadata:
+                name: foobars.example.com
+              spec:
+                group: example.com
+                versions:
+                  - name: v1
+                    served: true
+                    storage: true
+                    schema:
+                      openAPIV3Schema:
+                        type: object
+                        properties:
+                          foo:
+                            type: string
+                scope: Namespaced
+                names:
+                  plural: foobars
+                  singular: foobar
+                  kind: Foobar
+
+        - pause:
+            seconds: 5
+
+        - name: Adding CRD should succeed with warning
+          k8s:
+            definition:
+              apiVersion: example.com/v1
+              kind: Foobar
+              metadata:
+                name: foobar
+                namespace: "{{ validate_namespace }}"
+              foo: bar
+            validate:
+              fail_on_error: true
+              strict: true
+          register: result
+
+        - assert:
+            that:
+              - result is successful
+              - "'warnings' in result"
+      vars:
+        ansible_python_interpreter: "{{ virtualenv_interpreter }}"
+
+    - name: stat default kube config
+      stat:
+        path: "~/.kube/config"
+      register: _stat
+
+    - name: validate that in-memory kubeconfig authentication failed for kubernetes < 17.17.0
+      block:
+        - set_fact:
+            virtualenv_kubeconfig: "{{ remote_tmp_dir }}/kubeconfig"
+
+        - pip:
+            name:
+              - "kubernetes<17.17.0"
+            virtualenv: "{{ virtualenv_kubeconfig }}"
+            virtualenv_command: "{{ virtualenv_command }}"
+            virtualenv_site_packages: false
+
+        - name: list namespace using in-memory kubeconfig
+          k8s_info:
+            kind: Namespace
+            kubeconfig: "{{ lookup('file', '~/.kube/config') | from_yaml }}"
+          register: _result
+          ignore_errors: true
+          vars:
+            ansible_python_interpreter: "{{ virtualenv_kubeconfig }}/bin/python"
+
+        - name: assert that task failed with proper message
+          assert:
+            that:
+              - '"kubernetes >= 17.17.0 is required" in _result.msg'
+      when:
+        - _stat.stat.exists
+        - _stat.stat.readable
+        - _stat.stat.isreg
+  always:
+    - name: Remove temp directory
+      file:
+        path: "{{ remote_tmp_dir }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Remove namespace
+      k8s:
+        kind: Namespace
+        name: "{{ validate_namespace }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Remove CRD
+      k8s:
+        definition: *crd
+        state: absent
+      ignore_errors: true
+
+  vars:
+    validate_namespace: "{{ test_namespace }}"
+  environment:
+    ENABLE_TURBO_MODE: false

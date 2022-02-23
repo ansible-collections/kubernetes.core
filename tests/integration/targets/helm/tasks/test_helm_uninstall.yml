@@ -1,0 +1,80 @@
+- name: validate helm version lower than 3.7.0
+  helm_test_version:
+    binary_path: "{{ helm_binary }}"
+    version: "3.7.0"
+  register: test_version
+
+- block:
+  - set_fact:
+      chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
+      chart_name: "test-wait-uninstall"
+      helm_namespace: "{{ test_namespace[2] }}"
+
+  - name: Install chart
+    helm:
+      binary_path: "{{ helm_binary }}"
+      name: "{{ chart_name }}"
+      chart_ref: "{{ chart_source }}"
+      namespace: "{{ helm_namespace }}"
+      create_namespace: true
+
+  - name: Delete chart with wait
+    helm:
+      state: absent
+      binary_path: "{{ helm_binary }}"
+      name: "{{ chart_name }}"
+      namespace: "{{ helm_namespace }}"
+      wait: yes
+    register: uninstall
+
+  - name: assert warning has been raised
+    assert:
+      that:
+      - uninstall.warnings
+
+  - name: Create temp directory
+    tempfile:
+      state: directory
+      suffix: .test
+    register: _result
+
+  - set_fact:
+      helm_tmp_dir: "{{ _result.path }}"
+
+  - name: Unarchive Helm binary
+    unarchive:
+      src: 'https://get.helm.sh/helm-v3.7.0-linux-amd64.tar.gz'
+      dest: "{{ helm_tmp_dir }}"
+      remote_src: yes
+
+  - name: Install chart
+    helm:
+      binary_path: "{{ helm_tmp_dir }}/linux-amd64/helm"
+      name: "{{ chart_name }}"
+      chart_ref: "{{ chart_source }}"
+      namespace: "{{ helm_namespace }}"
+      create_namespace: true
+
+  - name: uninstall chart again using recent version
+    helm:
+      state: absent
+      binary_path: "{{ helm_tmp_dir }}/linux-amd64/helm"
+      name: "{{ chart_name }}"
+      namespace: "{{ helm_namespace }}"
+      wait: yes
+    register: uninstall
+
+  always:
+  - name: Delete temp directory
+    file:
+      path: "{{ helm_tmp_dir }}"
+      state: absent
+    ignore_errors: true
+
+  - name: Remove namespace
+    k8s:
+      kind: Namespace
+      name: "{{ helm_namespace }}"
+      state: absent
+    ignore_errors: true
+  when: test_version.result
