@@ -633,6 +633,10 @@ class K8sAnsibleMixin(object):
             )
 
         def _statefulset_ready(statefulset):
+            # These may be None
+            updated_replicas = statefulset.status.updatedReplicas or 0
+            ready_replicas = statefulset.status.readyReplicas or 0
+
             return (
                 statefulset.status
                 and statefulset.spec.updateStrategy.type == "RollingUpdate"
@@ -640,8 +644,8 @@ class K8sAnsibleMixin(object):
                 == (statefulset.metadata.generation or 0)
                 and statefulset.status.updateRevision
                 == statefulset.status.currentRevision
-                and statefulset.status.updatedReplicas == statefulset.spec.replicas
-                and statefulset.status.readyReplicas == statefulset.spec.replicas
+                and updated_replicas == statefulset.spec.replicas
+                and ready_replicas == statefulset.spec.replicas
                 and statefulset.status.replicas == statefulset.spec.replicas
             )
 
