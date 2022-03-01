@@ -1,0 +1,3 @@
+---
+minor_changes:
+- helm_template - add show_only and release_namespace as module arguments (https://github.com/ansible-collections/kubernetes.core/issues/313).
