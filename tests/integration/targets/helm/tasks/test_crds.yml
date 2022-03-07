@@ -15,6 +15,7 @@
 
     - name: Install chart while skipping CRDs
       helm:
+        binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/helm_test_crds/{{ test_chart }}"
         namespace: "{{ helm_namespace }}"
         name: test-crds
@@ -46,6 +47,7 @@
     # Helm won't install CRDs into an existing release, so we need to delete this, first
     - name: Uninstall chart
       helm:
+        binary_path: "{{ helm_binary }}"
         namespace: "{{ helm_namespace }}"
         name: test-crds
         state: absent
