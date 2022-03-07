@@ -1,2 +1,2 @@
-regex_files=plugins/modules/k8s_log.py
+k8s_log
 time=27
