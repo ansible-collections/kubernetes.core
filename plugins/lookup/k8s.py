@@ -8,13 +8,13 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 DOCUMENTATION = """
-    lookup: k8s
+    name: k8s
 
     short_description: Query the K8s API
 
     author:
-      - Chris Houseknecht <@chouseknecht>
-      - Fabian von Feilitzsch <@fabianvf>
+      - Chris Houseknecht (@chouseknecht)
+      - Fabian von Feilitzsch (@fabianvf)
 
     description:
       - Uses the Kubernetes Python client to fetch a specific object by name, all matching objects within a
@@ -159,28 +159,19 @@ RETURN = """
   _list:
     description:
       - One ore more object definitions returned from the API.
-    type: complex
-    contains:
-      api_version:
-        description: The versioned schema of this representation of an object.
-        returned: success
-        type: str
-      kind:
-        description: Represents the REST resource this object represents.
-        returned: success
-        type: str
-      metadata:
-        description: Standard object metadata. Includes name, namespace, annotations, labels, etc.
-        returned: success
-        type: complex
-      spec:
-        description: Specific attributes of the object. Will vary based on the I(api_version) and I(kind).
-        returned: success
-        type: complex
-      status:
-        description: Current status details for the object.
-        returned: success
-        type: complex
+    type: list
+    elements: dict
+    sample:
+        - kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            creationTimestamp: "2022-03-04T13:59:49Z"
+            name: my-config-map
+            namespace: default
+            resourceVersion: "418"
+            uid: 5714b011-d090-4eac-8272-a0ea82ec0abd
+          data:
+            key1: val1
 """
 
 import os

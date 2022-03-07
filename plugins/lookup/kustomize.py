@@ -4,14 +4,14 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 DOCUMENTATION = """
-    lookup: kustomize
+    name: kustomize
 
     short_description: Build a set of kubernetes resources using a 'kustomization.yaml' file.
 
     version_added: "2.2.0"
 
     author:
-      - Aubin Bikouo <@abikouo>
+      - Aubin Bikouo (@abikouo)
     notes:
       - If both kustomize and kubectl are part of the PATH, kustomize will be used by the plugin.
     description:
@@ -52,29 +52,16 @@ EXAMPLES = """
 RETURN = """
   _list:
     description:
-      - One ore more object definitions returned from the tool execution.
-    type: complex
-    contains:
-      api_version:
-        description: The versioned schema of this representation of an object.
-        returned: success
-        type: str
-      kind:
-        description: Represents the REST resource this object represents.
-        returned: success
-        type: str
+      - YAML string for the object definitions returned from the tool execution.
+    type: str
+    sample:
+      kind: ConfigMap
+      apiVersion: v1
       metadata:
-        description: Standard object metadata. Includes name, namespace, annotations, labels, etc.
-        returned: success
-        type: complex
-      spec:
-        description: Specific attributes of the object. Will vary based on the I(api_version) and I(kind).
-        returned: success
-        type: complex
-      status:
-        description: Current status details for the object.
-        returned: success
-        type: complex
+        name: my-config-map
+        namespace: default
+      data:
+        key1: val1
 """
 
 from ansible.errors import AnsibleLookupError
