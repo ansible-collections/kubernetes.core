@@ -39,4 +39,4 @@ k8s_pod_template:
 
 test_namespace: "scale"
 
-k8s_wait_timeout: 240
+k8s_wait_timeout: 400
