@@ -38,3 +38,5 @@ k8s_pod_template:
   spec: "{{ k8s_pod_spec }}"
 
 test_namespace: "apply"
+
+k8s_wait_timeout: 240
