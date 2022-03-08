@@ -229,6 +229,8 @@
         resource_version: 0
         label_selectors:
           - app=nginx
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: scale_out
 
     - assert:
@@ -259,6 +261,8 @@
         namespace: "{{ scale_namespace }}"
         label_selectors:
           - app=nginx
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: scale_out
 
     - assert:

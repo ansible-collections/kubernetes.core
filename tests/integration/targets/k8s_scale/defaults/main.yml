@@ -37,4 +37,4 @@ k8s_pod_template:
   metadata: "{{ k8s_pod_metadata }}"
   spec: "{{ k8s_pod_spec }}"
 
-k8s_wait_timeout: 240
+k8s_wait_timeout: 400
