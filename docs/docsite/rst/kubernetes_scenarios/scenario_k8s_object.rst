@@ -54,20 +54,20 @@ In this use case / example, we will create a Pod in the given Kubernetes Cluster
         - kubernetes.core
       tasks:
         - name: Create a pod
-          k8s:
+          kubernetes.core.k8s:
             state: present
             definition:
-            apiVersion: v1
-            kind: Pod
-            metadata:
+              apiVersion: v1
+              kind: Pod
+              metadata:
                 name: "utilitypod-1"
                 namespace: default
                 labels:
-                    app: galaxy
-            spec:
+                  app: galaxy
+              spec:
                 containers:
-                - name: utilitypod
-                  image: busybox
+                  - name: utilitypod
+                    image: busybox
 
 Since Ansible utilizes the Kubernetes API to perform actions, in this use case we will be connecting directly to the Kubernetes cluster.
 
