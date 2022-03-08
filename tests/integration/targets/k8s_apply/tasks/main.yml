@@ -307,6 +307,7 @@
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
       vars:
         k8s_pod_name: apply-deploy
@@ -378,6 +379,7 @@
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
       vars:
         k8s_pod_name: apply-deploy
@@ -426,6 +428,7 @@
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
       vars:
         k8s_pod_name: apply-deploy

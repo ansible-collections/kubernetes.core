@@ -2,6 +2,7 @@
 - block:
     - set_fact:
         template_namespace: template-test
+        k8s_wait_timeout: 240
 
     - name: Ensure namespace exists
       k8s:
@@ -72,6 +73,7 @@
       kubernetes.core.k8s:
         template: "pod_template_one.j2"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_one: pod-1
         k8s_pod_namespace: "{{ template_namespace }}"
@@ -103,6 +105,7 @@
         template:
           path: "pod_template_one.j2"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_one: pod-3
         k8s_pod_namespace: "{{ template_namespace }}"
@@ -120,6 +123,7 @@
           variable_start_string: '[['
           variable_end_string: ']]'
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_two: pod-4
         k8s_pod_namespace: "[[ template_namespace ]]"
@@ -136,6 +140,7 @@
         template:
           path: "pod_template_three.j2"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_three_one: pod-5
         k8s_pod_name_three_two: pod-6
@@ -156,6 +161,7 @@
             variable_end_string: ']]'
           - path: "pod_template_three.j2"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_one: pod-7
         k8s_pod_name_two: pod-8
@@ -224,6 +230,7 @@
           - pod_template_one.j2
         continue_on_error: true
         wait: true
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: resource
       ignore_errors: true
 

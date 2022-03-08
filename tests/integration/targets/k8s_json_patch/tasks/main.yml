@@ -2,6 +2,7 @@
     namespace: json-patch
     pod: json-patch
     deployment: json-patch
+    k8s_wait_timeout: 240
 
   block:
     - name: Ensure namespace exists
@@ -28,6 +29,7 @@
                   - -c
                   - while true; do echo $(date); sleep 10; done
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
 
     - name: Add a label and replace the image in checkmode
       kubernetes.core.k8s_json_patch:
@@ -118,6 +120,7 @@
     - name: Create a simple deployment
       kubernetes.core.k8s:
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -154,6 +157,7 @@
             path: /spec/replicas
             value: 3
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: result
 
     - name: Assert all replicas are available

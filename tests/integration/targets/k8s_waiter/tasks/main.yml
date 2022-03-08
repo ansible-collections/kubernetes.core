@@ -21,6 +21,7 @@
             namespace: "{{ wait_namespace }}"
           spec: "{{ k8s_pod_spec }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-pod
         k8s_pod_image: alpine:3.8
@@ -49,8 +50,7 @@
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
         wait: yes
-        wait_sleep: 5
-        wait_timeout: 180
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-ds
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
@@ -81,7 +81,7 @@
             template: "{{ k8s_pod_template }}"
         wait: yes
         wait_sleep: 3
-        wait_timeout: 180
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-ds
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
@@ -114,7 +114,7 @@
             template: "{{ k8s_pod_template }}"
         wait: yes
         wait_sleep: 3
-        wait_timeout: 180
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-ds
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:3
@@ -203,6 +203,7 @@
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-deploy
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
@@ -233,6 +234,7 @@
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-deploy
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
@@ -279,6 +281,7 @@
             paused: True
         apply: no
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         wait_condition:
           type: Progressing
           status: Unknown

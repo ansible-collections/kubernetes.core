@@ -3,6 +3,7 @@
     - name: Set variables
       set_fact:
         namespace: "testingrollback"
+        k8s_wait_timeout: 240
 
     - name: Create a namespace
       k8s:
@@ -20,6 +21,7 @@
       k8s:
         state: present
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         inline: &deploy
           apiVersion: apps/v1
           kind: Deployment
@@ -53,6 +55,7 @@
       k8s:
         state: present
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -96,6 +99,7 @@
       k8s:
         state: present
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: DaemonSet
@@ -149,6 +153,7 @@
       k8s:
         state: present
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: DaemonSet

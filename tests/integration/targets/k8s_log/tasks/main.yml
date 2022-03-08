@@ -1,5 +1,8 @@
 ---
 - block:
+    - set_fact:
+        k8s_wait_timeout: 240
+
     - name: ensure that k8s-log namespace exists
       k8s:
         kind: Namespace
@@ -8,6 +11,7 @@
     - name: create hello-world deployment
       k8s:
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: Deployment
