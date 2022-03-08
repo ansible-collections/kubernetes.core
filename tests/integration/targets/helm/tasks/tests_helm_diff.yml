@@ -1,0 +1,153 @@
+---
+- name: Test helm diff functionality
+  vars:
+    test_chart_ref: "/tmp/test-chart"
+
+  block:
+    - name: Install helm diff
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: present
+        plugin_path: https://github.com/databus23/helm-diff
+
+    - name: Copy test chart
+      copy:
+        src: "test-chart/"
+        dest: "{{ test_chart_ref }}"
+
+    - name: Install local chart
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+        create_namespace: yes
+      register: install
+
+    - assert:
+        that:
+          - install is changed
+
+    - name: Modify local chart
+      blockinfile:
+        create: yes
+        path: "{{ test_chart_ref }}/templates/anothermap.yaml"
+        block: !unsafe |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: test-chart-another-configmap
+          data:
+            foo: {{ .Values.foo | default "bar" }}
+
+    - name: Upgrade local chart with modifications
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+      register: install
+
+    - assert:
+        that:
+          - install is changed
+
+    - name: Upgrade modified local chart idempotency check
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+      register: install
+
+    - assert:
+        that:
+          - install is not changed
+
+    - name: Modify values
+      blockinfile:
+        create: yes
+        path: "{{ test_chart_ref }}/values.yml"
+        block: |
+          ---
+          foo: baz
+
+    - name: Upgrade with values file
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+        values_files:
+          - "{{ test_chart_ref }}/values.yml"
+      register: install
+
+    - assert:
+        that:
+          - install is changed
+
+    - name: Upgrade with values file idempotency check
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+        values_files:
+          - "{{ test_chart_ref }}/values.yml"
+      register: install
+
+    - assert:
+        that:
+          - install is not changed
+
+    - name: Upgrade with values
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+        values:
+          foo: gaz
+      register: install
+
+    - assert:
+        that:
+          - install is changed
+
+    - name: Upgrade with values idempotency check
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+        values:
+          foo: gaz
+      register: install
+
+    - assert:
+        that:
+          - install is not changed
+
+  always:
+    - name: Remove chart directory
+      file:
+        path: "{{ test_chart_ref }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Uninstall helm diff
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: diff
+      ignore_errors: yes
+
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent
+        wait: yes
+        wait_timeout: 180
+      ignore_errors: yes
