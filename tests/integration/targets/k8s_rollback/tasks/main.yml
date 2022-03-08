@@ -8,7 +8,7 @@
       k8s:
         state: present
         wait: yes
-        wait_timeout: 30
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         inline: &deploy
           apiVersion: apps/v1
           kind: Deployment
@@ -38,6 +38,7 @@
       k8s:
         state: present
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -133,6 +134,7 @@
       k8s:
         state: present
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: DaemonSet
@@ -181,7 +183,7 @@
       k8s:
         state: present
         wait: yes
-        wait_timeout: 30
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: DaemonSet

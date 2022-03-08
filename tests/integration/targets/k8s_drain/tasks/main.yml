@@ -71,6 +71,7 @@
     k8s:
       namespace: '{{ test_namespace }}'
       wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       definition:
         apiVersion: v1
         kind: Pod
@@ -98,6 +99,7 @@
     k8s:
       namespace: '{{ test_namespace }}'
       wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       definition:
         apiVersion: apps/v1
         kind: Deployment

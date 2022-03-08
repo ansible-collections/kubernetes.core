@@ -3,6 +3,7 @@
     - name: create hello-world deployment
       k8s:
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -79,7 +80,7 @@
       k8s:
         state: present
         wait: yes
-        wait_timeout: 120
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         wait_condition:
           type: Complete
           status: 'True'

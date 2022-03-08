@@ -1,5 +1,6 @@
 - block:
   - set_fact:
+      k8s_wait_timeout: 400
       pod_00:
         apiVersion: v1
         kind: Pod
@@ -131,7 +132,7 @@
                   name: web
       wait: yes
       wait_sleep: 3
-      wait_timeout: 180
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
 
   - name: Create ConfigMap using generateName
     kubernetes.core.k8s:

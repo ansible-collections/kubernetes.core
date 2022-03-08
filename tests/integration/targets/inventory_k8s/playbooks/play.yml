@@ -39,7 +39,7 @@
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
         wait: yes
-        wait_timeout: 120
+        wait_timeout: 400
       vars:
         k8s_pod_name: inventory
         k8s_pod_image: python

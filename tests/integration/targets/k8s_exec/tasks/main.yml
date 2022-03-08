@@ -1,5 +1,6 @@
 ---
 - vars:
+    k8s_wait_timeout: 400
     pod: sleep-pod
     exec_pod_definition:
       apiVersion: v1
@@ -34,7 +35,7 @@
         definition: "{{ exec_pod_definition }}"
         wait: yes
         wait_sleep: 1
-        wait_timeout: 30
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
 
     - name: "Execute a command"
       k8s_exec:
@@ -71,7 +72,7 @@
         definition: "{{ multi_container_pod_definition }}"
         wait: yes
         wait_sleep: 1
-        wait_timeout: 30
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
 
     - name: Execute command on the first container of the pod
       k8s_exec:

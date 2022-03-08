@@ -40,7 +40,7 @@
       label_selectors:
       - ansible.dev/team=cloud
       wait: yes
-      wait_timeout: 180
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
 
   - name: Ensure resources have been deleted
     k8s_info:
@@ -82,7 +82,7 @@
       label_selectors:
       - environment in (test, qa)
       wait: yes
-      wait_timeout: 180
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
     register: result
 
   - name: check that no resources were deleted
@@ -110,7 +110,7 @@
       label_selectors:
       - environment in (production)
       wait: yes
-      wait_timeout: 180
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
     register: result
 
   - name: check result is changed

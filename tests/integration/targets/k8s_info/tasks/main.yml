@@ -30,7 +30,7 @@
         namespace: "{{ wait_namespace }}"
         wait: yes
         wait_sleep: 5
-        wait_timeout: 400
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: wait_info
 
     - name: Assert that pod creation succeeded
@@ -48,6 +48,7 @@
         namespace: "{{ wait_namespace }}"
         state: absent
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       ignore_errors: yes
       register: short_wait_remove_pod
 
@@ -103,7 +104,7 @@
         namespace: "{{ wait_namespace }}"
         wait: yes
         wait_sleep: 5
-        wait_timeout: 400
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         label_selectors:
           - run == multi-box
       register: wait_info
@@ -124,6 +125,7 @@
         namespace: "{{ wait_namespace }}"
         state: absent
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       ignore_errors: yes
       register: multi_pod_one_remove
 
@@ -141,6 +143,7 @@
         namespace: "{{ wait_namespace }}"
         state: absent
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       ignore_errors: yes
       register: multi_pod_two_remove
 
@@ -183,7 +186,7 @@
         name: does-not-exist
         namespace: "{{ wait_namespace }}"
         wait: yes
-        wait_timeout: 45
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: result
 
     - name: Check that module waited
@@ -215,7 +218,7 @@
         label_selectors:
           - thislabel=doesnotexist
         wait: yes
-        wait_timeout: 10
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: result
 
     - name: Assert no pods were found

@@ -46,6 +46,7 @@
         namespace: "{{ gc_namespace }}"
         name: "{{ wait_job.resources[0].metadata.name }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: job
 
     - name: Assert job's pod is running
@@ -59,7 +60,7 @@
         namespace: "{{ gc_namespace }}"
         state: absent
         wait: yes
-        wait_timeout: 100
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         delete_options:
           propagationPolicy: Foreground
 
@@ -96,6 +97,7 @@
         namespace: "{{ gc_namespace }}"
         name: "{{ wait_job.resources[0].metadata.name }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: job
 
     - name: Assert job's pod is running
@@ -109,7 +111,7 @@
         namespace: "{{ gc_namespace }}"
         state: absent
         wait: yes
-        wait_timeout: 100
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         delete_options:
           propagationPolicy: "Background"
 
@@ -147,6 +149,7 @@
         namespace: "{{ gc_namespace }}"
         name: "{{ wait_job.resources[0].metadata.name }}"
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: job
 
     - name: Assert job's pod is running
@@ -160,7 +163,7 @@
         namespace: "{{ gc_namespace }}"
         state: absent
         wait: yes
-        wait_timeout: 100
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         delete_options:
           propagationPolicy: "Orphan"
 
@@ -211,7 +214,7 @@
           preconditions:
             uid: "{{ job.result.metadata.uid }}"
         wait: yes
-        wait_timeout: 100
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
 
     - name: Check that job is deleted
       k8s_info:
