@@ -180,6 +180,12 @@ def get_api_client(module=None, **kwargs):
     for true_name, arg_name in AUTH_ARG_MAP.items():
         if module and module.params.get(arg_name) is not None:
             auth[true_name] = module.params.get(arg_name)
+        elif module and true_name in module.params and module.params.get(true_name) is not None:
+            # Aliases
+            auth[true_name] = module.params.get(true_name)
+        elif true_name in kwargs and kwargs.get(true_name) is not None:
+            # Aliases
+            auth[true_name] = kwargs.get(true_name)
         elif arg_name in kwargs and kwargs.get(arg_name) is not None:
             auth[true_name] = kwargs.get(arg_name)
         elif arg_name == "proxy_headers":
