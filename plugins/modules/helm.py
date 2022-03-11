@@ -142,6 +142,11 @@ options:
     type: bool
     default: False
     version_added: "0.11.1"
+  post_renderer:
+    description:
+      - Path to an executable to be used for post rendering.
+    type: str
+    version_added: "2.3.0"
   replace:
     description:
       - Reuse the given name, only if that name is a deleted release which remains in the history.
@@ -405,6 +410,7 @@ def deploy(
     atomic=False,
     create_namespace=False,
     replace=False,
+    post_renderer=None,
     skip_crds=False,
     timeout=None,
 ):
@@ -452,6 +458,9 @@ def deploy(
         with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         deploy_command += " -f=" + path
+
+    if post_renderer:
+        deploy_command = " --post-renderer=" + post_renderer
 
     if skip_crds:
         deploy_command += " --skip-crds"
@@ -615,6 +624,7 @@ def main():
             timeout=dict(type="str"),
             atomic=dict(type="bool", default=False),
             create_namespace=dict(type="bool", default=False),
+            post_renderer=dict(type="str"),
             replace=dict(type="bool", default=False),
             skip_crds=dict(type="bool", default=False),
             history_max=dict(type="int"),
@@ -671,6 +681,7 @@ def main():
     wait_timeout = module.params.get("wait_timeout")
     atomic = module.params.get("atomic")
     create_namespace = module.params.get("create_namespace")
+    post_renderer = module.params.get("post_renderer")
     replace = module.params.get("replace")
     skip_crds = module.params.get("skip_crds")
     history_max = module.params.get("history_max")
@@ -731,6 +742,7 @@ def main():
                 values_files=values_files,
                 atomic=atomic,
                 create_namespace=create_namespace,
+                post_renderer=post_renderer,
                 replace=replace,
                 skip_crds=skip_crds,
                 history_max=history_max,
@@ -783,6 +795,7 @@ def main():
                     values_files=values_files,
                     atomic=atomic,
                     create_namespace=create_namespace,
+                    post_renderer=post_renderer,
                     replace=replace,
                     skip_crds=skip_crds,
                     history_max=history_max,
