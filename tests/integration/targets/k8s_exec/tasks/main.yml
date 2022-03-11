@@ -1,0 +1,94 @@
+---
+- vars:
+    k8s_wait_timeout: 400
+    pod: sleep-pod
+    exec_pod_definition:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: "{{ pod }}"
+        namespace: "{{ test_namespace }}"
+      spec:
+        containers:
+          - name: sleeper
+            image: busybox
+            command: ["sleep", "infinity"]
+    multi_container_pod_name: pod-2
+    multi_container_pod_definition:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: "{{ multi_container_pod_name }}"
+        namespace: "{{ test_namespace }}"
+      spec:
+        containers:
+          - name: sleeper-1
+            image: busybox
+            command: ["sleep", "infinity"]
+          - name: sleeper-2
+            image: busybox
+            command: ["sleep", "infinity"]
+
+  block:
+    - name: "Create a pod"
+      k8s:
+        definition: "{{ exec_pod_definition }}"
+        wait: yes
+        wait_sleep: 1
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+
+    - name: "Execute a command"
+      k8s_exec:
+        pod: "{{ pod }}"
+        namespace: "{{ test_namespace }}"
+        command: cat /etc/resolv.conf
+      register: output
+
+    - name: "Show k8s_exec output"
+      debug:
+        var: output
+
+    - name: "Assert k8s_exec output is correct"
+      assert:
+        that:
+          - "'nameserver' in output.stdout"
+
+    - name: Check if rc is returned for the given command
+      k8s_exec:
+        namespace: "{{ test_namespace }}"
+        pod: "{{ pod }}"
+        command: 'false'
+      register: command_status
+      ignore_errors: True
+
+    - name: Check last command status
+      assert:
+        that:
+          - command_status.rc != 0
+          - command_status.return_code != 0
+
+    - name: Create a multi container pod
+      k8s:
+        definition: "{{ multi_container_pod_definition }}"
+        wait: yes
+        wait_sleep: 1
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+
+    - name: Execute command on the first container of the pod
+      k8s_exec:
+        pod: "{{ multi_container_pod_name }}"
+        namespace: "{{ test_namespace }}"
+        command: echo hello
+      register: output
+
+    - name: Assert k8s_exec output is correct
+      assert:
+        that:
+          - "'hello' in output.stdout"
+
+  always:
+    - name: "Cleanup namespace"
+      k8s:
+        kind: Namespace
+        name: "{{ test_namespace }}"
+        state: absent

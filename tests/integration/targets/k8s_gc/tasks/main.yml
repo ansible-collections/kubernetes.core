@@ -1,0 +1,236 @@
+---
+- vars:
+    gc_namespace: "{{ test_namespace }}"
+    gc_name: garbage-job
+    # This is a job definition that runs for 10 minutes and won't gracefully
+    # shutdown. It allows us to test foreground vs background deletion.
+    job_definition:
+      apiVersion: v1
+      kind: Job
+      metadata:
+        name: "{{ gc_name }}"
+        namespace: "{{ gc_namespace }}"
+      spec:
+        template:
+          metadata:
+            labels:
+              job: gc
+          spec:
+            containers:
+              - name: "{{ gc_name }}"
+                image: busybox
+                command:
+                  - sleep
+                  - "600"
+            restartPolicy: Never
+
+  block:
+    - name: Add a job
+      k8s:
+        definition: "{{ job_definition }}"
+
+    - name: Wait Job's pod
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        label_selectors:
+          - "job=gc"
+      register: wait_job
+      until: wait_job.resources
+      retries: 5
+      delay: 10
+
+    - name: Wait job's pod running
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        name: "{{ wait_job.resources[0].metadata.name }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      register: job
+
+    - name: Assert job's pod is running
+      assert:
+        that: job.resources[0].status.phase == "Running"
+
+    - name: Delete job in foreground
+      k8s:
+        kind: Job
+        name: "{{ gc_name }}"
+        namespace: "{{ gc_namespace }}"
+        state: absent
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        delete_options:
+          propagationPolicy: Foreground
+
+    - name: Test job's pod does not exist
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        label_selectors:
+          - "job=gc"
+      register: job
+
+    - name: Assert job's pod does not exist
+      assert:
+        that: not job.resources
+
+    - name: Add a job
+      k8s:
+        definition: "{{ job_definition }}"
+
+    - name: Wait Job's pod
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        label_selectors:
+          - "job=gc"
+      register: wait_job
+      until: wait_job.resources
+      retries: 5
+      delay: 10
+
+    - name: Wait job's pod running
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        name: "{{ wait_job.resources[0].metadata.name }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      register: job
+
+    - name: Assert job's pod is running
+      assert:
+        that: job.resources[0].status.phase == "Running"
+
+    - name: Delete job in background
+      k8s:
+        kind: Job
+        name: "{{ gc_name }}"
+        namespace: "{{ gc_namespace }}"
+        state: absent
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        delete_options:
+          propagationPolicy: "Background"
+
+    # The default grace period is 30s so this pod should still be running.
+    - name: Test job's pod exists
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        label_selectors:
+          - "job=gc"
+      register: job
+
+    - name: Assert job's pod still running
+      assert:
+        that: job.resources[0].status.phase == "Running"
+
+    - name: Add a job
+      k8s:
+        definition: "{{ job_definition }}"
+
+    - name: Wait Job's pod
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        label_selectors:
+          - "job=gc"
+      register: wait_job
+      until: wait_job.resources
+      retries: 5
+      delay: 10
+
+    - name: Wait job's pod running
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        name: "{{ wait_job.resources[0].metadata.name }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      register: job
+
+    - name: Assert job's pod is running
+      assert:
+        that: job.resources[0].status.phase == "Running"
+
+    - name: Orphan the job's pod
+      k8s:
+        kind: Job
+        name: "{{ gc_name }}"
+        namespace: "{{ gc_namespace }}"
+        state: absent
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        delete_options:
+          propagationPolicy: "Orphan"
+
+    - name: Ensure grace period has expired
+      pause:
+        seconds: 60
+
+    - name: Test that job's pod is still running
+      k8s_info:
+        kind: Pod
+        namespace: "{{ gc_namespace }}"
+        label_selectors:
+          - "job=gc"
+      register: job
+
+    - name: Assert job's pod is still running
+      assert:
+        that: job.resources[0].status.phase == "Running"
+
+    - name: Add a job
+      k8s:
+        definition: "{{ job_definition }}"
+      register: job
+
+    - name: Delete a job with failing precondition
+      k8s:
+        kind: Job
+        name: "{{ gc_name }}"
+        namespace: "{{ gc_namespace }}"
+        state: absent
+        delete_options:
+          preconditions:
+            uid: not-a-valid-uid
+      ignore_errors: yes
+      register: result
+
+    - name: Assert that deletion failed
+      assert:
+        that: result is failed
+
+    - name: Delete a job using a valid precondition
+      k8s:
+        kind: Job
+        name: "{{ gc_name }}"
+        namespace: "{{ gc_namespace }}"
+        state: absent
+        delete_options:
+          preconditions:
+            uid: "{{ job.result.metadata.uid }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+
+    - name: Check that job is deleted
+      k8s_info:
+        kind: Job
+        namespace: "{{ gc_namespace }}"
+        name: "{{ gc_name }}"
+      register: job
+
+    - name: Assert job is deleted
+      assert:
+        that: not job.resources
+
+  always:
+    - name: Delete namespace
+      k8s:
+        kind: Namespace
+        name: "{{ gc_namespace }}"
+        state: absent
+      ignore_errors: true

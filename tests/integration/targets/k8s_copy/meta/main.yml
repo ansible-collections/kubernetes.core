@@ -1,0 +1,5 @@
+---
+collections:
+  - kubernetes.core
+dependencies:
+  - setup_namespace

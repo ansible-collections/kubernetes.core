@@ -15,4 +15,8 @@ tests/integration/cloud-config-*
 .cache
 
 # Helm charts
-molecule/default/*-chart-*.tgz
+tests/integration/*-chart-*.tgz
+
+# ansible-test generated file
+tests/integration/inventory
+tests/integration/*-*.yml

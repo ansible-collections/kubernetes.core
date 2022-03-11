@@ -22,10 +22,7 @@ test-sanity:
 	ansible-test sanity --docker -v --color --python $(PYTHON_VERSION) $(?TEST_ARGS)
 
 test-integration:
-	ansible-test integration --docker -v --color --retry-on-error --python $(PYTHON_VERSION) --continue-on-error --diff --coverage $(?TEST_ARGS)
-
-test-molecule:
-	molecule test
+	ansible-test integration --diff --no-temp-workdir --color --skip-tags False --retry-on-error --continue-on-error --python $(PYTHON_VERSION) -v --coverage $(?TEST_ARGS)
 
 test-unit:
 	ansible-test units --docker -v --color --python $(PYTHON_VERSION) $(?TEST_ARGS)

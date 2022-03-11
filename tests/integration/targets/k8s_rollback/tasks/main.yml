@@ -1,0 +1,301 @@
+---
+- block:
+    - name: Set variables
+      set_fact:
+        namespace: "{{ test_namespace }}"
+
+    - name: Create a deployment
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        inline: &deploy
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx-deploy
+            labels:
+              app: nginx
+            namespace: "{{ namespace }}"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: nginx
+            template:
+              metadata:
+                labels:
+                  app: nginx
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:1.17
+                    ports:
+                      - containerPort: 80
+
+
+    - name: Crash the existing deployment
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx-deploy
+            labels:
+              app: nginx
+            namespace: "{{ namespace }}"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: nginx
+            template:
+              metadata:
+                labels:
+                  app: nginx
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:1.0.23449928384992872784
+                    ports:
+                      - containerPort: 80
+      ignore_errors: yes
+      register: crash
+
+    - name: Assert that the Deployment failed
+      assert:
+        that:
+          - crash is failed
+
+    - name: Read the deployment
+      k8s_info:
+        kind: Deployment
+        name: nginx-deploy
+        namespace: "{{ namespace }}"
+      register: deployment
+
+    - set_fact:
+        failed_version: "{{ deployment.resources[0].metadata.annotations['deployment.kubernetes.io/revision'] }}"
+
+    - name: Rolling Back the crashed deployment (check mode)
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: nginx-deploy
+        namespace: "{{ namespace }}"
+      register: result
+      check_mode: yes
+
+    - assert:
+        that:
+          - result is changed
+
+    - name: Read the deployment
+      k8s_info:
+        kind: Deployment
+        name: nginx-deploy
+        namespace: "{{ namespace }}"
+      register: deployment
+
+    - name: Validate that Rollback using check_mode did not changed the Deployment
+      assert:
+        that:
+          - failed_version == deployment.resources[0].metadata.annotations['deployment.kubernetes.io/revision']
+
+    - name: Rolling Back the crashed deployment
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: nginx-deploy
+        namespace: "{{ namespace }}"
+      register: result
+
+    - name: assert rollback is changed
+      assert:
+        that:
+          - result is changed
+
+    - name: Read the deployment once again
+      k8s_info:
+        kind: Deployment
+        name: nginx-deploy
+        namespace: "{{ namespace }}"
+      register: deployment
+
+    - name: Validate that Rollback changed the Deployment
+      assert:
+        that:
+          - failed_version | int + 1 == deployment.resources[0].metadata.annotations['deployment.kubernetes.io/revision'] | int
+
+    - name: Create a DaemonSet
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        definition:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: fluentd-elasticsearch
+            namespace: "{{ namespace }}"
+            labels:
+              k8s-app: fluentd-logging
+          spec:
+            selector:
+              matchLabels:
+                name: fluentd-elasticsearch
+            template:
+              metadata:
+                labels:
+                  name: fluentd-elasticsearch
+              spec:
+                tolerations:
+                  - key: node-role.kubernetes.io/master
+                    effect: NoSchedule
+                containers:
+                  - name: fluentd-elasticsearch
+                    image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+                    resources:
+                      limits:
+                        memory: 200Mi
+                      requests:
+                        cpu: 100m
+                        memory: 200Mi
+                    volumeMounts:
+                      - name: varlog
+                        mountPath: /var/log
+                      - name: varlibdockercontainers
+                        mountPath: /var/lib/docker/containers
+                        readOnly: true
+                terminationGracePeriodSeconds: 30
+                volumes:
+                  - name: varlog
+                    hostPath:
+                      path: /var/log
+                  - name: varlibdockercontainers
+                    hostPath:
+                      path: /var/lib/docker/containers
+
+    - name: Crash the existing DaemonSet
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        definition:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: fluentd-elasticsearch
+            namespace: "{{ namespace }}"
+            labels:
+              k8s-app: fluentd-logging
+          spec:
+            selector:
+              matchLabels:
+                name: fluentd-elasticsearch
+            template:
+              metadata:
+                labels:
+                  name: fluentd-elasticsearch
+              spec:
+                tolerations:
+                  - key: node-role.kubernetes.io/master
+                    effect: NoSchedule
+                containers:
+                  - name: fluentd-elasticsearch
+                    image: quay.io/fluentd_elasticsearch/fluentd:v2734894949
+                    resources:
+                      limits:
+                        memory: 200Mi
+                      requests:
+                        cpu: 100m
+                        memory: 200Mi
+                    volumeMounts:
+                      - name: varlog
+                        mountPath: /var/log
+                      - name: varlibdockercontainers
+                        mountPath: /var/lib/docker/containers
+                        readOnly: true
+                terminationGracePeriodSeconds: 30
+                volumes:
+                  - name: varlog
+                    hostPath:
+                      path: /var/log
+                  - name: varlibdockercontainers
+                    hostPath:
+                      path: /var/lib/docker/containers
+      register: crash
+      ignore_errors: true
+
+    - name: Assert that the Daemonset failed
+      assert:
+        that:
+          - crash is failed
+
+    - name: Read the crashed DaemonSet
+      k8s_info:
+        kind: DaemonSet
+        name: fluentd-elasticsearch
+        namespace: "{{ namespace }}"
+      register: result
+
+    - set_fact:
+        failed_version: "{{ result.resources[0].metadata.annotations['deprecated.daemonset.template.generation'] }}"
+
+    - name: Rolling Back the crashed DaemonSet (check_mode)
+      k8s_rollback:
+        api_version: apps/v1
+        kind: DaemonSet
+        name: fluentd-elasticsearch
+        namespace: "{{ namespace }}"
+      register: result
+      check_mode: yes
+
+    - name: Read the DaemonSet
+      k8s_info:
+        kind: DaemonSet
+        name: fluentd-elasticsearch
+        namespace: "{{ namespace }}"
+      register: result
+
+    - name: Validate that Rollback using check_mode did not changed the DaemonSet version
+      assert:
+        that:
+          - failed_version == result.resources[0].metadata.annotations['deprecated.daemonset.template.generation']
+
+    - name: Rolling Back the crashed DaemonSet
+      k8s_rollback:
+        api_version: apps/v1
+        kind: DaemonSet
+        name: fluentd-elasticsearch
+        namespace: "{{ namespace }}"
+      register: result
+
+    - name: assert rollback is changed
+      assert:
+        that:
+          - result is changed
+
+    - name: Read the DaemonSet
+      k8s_info:
+        kind: DaemonSet
+        name: fluentd-elasticsearch
+        namespace: "{{ namespace }}"
+      register: result
+
+    - name: Validate that Rollback changed the Daemonset version
+      assert:
+        that:
+          - failed_version | int + 1 == result.resources[0].metadata.annotations['deprecated.daemonset.template.generation'] | int
+
+  always:
+    - name: Delete {{ namespace }} namespace
+      k8s:
+        name: "{{ namespace }}"
+        kind: Namespace
+        api_version: v1
+        state: absent
+      ignore_errors: yes

@@ -1,0 +1,25 @@
+---
+k8s_pod_template:
+  metadata:
+    labels:
+      app: "{{ k8s_pod_name }}"
+  spec:
+    serviceAccount: "default"
+    containers:
+      - image: "{{ k8s_pod_image }}"
+        imagePullPolicy: Always
+        name: "{{ k8s_pod_name }}"
+        command: []
+        readinessProbe:
+          initialDelaySeconds: 15
+          exec:
+            command:
+              - /bin/true
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "100Mi"
+        ports: []
+        env: []
+
+test_namespace: "delete"

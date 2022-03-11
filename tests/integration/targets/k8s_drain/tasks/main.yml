@@ -1,0 +1,301 @@
+---
+- block:
+  - name: Set common facts
+    set_fact:
+      drain_daemonset_name: "promotheus-dset"
+      drain_pod_name: "pod-drain"
+      drain_deployment_emptydir_name: "deployment-emptydir-drain"
+
+  # It seems that the default ServiceAccount can take a bit to be created
+  # right after a cluster is brought up. This can lead to the ServiceAccount
+  # admission controller rejecting a Pod creation request because the
+  # ServiceAccount does not yet exist.
+  - name: Wait for default serviceaccount to be created
+    k8s_info:
+      kind: ServiceAccount
+      name: default
+      namespace: "{{ test_namespace }}"
+      wait: yes
+
+  - name: list cluster nodes
+    k8s_info:
+      kind: node
+    register: nodes
+
+  - name: Select uncordoned nodes
+    set_fact:
+      uncordoned_nodes: "{{ nodes.resources | selectattr('spec.unschedulable', 'undefined') | map(attribute='metadata.name') | list}}"
+
+  - name: Assert that at least one node is schedulable
+    assert:
+      that:
+      - uncordoned_nodes | length > 0
+
+  - name: select node to drain
+    set_fact:
+      node_to_drain: '{{ uncordoned_nodes[0] }}'
+
+  - name: Deploy daemonset on cluster
+    k8s:
+      namespace: '{{ test_namespace }}'
+      definition:
+        apiVersion: apps/v1
+        kind: DaemonSet
+        metadata:
+          name: '{{ drain_daemonset_name }}'
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchFields:
+                  - key: metadata.name
+                    operator: In
+                    values:
+                    - '{{ node_to_drain }}'
+          selector:
+            matchLabels:
+              name: prometheus-exporter
+          template:
+            metadata:
+              labels:
+                name: prometheus-exporter
+            spec:
+              containers:
+              - name: prometheus
+                image: prom/node-exporter
+                ports:
+                - containerPort: 80
+
+  - name: Create Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet.
+    k8s:
+      namespace: '{{ test_namespace }}'
+      wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ drain_pod_name }}'
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchFields:
+                  - key: metadata.name
+                    operator: In
+                    values:
+                    - '{{ node_to_drain }}'
+          containers:
+          - name: c0
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+
+  - name: Create Deployment with an emptyDir volume.
+    k8s:
+      namespace: '{{ test_namespace }}'
+      wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: '{{ drain_deployment_emptydir_name }}'
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              drain: emptyDir
+          template:
+            metadata:
+              labels:
+                drain: emptyDir
+            spec:
+              metadata:
+                labels:
+                  drain: emptyDir
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchFields:
+                      - key: metadata.name
+                        operator: In
+                        values:
+                        - '{{ node_to_drain }}'
+              containers:
+              - name: c0
+                image: busybox
+                command:
+                - /bin/sh
+                - -c
+                - while true;do date;sleep 5; done
+                volumeMounts:
+                - mountPath: /emptydir
+                  name: emptydir
+              volumes:
+              - name: emptydir
+                emptyDir: {}
+
+  - name: Register emptyDir Pod name
+    k8s_info:
+      namespace: '{{ test_namespace }}'
+      kind: Pod
+      label_selectors:
+      - "drain = emptyDir"
+    register: emptydir_pod_result
+    failed_when:
+    - emptydir_pod_result.resources | length != 1
+
+  - name: Cordon node
+    k8s_drain:
+      state: cordon
+      name: '{{ node_to_drain }}'
+    register: cordon
+
+  - name: assert that cordon is changed
+    assert:
+      that:
+      - cordon is changed
+
+  - name: Test cordon idempotency
+    k8s_drain:
+      state: cordon
+      name: '{{ node_to_drain }}'
+    register: cordon
+
+  - name: assert that cordon is not changed
+    assert:
+      that:
+      - cordon is not changed
+
+  - name: Get pods
+    k8s_info:
+      kind: Pod
+      namespace: '{{ test_namespace }}'
+    register: Pod
+
+  - name: assert that pods are running on cordoned node
+    assert:
+      that:
+      - "{{ Pod.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_drain) | list | length > 0 }}"
+
+  - name: Uncordon node
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+    register: uncordon
+
+  - name: assert that uncordon is changed
+    assert:
+      that:
+      - uncordon is changed
+
+  - name: Test uncordon idempotency
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+    register: uncordon
+
+  - name: assert that uncordon is not changed
+    assert:
+      that:
+      - uncordon is not changed
+
+  - name: Drain node
+    k8s_drain:
+      state: drain
+      name: '{{ node_to_drain }}'
+    ignore_errors: true
+    register: drain_result
+
+  - name: assert that drain failed due to DaemonSet managed Pods
+    assert:
+      that:
+      - drain_result is failed
+      - '"cannot delete DaemonSet-managed Pods" in drain_result.msg'
+      - '"cannot delete Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet" in drain_result.msg'
+      - '"cannot delete Pods with local storage" in drain_result.msg'
+
+  - name: Drain node using ignore_daemonsets, force, and delete_emptydir_data options
+    k8s_drain:
+      state: drain
+      name: '{{ node_to_drain }}'
+      delete_options:
+        force: true
+        ignore_daemonsets: true
+        delete_emptydir_data: true
+        wait_timeout: 0
+    register: drain_result
+
+  - name: assert that node has been drained
+    assert:
+      that:
+      - drain_result is changed
+      - '"node {{ node_to_drain }} marked unschedulable." in drain_result.result'
+
+  - name: assert that unmanaged pod were deleted
+    k8s_info:
+      namespace: '{{ test_namespace }}'
+      kind: Pod
+      name: '{{ drain_pod_name }}'
+    register: _result
+    failed_when: _result.resources
+
+  - name: assert that emptyDir pod was deleted
+    k8s_info:
+      namespace: '{{ test_namespace }}'
+      kind: Pod
+      name: "{{ emptydir_pod_result.resources[0].metadata.name }}"
+    register: _result
+    failed_when: _result.resources | length != 0
+
+  - name: Test drain idempotency
+    k8s_drain:
+      state: drain
+      name: '{{ node_to_drain }}'
+      delete_options:
+        force: true
+        ignore_daemonsets: true
+        delete_emptydir_data: true
+    register: drain_result
+
+  - name: Check idempotency
+    assert:
+      that:
+      - drain_result is not changed
+
+  - name: Get DaemonSet
+    k8s_info:
+      kind: DaemonSet
+      namespace: '{{ test_namespace }}'
+      name: '{{ drain_daemonset_name }}'
+    register: dset_result
+
+  - name: assert that daemonset managed pods were not removed
+    assert:
+      that:
+      - dset_result.resources | list | length > 0
+
+  - name: Uncordon node
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+
+  always:
+  - name: Uncordon node
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+    when: node_to_drain is defined
+    ignore_errors: true
+
+  - name: delete namespace
+    k8s:
+      state: absent
+      kind: namespace
+      name: '{{ test_namespace }}'

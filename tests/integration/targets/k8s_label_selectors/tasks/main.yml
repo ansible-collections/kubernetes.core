@@ -1,0 +1,652 @@
+---
+- block:
+  - set_fact:
+      selector_namespace: "{{ test_namespace }}"
+      selector_pod_delete: "pod-selector-delete"
+      selector_pod_apply: "pod-selector-apply"
+      selector_pod_create:
+      - "pod-selector-apply-00"
+      - "pod-selector-apply-01"
+      - "pod-selector-apply-02"
+      - "pod-selector-apply-03"
+
+  # Resource deletion using label selector (equality-based requirement)
+  - name: Create simple pod
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_delete }}-00'
+          labels:
+            ansible.dev/team: "cloud"
+            ansible.release/version: upstream
+            ansible.dev/test: "true"
+        spec:
+          containers:
+          - name: c0
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+
+  - name: Delete all resource using selector
+    k8s:
+      state: absent
+      kind: Pod
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - ansible.dev/team=cloud
+      wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+
+  - name: Ensure resources have been deleted
+    k8s_info:
+      kind: Pod
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - ansible.dev/team=cloud
+    register: result
+
+  - assert:
+      that:
+      - result.resources == []
+
+  # Resource deletion using label selector (set-based requirement)
+  - name: Create simple pod
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_delete }}-01'
+          labels:
+            environment: production
+        spec:
+          containers:
+          - name: c0
+            image: alpine:3.14.0
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+
+  - name: Delete all resource using selector
+    k8s:
+      state: absent
+      kind: Pod
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - environment in (test, qa)
+      wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+    register: result
+
+  - name: check that no resources were deleted
+    assert:
+      that:
+      - result is not changed
+
+  - name: Ensure resources have not been deleted
+    k8s_info:
+      kind: Pod
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - environment in (production)
+    register: result
+
+  - assert:
+      that:
+      - result.resources | list | length > 0
+
+  - name: Delete all resource using selector
+    k8s:
+      state: absent
+      kind: Pod
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - environment in (production)
+      wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+    register: result
+
+  - name: check result is changed
+    assert:
+      that:
+      - result is changed
+
+  - name: Ensure resources have not been deleted
+    k8s_info:
+      kind: Pod
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - environment in (production)
+    register: result
+
+  - assert:
+      that:
+      - result.resources | list | length == 0
+
+  # Resource creation using label selector
+  - name: Create simple pod using label_selectors option (equality-based requirement)
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - container.image=fedora
+      definition: |
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[0] }}'
+          labels:
+            container.image: busybox
+        spec:
+          containers:
+          - name: c0
+            image: busybox
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[1] }}'
+          labels:
+            container.image: alpine
+        spec:
+          containers:
+          - name: c0
+            image: alpine
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[2] }}'
+          labels:
+            container.image: python
+            release: dev
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[3] }}'
+          labels:
+            container.image: python
+            release: dev
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+    register: result
+
+  - assert:
+      that:
+      - result is not changed
+
+  - name: Create simple pod using label_selectors option
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - container.image==alpine
+      definition: |
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[0] }}'
+          labels:
+            container.image: busybox
+        spec:
+          containers:
+          - name: c0
+            image: busybox
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[1] }}'
+          labels:
+            container.image: alpine
+        spec:
+          containers:
+          - name: c0
+            image: alpine
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[2] }}'
+          labels:
+            container.image: python
+            environment: test
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[3] }}'
+          labels:
+            container.image: python
+            environment: production
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+    register: result
+
+  - assert:
+      that:
+      - result is changed
+
+  - name: list pod created
+    k8s_info:
+      namespace: '{{ selector_namespace }}'
+      kind: Pod
+      label_selectors:
+      - container.image
+    register: pod_created
+
+  - name: Validate that pod with matching label was created
+    assert:
+      that:
+      - pods_created | length == 1
+      - selector_pod_create[1] in pods_created
+    vars:
+      pods_created: '{{ pod_created.resources | map(attribute="metadata.name") | list }}'
+
+  - name: Create simple pod using label_selectors option (set-based requirement)
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - "!environment"
+      definition: |
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[0] }}'
+          labels:
+            container.image: busybox
+        spec:
+          containers:
+          - name: c0
+            image: busybox
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[1] }}'
+          labels:
+            container.image: alpine
+        spec:
+          containers:
+          - name: c0
+            image: alpine
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[2] }}'
+          labels:
+            container.image: python
+            environment: test
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[3] }}'
+          labels:
+            container.image: python
+            environment: production
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+    register: result
+
+  - assert:
+      that:
+      - result is changed
+
+  - name: list pod created
+    k8s_info:
+      namespace: '{{ selector_namespace }}'
+      kind: Pod
+      label_selectors:
+      - container.image
+    register: pod_created
+
+  - name: Validate that pod with matching label was created
+    assert:
+      that:
+      - pods_created | length == 2
+      - selector_pod_create[0] in pods_created
+    vars:
+      pods_created: '{{ pod_created.resources | map(attribute="metadata.name") | list }}'
+
+  - name: Create simple pod using label_selectors option (set-based requirement)
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - environment in (test)
+      definition: |
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[0] }}'
+          labels:
+            container.image: busybox
+        spec:
+          containers:
+          - name: c0
+            image: busybox
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[1] }}'
+          labels:
+            container.image: alpine
+        spec:
+          containers:
+          - name: c0
+            image: alpine
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[2] }}'
+          labels:
+            container.image: python
+            environment: test
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[3] }}'
+          labels:
+            container.image: python
+            environment: production
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+    register: result
+
+  - assert:
+      that:
+      - result is changed
+
+  - name: list pod created
+    k8s_info:
+      namespace: '{{ selector_namespace }}'
+      kind: Pod
+      label_selectors:
+      - container.image
+    register: pod_created
+
+  - name: Validate that pod with matching label was created
+    assert:
+      that:
+      - pods_created | length == 3
+      - selector_pod_create[2] in pods_created
+    vars:
+      pods_created: '{{ pod_created.resources | map(attribute="metadata.name") | list }}'
+
+  - name: Create simple pod using label_selectors option (set-based requirement)
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      label_selectors:
+      - environment notin (test)
+      definition: |
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[0] }}'
+          labels:
+            container.image: busybox
+        spec:
+          containers:
+          - name: c0
+            image: busybox
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[1] }}'
+          labels:
+            container.image: alpine
+        spec:
+          containers:
+          - name: c0
+            image: alpine
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[2] }}'
+          labels:
+            container.image: python
+            environment: test
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+        ---
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_create[3] }}'
+          labels:
+            container.image: python
+            environment: production
+        spec:
+          containers:
+          - name: c0
+            image: python
+            command:
+              - /bin/sh
+              - -c
+              - while true;do date;sleep 5; done
+    register: result
+
+  - assert:
+      that:
+      - result is changed
+
+  - name: list pod created
+    k8s_info:
+      namespace: '{{ selector_namespace }}'
+      kind: Pod
+      label_selectors:
+      - container.image
+    register: pod_created
+
+  - name: Validate that pod with matching label was created
+    assert:
+      that:
+      - pods_created | length == 4
+      - selector_pod_create[3] in pods_created
+    vars:
+      pods_created: '{{ pod_created.resources | map(attribute="metadata.name") | list }}'
+
+  # Resource update using apply
+  - name: Create simple pod using apply
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      apply: yes
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_apply }}'
+          labels:
+            environment: test
+        spec:
+          containers:
+          - name: c0
+            image: busybox:1.31.0
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+
+  - name: Apply new pod definition using label_selectors (no match)
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      apply: yes
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_apply }}'
+          labels:
+            environment: test
+        spec:
+          containers:
+          - name: c0
+            image: busybox:1.33.0
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+      label_selectors:
+      - environment=qa
+    register: result
+
+  - name: check task output
+    assert:
+      that:
+      - result is not changed
+      - '"filtered by label_selectors" in result.msg'
+
+  - name: Apply new pod definition using label_selectors
+    k8s:
+      namespace: '{{ selector_namespace }}'
+      apply: yes
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ selector_pod_apply }}'
+          labels:
+            environment: test
+        spec:
+          containers:
+          - name: c0
+            image: busybox:1.33.0
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+      label_selectors:
+      - environment!=qa
+    register: result
+
+  - name: check task output
+    assert:
+      that:
+      - result is changed
+
+  always:
+  - name: Ensure namespace is deleted
+    k8s:
+      kind: Namespace
+      name: '{{ selector_namespace }}'
+      state: absent
+    ignore_errors: true

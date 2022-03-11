@@ -1,0 +1,188 @@
+- block:
+  - set_fact:
+      k8s_wait_timeout: 400
+      pod_00:
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: py-container
+            image: python:3.7-alpine
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+      pod_01:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          generateName: pod-
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - while true; do echo $(date); sleep 10; done
+            image: python:3.7-alpine
+            imagePullPolicy: IfNotPresent
+            name: py-container
+
+  - name: Create namespace using generateName
+    k8s:
+      definition:
+        kind: Namespace
+        metadata:
+          generateName: "test-"
+          labels:
+            ansible: test
+    register: result
+
+  - set_fact:
+      namespace: "{{ result.result.metadata.name }}"
+
+  - name: Create Pod without name
+    k8s:
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_00 }}"
+    register: result
+    ignore_errors: true
+
+  - name: assert pod creation failed
+    assert:
+      that:
+      - result is failed
+      - "'name or generateName is required' in result.msg"
+
+  - name: create pod using name parameter should succeed
+    k8s:
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_00 }}"
+      name: pod-01
+
+  - name: list Pod for namespace
+    k8s_info:
+      kind: Pod
+      namespace: "{{ namespace }}"
+    register: pods
+
+  - name: assert pod has been created
+    assert:
+      that:
+      - "{{ pods.resources | length == 1 }}"
+
+  - name: create pod using generate_name parameter should succeed
+    k8s:
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_00 }}"
+      generate_name: pod-
+
+  - name: list Pod for namespace
+    k8s_info:
+      kind: Pod
+      namespace: "{{ namespace }}"
+    register: pods
+
+  - name: assert pod has been created
+    assert:
+      that:
+      - "{{ pods.resources | length == 2 }}"
+
+  - name: create pod using metadata.generateName parameter should succeed
+    k8s:
+      namespace: "{{ namespace }}"
+      definition: "{{ pod_01 }}"
+
+  - name: list Pod for namespace
+    k8s_info:
+      kind: Pod
+      namespace: "{{ namespace }}"
+    register: pods
+
+  - name: assert pod has been created
+    assert:
+      that:
+      - "{{ pods.resources | length == 3 }}"
+
+  - name: create object using metadata.generateName should support wait option
+    k8s:
+      namespace: "{{ namespace }}"
+      definition:
+        apiVersion: apps/v1
+        kind: StatefulSet
+        metadata:
+          generateName: test-
+        spec:
+          selector:
+            matchLabels:
+              app: nginx
+          serviceName: "nginx"
+          replicas: 3
+          template:
+            metadata:
+              labels:
+                app: nginx
+            spec:
+              terminationGracePeriodSeconds: 10
+              containers:
+              - name: nginx
+                image: k8s.gcr.io/nginx-slim:0.8
+                ports:
+                - containerPort: 80
+                  name: web
+      wait: yes
+      wait_sleep: 3
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+
+  - name: Create ConfigMap using generateName
+    kubernetes.core.k8s:
+      kind: ConfigMap
+      namespace: "{{ namespace }}"
+      generate_name: cmap-
+      append_hash: yes
+    register: config
+
+  - name: assert that configmap has been created using generateName
+    assert:
+      that:
+      - "config.result.metadata.name.startswith('cmap-')"
+
+  - name: Create Pod with failing container
+    kubernetes.core.k8s:
+      namespace: "{{ namespace }}"
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: pod1
+        spec:
+          containers:
+          - image: adslfkjadslfkjadslkfjsadf
+            name: non-existent-container-image
+
+  - name: Create second Pod using wait (it should not wait for the first container)
+    kubernetes.core.k8s:
+      namespace: "{{ namespace }}"
+      generate_name: "pod2-"
+      definition:
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - while true; do echo $(date); sleep 10; done
+            image: python:3.7-alpine
+            imagePullPolicy: Always
+            name: c0
+      wait: yes
+      wait_timeout: 10
+
+  always:
+  - name: Delete namespace
+    k8s:
+      kind: Namespace
+      name: "{{ namespace }}"
+      state: absent
+    ignore_errors: true

@@ -1,0 +1,172 @@
+- vars:
+    pod: json-patch
+    deployment: json-patch
+    k8s_wait_timeout: 400
+
+  block:
+    - name: Create a simple pod
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            namespace: "{{ test_namespace }}"
+            name: "{{ pod }}"
+            labels:
+              label1: foo
+          spec:
+            containers:
+              - image: busybox:musl
+                name: busybox
+                command:
+                  - sh
+                  - -c
+                  - while true; do echo $(date); sleep 10; done
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+
+    - name: Add a label and replace the image in checkmode
+      kubernetes.core.k8s_json_patch:
+        kind: Pod
+        namespace: "{{ test_namespace }}"
+        name: "{{ pod }}"
+        patch:
+          - op: add
+            path: /metadata/labels/label2
+            value: bar
+          - op: replace
+            path: /spec/containers/0/image
+            value: busybox:glibc
+      check_mode: yes
+      register: result
+      diff: yes
+
+    - name: Assert patch was made
+      assert:
+        that:
+          - result.changed
+          - result.result.metadata.labels.label2 == "bar"
+          - result.result.spec.containers[0].image == "busybox:glibc"
+          - result.diff
+
+    - name: Describe pod
+      kubernetes.core.k8s_info:
+        kind: Pod
+        name: "{{ pod }}"
+        namespace: "{{ test_namespace }}"
+      register: result
+
+    - name: Assert pod has not changed
+      assert:
+        that:
+          - result.resources[0].metadata.labels.label2 is not defined
+          - result.resources[0].spec.containers[0].image == "busybox:musl"
+
+    - name: Add a label and replace the image
+      kubernetes.core.k8s_json_patch:
+        kind: Pod
+        namespace: "{{ test_namespace }}"
+        name: "{{ pod }}"
+        patch:
+          - op: add
+            path: /metadata/labels/label2
+            value: bar
+          - op: replace
+            path: /spec/containers/0/image
+            value: busybox:glibc
+      register: result
+      diff: no
+
+    - name: Assert patch was made
+      assert:
+        that:
+          - result.changed
+          - result.diff is not defined
+
+    - name: Describe pod
+      kubernetes.core.k8s_info:
+        kind: Pod
+        name: "{{ pod }}"
+        namespace: "{{ test_namespace }}"
+      register: result
+
+    - name: Assert that both patch operations have been applied
+      assert:
+        that:
+          - result.resources[0].metadata.labels.label2 == "bar"
+          - result.resources[0].spec.containers[0].image == "busybox:glibc"
+
+    - name: Apply the same patch to the pod
+      kubernetes.core.k8s_json_patch:
+        kind: Pod
+        namespace: "{{ test_namespace }}"
+        name: "{{ pod }}"
+        patch:
+          - op: add
+            path: /metadata/labels/label2
+            value: bar
+          - op: replace
+            path: /spec/containers/0/image
+            value: busybox:glibc
+      register: result
+
+    - name: Assert that no changes were made
+      assert:
+        that:
+          - not result.changed
+
+    - name: Create a simple deployment
+      kubernetes.core.k8s:
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        wait: yes
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            namespace: "{{ test_namespace }}"
+            name: "{{ deployment }}"
+            labels:
+              name: "{{ deployment }}"
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: busybox
+            template:
+              metadata:
+                labels:
+                  app: busybox
+              spec:
+                containers:
+                  - name: busybox
+                    image: busybox
+                    command:
+                      - sh
+                      - -c
+                      - while true; do echo $(date); sleep 10; done
+
+    - name: Apply patch and wait for deployment to be ready
+      kubernetes.core.k8s_json_patch:
+        kind: Deployment
+        namespace: "{{ test_namespace }}"
+        name: "{{ deployment }}"
+        patch:
+          - op: replace
+            path: /spec/replicas
+            value: 3
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      register: result
+
+    - name: Assert all replicas are available
+      assert:
+        that:
+          - result.result.status.availableReplicas == 3
+
+  always:
+    - name: Ensure namespace has been deleted
+      kubernetes.core.k8s:
+        kind: Namespace
+        name: "{{ test_namespace }}"
+        state: absent
+      ignore_errors: yes

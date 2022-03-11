@@ -1,0 +1,725 @@
+---
+- block:
+    - name: Ensure namespace exists
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ test_namespace }}"
+
+    - name: Add a configmap
+      k8s:
+        name: "apply-configmap"
+        namespace: "{{ test_namespace }}"
+        definition:
+          kind: ConfigMap
+          apiVersion: v1
+          data:
+            one: "1"
+            two: "2"
+            three: "3"
+        apply: yes
+      register: k8s_configmap
+
+    - name: Check configmap was created
+      assert:
+        that:
+          - k8s_configmap is changed
+          - k8s_configmap.result.metadata.annotations|default(False)
+
+    - name: Add same configmap again
+      k8s:
+        definition:
+          kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            name: "apply-configmap"
+            namespace: "{{ test_namespace }}"
+          data:
+            one: "1"
+            two: "2"
+            three: "3"
+        apply: yes
+      register: k8s_configmap_2
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_configmap_2 is not changed
+
+    - name: Add same configmap again with check mode on
+      k8s:
+        definition:
+          kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            name: "apply-configmap"
+            namespace: "{{ test_namespace }}"
+          data:
+            one: "1"
+            two: "2"
+            three: "3"
+        apply: yes
+      check_mode: yes
+      register: k8s_configmap_check
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_configmap_check is not changed
+
+    - name: Add same configmap again but using name and namespace args
+      k8s:
+        name: "apply-configmap"
+        namespace: "{{ test_namespace }}"
+        definition:
+          kind: ConfigMap
+          apiVersion: v1
+          data:
+            one: "1"
+            two: "2"
+            three: "3"
+        apply: yes
+      register: k8s_configmap_2a
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_configmap_2a is not changed
+
+    - name: Update configmap
+      k8s:
+        definition:
+          kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            name: "apply-configmap"
+            namespace: "{{ test_namespace }}"
+          data:
+            one: "1"
+            three: "3"
+            four: "4"
+        apply: yes
+      register: k8s_configmap_3
+
+    - name: Ensure that configmap has been correctly updated
+      assert:
+        that:
+          - k8s_configmap_3 is changed
+          - "'four' in k8s_configmap_3.result.data"
+          - "'two' not in k8s_configmap_3.result.data"
+
+    - name: Add a service
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: apply-svc
+            namespace: "{{ test_namespace }}"
+          spec:
+            selector:
+              app: whatever
+            ports:
+              - name: http
+                port: 8080
+                targetPort: 8080
+        apply: yes
+      register: k8s_service
+
+    - name: Add exactly same service
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: apply-svc
+            namespace: "{{ test_namespace }}"
+          spec:
+            selector:
+              app: whatever
+            ports:
+              - name: http
+                port: 8080
+                targetPort: 8080
+        apply: yes
+      register: k8s_service_2
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_service_2 is not changed
+
+    - name: Add exactly same service in check mode
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: apply-svc
+            namespace: "{{ test_namespace }}"
+          spec:
+            selector:
+              app: whatever
+            ports:
+              - name: http
+                port: 8080
+                targetPort: 8080
+        apply: yes
+      register: k8s_service_3
+      check_mode: yes
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_service_3 is not changed
+
+    - name: Change service ports
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: apply-svc
+            namespace: "{{ test_namespace }}"
+          spec:
+            selector:
+              app: whatever
+            ports:
+              - name: http
+                port: 8081
+                targetPort: 8081
+        apply: yes
+      register: k8s_service_4
+
+    - name: Check ports are correct
+      assert:
+        that:
+          - k8s_service_4 is changed
+          - k8s_service_4.result.spec.ports | length == 1
+          - k8s_service_4.result.spec.ports[0].port == 8081
+
+    - name: Insert new service port
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: apply-svc
+            namespace: "{{ test_namespace }}"
+          spec:
+            selector:
+              app: whatever
+            ports:
+              - name: mesh
+                port: 8080
+                targetPort: 8080
+              - name: http
+                port: 8081
+                targetPort: 8081
+        apply: yes
+      register: k8s_service_4
+
+    - name: Check ports are correct
+      assert:
+        that:
+          - k8s_service_4 is changed
+          - k8s_service_4.result.spec.ports | length == 2
+          - k8s_service_4.result.spec.ports[0].port == 8080
+          - k8s_service_4.result.spec.ports[1].port == 8081
+
+    - name: Remove new service port (check mode)
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: apply-svc
+            namespace: "{{ test_namespace }}"
+          spec:
+            selector:
+              app: whatever
+            ports:
+              - name: http
+                port: 8081
+                targetPort: 8081
+        apply: yes
+      check_mode: yes
+      register: k8s_service_check
+
+    - name: Check ports are correct
+      assert:
+        that:
+          - k8s_service_check is changed
+          - k8s_service_check.result.spec.ports | length == 1
+          - k8s_service_check.result.spec.ports[0].port == 8081
+
+    - name: Remove new service port
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: apply-svc
+            namespace: "{{ test_namespace }}"
+          spec:
+            selector:
+              app: whatever
+            ports:
+              - name: http
+                port: 8081
+                targetPort: 8081
+        apply: yes
+      register: k8s_service_5
+
+    - name: Check ports are correct
+      assert:
+        that:
+          - k8s_service_5 is changed
+          - k8s_service_5.result.spec.ports | length == 1
+          - k8s_service_5.result.spec.ports[0].port == 8081
+
+    - name: Add a serviceaccount
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: apply-deploy
+            namespace: "{{ test_namespace }}"
+
+    - name: Add a deployment
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: apply-deploy
+            namespace: "{{ test_namespace }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        apply: yes
+      vars:
+        k8s_pod_name: apply-deploy
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-green
+        k8s_pod_service_account: apply-deploy
+        k8s_pod_ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        k8s_pod_resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 100m
+            memory: 100Mi
+
+    - name: Update the earlier deployment in check mode
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: apply-deploy
+            namespace: "{{ test_namespace }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        apply: yes
+      check_mode: yes
+      vars:
+        k8s_pod_name: apply-deploy
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple
+        k8s_pod_service_account: apply-deploy
+        k8s_pod_ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        k8s_pod_resources:
+          requests:
+            cpu: 50m
+          limits:
+            cpu: 50m
+            memory: 50Mi
+      register: update_deploy_check_mode
+
+    - name: Ensure check mode change took
+      assert:
+        that:
+          - update_deploy_check_mode is changed
+          - "update_deploy_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple'"
+
+    - name: Update the earlier deployment
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: apply-deploy
+            namespace: "{{ test_namespace }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        apply: yes
+      vars:
+        k8s_pod_name: apply-deploy
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple
+        k8s_pod_service_account: apply-deploy
+        k8s_pod_ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        k8s_pod_resources:
+          requests:
+            cpu: 50m
+          limits:
+            cpu: 50m
+            memory: 50Mi
+      register: update_deploy_for_real
+
+    - name: Ensure change took
+      assert:
+        that:
+          - update_deploy_for_real is changed
+          - "update_deploy_for_real.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple'"
+
+    - name: Remove the serviceaccount
+      k8s:
+        state: absent
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: apply-deploy
+            namespace: "{{ test_namespace }}"
+
+    - name: Apply deployment after service account removed
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: apply-deploy
+            namespace: "{{ test_namespace }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        apply: yes
+      vars:
+        k8s_pod_name: apply-deploy
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-green
+        k8s_pod_service_account: apply-deploy
+        k8s_pod_ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        k8s_pod_resources:
+          requests:
+            cpu: 50m
+          limits:
+            cpu: 50m
+            memory: 50Mi
+      register: deploy_after_serviceaccount_removal
+      ignore_errors: yes
+
+    - name: Ensure that updating deployment after service account removal failed
+      assert:
+        that:
+          - deploy_after_serviceaccount_removal is failed
+
+    - name: Add a secret
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: apply-secret
+            namespace: "{{ test_namespace }}"
+          type: Opaque
+          stringData:
+            foo: bar
+      register: k8s_secret
+
+    - name: Check secret was created
+      assert:
+        that:
+          - k8s_secret is changed
+          - k8s_secret.result.data.foo
+
+    - name: Add same secret
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: apply-secret
+            namespace: "{{ test_namespace }}"
+          type: Opaque
+          stringData:
+            foo: bar
+      register: k8s_secret
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_secret is not changed
+
+    - name: Add same secret with check mode on
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: apply-secret
+            namespace: "{{ test_namespace }}"
+          type: Opaque
+          stringData:
+            foo: bar
+      check_mode: yes
+      register: k8s_secret
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_secret is not changed
+
+    - name: Add same secret with check mode on using data
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: apply-secret
+            namespace: "{{ test_namespace }}"
+          type: Opaque
+          data:
+            foo: YmFy
+      check_mode: yes
+      register: k8s_secret
+
+    - name: Check nothing changed
+      assert:
+        that:
+          - k8s_secret is not changed
+
+    - name: Create network policy (egress array with empty dict)
+      k8s:
+        namespace: "{{ test_namespace }}"
+        apply: true
+        definition:
+          kind: NetworkPolicy
+          apiVersion: networking.k8s.io/v1
+          metadata:
+            name: apply-netpolicy
+            labels:
+              app: apply-netpolicy
+            annotations:
+              {}
+          spec:
+            podSelector:
+              matchLabels:
+                app: apply-netpolicy
+            policyTypes:
+              - Ingress
+              - Egress
+            ingress:
+              - ports:
+                  - port: 9093
+                    protocol: TCP
+            egress:
+              - {}
+
+    - name: Apply network policy
+      k8s:
+        namespace: "{{ test_namespace }}"
+        definition:
+          kind: NetworkPolicy
+          apiVersion: networking.k8s.io/v1
+          metadata:
+            name: apply-netpolicy
+            labels:
+              app: apply-netpolicy
+            annotations:
+              {}
+          spec:
+            podSelector:
+              matchLabels:
+                app: apply-netpolicy
+            policyTypes:
+              - Ingress
+              - Egress
+            ingress:
+              - ports:
+                  - port: 9093
+                    protocol: TCP
+            egress:
+              - {}
+        apply: true
+      register: k8s_networkpolicy
+
+    - name: Check that nothing changed
+      assert:
+        that:
+          - k8s_networkpolicy is not changed
+
+    # Server Side Apply
+    - name: Create Configmap using server side apply - field_manager not specified
+      k8s:
+        namespace: "{{ test_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          force_conflicts: false
+      register: result
+      ignore_errors: true
+
+    - name: Check that configmap creation failed
+      assert:
+        that:
+          - result is failed
+          - '"field_manager" in result.msg'
+
+    - name: Create Configmap using server side apply
+      k8s:
+        namespace: "{{ test_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-00"
+      register: result
+
+    - name: Check configmap was created with expected manager
+      assert:
+        that:
+          - result is changed
+          - result.result.metadata.managedFields | length == 1
+          - result.result.metadata.managedFields[0].manager == 'manager-00'
+
+    - name: Apply ConfigMap using same parameters
+      k8s:
+        namespace: "{{ test_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-00"
+      register: result
+
+    - name: Assert that nothing change using check_mode
+      assert:
+        that:
+          - result is not changed
+
+    - name: Apply ConfigMap adding new manager
+      k8s:
+        namespace: "{{ test_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-0
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-01"
+      register: result
+
+    - name: Assert that number of manager has increased
+      assert:
+        that:
+          - result is changed
+          - result.result.metadata.managedFields | length == 2
+
+    - name: Apply changes to Configmap using new field_manager
+      k8s:
+        namespace: "{{ test_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-1
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-02"
+      register: result
+      ignore_errors: true
+
+    - name: assert that operation failed with conflicts
+      assert:
+        that:
+          - result is failed
+          - result.reason == 'Conflict'
+
+    - name: Apply changes to Configmap using new field_manager and force_conflicts
+      k8s:
+        namespace: "{{ test_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: server-side-cm
+          data:
+            key: value-1
+        apply: yes
+        server_side_apply:
+          field_manager: "manager-02"
+          force_conflicts: true
+      register: result
+
+    - name: assert that operation failed with conflicts
+      assert:
+        that:
+          - result is changed
+          - result.result.metadata.managedFields | length == 1
+          - result.result.metadata.managedFields[0].manager == 'manager-02'
+          - result.result.data.key == 'value-1'
+
+  always:
+    - name: Remove namespace
+      k8s:
+        kind: Namespace
+        name: "{{ test_namespace }}"
+        state: absent
