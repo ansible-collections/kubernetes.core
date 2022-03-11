@@ -1,0 +1,3 @@
+---
+test_namespace: "garbage"
+k8s_wait_timeout: 400

@@ -1,0 +1,3 @@
+---
+test_namespace: "label-selectors"
+k8s_wait_timeout: 400

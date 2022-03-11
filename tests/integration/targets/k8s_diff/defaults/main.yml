@@ -1,0 +1,3 @@
+---
+test_namespace: "diff"
+diff_configmap: "diff-configmap"

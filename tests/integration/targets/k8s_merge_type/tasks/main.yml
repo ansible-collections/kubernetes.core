@@ -1,0 +1,137 @@
+- block:
+  - name: Define common facts
+    set_fact:
+      k8s_patch_namespace: "{{ test_namespace }}"
+      k8s_strategic_merge: "strategic-merge"
+      k8s_merge: "json-merge"
+      k8s_json: "json-patch"
+
+  # Strategic merge
+  - name: create a simple nginx deployment
+    kubernetes.core.k8s:
+      namespace: "{{ k8s_patch_namespace }}"
+      definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: "{{ k8s_strategic_merge }}"
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: nginx
+          template:
+            metadata:
+              labels:
+                app: nginx
+            spec:
+              containers:
+              - name: "{{ k8s_strategic_merge }}-ctr"
+                image: nginx
+              tolerations:
+              - effect: NoSchedule
+                key: dedicated
+                value: "test-strategic-merge"
+
+
+  - name: patch service using strategic merge
+    kubernetes.core.k8s:
+      kind: Deployment
+      namespace: "{{ k8s_patch_namespace }}"
+      name: "{{ k8s_strategic_merge }}"
+      definition:
+        spec:
+          template:
+            spec:
+              containers:
+              - name: "{{ k8s_strategic_merge }}-ctr-2"
+                image: redis
+    register: depl_patch
+
+  - name: validate that resource was patched
+    assert:
+      that:
+      - depl_patch.changed
+
+  - name: describe "{{ k8s_strategic_merge }}" deployment
+    kubernetes.core.k8s_info:
+      kind: Deployment
+      name: "{{ k8s_strategic_merge }}"
+      namespace: "{{ k8s_patch_namespace }}"
+    register: deployment_out
+
+  - name: assert that deployment contains expected images
+    assert:
+      that:
+      - deployment_out.resources[0].spec.template.spec.containers | selectattr('image','equalto','nginx') | list | length == 1
+      - deployment_out.resources[0].spec.template.spec.containers | selectattr('image','equalto','redis') | list | length == 1
+
+  # Json merge
+  - name: create a simple nginx deployment (testing merge patch)
+    kubernetes.core.k8s:
+      namespace: "{{ k8s_patch_namespace }}"
+      definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: "{{ k8s_merge }}"
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: nginx
+          template:
+            metadata:
+              labels:
+                app: nginx
+            spec:
+              containers:
+              - name: "{{ k8s_merge }}-ctr"
+                image: nginx
+              tolerations:
+              - effect: NoSchedule
+                key: dedicated
+                value: "test-strategic-merge"
+
+
+  - name: patch service using json merge patch
+    kubernetes.core.k8s:
+      kind: Deployment
+      namespace: "{{ k8s_patch_namespace }}"
+      name: "{{ k8s_merge }}"
+      merge_type:
+      - merge
+      definition:
+        spec:
+          template:
+            spec:
+              containers:
+              - name: "{{ k8s_merge }}-ctr-2"
+                image: python
+    register: merge_patch
+
+  - name: validate that resource was patched
+    assert:
+      that:
+      - merge_patch.changed
+
+  - name: describe "{{ k8s_merge }}" deployment
+    kubernetes.core.k8s_info:
+      kind: Deployment
+      name: "{{ k8s_merge }}"
+      namespace: "{{ k8s_patch_namespace }}"
+    register: merge_out
+
+  - name: assert that deployment contains expected images
+    assert:
+      that:
+      - merge_out.resources[0].spec.template.spec.containers | list | length == 1
+      - merge_out.resources[0].spec.template.spec.containers[0].image == 'python'
+
+  always:
+  - name: Ensure namespace has been deleted
+    kubernetes.core.k8s:
+      kind: namespace
+      name: "{{ k8s_patch_namespace }}"
+      state: absent
+    ignore_errors: yes

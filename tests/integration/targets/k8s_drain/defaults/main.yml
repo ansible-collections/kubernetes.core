@@ -1,0 +1,3 @@
+---
+test_namespace: "drain"
+k8s_wait_timeout: 400
