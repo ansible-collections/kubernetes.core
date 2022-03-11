@@ -344,6 +344,7 @@
     - name: Create a StatefulSet
       kubernetes.core.k8s:
         wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         definition:
           apiVersion: apps/v1
           kind: StatefulSet
@@ -381,7 +382,7 @@
         namespace: "{{ scale_namespace }}"
         replicas: 0
         wait: yes
-        wait_timeout: 60
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       register: output
 
     - assert:
