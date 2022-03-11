@@ -1,2 +1,0 @@
-bugfixes:
-  - module_utils.common - change default opening mode to read-bytes to avoid bad interpretation of non ascii characters and strings, often present in 3rd party manifests.
