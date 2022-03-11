@@ -22,9 +22,9 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
     author:
-        - xuxinkun
+        - xuxinkun (@xuxinkun)
 
-    connection: kubectl
+    name: kubectl
 
     short_description: Execute tasks in pods running on Kubernetes.
 
