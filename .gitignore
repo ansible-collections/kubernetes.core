@@ -20,3 +20,4 @@ tests/integration/*-chart-*.tgz
 # ansible-test generated file
 tests/integration/inventory
 tests/integration/*-*.yml
+*.gz
