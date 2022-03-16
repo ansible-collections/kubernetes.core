@@ -1,14 +1,14 @@
-.. _kubernetes.core.k8s_cluster_info_module:
+.. _kubernetes.core.k8s_taint_module:
 
 
-********************************
-kubernetes.core.k8s_cluster_info
-********************************
+*************************
+kubernetes.core.k8s_taint
+*************************
 
-**Describe Kubernetes (K8s) cluster, APIs available and their respective versions**
+**Taint a node in a Kubernetes/OpenShift cluster**
 
 
-Version added: 0.11.1
+Version added: 2.3.0
 
 .. contents::
    :local:
@@ -17,9 +17,8 @@ Version added: 0.11.1
 
 Synopsis
 --------
-- Use the Kubernetes Python client to perform read operations on K8s objects.
-- Authenticate using either a config file, certificates, password or token.
-- Supports check mode.
+- Taint allows a node to refuse Pod to be scheduled unless that Pod has a matching toleration.
+- Untaint will remove taints from nodes as needed.
 
 
 
@@ -29,7 +28,6 @@ The below requirements are needed on the host that executes this module.
 
 - python >= 3.6
 - kubernetes >= 12.0.0
-- PyYAML >= 3.11
 
 
 Parameters
@@ -174,25 +172,6 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>invalidate_cache</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
-                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
-                        </ul>
-                </td>
-                <td>
-                        <div>Invalidate cache before retrieving information about cluster.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -204,6 +183,22 @@ Parameters
                 <td>
                         <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
                         <div>The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version &gt;= 17.17.0. Added in version 2.2.0.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>name</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The name of the node.</div>
                 </td>
             </tr>
             <tr>
@@ -352,6 +347,116 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>replace</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>If <code>true</code>, allow taints to be replaced.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
+                                    <li>absent</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Determines whether to add or remove taints.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>taints</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List containing the taints.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>effect</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>NoSchedule</li>
+                                    <li>NoExecute</li>
+                                    <li>PreferNoSchedule</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>The effect of the taint on Pods that do not tolerate the taint.</div>
+                        <div>Required when <em>state=present</em>.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>key</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The taint key to be applied to a node.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>value</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The taint value corresponding to the taint key.</div>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>username</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -402,14 +507,34 @@ Examples
 
 .. code-block:: yaml
 
-    - name: Get Cluster information
-      kubernetes.core.k8s_cluster_info:
-      register: api_status
+    - name: Taint node "foo"
+      kubernetes.core.k8s_taint:
+        state: present
+        name: foo
+        taints:
+        - effect: NoExecute
+          key: "key1"
 
-    - name: Do not invalidate cache before getting information
-      kubernetes.core.k8s_cluster_info:
-        invalidate_cache: False
-      register: api_status
+    - name: Taint node "foo"
+      kubernetes.core.k8s_taint:
+        state: present
+        name: foo
+        taints:
+        - effect: NoExecute
+          key: "key1"
+          value: "value1"
+        - effect: NoSchedule
+          key: "key1"
+          value: "value1"
+
+    - name: Remove taint from "foo".
+      kubernetes.core.k8s_taint:
+        state: absent
+        name: foo
+        taints:
+        - effect: NoExecute
+          key: "key1"
+          value: "value1"
 
 
 
@@ -428,16 +553,15 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>apis</b>
+                    <b>result</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">dictionary</span>
-                       / <span style="color: purple">elements=dictionary</span>
+                      <span style="color: purple">complex</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>dictionary of group + version of resource found from cluster</div>
+                            <div>The tainted Node object. Will be empty in the case of a deletion.</div>
                     <br/>
                 </td>
             </tr>
@@ -445,23 +569,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>categories</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">list</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>API categories</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>name</b>
+                    <b>api_version</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
@@ -469,7 +577,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>success</td>
                 <td>
-                            <div>Resource short name</div>
+                            <div>The versioned schema of this representation of an object.</div>
                     <br/>
                 </td>
             </tr>
@@ -477,39 +585,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>namespaced</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>If resource is namespaced</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>preferred</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>If resource version preferred</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>short_names</b>
+                    <b>kind</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
                       <span style="color: purple">string</span>
@@ -517,7 +593,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>success</td>
                 <td>
-                            <div>Resource short names</div>
+                            <div>Represents the REST resource this object represents.</div>
                     <br/>
                 </td>
             </tr>
@@ -525,47 +601,15 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>singular_name</b>
+                    <b>metadata</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">string</span>
+                      <span style="color: purple">complex</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>Resource singular name</div>
-                    <br/>
-                </td>
-            </tr>
-
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>connection</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">dictionary</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Connection information</div>
-                    <br/>
-                </td>
-            </tr>
-                                <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>cert_file</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Path to client certificate.</div>
+                            <div>Standard object metadata. Includes name, namespace, annotations, labels, etc.</div>
                     <br/>
                 </td>
             </tr>
@@ -573,15 +617,15 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>host</b>
+                    <b>spec</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">string</span>
+                      <span style="color: purple">complex</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>Host URL</div>
+                            <div>Specific attributes of the object. Will vary based on the <em>api_version</em> and <em>kind</em>.</div>
                     <br/>
                 </td>
             </tr>
@@ -589,127 +633,15 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>password</b>
+                    <b>status</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">string</span>
+                      <span style="color: purple">complex</span>
                     </div>
                 </td>
                 <td>success</td>
                 <td>
-                            <div>User password</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>proxy</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Proxy details</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>ssl_ca_cert</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Path to CA certificate</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>username</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Username</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>verify_ssl</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>SSL verification status</div>
-                    <br/>
-                </td>
-            </tr>
-
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>version</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">dictionary</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Information about server and client version</div>
-                    <br/>
-                </td>
-            </tr>
-                                <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>client</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Client version</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>server</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">dictionary</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Server version</div>
+                            <div>Current status details for the object.</div>
                     <br/>
                 </td>
             </tr>
@@ -725,4 +657,4 @@ Status
 Authors
 ~~~~~~~
 
-- Abhijeet Kasurde (@Akasurde)
+- Alina Buzachis (@alinabuzachis)

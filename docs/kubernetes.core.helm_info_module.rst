@@ -175,6 +175,31 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>release_state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Show releases as per their states.</div>
+                        <div>Default value is <code>deployed</code> and <code>failed</code>.</div>
+                        <div>If set to <code>all</code>, show all releases without any filter applied.</div>
+                        <div>If set to <code>deployed</code>, show deployed releases.</div>
+                        <div>If set to <code>failed</code>, show failed releases.</div>
+                        <div>If set to <code>pending</code>, show pending releases.</div>
+                        <div>If set to <code>superseded</code>, show superseded releases.</div>
+                        <div>If set to <code>uninstalled</code>, show uninstalled releases, if <code>helm uninstall --keep-history</code> was used.</div>
+                        <div>If set to <code>uninstalling</code>, show releases that are currently being uninstalled.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>validate_certs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -204,10 +229,17 @@ Examples
 
 .. code-block:: yaml
 
-    - name: Deploy latest version of Grafana chart inside monitoring namespace
+    - name: Gather information of Grafana chart inside monitoring namespace
       kubernetes.core.helm_info:
         name: test
         release_namespace: monitoring
+
+    - name: Gather information about test-chart with pending state
+      kubernetes.core.helm_info:
+        name: test-chart
+        release_namespace: testenv
+        release_state:
+        - pending
 
 
 

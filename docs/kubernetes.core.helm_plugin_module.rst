@@ -150,7 +150,7 @@ Parameters
                 </td>
                 <td>
                         <div>Name of Helm plugin.</div>
-                        <div>Required only if <code>state=absent</code>.</div>
+                        <div>Required only if <code>state=absent</code> or <code>state=latest</code>.</div>
                 </td>
             </tr>
             <tr>
@@ -173,6 +173,23 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>plugin_version</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Plugin version to install. If this is not specified, the latest version is installed.</div>
+                        <div>Ignored when <code>state=absent</code> or <code>state=latest</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -183,10 +200,12 @@ Parameters
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>absent</li>
                                     <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
+                                    <li>latest</li>
                         </ul>
                 </td>
                 <td>
                         <div>If <code>state=present</code> the Helm plugin will be installed.</div>
+                        <div>If <code>state=latest</code> the Helm plugin will be updated. Added in version 2.3.0.</div>
                         <div>If <code>state=absent</code> the Helm plugin will be removed.</div>
                 </td>
             </tr>
@@ -236,6 +255,17 @@ Examples
       kubernetes.core.helm_plugin:
         plugin_name: env
         state: absent
+
+    - name: Install Helm plugin with a specific version
+      kubernetes.core.helm_plugin:
+        plugin_version: 2.0.1
+        plugin_path: https://domain/path/to/plugin.tar.gz
+        state: present
+
+    - name: Update Helm plugin
+      kubernetes.core.helm_plugin:
+        plugin_name: secrets
+        state: latest
 
 
 

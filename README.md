@@ -72,6 +72,7 @@ Name | Description
 [kubernetes.core.k8s_rollback](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
 [kubernetes.core.k8s_scale](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
 [kubernetes.core.k8s_service](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_service_module.rst)|Manage Services on Kubernetes
+[kubernetes.core.k8s_taint](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_taint_module.rst)|Taint a node in a Kubernetes/OpenShift cluster
 
 <!--end collection content-->
 

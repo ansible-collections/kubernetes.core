@@ -351,8 +351,8 @@ Status
 Authors
 ~~~~~~~
 
-- Chris Houseknecht <@chouseknecht>
-- Fabian von Feilitzsch <@fabianvf>
+- Chris Houseknecht (@chouseknecht)
+- Fabian von Feilitzsch (@fabianvf)
 
 
 .. hint::

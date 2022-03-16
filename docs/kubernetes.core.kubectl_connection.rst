@@ -354,7 +354,7 @@ Status
 Authors
 ~~~~~~~
 
-- xuxinkun
+- xuxinkun (@xuxinkun)
 
 
 .. hint::

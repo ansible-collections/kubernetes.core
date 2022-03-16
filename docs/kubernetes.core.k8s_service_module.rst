@@ -175,6 +175,41 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>impersonate_groups</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Group(s) to impersonate for the operation.</div>
+                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: &#x27;Group1,Group2&#x27;</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>impersonate_user</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Username to impersonate for the operation.</div>
+                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_USER environment.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -243,6 +278,25 @@ Parameters
                 </td>
                 <td>
                         <div>Use to specify a Service object namespace.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_proxy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -433,7 +487,7 @@ Parameters
                 <td>
                         <div>Provide a path to a file containing a valid YAML definition of an object or objects to be created or updated. Mutually exclusive with <em>resource_definition</em>. NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the configuration read in from the <em>src</em> file.</div>
                         <div>Reads from the local file system. To read from the Ansible controller&#x27;s file system, including vaulted files, use the file lookup plugin or template lookup plugin, combined with the from_yaml filter, and pass the result to <em>resource_definition</em>. See Examples below.</div>
-                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>k8s</span> module.</div>
+                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>kubernetes.core.k8s</span> module.</div>
                 </td>
             </tr>
             <tr>
