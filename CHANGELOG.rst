@@ -5,6 +5,54 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.3.0
+======
+
+Minor Changes
+-------------
+
+- add support for dry run with kubernetes client version >=18.20 (https://github.com/ansible-collections/kubernetes.core/pull/245).
+- fixed module_defaults by removing routing hacks from runtime.yml (https://github.com/ansible-collections/kubernetes.core/pull/347).
+- helm - add support for timeout cli parameter to allow setting Helm timeout independent of wait (https://github.com/ansible-collections/kubernetes.core/issues/67).
+- helm - add support for wait parameter for helm uninstall command. (https://github.com/ansible-collections/kubernetes/core/issues/33).
+- helm - support repo location for helm diff (https://github.com/ansible-collections/kubernetes.core/issues/174).
+- helm - when ansible is executed in check mode, return the diff between what's deployed and what will be deployed.
+- helm_info - add release state as a module argument (https://github.com/ansible-collections/kubernetes.core/issues/377).
+- helm_plugin - Add plugin_version parameter to the helm_plugin module (https://github.com/ansible-collections/kubernetes.core/issues/157).
+- helm_plugin - Add support for helm plugin update using state=update.
+- helm_repository - add support for pass-credentials cli parameter (https://github.com/ansible-collections/kubernetes.core/pull/282).
+- helm_repository - added support for ``host``, ``api_key``, ``validate_certs``, and ``ca_cert``.
+- helm_template - add show_only and release_namespace as module arguments (https://github.com/ansible-collections/kubernetes.core/issues/313).
+- k8s - add no_proxy support to k8s* (https://github.com/ansible-collections/kubernetes.core/pull/272).
+- k8s - add support for server_side_apply. (https://github.com/ansible-collections/kubernetes.core/issues/87).
+- k8s - add support for user impersonation. (https://github.com/ansible-collections/kubernetes/core/issues/40).
+- k8s - allow resource definition using metadata.generateName (https://github.com/ansible-collections/kubernetes.core/issues/35).
+- k8s lookup plugin - Enable turbo mode via environment variable  (https://github.com/ansible-collections/kubernetes.core/issues/291).
+- k8s_drain - Adds ``delete_emptydir_data`` option to ``k8s_drain.delete_options`` to evict pods with an ``emptyDir`` volume attached (https://github.com/ansible-collections/kubernetes.core/pull/322).
+- k8s_exec - select first container from the pod if none specified (https://github.com/ansible-collections/kubernetes.core/issues/358).
+- k8s_rollback - add support for check_mode. (https://github.com/ansible-collections/kubernetes/core/issues/243).
+- k8s_scale - add support for check_mode. (https://github.com/ansible-collections/kubernetes/core/issues/244).
+- kubectl - wait for dd command to complete before proceeding (https://github.com/ansible-collections/kubernetes.core/pull/321).
+
+Bugfixes
+--------
+
+- Various modules and plugins - use vendored version of ``distutils.version`` instead of the deprecated Python standard library ``distutils`` (https://github.com/ansible-collections/kubernetes.core/pull/314).
+- common - Ensure the label_selectors parameter of _wait_for method is optional.
+- helm_template - evaluate release_values after values_files, insuring highest precedence (now same behavior as in helm module). (https://github.com/ansible-collections/kubernetes.core/pull/348)
+- import exception from ``kubernetes.client.rest``.
+- k8s_drain - fix error caused by accessing an undefined variable when pods have local storage (https://github.com/ansible-collections/kubernetes.core/issues/292).
+- k8s_info - don't wait on empty List resources (https://github.com/ansible-collections/kubernetes.core/pull/253).
+- k8s_scale - fix waiting on statefulset when scaled down to 0 replicas (https://github.com/ansible-collections/kubernetes.core/issues/203).
+- module_utils.common - change default opening mode to read-bytes to avoid bad interpretation of non ascii characters and strings, often present in 3rd party manifests.
+- remove binary file from k8s_cp test suite (https://github.com/ansible-collections/kubernetes.core/pull/298).
+- use resource prefix when finding resource and apiVersion is v1 (https://github.com/ansible-collections/kubernetes.core/issues/351).
+
+New Modules
+-----------
+
+- k8s_taint - Taint a node in a Kubernetes/OpenShift cluster
+
 v2.2.0
 ======
 

@@ -1,2 +1,0 @@
-minor_changes:
-  - helm - add support for timeout cli parameter to allow setting Helm timeout independent of wait (https://github.com/ansible-collections/kubernetes.core/issues/67).

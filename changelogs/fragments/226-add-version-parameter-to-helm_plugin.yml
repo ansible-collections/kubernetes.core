@@ -1,3 +1,0 @@
-minor_changes:
-  - helm_plugin - Add plugin_version parameter to the helm_plugin module (https://github.com/ansible-collections/kubernetes.core/issues/157).
-  - helm_plugin - Add support for helm plugin update using state=update.

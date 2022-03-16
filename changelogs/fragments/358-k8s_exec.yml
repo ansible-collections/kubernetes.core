@@ -1,3 +1,0 @@
----
-minor_changes:
-- k8s_exec - select first container from the pod if none specified (https://github.com/ansible-collections/kubernetes.core/issues/358).

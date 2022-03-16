@@ -62,7 +62,7 @@ options:
       - namespace scope for this request.
     required: false
     type: str
-    version_added: 2.4.0
+    version_added: 2.3.0
   release_values:
     description:
         - Values to pass to chart.
@@ -76,7 +76,7 @@ options:
     required: false
     type: list
     elements: str
-    version_added: 2.4.0
+    version_added: 2.3.0
   values_files:
     description:
         - Value files to pass to chart.
