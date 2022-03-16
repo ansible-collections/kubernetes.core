@@ -339,6 +339,26 @@ Parameters
             <tr>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>generate_name</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Use to specify the basis of an object name and random characters will be added automatically on server to generate a unique name.</div>
+                        <div>This option is ignored when <em>state</em> is not set to <code>present</code> or when <em>apply</em> is set to <code>yes</code>.</div>
+                        <div>If <em>resource definition</em> is provided, the <em>metadata.generateName</em> value from the <em>resource_definition</em> will override this option.</div>
+                        <div>If <em>resource definition</em> is provided, and contains <em>metadata.name</em>, this option is ignored.</div>
+                        <div>mutually exclusive with <code>name</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>host</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -349,6 +369,41 @@ Parameters
                 </td>
                 <td>
                         <div>Provide a URL for accessing the API. Can also be specified via K8S_AUTH_HOST environment variable.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>impersonate_groups</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Group(s) to impersonate for the operation.</div>
+                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: &#x27;Group1,Group2&#x27;</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>impersonate_user</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Username to impersonate for the operation.</div>
+                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_USER environment.</div>
                 </td>
             </tr>
             <tr>
@@ -462,6 +517,25 @@ Parameters
                         <div>Useful when creating, deleting, or discovering an object without providing a full resource definition.</div>
                         <div>Use in conjunction with <em>api_version</em>, <em>kind</em>, and <em>name</em> to identify a specific object.</div>
                         <div>If <em>resource definition</em> is provided, the <em>metadata.namespace</em> value from the <em>resource_definition</em> will override this option.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_proxy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -608,6 +682,63 @@ Parameters
             <tr>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>server_side_apply</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>When this option is set, apply runs in the server instead of the client.</div>
+                        <div>Ignored if <code>apply</code> is not set or is set to False.</div>
+                        <div>This option requires &quot;kubernetes &gt;= 19.15.0&quot;.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>field_manager</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the manager used to track field ownership.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>force_conflicts</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>A conflict is a special status error that occurs when an Server Side Apply operation tries to change a field, which another user also claims to manage.</div>
+                        <div>When set to True, server-side apply will force the changes against conflicts.</div>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>src</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -619,7 +750,7 @@ Parameters
                 <td>
                         <div>Provide a path to a file containing a valid YAML definition of an object or objects to be created or updated. Mutually exclusive with <em>resource_definition</em>. NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the configuration read in from the <em>src</em> file.</div>
                         <div>Reads from the local file system. To read from the Ansible controller&#x27;s file system, including vaulted files, use the file lookup plugin or template lookup plugin, combined with the from_yaml filter, and pass the result to <em>resource_definition</em>. See Examples below.</div>
-                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>k8s</span> module.</div>
+                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>kubernetes.core.k8s</span> module.</div>
                 </td>
             </tr>
             <tr>
@@ -1057,6 +1188,33 @@ Examples
           metadata:
             labels:
               support: patch
+
+    # Create object using generateName
+    - name: create resource using name generated by the server
+      kubernetes.core.k8s:
+        state: present
+        generate_name: pod-
+        definition:
+          apiVersion: v1
+          kind: Pod
+          spec:
+            containers:
+            - name: py
+              image: python:3.7-alpine
+              imagePullPolicy: IfNotPresent
+
+    # Server side apply
+    - name: Create configmap using server side apply
+      kubernetes.core.k8s:
+        namespace: testing
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: my-configmap
+        apply: yes
+        server_side_apply:
+          field_manager: ansible
 
 
 

@@ -117,7 +117,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>The command to execute</div>
+                        <div>The command to execute.</div>
                 </td>
             </tr>
             <tr>
@@ -134,6 +134,7 @@ Parameters
                 <td>
                         <div>The name of the container in the pod to connect to.</div>
                         <div>Defaults to only container if there is only one container in the pod.</div>
+                        <div>If not specified, will choose the first container from the given pod as kubectl cmdline does.</div>
                 </td>
             </tr>
             <tr>
@@ -169,6 +170,41 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>impersonate_groups</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Group(s) to impersonate for the operation.</div>
+                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: &#x27;Group1,Group2&#x27;</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>impersonate_user</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Username to impersonate for the operation.</div>
+                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_USER environment.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -195,7 +231,26 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>The pod namespace name</div>
+                        <div>The pod namespace name.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_proxy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -250,7 +305,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>The pod name</div>
+                        <div>The pod name.</div>
                 </td>
             </tr>
             <tr>
@@ -267,7 +322,7 @@ Parameters
                 <td>
                         <div>The URL of an HTTP proxy to use for the connection.</div>
                         <div>Can also be specified via <em>K8S_AUTH_PROXY</em> environment variable.</div>
-                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. HTTP_PROXY).</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (for example, HTTP_PROXY).</div>
                 </td>
             </tr>
             <tr>
@@ -414,6 +469,13 @@ Examples
         msg: "cmd failed"
       when: command_status.rc != 0
 
+    - name: Specify a container name to execute the command on
+      kubernetes.core.k8s_exec:
+        namespace: myproject
+        pod: busybox-test
+        container: manager
+        command: echo "hello"
+
 
 
 Return Values
@@ -452,8 +514,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <div style="font-size: small">
                       <span style="color: purple">integer</span>
                     </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.2.0</div>
-                </td>
+<div style="font-style: italic; font-size: small; color: darkgreen">added in 2.2.0</div>                </td>
                 <td></td>
                 <td>
                             <div>The command status code</div>

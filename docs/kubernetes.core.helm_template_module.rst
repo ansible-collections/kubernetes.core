@@ -134,6 +134,22 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>release_namespace</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>namespace scope for this request.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>release_values</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -146,6 +162,23 @@ Parameters
                 <td>
                         <div>Values to pass to chart.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: values</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>show_only</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Only show manifests rendered from the given templates.</div>
                 </td>
             </tr>
             <tr>
@@ -206,6 +239,24 @@ Examples
     - name: Render templates
       kubernetes.core.helm_template:
         chart_ref: stable/prometheus
+      register: result
+
+    - name: Write templates to file
+      copy:
+        dest: myfile.yaml
+        content: "{{ result.stdout }}"
+
+    - name: Render MutatingWebhooksConfiguration for revision tag "canary", rev "1-13-0"
+      kubernetes.core.helm_template:
+        chart_ref: istio/istiod
+        chart_version: "1.13.0"
+        release_namespace: "istio-system"
+        show_only:
+          - "templates/revision-tags.yaml"
+        release_values:
+          revision: "1-13-0"
+          revisionTags:
+            - "canary"
       register: result
 
     - name: Write templates to file

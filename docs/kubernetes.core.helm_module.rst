@@ -532,6 +532,12 @@ Parameters
     <br/>
 
 
+Notes
+-----
+
+.. note::
+   - The default idempotency check can fail to report changes when ``release_state`` is set to ``present`` and ``chart_repo_url`` is defined. Install helm diff >= 3.4.1 for better results.
+
 
 
 Examples
