@@ -161,10 +161,12 @@ def get_helm_version(module, helm_bin):
 
     helm_version_command = helm_bin + " version"
     rc, out, err = module.run_command(helm_version_command)
-    if rc == 0:
-        m = re.match(r'version.BuildInfo{Version:"v([0-9\.]*)",', out)
-        if m:
-            return m.group(1)
+    m = re.match(r'version.BuildInfo{Version:"v([0-9\.]*)",', out)
+    if m:
+        return m.group(1)
+    m = re.match(r'Client: &version.Version{SemVer:"v([0-9\.]*)", ', out)
+    if m:
+        return m.group(1)
     return None
 
 

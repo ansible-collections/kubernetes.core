@@ -46,6 +46,9 @@
 - name: Test in-memory kubeconfig
   include_tasks: tests_in_memory_kubeconfig.yml
 
+- name: Test helm pull
+  include_tasks: tests_helm_pull.yml
+
 - name: Clean helm install
   file:
     path: "{{ item }}"
