@@ -286,6 +286,72 @@
       state: uncordon
       name: '{{ node_to_drain }}'
 
+  - name: Create another Pod
+    k8s:
+      namespace: '{{ test_namespace }}'
+      wait: yes
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: '{{ drain_pod_name }}-01'
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchFields:
+                  - key: metadata.name
+                    operator: In
+                    values:
+                    - '{{ node_to_drain }}'
+          containers:
+          - name: c0
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+            volumeMounts:
+            - mountPath: /emptydir
+              name: emptydir
+          volumes:
+          - name: emptydir
+            emptyDir: {}
+
+  - name: Drain node using disable_eviction set to yes
+    k8s_drain:
+      state: drain
+      name: '{{ node_to_drain }}'
+      delete_options:
+        force: true
+        disable_eviction: yes
+        terminate_grace_period: 0
+        ignore_daemonsets: yes
+        wait_timeout: 0
+        delete_emptydir_data: true
+    register: disable_evict
+
+  - name: assert that node has been drained
+    assert:
+      that:
+      - disable_evict is changed
+      - '"node {{ node_to_drain }} marked unschedulable." in disable_evict.result'
+
+  - name: assert that unmanaged pod were deleted
+    k8s_info:
+      namespace: '{{ test_namespace }}'
+      kind: Pod
+      name: '{{ drain_pod_name }}-01'
+    register: _result
+    failed_when: _result.resources
+
+  - name: Uncordon node
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+
   always:
   - name: Uncordon node
     k8s_drain:
