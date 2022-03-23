@@ -212,7 +212,7 @@ def execute_module(module, k8s_ansible_mixin):
         rc = int(err["details"]["causes"][0]["message"])
 
     module.deprecate(
-        "The 'return_code' return key is deprecated. Please use 'rc' instead. "
+        "The 'return_code' return key is being renamed to 'rc'. "
         "Both keys are being returned for now to allow users to migrate their automation.",
         version="4.0.0",
         collection_name="kubernetes.core",
