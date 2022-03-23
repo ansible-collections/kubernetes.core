@@ -140,7 +140,7 @@ from ansible.module_utils._text import to_native
 
 try:
     from kubernetes.client.api import core_v1_api
-    from kubernetes.client.models import V1DeleteOptions
+    from kubernetes.client.models import V1DeleteOptions, V1ObjectMeta
     from kubernetes.client.exceptions import ApiException
 except ImportError:
     # ImportError are managed by the common module already.
@@ -273,15 +273,8 @@ class K8sDrainAnsible(object):
         self._drain_options = module.params.get("delete_options", {})
         self._delete_options = None
         if self._drain_options.get("terminate_grace_period"):
-            self._delete_options = {}
-            self._delete_options.update({"apiVersion": "v1"})
-            self._delete_options.update({"kind": "DeleteOptions"})
-            self._delete_options.update(
-                {
-                    "gracePeriodSeconds": self._drain_options.get(
-                        "terminate_grace_period"
-                    )
-                }
+            self._delete_options = V1DeleteOptions(
+                grace_period_seconds=self._drain_options.get("terminate_grace_period")
             )
 
         self._changed = False
@@ -318,17 +311,16 @@ class K8sDrainAnsible(object):
 
     def evict_pods(self, pods):
         for namespace, name in pods:
-            definition = {"metadata": {"name": name, "namespace": namespace}}
-            if self._delete_options:
-                definition.update({"delete_options": self._delete_options})
             try:
                 if self._drain_options.get("disable_eviction"):
-                    body = V1DeleteOptions(**definition)
                     self._api_instance.delete_namespaced_pod(
-                        name=name, namespace=namespace, body=body
+                        name=name, namespace=namespace, body=self._delete_options
                     )
                 else:
-                    body = v1_eviction(**definition)
+                    body = v1_eviction(
+                        delete_options=self._delete_options,
+                        metadata=V1ObjectMeta(name=name, namespace=namespace),
+                    )
                     self._api_instance.create_namespaced_pod_eviction(
                         name=name, namespace=namespace, body=body
                     )
