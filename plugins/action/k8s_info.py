@@ -352,7 +352,7 @@ class ActionModule(ActionBase):
 
         local_path = self._task.args.get("local_path")
         state = self._task.args.get("state", None)
-        if local_path and state == "to_pod":
+        if local_path and state == "to_pod" and not remote_transport:
             new_module_args["local_path"] = self.get_file_realpath(local_path)
 
         # Execute the k8s_* module.
