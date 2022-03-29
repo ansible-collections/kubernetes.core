@@ -146,7 +146,7 @@ options:
     description:
       - Path to an executable to be used for post rendering.
     type: str
-    version_added: "2.3.0"
+    version_added: "2.4.0"
   replace:
     description:
       - Reuse the given name, only if that name is a deleted release which remains in the history.
