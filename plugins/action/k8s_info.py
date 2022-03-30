@@ -295,7 +295,7 @@ class ActionModule(ActionBase):
             )
 
     def run(self, tmp=None, task_vars=None):
-        """ handler for k8s options """
+        """handler for k8s options"""
         if task_vars is None:
             task_vars = dict()
 

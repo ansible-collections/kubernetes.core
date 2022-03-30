@@ -19,4 +19,4 @@ __metaclass__ = type
 
 
 class ApplyException(Exception):
-    """ Could not apply patch """
+    """Could not apply patch"""

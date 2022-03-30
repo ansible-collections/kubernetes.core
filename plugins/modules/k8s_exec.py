@@ -228,7 +228,10 @@ def execute_module(module, k8s_ansible_mixin):
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True,)
+    module = AnsibleModule(
+        argument_spec=argspec(),
+        supports_check_mode=True,
+    )
     from ansible_collections.kubernetes.core.plugins.module_utils.common import (
         K8sAnsibleMixin,
         get_api_client,

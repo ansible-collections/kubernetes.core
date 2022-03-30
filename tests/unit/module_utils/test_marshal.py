@@ -26,25 +26,49 @@ from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
 
 tests = [
     dict(
-        resource=dict(kind="ConfigMap", name="", data=dict(),),
+        resource=dict(
+            kind="ConfigMap",
+            name="",
+            data=dict(),
+        ),
         expected=b'{"data":{},"kind":"ConfigMap","name":""}',
     ),
     dict(
-        resource=dict(kind="ConfigMap", name="", data=dict(one=""),),
+        resource=dict(
+            kind="ConfigMap",
+            name="",
+            data=dict(one=""),
+        ),
         expected=b'{"data":{"one":""},"kind":"ConfigMap","name":""}',
     ),
     dict(
         resource=dict(
-            kind="ConfigMap", name="", data=dict(two="2", one="", three="3",),
+            kind="ConfigMap",
+            name="",
+            data=dict(
+                two="2",
+                one="",
+                three="3",
+            ),
         ),
         expected=b'{"data":{"one":"","three":"3","two":"2"},"kind":"ConfigMap","name":""}',
     ),
     dict(
-        resource=dict(kind="Secret", type="my-type", name="", data=dict(),),
+        resource=dict(
+            kind="Secret",
+            type="my-type",
+            name="",
+            data=dict(),
+        ),
         expected=b'{"data":{},"kind":"Secret","name":"","type":"my-type"}',
     ),
     dict(
-        resource=dict(kind="Secret", type="my-type", name="", data=dict(one=""),),
+        resource=dict(
+            kind="Secret",
+            type="my-type",
+            name="",
+            data=dict(one=""),
+        ),
         expected=b'{"data":{"one":""},"kind":"Secret","name":"","type":"my-type"}',
     ),
     dict(
@@ -52,7 +76,11 @@ tests = [
             kind="Secret",
             type="my-type",
             name="",
-            data=dict(two="Mg==", one="", three="Mw==",),
+            data=dict(
+                two="Mg==",
+                one="",
+                three="Mw==",
+            ),
         ),
         expected=b'{"data":{"one":"","three":"Mw==","two":"Mg=="},"kind":"Secret","name":"","type":"my-type"}',
     ),

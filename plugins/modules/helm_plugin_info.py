@@ -81,7 +81,9 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             binary_path=dict(type="path"),
-            plugin_name=dict(type="str",),
+            plugin_name=dict(
+                type="str",
+            ),
             # Helm options
             context=dict(
                 type="str",

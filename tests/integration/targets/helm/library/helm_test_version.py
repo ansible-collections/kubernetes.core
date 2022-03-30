@@ -62,7 +62,8 @@ from ansible.module_utils.basic import AnsibleModule
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            binary_path=dict(type="path"), version=dict(type="str", default="3.7.0"),
+            binary_path=dict(type="path"),
+            version=dict(type="str", default="3.7.0"),
         ),
     )
 

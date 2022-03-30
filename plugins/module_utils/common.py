@@ -473,9 +473,11 @@ class K8sAnsibleMixin(object):
         if result_empty(result):
             res = dict(resources=[], api_found=True)
             if last_exception is not None:
-                res["msg"] = (
-                    "Exception '%s' raised while trying to get resource using %s"
-                    % (last_exception, params)
+                res[
+                    "msg"
+                ] = "Exception '%s' raised while trying to get resource using %s" % (
+                    last_exception,
+                    params,
                 )
             return res
 
