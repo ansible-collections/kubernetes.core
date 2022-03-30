@@ -385,8 +385,10 @@ def check_pod(k8s_ansible_mixin, module):
     def _fail(exc):
         arg = {}
         if hasattr(exc, "body"):
-            msg = "Namespace={0} Kind=Pod Name={1}: Failed requested object: {2}".format(
-                namespace, name, exc.body
+            msg = (
+                "Namespace={0} Kind=Pod Name={1}: Failed requested object: {2}".format(
+                    namespace, name, exc.body
+                )
             )
         else:
             msg = to_native(exc)
