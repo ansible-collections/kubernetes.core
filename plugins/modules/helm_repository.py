@@ -228,7 +228,7 @@ def main():
             repo_state=dict(
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
-            pass_credentials=dict(type="bool", default=False),
+            pass_credentials=dict(type="bool", default=False, no_log=True),
             # Generic auth key
             host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
             ca_cert=dict(
