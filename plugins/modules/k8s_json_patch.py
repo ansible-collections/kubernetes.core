@@ -79,7 +79,7 @@ EXAMPLES = r"""
         path: /metadata/labels/app
         value: myapp
       - op: replace
-        patch: /spec/containers/0/image
+        path: /spec/containers/0/image
         value: nginx
 """
 
