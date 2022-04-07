@@ -1,0 +1,34 @@
+- name: Prepare Kubernetes core release
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Ensure required python modules are installed
+      pip:
+        name:
+          - packaging
+          - gitpython
+
+    - name: define collection path
+      set_fact:
+        collection_path: "{{ playbook_dir | dirname }}"
+
+    - name: "Update the version in the following places: galaxy.yml, README.md, Makefile"
+      command: >
+        python3 update_version.py
+        --collection-path "{{ collection_path }}"
+        {% if k8s_release_version is defined %}--release-version {{ k8s_release_version }}{% endif %}
+      register: update_version
+
+    - set_fact:
+        result: "{{ update_version.stdout | from_json }}"
+
+    - name: Enure tox is installed
+      pip:
+        name: tox
+
+    - name: Update Changelog
+      command: 'tox -e antsibull-changelog -- release --verbose --version {{ result.release_version }}'
+
+    - name: Refresh documentation
+      command: 'tox -e add_docs -vv'

@@ -253,3 +253,5 @@ plugins/module_utils/copy.py compile-2.6!skip
 plugins/module_utils/copy.py compile-2.7!skip
 plugins/module_utils/copy.py import-2.6!skip
 plugins/module_utils/copy.py import-2.7!skip
+tools/update_version.py future-import-boilerplate!skip
+tools/update_version.py metaclass-boilerplate!skip
