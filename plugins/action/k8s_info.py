@@ -12,7 +12,6 @@ import traceback
 import os
 from contextlib import contextmanager
 
-
 from ansible.config.manager import ensure_type
 from ansible.errors import (
     AnsibleError,
@@ -24,6 +23,31 @@ from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.six import string_types, iteritems
 from ansible.module_utils._text import to_text, to_bytes, to_native
 from ansible.plugins.action import ActionBase
+
+
+class RemoveOmit(object):
+    def __init__(self, buffer, omit_value):
+        try:
+            import yaml
+        except ImportError:
+            raise AnsibleError("Failed to import the required Python library (PyYAML).")
+        self.data = yaml.safe_load_all(buffer)
+        self.omit = omit_value
+
+    def remove_omit(self, data):
+        if isinstance(data, dict):
+            result = dict()
+            for key, value in iteritems(data):
+                if value == self.omit:
+                    continue
+                result[key] = self.remove_omit(value)
+            return result
+        if isinstance(data, list):
+            return [self.remove_omit(v) for v in data if v != self.omit]
+        return data
+
+    def output(self):
+        return [self.remove_omit(d) for d in self.data]
 
 
 class ActionModule(ActionBase):
@@ -180,6 +204,7 @@ class ActionModule(ActionBase):
                 "'template' is only a supported parameter for the 'k8s' module."
             )
 
+        omit_value = task_vars.get("omit")
         template_params = []
         if isinstance(template, string_types) or isinstance(template, dict):
             template_params.append(self.get_template_args(template))
@@ -245,7 +270,10 @@ class ActionModule(ActionBase):
                     preserve_trailing_newlines=True,
                     escape_backslashes=False,
                 )
-                result_template.append(result)
+                if omit_value is not None:
+                    result_template.extend(RemoveOmit(result, omit_value).output())
+                else:
+                    result_template.append(result)
         self._templar.available_variables = old_vars
         resource_definition = self._task.args.get("definition", None)
         if not resource_definition:
@@ -295,7 +323,7 @@ class ActionModule(ActionBase):
             )
 
     def run(self, tmp=None, task_vars=None):
-        """ handler for k8s options """
+        """handler for k8s options"""
         if task_vars is None:
             task_vars = dict()
 
