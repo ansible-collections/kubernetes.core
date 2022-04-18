@@ -18,6 +18,9 @@
 - name: tests_repository
   include_tasks: tests_repository.yml
 
+- name: test helm dependency update
+  include_tasks: test_up_dep.yml
+
 - name: Deploy charts
   include_tasks: "tests_chart/{{ test_chart_type }}.yml"
   loop_control:

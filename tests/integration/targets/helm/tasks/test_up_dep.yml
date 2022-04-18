@@ -1,0 +1,62 @@
+- name: copy chart
+  copy:
+    src: "{{ item }}"
+    dest: /tmp
+  loop:
+    - test-chart
+    - dep-up
+
+- name: "Test chart without dependencies block"
+  block:
+    - name: "Test chart without dependencies block"
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test
+        chart_ref: "/tmp/test-chart"
+        chart_version: "{{ chart_source_version | default(omit) }}"
+        namespace: "{{ helm_namespace }}"
+        create_namespace: yes
+      register: release
+
+    - name: "Check if the subchart exist in chart"
+      stat:
+        path: "/tmp/test-chart/Chart.lock"
+      register: stat_result
+
+    - assert:
+        that:
+          - not stat_result.stat.exists
+        success_msg: "There is no Subchart pulled"
+        fail_msg: "subchart exist in the charts directory"
+
+- name: "Test chart with dependencies block"
+  block:
+    - name: "Test chart with dependencies block"
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test
+        chart_ref: "/tmp/dep-up"
+        chart_version: "{{ chart_source_version | default(omit) }}"
+        namespace: "{{ helm_namespace }}"
+        create_namespace: yes
+      register: release
+
+    - name: "Check if the subchart exist in chart"
+      stat:
+        path: "/tmp/dep-up/Chart.lock"
+      register: stat_result
+
+    - assert:
+        that:
+          - stat_result.stat.exists
+        success_msg: "subchart exist in the chart directory"
+        fail_msg: "subchart not exist in the charts directory"
+
+- name: Remove helm namespace
+  k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ helm_namespace }}"
+    state: absent
+    wait: true
+    wait_timeout: 180

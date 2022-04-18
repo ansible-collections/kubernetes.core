@@ -6,7 +6,7 @@
 
 - name: Unarchive Helm binary
   unarchive:
-    src: 'https://get.helm.sh/{{ helm_archive_name }}'
+    src: "https://get.helm.sh/{{ helm_archive_name }}"
     dest: /tmp/helm/
     remote_src: yes
   retries: 10

@@ -30,6 +30,7 @@ description:
 notes:
   - The default idempotency check can fail to report changes when C(release_state) is set to C(present)
     and C(chart_repo_url) is defined. Install helm diff >= 3.4.1 for better results.
+  - The module perform the helm dependency update if we specify the C(dependencies) block in the I(Chart.yaml/requirements.yaml) file.
 
 options:
   chart_ref:
@@ -385,6 +386,14 @@ def run_repo_update(module, command):
     rc, out, err = run_helm(module, repo_update_command)
 
 
+def run_dep_update(module, command, chart_ref):
+    """
+    Run dependency update
+    """
+    repo_dep_update = command + " dependency update " + chart_ref
+    rc, out, err = run_helm(module, repo_dep_update)
+
+
 def fetch_chart_info(module, command, chart_ref):
     """
     Get chart info
@@ -413,6 +422,7 @@ def deploy(
     post_renderer=None,
     skip_crds=False,
     timeout=None,
+    dependency_update=None,
 ):
     """
     Install/upgrade/rollback release chart
@@ -420,6 +430,8 @@ def deploy(
     if replace:
         # '--replace' is not supported by 'upgrade -i'
         deploy_command = command + " install"
+        if dependency_update:
+            deploy_command += " --dependency-update"
     else:
         deploy_command = command + " upgrade -i"  # install/upgrade
 
@@ -687,6 +699,8 @@ def main():
     history_max = module.params.get("history_max")
     timeout = module.params.get("timeout")
 
+    dependency_update = False
+
     if bin_path is not None:
         helm_cmd_common = bin_path
     else:
@@ -723,11 +737,29 @@ def main():
         if chart_version is not None:
             helm_cmd += " --version=" + chart_version
 
-        if chart_repo_url is not None:
+        if chart_repo_url:
             helm_cmd += " --repo=" + chart_repo_url
 
         # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
         chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
+        if chart_info.get('dependencies'):
+            # '--update-dependency' not supported with 'helm upgrade'
+            # Maybe in the near future https://github.com/helm/helm/pull/8810
+            if chart_repo_url:
+                module.warn("This is a not stable feature with 'chart_repo_url'. Please consider to use dependency update with on-disk charts")
+                if replace:
+                    dependency_update = True
+                else:
+                    msg_fail = ("'--dependency-update' hasn't been supported yet with 'helm upgrade'. "
+                                "Please use 'helm install' instead by adding 'replace' option")
+                    module.fail_json(msg=msg_fail)
+            else:
+                # Can't use '--dependency-update' with 'helm upgrade' that is the
+                # default chart install method, so if chart_repo_url is defined
+                # we can't use the dependency update command. But, in the near future
+                # we can get rid of this method and use only '--dependency-update'
+                # option. Please see https://github.com/helm/helm/pull/8810
+                run_dep_update(module, helm_cmd_common, chart_ref)
 
         if release_status is None:  # Not installed
             helm_cmd = deploy(
@@ -744,6 +776,7 @@ def main():
                 create_namespace=create_namespace,
                 post_renderer=post_renderer,
                 replace=replace,
+                dependency_update=dependency_update,
                 skip_crds=skip_crds,
                 history_max=history_max,
                 timeout=timeout,
@@ -800,6 +833,7 @@ def main():
                     skip_crds=skip_crds,
                     history_max=history_max,
                     timeout=timeout,
+                    dependency_update=dependency_update,
                 )
                 changed = True
 
