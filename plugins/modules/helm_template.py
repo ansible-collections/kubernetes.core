@@ -274,16 +274,8 @@ def main():
         update_cmd = helm_cmd + " repo update"
         run_helm(module, update_cmd)
 
-    # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
-    chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
-
-    if dependency_update:
-        if not chart_info.get('dependencies'):
-            msg_fail = (f"No subchart will be pulled for {chart_ref}. "
-                        "Please make sure to add dependencies block in Chart.yaml or requirements.yaml. "
-                        "For more information please visite https://helm.sh/docs/helm/helm_dependency/")
-            module.fail_json(msg=msg_fail)
-
+    if chart_repo_url:
+        helm_cmd += f" --repo={chart_repo_url}"
     tmpl_cmd = template(
         helm_cmd,
         chart_ref,
