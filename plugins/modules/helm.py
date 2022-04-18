@@ -620,7 +620,7 @@ def main():
             chart_ref=dict(type="path"),
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
-            dependency_update=dict(type='bool', default=False, aliases=['dep_up']),
+            dependency_update=dict(type="bool", default=False, aliases=["dep_up"]),
             release_name=dict(type="str", required=True, aliases=["name"]),
             release_namespace=dict(type="str", required=True, aliases=["namespace"]),
             release_state=dict(
@@ -691,7 +691,7 @@ def main():
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
-    dependency_update = module.params.get('dependency_update')
+    dependency_update = module.params.get("dependency_update")
     release_name = module.params.get("release_name")
     release_state = module.params.get("release_state")
     release_values = module.params.get("release_values")
@@ -755,26 +755,34 @@ def main():
         chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
 
         if dependency_update:
-            if chart_info.get('dependencies'):
+            if chart_info.get("dependencies"):
                 # Can't use '--dependency-update' with 'helm upgrade' that is the
                 # default chart install method, so if chart_repo_url is defined
                 # we can't use the dependency update command. But, in the near future
                 # we can get rid of this method and use only '--dependency-update'
                 # option. Please see https://github.com/helm/helm/pull/8810
-                if not chart_repo_url and not re.fullmatch(r'^http[s]*://[\w.:/?&=-]+$', chart_ref):
+                if not chart_repo_url and not re.fullmatch(
+                    r"^http[s]*://[\w.:/?&=-]+$", chart_ref
+                ):
                     run_dep_update(module, helm_cmd_common, chart_ref)
 
                     # To not add --dependency-update option in the deploy function
                     dependency_update = False
                 else:
-                    module.warn("This is a not stable feature with 'chart_repo_url'. Please consider to use dependency update with on-disk charts")
+                    module.warn(
+                        "This is a not stable feature with 'chart_repo_url'. Please consider to use dependency update with on-disk charts"
+                    )
                     if not replace:
-                        msg_fail = ("'--dependency-update' hasn't been supported yet with 'helm upgrade'. "
-                                    "Please use 'helm install' instead by adding 'replace' option")
+                        msg_fail = (
+                            "'--dependency-update' hasn't been supported yet with 'helm upgrade'. "
+                            "Please use 'helm install' instead by adding 'replace' option"
+                        )
                         module.fail_json(msg=msg_fail)
             else:
-                module.warn("There is no dependencies block defined in Chart.yaml. Dependency update will not be performed. "
-                            "Please consider add dependencies block or disable dependency_update to remove this warning.")
+                module.warn(
+                    "There is no dependencies block defined in Chart.yaml. Dependency update will not be performed. "
+                    "Please consider add dependencies block or disable dependency_update to remove this warning."
+                )
 
         if release_status is None:  # Not installed
             helm_cmd = deploy(

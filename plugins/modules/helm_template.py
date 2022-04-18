@@ -239,7 +239,7 @@ def main():
             chart_ref=dict(type="path", required=True),
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
-            dependency_update=dict(type='bool', default=False, aliases=['dep_up']),
+            dependency_update=dict(type="bool", default=False, aliases=["dep_up"]),
             include_crds=dict(type="bool", default=False),
             output_dir=dict(type="path"),
             release_namespace=dict(type="str"),
@@ -256,7 +256,7 @@ def main():
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
-    dependency_update = module.params.get('dependency_update')
+    dependency_update = module.params.get("dependency_update")
     include_crds = module.params.get("include_crds")
     output_dir = module.params.get("output_dir")
     show_only = module.params.get("show_only")
