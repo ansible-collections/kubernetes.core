@@ -381,12 +381,6 @@ Parameters
     <br/>
 
 
-Notes
------
-
-.. note::
-   - While querying, please use ``query`` or ``lookup`` format with ``wantlist=True`` to provide an easier and more consistent interface. For more details, see https://docs.ansible.com/ansible/latest/plugins/lookup.html#forcing-lookups-to-return-lists-query-and-wantlist-true.
-
 
 
 Examples
@@ -396,23 +390,23 @@ Examples
 
     - name: Fetch a list of namespaces
       set_fact:
-        projects: "{{ query('kubernetes.core.k8s', api_version='v1', kind='Namespace') }}"
+        projects: "{{ lookup('kubernetes.core.k8s', api_version='v1', kind='Namespace') }}"
 
     - name: Fetch all deployments
       set_fact:
-        deployments: "{{ query('kubernetes.core.k8s', kind='Deployment') }}"
+        deployments: "{{ lookup('kubernetes.core.k8s', kind='Deployment') }}"
 
     - name: Fetch all deployments in a namespace
       set_fact:
-        deployments: "{{ query('kubernetes.core.k8s', kind='Deployment', namespace='testing') }}"
+        deployments: "{{ lookup('kubernetes.core.k8s', kind='Deployment', namespace='testing') }}"
 
     - name: Fetch a specific deployment by name
       set_fact:
-        deployments: "{{ query('kubernetes.core.k8s', kind='Deployment', namespace='testing', resource_name='elastic') }}"
+        deployments: "{{ lookup('kubernetes.core.k8s', kind='Deployment', namespace='testing', resource_name='elastic') }}"
 
     - name: Fetch with label selector
       set_fact:
-        service: "{{ query('kubernetes.core.k8s', kind='Service', label_selector='app=galaxy') }}"
+        service: "{{ lookup('kubernetes.core.k8s', kind='Service', label_selector='app=galaxy') }}"
 
     # Use parameters from a YAML config
 
@@ -422,11 +416,11 @@ Examples
 
     - name: Using the config (loaded from a file in prior task), fetch the latest version of the object
       set_fact:
-        service: "{{ query('kubernetes.core.k8s', resource_definition=config) }}"
+        service: "{{ lookup('kubernetes.core.k8s', resource_definition=config) }}"
 
     - name: Use a config from the local filesystem
       set_fact:
-        service: "{{ query('kubernetes.core.k8s', src='service.yml') }}"
+        service: "{{ lookup('kubernetes.core.k8s', src='service.yml') }}"
 
 
 

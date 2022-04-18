@@ -387,22 +387,6 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>since_seconds</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">string</span>
-                    </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.2.0</div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>A relative time in seconds before the current time from which to show logs.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>username</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -474,7 +458,6 @@ Examples
         kind: Deployment
         namespace: testing
         name: example
-        since_seconds: "4000"
       register: log
 
     # This will get the log from a single Pod managed by this DeploymentConfig
