@@ -52,6 +52,56 @@
         success_msg: "subchart exist in the chart directory"
         fail_msg: "subchart not exist in the charts directory"
 
+- name: "Test Helm dependency update block exist in the helm_template module"
+  block:
+    - name: Test Helm dependency update block exist in the helm_template module
+      helm_template:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "/tmp/dep-up"
+        chart_version: "{{ chart_source_version | default(omit) }}"
+        output_dir: "/tmp"
+      register: result
+
+    - name: "Check if the subchart exist in chart"
+      stat:
+        path: "{{ item }}"
+      register: stat_result
+      loop:
+        - /tmp/dep-up/Chart.lock
+        - /tmp/dep_up/charts/test-chart/templates/configmap.yaml
+
+    - assert:
+        that:
+          - stat_result.results[0].stat.exists
+          - stat_result.results[1].stat.exists
+        success_msg: "subchart exist in the charts directory"
+        fail_msg: "There is no Subchart pulled"
+
+- name: "Test Helm dependency update block not exist in the helm_template module"
+  block:
+    - name: Test Helm dependency update block not exist in the helm_template module
+      helm_template:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "/tmp/test-chart"
+        chart_version: "{{ chart_source_version | default(omit) }}"
+        output_dir: "/tmp"
+      register: result
+
+    - name: "Check if the subchart exist in chart"
+      stat:
+        path: "{{ item }}"
+      register: stat_result
+      loop:
+        - /tmp/test-chart/Chart.lock
+        - /tmp/test-chart/templates/configmap.yaml
+
+    - assert:
+        that:
+          - not stat_result.results[0].stat.exists
+          - stat_result.results[1].stat.exists
+        success_msg: "subchart exist in the charts directory"
+        fail_msg: "There is no Subchart pulled"
+
 - name: Remove helm namespace
   k8s:
     api_version: v1

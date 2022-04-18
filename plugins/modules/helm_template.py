@@ -21,6 +21,9 @@ author:
 description:
   - Render chart templates to an output directory or as text of concatenated yaml documents.
 
+notes:
+  - The module performs the helm dependency update if we specify the C(dependencies) block in the I(Chart.yaml/requirements.yaml) file.
+
 options:
   binary_path:
     description:
@@ -162,11 +165,23 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
+def fetch_chart_info(module, command, chart_ref):
+    """
+    Get chart info
+    """
+    inspect_command = f"{command} show chart {chart_ref}"
+
+    rc, out, err = run_helm(module, inspect_command)
+
+    return yaml.safe_load(out)
+
+
 def template(
     cmd,
     chart_ref,
     chart_repo_url=None,
     chart_version=None,
+    dependency_update=None,
     output_dir=None,
     show_only=None,
     release_values=None,
@@ -175,6 +190,9 @@ def template(
     include_crds=False,
 ):
     cmd += " template " + chart_ref
+
+    if dependency_update:
+        cmd += " --dependency-update"
 
     if chart_repo_url:
         cmd += " --repo=" + chart_repo_url
@@ -239,6 +257,8 @@ def main():
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
 
+    dependency_update = False
+
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
@@ -248,9 +268,15 @@ def main():
         update_cmd = helm_cmd + " repo update"
         run_helm(module, update_cmd)
 
+    # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
+    chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
+    if chart_info.get('dependencies'):
+        dependency_update = True
+
     tmpl_cmd = template(
         helm_cmd,
         chart_ref,
+        dependency_update=dependency_update,
         chart_repo_url=chart_repo_url,
         chart_version=chart_version,
         output_dir=output_dir,
