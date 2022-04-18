@@ -53,7 +53,7 @@ options:
     default: false
     type: bool
     aliases: [ dep_up ]
-    version_added: "2.2.0"
+    version_added: "2.4.0"
   include_crds:
     description:
       - Include custom resource descriptions in rendered templates.
@@ -171,17 +171,6 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
 
 
-def fetch_chart_info(module, command, chart_ref):
-    """
-    Get chart info
-    """
-    inspect_command = f"{command} show chart {chart_ref}"
-
-    rc, out, err = run_helm(module, inspect_command)
-
-    return yaml.safe_load(out)
-
-
 def template(
     cmd,
     chart_ref,
@@ -274,8 +263,6 @@ def main():
         update_cmd = helm_cmd + " repo update"
         run_helm(module, update_cmd)
 
-    if chart_repo_url:
-        helm_cmd += f" --repo={chart_repo_url}"
     tmpl_cmd = template(
         helm_cmd,
         chart_ref,

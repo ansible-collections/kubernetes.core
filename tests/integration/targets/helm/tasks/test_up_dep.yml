@@ -9,6 +9,9 @@
         - test-chart
         - dep-up
 
+    - set_fact:
+        helm_namespace: "{{ test_namespace[10] }}"
+
     - name: "Test chart with dependency_update false"
       helm:
         binary_path: "{{ helm_binary }}"

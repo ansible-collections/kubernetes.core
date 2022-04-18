@@ -61,7 +61,7 @@ options:
     default: false
     type: bool
     aliases: [ dep_up ]
-    version_added: "2.2.0"
+    version_added: "2.4.0"
   release_name:
     description:
       - Release name to manage.
