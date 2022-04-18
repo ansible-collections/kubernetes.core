@@ -30,7 +30,7 @@ description:
 notes:
   - The default idempotency check can fail to report changes when C(release_state) is set to C(present)
     and C(chart_repo_url) is defined. Install helm diff >= 3.4.1 for better results.
-  - The module perform the helm dependency update if we specify the C(dependencies) block in the I(Chart.yaml/requirements.yaml) file.
+  - The module performs the helm dependency update if we specify the C(dependencies) block in the I(Chart.yaml/requirements.yaml) file.
 
 options:
   chart_ref:

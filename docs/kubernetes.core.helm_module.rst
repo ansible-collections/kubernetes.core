@@ -532,6 +532,12 @@ Parameters
     <br/>
 
 
+Notes
+-----
+
+.. note::
+   - The module performs the helm dependency update if we specify the ``dependencies`` block in the *Chart.yaml/requirements.yaml* file.
+
 
 
 Examples
