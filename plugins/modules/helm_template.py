@@ -21,9 +21,6 @@ author:
 description:
   - Render chart templates to an output directory or as text of concatenated yaml documents.
 
-notes:
-  - The module performs the helm dependency update if we specify the C(dependencies) block in the I(Chart.yaml/requirements.yaml) file.
-
 options:
   binary_path:
     description:
@@ -48,6 +45,14 @@ options:
       - Chart version to use. If this is not specified, the latest version is installed.
     required: false
     type: str
+  dependency_update:
+    description:
+      - Run helm dependency update before the operation.
+      - The I(dependency_update) option require the add of C(dependencies) block in C(Chart.yaml/requirements.yaml) file.
+      - For more information please visit U(https://helm.sh/docs/helm/helm_dependency/)
+    default: false
+    type: bool
+    aliases: [ dep_up ]
   include_crds:
     description:
       - Include custom resource descriptions in rendered templates.
@@ -233,6 +238,7 @@ def main():
             chart_ref=dict(type="path", required=True),
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
+            dependency_update=dict(type='bool', default=False, aliases=['dep_up']),
             include_crds=dict(type="bool", default=False),
             output_dir=dict(type="path"),
             release_namespace=dict(type="str"),
@@ -249,6 +255,7 @@ def main():
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
+    dependency_update = module.params.get('dependency_update')
     include_crds = module.params.get("include_crds")
     output_dir = module.params.get("output_dir")
     show_only = module.params.get("show_only")
@@ -256,8 +263,6 @@ def main():
     release_values = module.params.get("release_values")
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
-
-    dependency_update = False
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
@@ -270,8 +275,13 @@ def main():
 
     # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
     chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
-    if chart_info.get('dependencies'):
-        dependency_update = True
+
+    if dependency_update:
+        if not chart_info.get('dependencies'):
+            msg_fail = (f"No subchart will be pulled for {chart_ref}. "
+                        "Please make sure to add dependencies block in Chart.yaml or requirements.yaml. "
+                        "For more information please visite https://helm.sh/docs/helm/helm_dependency/")
+            module.fail_json(msg=msg_fail)
 
     tmpl_cmd = template(
         helm_cmd,

@@ -1,3 +1,4 @@
+# Helm module
 - name: copy chart
   copy:
     src: "{{ item }}"
@@ -6,15 +7,16 @@
     - test-chart
     - dep-up
 
-- name: "Test chart without dependencies block"
+- name: "Test chart with dependency_update false"
   block:
-    - name: "Test chart without dependencies block"
+    - name: "Test chart with dependency_update false"
       helm:
         binary_path: "{{ helm_binary }}"
         name: test
         chart_ref: "/tmp/test-chart"
         chart_version: "{{ chart_source_version | default(omit) }}"
         namespace: "{{ helm_namespace }}"
+        dependency_update: false
         create_namespace: yes
       register: release
 
@@ -26,18 +28,39 @@
     - assert:
         that:
           - not stat_result.stat.exists
-        success_msg: "There is no Subchart pulled"
+        success_msg: "subchart not exist in the chart directory"
         fail_msg: "subchart exist in the charts directory"
 
-- name: "Test chart with dependencies block"
+- name: "Test chart without dependencies block and dependency_update true"
   block:
-    - name: "Test chart with dependencies block"
+    - name: "Test chart without dependencies block"
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test
+        chart_ref: "/tmp/test-chart"
+        chart_version: "{{ chart_source_version | default(omit) }}"
+        namespace: "{{ helm_namespace }}"
+        create_namespace: yes
+        dependency_update: true
+      ignore_errors: true
+      register: release
+
+    - assert:
+        that:
+          - release.failed
+          - release.msg == "No subchart will be pulled for /tmp/test-chart. Please make sure to add dependencies block in Chart.yaml or requirements.yaml. For more information please visite https://helm.sh/docs/helm/helm_dependency/"
+        success_msg: "Failed when there is no dependencies block with dependency_update enabled"
+
+- name: "Test chart with dependencies block and dependency_update true"
+  block:
+    - name: "Test chart with dependencies block and dependency_update true"
       helm:
         binary_path: "{{ helm_binary }}"
         name: test
         chart_ref: "/tmp/dep-up"
         chart_version: "{{ chart_source_version | default(omit) }}"
         namespace: "{{ helm_namespace }}"
+        dependency_update: true
         create_namespace: yes
       register: release
 
@@ -52,13 +75,43 @@
         success_msg: "subchart exist in the chart directory"
         fail_msg: "subchart not exist in the charts directory"
 
-- name: "Test Helm dependency update block exist in the helm_template module"
+# Clean
+- name: "Clean"
   block:
-    - name: Test Helm dependency update block exist in the helm_template module
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent
+        wait: true
+        wait_timeout: 180
+
+    - name: "Remove charts"
+      file:
+        state: absent
+        path: "/tmp/{{ item }}"
+      loop:
+        - test-chart
+        - dep-up
+
+# Helm template module
+- name: copy chart
+  copy:
+    src: "{{ item }}"
+    dest: /tmp
+  loop:
+    - test-chart
+    - dep-up
+
+- name: "Test Helm dependency update block exist in the helm_template module and dependency_update true"
+  block:
+    - name: Test Helm dependency update block exist in the helm_template module and dependency_update true
       helm_template:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/dep-up"
         chart_version: "{{ chart_source_version | default(omit) }}"
+        dependency_update: true
         output_dir: "/tmp"
       register: result
 
@@ -77,13 +130,32 @@
         success_msg: "subchart exist in the charts directory"
         fail_msg: "There is no Subchart pulled"
 
-- name: "Test Helm dependency update block not exist in the helm_template module"
+- name: "Test Helm dependency update block not exist in the helm_template module and dependency_update true"
   block:
-    - name: Test Helm dependency update block not exist in the helm_template module
+    - name: Test Helm dependency update block not exist in the helm_template module and dependency_update true
       helm_template:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/test-chart"
         chart_version: "{{ chart_source_version | default(omit) }}"
+        output_dir: "/tmp"
+        dependency_update: true
+      register: release
+      ignore_errors: true
+
+    - assert:
+        that:
+          - release.failed
+          - release.msg == "No subchart will be pulled for /tmp/test-chart. Please make sure to add dependencies block in Chart.yaml or requirements.yaml. For more information please visite https://helm.sh/docs/helm/helm_dependency/"
+        success_msg: "Failed when there is no dependencies block with dependency_update enabled"
+
+- name: "Test Helm subchart not pulled when dependency_update false for helm_template"
+  block:
+    - name: Test Helm subchart not pulled when dependency_update false
+      helm_template:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "/tmp/test-chart"
+        chart_version: "{{ chart_source_version | default(omit) }}"
+        dependency_update: false
         output_dir: "/tmp"
       register: result
 
@@ -99,14 +171,5 @@
         that:
           - not stat_result.results[0].stat.exists
           - stat_result.results[1].stat.exists
-        success_msg: "subchart exist in the charts directory"
+        success_msg: "subchart not exist in the charts directory"
         fail_msg: "There is no Subchart pulled"
-
-- name: Remove helm namespace
-  k8s:
-    api_version: v1
-    kind: Namespace
-    name: "{{ helm_namespace }}"
-    state: absent
-    wait: true
-    wait_timeout: 180

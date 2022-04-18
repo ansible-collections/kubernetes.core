@@ -196,6 +196,30 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dependency_update</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Run standelone <code>helm dependency update CHART</code> before the operation.</div>
+                        <div>Run inline <code>--dependency-update</code> with <code>helm install</code> command. This feature is not supported yet with the <code>helm upgrade</code> command.</div>
+                        <div>So we should consider to use <em>dependency_update</em> options with <em>replace</em> option enabled when specifying <em>chart_repo_url</em>.</div>
+                        <div>The <em>dependency_update</em> option require the add of <code>dependencies</code> block in <code>Chart.yaml/requirements.yaml</code> file.</div>
+                        <div>For more information please visit <a href='https://helm.sh/docs/helm/helm_dependency/'>https://helm.sh/docs/helm/helm_dependency/</a></div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: dep_up</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>disable_hook</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -531,12 +555,6 @@ Parameters
     </table>
     <br/>
 
-
-Notes
------
-
-.. note::
-   - The module performs the helm dependency update if we specify the ``dependencies`` block in the *Chart.yaml/requirements.yaml* file.
 
 
 
