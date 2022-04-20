@@ -143,7 +143,7 @@ def argspec():
             container=dict(),
             since_seconds=dict(),
             label_selectors=dict(type="list", elements="str", default=[]),
-            previous=dict(type="bool", default=False),
+            previous=dict(type="bool"),
         )
     )
     return args
