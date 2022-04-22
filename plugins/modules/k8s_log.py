@@ -65,6 +65,8 @@ options:
     - If true, print the logs for the previous instance of the container in a pod if it exists.
     required: no
     type: bool
+    default: False
+    version_added: '2.4.0'
 
 requirements:
   - "python >= 3.6"
@@ -143,7 +145,7 @@ def argspec():
             container=dict(),
             since_seconds=dict(),
             label_selectors=dict(type="list", elements="str", default=[]),
-            previous=dict(type="bool"),
+            previous=dict(type="bool", default=False),
         )
     )
     return args
