@@ -367,7 +367,7 @@
         chart_ref: "{{ chart_source }}"
         chart_version: "{{ chart_source_version | default(omit) }}"
         disable_hook: True
-        name: "MyRelease"
+        release_name: "MyRelease"
         release_namespace: "MyReleaseNamespace"
         show_only:
           - "templates/configmap.yaml"

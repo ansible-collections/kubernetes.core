@@ -130,7 +130,7 @@ def test_template_with_release_namespace():
 def test_template_with_name():
     my_chart_ref = "testref"
     helm_cmd = "helm"
-    name = "mytestrelease"
+    release_name = "mytestrelease"
     parser = argparse.ArgumentParser()
 
     parser.add_argument("cmd")
@@ -141,11 +141,11 @@ def test_template_with_name():
     parser.add_argument("NAME", nargs="?", default="release-name")
     parser.add_argument("CHART", nargs="+")
 
-    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, name=name)
+    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, release_name=release_name)
 
     args, unknown = parser.parse_known_args(mytemplate.split())
 
-    assert args.NAME == name
+    assert args.NAME == release_name
 
 
 def test_template_with_disablehook():
