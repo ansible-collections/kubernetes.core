@@ -254,7 +254,7 @@ def main():
             dependency_update=dict(type="bool", default=False, aliases=["dep_up"]),
             disable_hook=dict(type="bool", default=False),
             include_crds=dict(type="bool", default=False),
-            release_name=dict(type="str", default={}, aliases=["name"]),
+            release_name=dict(type="str", aliases=["name"]),
             output_dir=dict(type="path"),
             release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),

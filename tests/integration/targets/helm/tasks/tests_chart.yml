@@ -375,7 +375,6 @@
           "myValue": "ThisValue"
       register: result
       when: chart_source is search("test-chart")
-      # limit test of "show-only" to controlled (local) chart_source
 
     - assert:
         that:
