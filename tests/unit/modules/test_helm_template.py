@@ -141,7 +141,9 @@ def test_template_with_name():
     parser.add_argument("NAME", nargs="?", default="release-name")
     parser.add_argument("CHART", nargs="+")
 
-    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, release_name=release_name)
+    mytemplate = template(
+        cmd=helm_cmd, chart_ref=my_chart_ref, release_name=release_name
+    )
 
     args, unknown = parser.parse_known_args(mytemplate.split())
 
