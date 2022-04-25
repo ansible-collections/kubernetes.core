@@ -62,7 +62,7 @@ options:
     version_added: '2.2.0'
   previous:
     description:
-    - If true, print the logs for the previous instance of the container in a pod if it exists.
+    - If C(true), print the logs for the previous instance of the container in a pod if it exists.
     required: no
     type: bool
     default: False
