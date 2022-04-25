@@ -53,7 +53,7 @@ options:
     type: str
   dependency_update:
     description:
-      - Run standelone C(helm dependency update CHART) before the operation.
+      - Run standalone C(helm dependency update CHART) before the operation.
       - Run inline C(--dependency-update) with C(helm install) command. This feature is not supported yet with the C(helm upgrade) command.
       - So we should consider to use I(dependency_update) options with I(replace) option enabled when specifying I(chart_repo_url).
       - The I(dependency_update) option require the add of C(dependencies) block in C(Chart.yaml/requirements.yaml) file.
