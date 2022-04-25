@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s - fix the issue when trying to delete resources using label_selectors options (https://github.com/ansible-collections/kubernetes.core/issues/433).
