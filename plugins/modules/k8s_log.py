@@ -60,6 +60,13 @@ options:
     required: no
     type: str
     version_added: '2.2.0'
+  previous:
+    description:
+    - If C(true), print the logs for the previous instance of the container in a pod if it exists.
+    required: no
+    type: bool
+    default: False
+    version_added: '2.4.0'
 
 requirements:
   - "python >= 3.6"
@@ -138,6 +145,7 @@ def argspec():
             container=dict(),
             since_seconds=dict(),
             label_selectors=dict(type="list", elements="str", default=[]),
+            previous=dict(type="bool", default=False),
         )
     )
     return args
@@ -183,6 +191,11 @@ def execute_module(module, k8s_ansible_mixin):
     if module.params.get("since_seconds"):
         kwargs.setdefault("query_params", {}).update(
             {"sinceSeconds": module.params["since_seconds"]}
+        )
+
+    if module.params.get("previous"):
+        kwargs.setdefault("query_params", {}).update(
+            {"previous": module.params["previous"]}
         )
 
     log = serialize_log(
