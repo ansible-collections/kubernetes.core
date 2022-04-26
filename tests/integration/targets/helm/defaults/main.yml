@@ -25,3 +25,4 @@ test_namespace:
   - "helm-local-path-001"
   - "helm-local-path-002"
   - "helm-local-path-003"
+  - "helm-dep"

@@ -1,0 +1,2 @@
+minor_changes:
+  - helm - add support for helm dependency update (https://github.com/ansible-collections/kubernetes.core/pull/208).

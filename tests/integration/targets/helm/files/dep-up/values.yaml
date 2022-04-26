@@ -1,0 +1,2 @@
+chart-test:
+  myValue: helm update dependency test

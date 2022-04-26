@@ -99,6 +99,28 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dependency_update</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Run helm dependency update before the operation.</div>
+                        <div>The <em>dependency_update</em> option require the add of <code>dependencies</code> block in <code>Chart.yaml/requirements.yaml</code> file.</div>
+                        <div>For more information please visit <a href='https://helm.sh/docs/helm/helm_dependency/'>https://helm.sh/docs/helm/helm_dependency/</a></div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: dep_up</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>include_crds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">

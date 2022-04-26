@@ -45,6 +45,15 @@ options:
       - Chart version to use. If this is not specified, the latest version is installed.
     required: false
     type: str
+  dependency_update:
+    description:
+      - Run helm dependency update before the operation.
+      - The I(dependency_update) option require the add of C(dependencies) block in C(Chart.yaml/requirements.yaml) file.
+      - For more information please visit U(https://helm.sh/docs/helm/helm_dependency/)
+    default: false
+    type: bool
+    aliases: [ dep_up ]
+    version_added: "2.4.0"
   include_crds:
     description:
       - Include custom resource descriptions in rendered templates.
@@ -167,6 +176,7 @@ def template(
     chart_ref,
     chart_repo_url=None,
     chart_version=None,
+    dependency_update=None,
     output_dir=None,
     show_only=None,
     release_values=None,
@@ -175,6 +185,9 @@ def template(
     include_crds=False,
 ):
     cmd += " template " + chart_ref
+
+    if dependency_update:
+        cmd += " --dependency-update"
 
     if chart_repo_url:
         cmd += " --repo=" + chart_repo_url
@@ -215,6 +228,7 @@ def main():
             chart_ref=dict(type="path", required=True),
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
+            dependency_update=dict(type="bool", default=False, aliases=["dep_up"]),
             include_crds=dict(type="bool", default=False),
             output_dir=dict(type="path"),
             release_namespace=dict(type="str"),
@@ -231,6 +245,7 @@ def main():
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
+    dependency_update = module.params.get("dependency_update")
     include_crds = module.params.get("include_crds")
     output_dir = module.params.get("output_dir")
     show_only = module.params.get("show_only")
@@ -251,6 +266,7 @@ def main():
     tmpl_cmd = template(
         helm_cmd,
         chart_ref,
+        dependency_update=dependency_update,
         chart_repo_url=chart_repo_url,
         chart_version=chart_version,
         output_dir=output_dir,

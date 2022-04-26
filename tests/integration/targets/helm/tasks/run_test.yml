@@ -27,6 +27,9 @@
     - from_repository
     - from_url
 
+- name: test helm dependency update
+  include_tasks: test_up_dep.yml
+
 - name: Test helm plugin
   include_tasks: tests_helm_plugin.yml
 
