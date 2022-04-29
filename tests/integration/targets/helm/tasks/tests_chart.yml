@@ -361,6 +361,31 @@
         that:
           result.stat.exists
 
+    - name: Render single template from chart to result
+      helm_template:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_source }}"
+        chart_version: "{{ chart_source_version | default(omit) }}"
+        disable_hook: True
+        release_name: "MyRelease"
+        release_namespace: "MyReleaseNamespace"
+        show_only:
+          - "templates/configmap.yaml"
+        release_values:
+          "myValue": "ThisValue"
+      register: result
+      when: chart_source is search("test-chart")
+
+    - assert:
+        that:
+          - result is changed
+          - result is not failed
+          - result.rc == 0
+          - result.command is match("{{ helm_binary }} template MyRelease {{ chart_source }}")
+          - result.stdout is search("ThisValue")
+      when: chart_source is search("test-chart")
+      # limit assertion of test result to controlled (local) chart_source
+
     - name: Release using non-existent context
       helm:
         binary_path: "{{ helm_binary }}"

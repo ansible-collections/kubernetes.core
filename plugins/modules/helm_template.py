@@ -54,6 +54,12 @@ options:
     type: bool
     aliases: [ dep_up ]
     version_added: "2.4.0"
+  disable_hook:
+    description:
+      - Prevent hooks from running during install.
+    default: False
+    type: bool
+    version_added: 2.4.0
   include_crds:
     description:
       - Include custom resource descriptions in rendered templates.
@@ -66,6 +72,13 @@ options:
       - If the directory already exists, it will be overwritten.
     required: false
     type: path
+  release_name:
+    description:
+      - Release name to use in rendered templates.
+    required: false
+    aliases: [ name ]
+    type: str
+    version_added: 2.4.0
   release_namespace:
     description:
       - namespace scope for this request.
@@ -177,14 +190,21 @@ def template(
     chart_repo_url=None,
     chart_version=None,
     dependency_update=None,
+    disable_hook=None,
     output_dir=None,
     show_only=None,
-    release_values=None,
+    release_name=None,
     release_namespace=None,
+    release_values=None,
     values_files=None,
     include_crds=False,
 ):
-    cmd += " template " + chart_ref
+    cmd += " template "
+
+    if release_name:
+        cmd += release_name + " "
+
+    cmd += chart_ref
 
     if dependency_update:
         cmd += " --dependency-update"
@@ -194,6 +214,9 @@ def template(
 
     if chart_version:
         cmd += " --version=" + chart_version
+
+    if disable_hook:
+        cmd += " --no-hooks"
 
     if output_dir:
         cmd += " --output-dir=" + output_dir
@@ -229,7 +252,9 @@ def main():
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
             dependency_update=dict(type="bool", default=False, aliases=["dep_up"]),
+            disable_hook=dict(type="bool", default=False),
             include_crds=dict(type="bool", default=False),
+            release_name=dict(type="str", aliases=["name"]),
             output_dir=dict(type="path"),
             release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
@@ -246,7 +271,9 @@ def main():
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
     dependency_update = module.params.get("dependency_update")
+    disable_hook = module.params.get("disable_hook")
     include_crds = module.params.get("include_crds")
+    release_name = module.params.get("release_name")
     output_dir = module.params.get("output_dir")
     show_only = module.params.get("show_only")
     release_namespace = module.params.get("release_namespace")
@@ -269,6 +296,8 @@ def main():
         dependency_update=dependency_update,
         chart_repo_url=chart_repo_url,
         chart_version=chart_version,
+        disable_hook=disable_hook,
+        release_name=release_name,
         output_dir=output_dir,
         release_namespace=release_namespace,
         release_values=release_values,
