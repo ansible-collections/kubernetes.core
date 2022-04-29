@@ -123,9 +123,15 @@ def main():
             state=dict(
                 type="str", default="present", choices=["present", "absent", "latest"]
             ),
-            plugin_path=dict(type="str",),
-            plugin_name=dict(type="str",),
-            plugin_version=dict(type="str",),
+            plugin_path=dict(
+                type="str",
+            ),
+            plugin_name=dict(
+                type="str",
+            ),
+            plugin_version=dict(
+                type="str",
+            ),
             # Helm options
             context=dict(
                 type="str",

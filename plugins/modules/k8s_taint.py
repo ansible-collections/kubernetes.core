@@ -301,7 +301,10 @@ class K8sTaintAnsible:
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True,)
+    module = AnsibleModule(
+        argument_spec=argspec(),
+        supports_check_mode=True,
+    )
     k8s_taint = K8sTaintAnsible(module)
     k8s_taint.execute_module()
 

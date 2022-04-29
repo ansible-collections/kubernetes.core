@@ -205,7 +205,7 @@ CONNECTION_OPTIONS = {
 
 
 class Connection(ConnectionBase):
-    """ Local kubectl based connections """
+    """Local kubectl based connections"""
 
     transport = CONNECTION_TRANSPORT
     connection_options = CONNECTION_OPTIONS
@@ -240,12 +240,12 @@ class Connection(ConnectionBase):
                 # Translate verify_ssl to skip_verify_ssl, and output as string
                 skip_verify_ssl = not self.get_option(key)
                 local_cmd.append(
-                    u"{0}={1}".format(
+                    "{0}={1}".format(
                         self.connection_options[key], str(skip_verify_ssl).lower()
                     )
                 )
                 censored_local_cmd.append(
-                    u"{0}={1}".format(
+                    "{0}={1}".format(
                         self.connection_options[key], str(skip_verify_ssl).lower()
                     )
                 )
@@ -262,12 +262,12 @@ class Connection(ConnectionBase):
                 else:
                     censored_local_cmd += [cmd_arg, self.get_option(key)]
 
-        extra_args_name = u"{0}_extra_args".format(self.transport)
+        extra_args_name = "{0}_extra_args".format(self.transport)
         if self.get_option(extra_args_name):
             local_cmd += self.get_option(extra_args_name).split(" ")
             censored_local_cmd += self.get_option(extra_args_name).split(" ")
 
-        pod = self.get_option(u"{0}_pod".format(self.transport))
+        pod = self.get_option("{0}_pod".format(self.transport))
         if not pod:
             pod = self._play_context.remote_addr
         # -i is needed to keep stdin open which allows pipelining to work
@@ -275,7 +275,7 @@ class Connection(ConnectionBase):
         censored_local_cmd += ["exec", "-i", pod]
 
         # if the pod has more than one container, then container is required
-        container_arg_name = u"{0}_container".format(self.transport)
+        container_arg_name = "{0}_container".format(self.transport)
         if self.get_option(container_arg_name):
             local_cmd += ["-c", self.get_option(container_arg_name)]
             censored_local_cmd += ["-c", self.get_option(container_arg_name)]
@@ -286,17 +286,17 @@ class Connection(ConnectionBase):
         return local_cmd, censored_local_cmd
 
     def _connect(self, port=None):
-        """ Connect to the container. Nothing to do """
+        """Connect to the container. Nothing to do"""
         super(Connection, self)._connect()
         if not self._connected:
             display.vvv(
-                u"ESTABLISH {0} CONNECTION".format(self.transport),
+                "ESTABLISH {0} CONNECTION".format(self.transport),
                 host=self._play_context.remote_addr,
             )
             self._connected = True
 
     def exec_command(self, cmd, in_data=None, sudoable=False):
-        """ Run a command in the container """
+        """Run a command in the container"""
         super(Connection, self).exec_command(cmd, in_data=in_data, sudoable=sudoable)
 
         local_cmd, censored_local_cmd = self._build_exec_cmd(
@@ -333,7 +333,7 @@ class Connection(ConnectionBase):
         return os.path.normpath(remote_path)
 
     def put_file(self, in_path, out_path):
-        """ Transfer a file from local to the container """
+        """Transfer a file from local to the container"""
         super(Connection, self).put_file(in_path, out_path)
         display.vvv(
             "PUT %s TO %s" % (in_path, out_path), host=self._play_context.remote_addr
@@ -376,7 +376,7 @@ class Connection(ConnectionBase):
                 )
 
     def fetch_file(self, in_path, out_path):
-        """ Fetch a file from container to local. """
+        """Fetch a file from container to local."""
         super(Connection, self).fetch_file(in_path, out_path)
         display.vvv(
             "FETCH %s TO %s" % (in_path, out_path), host=self._play_context.remote_addr
@@ -420,6 +420,6 @@ class Connection(ConnectionBase):
             )
 
     def close(self):
-        """ Terminate the connection. Nothing to do for kubectl"""
+        """Terminate the connection. Nothing to do for kubectl"""
         super(Connection, self).close()
         self._connected = False

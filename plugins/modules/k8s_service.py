@@ -187,7 +187,7 @@ def merge_dicts(x, y):
 
 
 def argspec():
-    """ argspec property builder """
+    """argspec property builder"""
     argument_spec = copy.deepcopy(AUTH_ARG_SPEC)
     argument_spec.update(COMMON_ARG_SPEC)
     argument_spec.update(RESOURCE_ARG_SPEC)
@@ -196,7 +196,7 @@ def argspec():
 
 
 def execute_module(module, k8s_ansible_mixin):
-    """ Module execution """
+    """Module execution"""
     k8s_ansible_mixin.set_resource_definitions(module)
 
     api_version = "v1"

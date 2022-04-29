@@ -164,7 +164,8 @@ SCALE_ARG_SPEC = {
 
 
 def execute_module(
-    module, k8s_ansible_mixin,
+    module,
+    k8s_ansible_mixin,
 ):
     k8s_ansible_mixin.set_resource_definitions(module)
 

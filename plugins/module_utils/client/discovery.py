@@ -96,7 +96,7 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
             self._write_cache()
 
     def get_resources_for_api_version(self, prefix, group, version, preferred):
-        """ returns a dictionary of resources associated with provided (prefix, group, version)"""
+        """returns a dictionary of resources associated with provided (prefix, group, version)"""
 
         resources = defaultdict(list)
         subresources = defaultdict(dict)
