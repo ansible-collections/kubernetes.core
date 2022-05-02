@@ -128,7 +128,7 @@ options:
   impersonate_groups:
     description:
     - Group(s) to impersonate for the operation.
-    - "Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: 'Group1,Group2'"
+    - "Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: Group1,Group2"
     type: list
     elements: str
     version_added: 2.3.0
