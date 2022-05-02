@@ -995,6 +995,7 @@ class K8sAnsibleMixin(object):
                 if self.check_mode and not self.supports_dry_run:
                     return result
                 else:
+                    params = {"namespace": namespace}
                     if delete_options:
                         body = {
                             "apiVersion": "v1",
@@ -1005,8 +1006,18 @@ class K8sAnsibleMixin(object):
                     if self.check_mode:
                         params["dry_run"] = "All"
                     try:
-                        k8s_obj = resource.delete(**params)
-                        result["result"] = k8s_obj.to_dict()
+                        if existing.kind.endswith("List"):
+                            result["result"] = []
+                            for item in existing.items:
+                                origin_name = item.metadata.name
+                                params["name"] = origin_name
+                                k8s_obj = resource.delete(**params)
+                                result["result"].append(k8s_obj.to_dict())
+                        else:
+                            origin_name = existing.metadata.name
+                            params["name"] = origin_name
+                            k8s_obj = resource.delete(**params)
+                            result["result"] = k8s_obj.to_dict()
                     except DynamicApiError as exc:
                         msg = "Failed to delete object: {0}".format(exc.body)
                         if continue_on_error:
