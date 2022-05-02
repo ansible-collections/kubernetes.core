@@ -1,2 +1,0 @@
-bugfixes:
-  - Catch expectation raised when the process is waiting for resources (https://github.com/ansible-collections/kubernetes.core/issues/407).
