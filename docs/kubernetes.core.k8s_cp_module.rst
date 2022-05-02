@@ -182,7 +182,7 @@ Parameters
                 </td>
                 <td>
                         <div>Group(s) to impersonate for the operation.</div>
-                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: &#x27;Group1,Group2&#x27;</div>
+                        <div>Can also be specified via K8S_AUTH_IMPERSONATE_GROUPS environment. Example: Group1,Group2</div>
                 </td>
             </tr>
             <tr>

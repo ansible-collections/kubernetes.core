@@ -568,3 +568,22 @@ releases:
       name: k8s_taint
       namespace: ''
     release_date: '2022-03-11'
+  2.3.1:
+    changes:
+      bugfixes:
+      - Catch expectation raised when the process is waiting for resources (https://github.com/ansible-collections/kubernetes.core/issues/407).
+      - Remove `omit` placeholder when defining resource using template parameter
+        (https://github.com/ansible-collections/kubernetes.core/issues/431).
+      - k8s - fix the issue when trying to delete resources using label_selectors
+        options (https://github.com/ansible-collections/kubernetes.core/issues/433).
+      - k8s_cp - fix issue when using parameter local_path with file on managed node.
+        (https://github.com/ansible-collections/kubernetes.core/issues/421).
+      - k8s_drain - fix error occurring when trying to drain node with disable_eviction
+        set to yes (https://github.com/ansible-collections/kubernetes.core/issues/416).
+    fragments:
+    - 408-fix-wait-on-exception.yml
+    - 417-fix-k8s-drain-delete-options.yaml
+    - 422-k8s_cp-fix-issue-when-issue-local_path.yaml
+    - 432-fix-issue-when-using-template-parameter.yaml
+    - 434-fix-k8s-delete-using-label_selector.yaml
+    release_date: '2022-05-02'
