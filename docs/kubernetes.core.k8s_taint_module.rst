@@ -1,13 +1,14 @@
-.. _kubernetes.core.k8s_service_module:
+.. _kubernetes.core.k8s_taint_module:
 
 
-***************************
-kubernetes.core.k8s_service
-***************************
+*************************
+kubernetes.core.k8s_taint
+*************************
 
-**Manage Services on Kubernetes**
+**Taint a node in a Kubernetes/OpenShift cluster**
 
 
+Version added: 2.3.0
 
 .. contents::
    :local:
@@ -16,7 +17,8 @@ kubernetes.core.k8s_service
 
 Synopsis
 --------
-- Use Kubernetes Python SDK to manage Services on Kubernetes
+- Taint allows a node to refuse Pod to be scheduled unless that Pod has a matching toleration.
+- Untaint will remove taints from nodes as needed.
 
 
 
@@ -52,27 +54,6 @@ Parameters
                 </td>
                 <td>
                         <div>Token used to authenticate with the API. Can also be specified via K8S_AUTH_API_KEY environment variable.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>apply</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
-                                    <li>yes</li>
-                        </ul>
-                </td>
-                <td>
-                        <div><code>apply</code> compares the desired resource definition with the previously supplied resource definition, ignoring properties that are automatically generated</div>
-                        <div><code>apply</code> works better with Services than &#x27;force=yes&#x27;</div>
-                        <div>mutually exclusive with <code>merge_type</code></div>
                 </td>
             </tr>
             <tr>
@@ -136,25 +117,6 @@ Parameters
                 </td>
                 <td>
                         <div>The name of a context found in the config file. Can also be specified via K8S_AUTH_CONTEXT environment variable.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>force</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
-                                    <li>yes</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>If set to <code>yes</code>, and <em>state</em> is <code>present</code>, an existing object will be replaced.</div>
                 </td>
             </tr>
             <tr>
@@ -226,31 +188,6 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>merge_type</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=string</span>
-                    </div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>json</li>
-                                    <li>merge</li>
-                                    <li>strategic-merge</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>Whether to override the default patch merge approach with a specific type. By default, the strategic merge will typically be used.</div>
-                        <div>For example, Custom Resource Definitions typically aren&#x27;t updatable by the usual strategic merge. You may want to use <code>merge</code> if you see &quot;strategic merge patch format is not supported&quot;</div>
-                        <div>See <a href='https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment'>https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment</a></div>
-                        <div>If more than one <code>merge_type</code> is given, the merge_types will be tried in order</div>
-                        <div>This defaults to <code>[&#x27;strategic-merge&#x27;, &#x27;merge&#x27;]</code>, which is ideal for using the same parameters on resource kinds that combine Custom Resources and built-in resources.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -261,23 +198,26 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Use to specify a Service object name.</div>
+                        <div>The name of the node.</div>
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>namespace</b>
+                    <b>no_proxy</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
-                         / <span style="color: red">required</span>
                     </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
                 </td>
                 <td>
                 </td>
                 <td>
-                        <div>Use to specify a Service object namespace.</div>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -317,23 +257,6 @@ Parameters
                         <div>Default to false.</div>
                         <div>Please note that the current version of the k8s python client library does not support setting this flag to True yet.</div>
                         <div>The fix for this k8s python library is here: https://github.com/kubernetes-client/python-base/pull/169</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>ports</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">list</span>
-                         / <span style="color: purple">elements=dictionary</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>A list of ports to expose.</div>
-                        <div><a href='https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services'>https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services</a></div>
                 </td>
             </tr>
             <tr>
@@ -424,51 +347,20 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>resource_definition</b>
+                    <b>replace</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">-</span>
+                        <span style="color: purple">boolean</span>
                     </div>
                 </td>
                 <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
                 </td>
                 <td>
-                        <div>Provide a valid YAML definition (either as a string, list, or dict) for an object when creating or updating.</div>
-                        <div>NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the provided <em>resource_definition</em>.</div>
-                        <div style="font-size: small; color: darkgreen"><br/>aliases: definition, inline</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>selector</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">dictionary</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>Label selectors identify objects this Service should apply to.</div>
-                        <div><a href='https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/'>https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/</a></div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>src</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">path</span>
-                    </div>
-                </td>
-                <td>
-                </td>
-                <td>
-                        <div>Provide a path to a file containing a valid YAML definition of an object or objects to be created or updated. Mutually exclusive with <em>resource_definition</em>. NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the configuration read in from the <em>src</em> file.</div>
-                        <div>Reads from the local file system. To read from the Ansible controller&#x27;s file system, including vaulted files, use the file lookup plugin or template lookup plugin, combined with the from_yaml filter, and pass the result to <em>resource_definition</em>. See Examples below.</div>
-                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>k8s</span> module.</div>
+                        <div>If <code>true</code>, allow taints to be replaced.</div>
                 </td>
             </tr>
             <tr>
@@ -482,18 +374,36 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>absent</li>
                                     <li><div style="color: blue"><b>present</b>&nbsp;&larr;</div></li>
+                                    <li>absent</li>
                         </ul>
                 </td>
                 <td>
-                        <div>Determines if an object should be created, patched, or deleted. When set to <code>present</code>, an object will be created, if it does not already exist. If set to <code>absent</code>, an existing object will be deleted. If set to <code>present</code>, an existing object will be patched, if its attributes differ from those specified using <em>resource_definition</em> or <em>src</em>.</div>
+                        <div>Determines whether to add or remove taints.</div>
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>type</b>
+                    <b>taints</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List containing the taints.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>effect</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">string</span>
@@ -501,17 +411,49 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>NodePort</li>
-                                    <li>ClusterIP</li>
-                                    <li>LoadBalancer</li>
-                                    <li>ExternalName</li>
+                                    <li>NoSchedule</li>
+                                    <li>NoExecute</li>
+                                    <li>PreferNoSchedule</li>
                         </ul>
                 </td>
                 <td>
-                        <div>Specifies the type of Service to create.</div>
-                        <div>See <a href='https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types'>https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types</a></div>
+                        <div>The effect of the taint on Pods that do not tolerate the taint.</div>
+                        <div>Required when <em>state=present</em>.</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>key</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The taint key to be applied to a node.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>value</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The taint value corresponding to the taint key.</div>
+                </td>
+            </tr>
+
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
@@ -565,29 +507,34 @@ Examples
 
 .. code-block:: yaml
 
-    - name: Expose https port with ClusterIP
-      kubernetes.core.k8s_service:
+    - name: Taint node "foo"
+      kubernetes.core.k8s_taint:
         state: present
-        name: test-https
-        namespace: default
-        ports:
-        - port: 443
-          protocol: TCP
-        selector:
-          key: special
+        name: foo
+        taints:
+        - effect: NoExecute
+          key: "key1"
 
-    - name: Expose https port with ClusterIP using spec
-      kubernetes.core.k8s_service:
+    - name: Taint node "foo"
+      kubernetes.core.k8s_taint:
         state: present
-        name: test-https
-        namespace: default
-        inline:
-          spec:
-            ports:
-            - port: 443
-              protocol: TCP
-            selector:
-              key: special
+        name: foo
+        taints:
+        - effect: NoExecute
+          key: "key1"
+          value: "value1"
+        - effect: NoSchedule
+          key: "key1"
+          value: "value1"
+
+    - name: Remove taint from "foo".
+      kubernetes.core.k8s_taint:
+        state: absent
+        name: foo
+        taints:
+        - effect: NoExecute
+          key: "key1"
+          value: "value1"
 
 
 
@@ -614,7 +561,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>success</td>
                 <td>
-                            <div>The created, patched, or otherwise present Service object. Will be empty in the case of a deletion.</div>
+                            <div>The tainted Node object. Will be empty in the case of a deletion.</div>
                     <br/>
                 </td>
             </tr>
@@ -646,7 +593,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>success</td>
                 <td>
-                            <div>Always &#x27;Service&#x27;.</div>
+                            <div>Represents the REST resource this object represents.</div>
                     <br/>
                 </td>
             </tr>
@@ -710,4 +657,4 @@ Status
 Authors
 ~~~~~~~
 
-- KubeVirt Team (@kubevirt)
+- Alina Buzachis (@alinabuzachis)

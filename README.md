@@ -11,6 +11,8 @@ The collection includes a variety of Ansible content to help automate the manage
 
 This collection has been tested against following Ansible versions: **>=2.9.17**.
 
+For collections that support Ansible 2.9, please ensure you update your `network_os` to use the 
+fully qualified collection name (for example, `cisco.ios.ios`). 
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
@@ -89,7 +91,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 2.2.0
+    version: 2.3.1
 ```
 
 ### Installing the Kubernetes Python Library

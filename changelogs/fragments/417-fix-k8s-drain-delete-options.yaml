@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s_drain - fix error occurring when trying to drain node with disable_eviction set to yes (https://github.com/ansible-collections/kubernetes.core/issues/416).
