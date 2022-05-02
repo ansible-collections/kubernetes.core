@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - Remove `omit` placeholder when defining resource using template parameter (https://github.com/ansible-collections/kubernetes.core/issues/431).

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    annotations:
+        description: "{{ k8s_configmap_desc | default(omit) }}"
+data:
+    key: "testing-template"
