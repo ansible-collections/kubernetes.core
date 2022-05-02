@@ -421,18 +421,25 @@ class K8sAnsibleMixin(object):
             field_selectors = []
 
         result = None
+        params = dict(
+            name=name,
+            namespace=namespace,
+            label_selector=",".join(label_selectors),
+            field_selector=",".join(field_selectors),
+        )
         try:
-            result = resource.get(
-                name=name,
-                namespace=namespace,
-                label_selector=",".join(label_selectors),
-                field_selector=",".join(field_selectors),
-            )
+            result = resource.get(**params)
         except BadRequestError:
             return dict(resources=[], api_found=True)
         except NotFoundError:
             if not wait or name is None:
                 return dict(resources=[], api_found=True)
+        except Exception as e:
+            if not wait or name is None:
+                err = "Exception '{0}' raised while trying to get resource using {1}".format(
+                    e, params
+                )
+                return dict(resources=[], msg=err, api_found=True)
 
         if not wait:
             result = result.to_dict()
@@ -452,21 +459,27 @@ class K8sAnsibleMixin(object):
                 and not result.get("items")
             )
 
+        last_exception = None
         while result_empty(result) and _elapsed() < wait_timeout:
             try:
-                result = resource.get(
-                    name=name,
-                    namespace=namespace,
-                    label_selector=",".join(label_selectors),
-                    field_selector=",".join(field_selectors),
-                )
+                result = resource.get(**params)
             except NotFoundError:
                 pass
+            except Exception as e:
+                last_exception = e
             if not result_empty(result):
                 break
             time.sleep(wait_sleep)
         if result_empty(result):
-            return dict(resources=[], api_found=True)
+            res = dict(resources=[], api_found=True)
+            if last_exception is not None:
+                res[
+                    "msg"
+                ] = "Exception '%s' raised while trying to get resource using %s" % (
+                    last_exception,
+                    params,
+                )
+            return res
 
         if isinstance(result, ResourceInstance):
             satisfied_by = []
@@ -583,6 +596,8 @@ class K8sAnsibleMixin(object):
             except NotFoundError:
                 if state == "absent":
                     return True, {}, _wait_for_elapsed()
+            except Exception:
+                pass
         if response:
             response = response.to_dict()
         return False, response, _wait_for_elapsed()
