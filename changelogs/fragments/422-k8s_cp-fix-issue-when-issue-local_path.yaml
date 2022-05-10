@@ -1,2 +1,0 @@
-bugfixes:
-  - k8s_cp - fix issue when using parameter local_path with file on managed node. (https://github.com/ansible-collections/kubernetes.core/issues/421).
