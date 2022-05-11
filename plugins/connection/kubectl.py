@@ -171,6 +171,37 @@ DOCUMENTATION = r"""
         aliases: [ kubectl_verify_ssl ]
 """
 
+# example taken and adapted from
+# https://github.com/geerlingguy/ansible-for-devops/blob/master/kubernetes/examples/kubectl-connection.yml
+#
+EXAMPLES = r"""
+# This playbook assumes you already have the kubectl binary installed
+# and available in the $PATH.
+- hosts: k8s-master
+  become: yes
+
+  tasks:
+    - name: Get the phpmyadmin Pod name.
+      command: >
+        kubectl --no-headers=true get pod -l app=phpmyadmin
+        -o custom-columns=:metadata.name
+      register: phpmyadmin_pod
+
+    - name: Add the phpmyadmin Pod to the inventory.
+      add_host:
+        name: '{{ phpmyadmin_pod.stdout }}'
+        ansible_kubectl_namespace: default
+        ansible_connection: kubectl
+
+    # Note: Python is required to use other modules.
+    - name: Run a command inside the container.
+      shell: date
+      register: date_output
+      delegate_to: '{{ phpmyadmin_pod.stdout }}'
+
+    - debug: var=date_output.stdout
+"""
+
 import distutils.spawn
 import os
 import os.path
