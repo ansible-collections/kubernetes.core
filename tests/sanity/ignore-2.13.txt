@@ -1,8 +1,8 @@
-molecule/default/files/deployment.yaml yamllint!skip
-molecule/default/roles/helm/files/appversionless-chart-v2/templates/configmap.yaml yamllint!skip
-molecule/default/roles/helm/files/appversionless-chart/templates/configmap.yaml yamllint!skip
-molecule/default/roles/helm/files/test-chart-v2/templates/configmap.yaml yamllint!skip
-molecule/default/roles/helm/files/test-chart/templates/configmap.yaml yamllint!skip
+tests/integration/targets/k8s_scale/files/deployment.yaml yamllint!skip
+tests/integration/targets/helm/files/appversionless-chart-v2/templates/configmap.yaml yamllint!skip
+tests/integration/targets/helm/files/appversionless-chart/templates/configmap.yaml yamllint!skip
+tests/integration/targets/helm/files/test-chart-v2/templates/configmap.yaml yamllint!skip
+tests/integration/targets/helm/files/test-chart/templates/configmap.yaml yamllint!skip
 plugins/module_utils/__init__.py compile-2.7!skip
 plugins/module_utils/__init__.py compile-3.5!skip
 plugins/module_utils/__init__.py future-import-boilerplate!skip
@@ -36,8 +36,6 @@ plugins/module_utils/client/discovery.py import-3.8!skip
 plugins/module_utils/client/discovery.py import-3.9!skip
 plugins/module_utils/client/discovery.py import-3.10!skip
 plugins/module_utils/client/discovery.py metaclass-boilerplate!skip
-molecule/default/roles/k8scopy/library/kubectl_file_compare.py shebang
-molecule/default/roles/k8scopy/library/k8s_create_file.py shebang
 plugins/module_utils/client/resource.py import-2.7!skip
 plugins/module_utils/client/resource.py import-3.5!skip
 plugins/module_utils/client/resource.py import-3.6!skip

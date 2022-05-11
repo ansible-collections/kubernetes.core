@@ -1,0 +1,61 @@
+---
+- block:
+    - name: Install custom resource definitions
+      k8s:
+        definition: "{{ lookup('file', 'setup-crd.yml') }}"
+
+    - name: Pause 5 seconds to avoid race condition
+      pause:
+        seconds: 5
+
+    - name: Create custom resource definition
+      k8s:
+        definition: "{{ lookup('file', 'crd-resource.yml') }}"
+        namespace: "{{ test_namespace }}"
+        apply: "{{ create_crd_with_apply | default(omit) }}"
+      register: create_crd
+
+    - name: Patch custom resource definition
+      k8s:
+        definition: "{{ lookup('file', 'crd-resource.yml') }}"
+        namespace: "{{ test_namespace }}"
+      register: recreate_crd
+      ignore_errors: yes
+
+    - name: Assert that recreating crd is as expected
+      assert:
+        that:
+          - recreate_crd is not failed
+
+    - block:
+        - name: Recreate custom resource definition with merge_type
+          k8s:
+            definition: "{{ lookup('file', 'crd-resource.yml') }}"
+            merge_type:
+              - merge
+            namespace: "{{ test_namespace }}"
+          register: recreate_crd_with_merge
+
+        - name: Recreate custom resource definition with merge_type list
+          k8s:
+            definition: "{{ lookup('file', 'crd-resource.yml') }}"
+            merge_type:
+              - strategic-merge
+              - merge
+            namespace: "{{ test_namespace }}"
+          register: recreate_crd_with_merge_list
+      when: recreate_crd is successful
+
+
+    - name: Remove crd
+      k8s:
+        definition: "{{ lookup('file', 'crd-resource.yml') }}"
+        namespace: "{{ test_namespace }}"
+        state: absent
+
+  always:
+    - name: Remove crd namespace
+      k8s:
+        kind: Namespace
+        name: "{{ test_namespace }}"
+        state: absent

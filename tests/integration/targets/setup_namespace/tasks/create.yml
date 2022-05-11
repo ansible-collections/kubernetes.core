@@ -1,0 +1,22 @@
+---
+- name: "Read namespace {{ namespace_to_create }}"
+  kubernetes.core.k8s_info:
+    kind: Namespace
+    name: "{{ namespace_to_create }}"
+  register: _namespace
+
+- name: Delete existing namespace
+  kubernetes.core.k8s:
+    kind: Namespace
+    name: "{{ namespace_to_create }}"
+    state: absent
+    wait: yes
+
+- name: "Ensure namespace {{ namespace_to_create }}"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ namespace_to_create }}"
+        labels: "{{ namespace_labels | default(omit) }}"

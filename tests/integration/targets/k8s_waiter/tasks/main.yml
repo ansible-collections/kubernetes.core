@@ -1,0 +1,470 @@
+---
+- block:
+    - set_fact:
+        wait_namespace: "{{ test_namespace }}"
+        k8s_wait_timeout: 400
+
+    - name: Add a simple pod
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: "{{ k8s_pod_name }}"
+            namespace: "{{ wait_namespace }}"
+          spec: "{{ k8s_pod_spec }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-pod
+        k8s_pod_image: alpine:3.8
+        k8s_pod_command:
+          - sleep
+          - "10000"
+
+    - name: Add a daemonset
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: wait-daemonset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 5
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-ds
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: ds
+
+    - name: Check that daemonset wait worked
+      assert:
+        that:
+          - ds.result.status.currentNumberScheduled == ds.result.status.desiredNumberScheduled
+
+    - name: Update a daemonset in check_mode
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: wait-daemonset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            updateStrategy:
+              type: RollingUpdate
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 3
+        wait_timeout: 180
+      vars:
+        k8s_pod_name: wait-ds
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: update_ds_check_mode
+      check_mode: yes
+
+    - name: Check that check_mode result contains the changes
+      assert:
+        that:
+          - update_ds_check_mode is changed
+          - "update_ds_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:2'"
+
+    - name: Update a daemonset
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: wait-daemonset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            updateStrategy:
+              type: RollingUpdate
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 3
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-ds
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:3
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: ds
+
+    - name: Get updated pods
+      k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ wait_namespace }}"
+        label_selectors:
+          - app=wait-ds
+        field_selectors:
+          - status.phase=Running
+      register: updated_ds_pods
+
+    - name: Check that daemonset wait worked
+      assert:
+        that:
+          - ds.result.status.currentNumberScheduled == ds.result.status.desiredNumberScheduled
+          - updated_ds_pods.resources[0].spec.containers[0].image.endswith(":3")
+
+    - name: Add a statefulset
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: wait-statefulset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 5
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-sts
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: sts
+
+    - name: Check that statefulset wait worked
+      assert:
+        that:
+          - sts.result.spec.replicas == sts.result.status.readyReplicas
+
+    - name: Update a statefulset in check_mode
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: wait-statefulset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            updateStrategy:
+              type: RollingUpdate
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 3
+        wait_timeout: 180
+      vars:
+        k8s_pod_name: wait-sts
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: update_sts_check_mode
+      check_mode: yes
+
+    - name: Check that check_mode result contains the changes
+      assert:
+        that:
+          - update_sts_check_mode is changed
+          - "update_sts_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:2'"
+
+    - name: Update a statefulset
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: wait-statefulset
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            updateStrategy:
+              type: RollingUpdate
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 3
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-sts
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:3
+        k8s_pod_command:
+          - sleep
+          - "600"
+      register: sts
+
+    - name: Get updated pods
+      k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ wait_namespace }}"
+        label_selectors:
+          - app=wait-sts
+        field_selectors:
+          - status.phase=Running
+      register: updated_sts_pods
+
+    - name: Check that statefulset wait worked
+      assert:
+        that:
+          - sts.result.spec.replicas == sts.result.status.readyReplicas
+          - updated_sts_pods.resources[0].spec.containers[0].image.endswith(":3")
+
+    - name: Add a crashing pod
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: "{{ k8s_pod_name }}"
+            namespace: "{{ wait_namespace }}"
+          spec: "{{ k8s_pod_spec }}"
+        wait: yes
+        wait_sleep: 1
+        wait_timeout: 30
+      vars:
+        k8s_pod_name: wait-crash-pod
+        k8s_pod_image: alpine:3.8
+        k8s_pod_command:
+          - /bin/false
+      register: crash_pod
+      ignore_errors: yes
+
+    - name: Check that task failed
+      assert:
+        that:
+          - crash_pod is failed
+
+    - name: Use a non-existent image
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: "{{ k8s_pod_name }}"
+            namespace: "{{ wait_namespace }}"
+          spec: "{{ k8s_pod_spec }}"
+        wait: yes
+        wait_sleep: 1
+        wait_timeout: 30
+      vars:
+        k8s_pod_name: wait-no-image-pod
+        k8s_pod_image: i_made_this_up:and_this_too
+      register: no_image_pod
+      ignore_errors: yes
+
+    - name: Check that task failed
+      assert:
+        that:
+          - no_image_pod is failed
+
+    - name: Add a deployment
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: wait-deploy
+            namespace: "{{ wait_namespace }}"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-deploy
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+
+      register: deploy
+
+    - name: Check that deployment wait worked
+      assert:
+        that:
+          - deploy.result.status.availableReplicas == deploy.result.status.replicas
+
+    - name: Update a deployment
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: wait-deploy
+            namespace: "{{ wait_namespace }}"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-deploy
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
+        k8s_pod_ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+      register: update_deploy
+
+    # It looks like the Deployment is updated to have the desired state *before* the pods are terminated
+    # Wait a couple of seconds to allow the old pods to at least get to Terminating state
+    - name: Avoid race condition
+      pause:
+        seconds: 2
+
+    - name: Get updated pods
+      k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ wait_namespace }}"
+        label_selectors:
+          - app=wait-deploy
+        field_selectors:
+          - status.phase=Running
+      register: updated_deploy_pods
+      until: updated_deploy_pods.resources[0].spec.containers[0].image.endswith(':2')
+      retries: 6
+      delay: 5
+
+    - name: Check that deployment wait worked
+      assert:
+        that:
+          - deploy.result.status.availableReplicas == deploy.result.status.replicas
+
+    - name: Pause a deployment
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: wait-deploy
+            namespace: "{{ wait_namespace }}"
+          spec:
+            paused: True
+        apply: no
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        wait_condition:
+          type: Progressing
+          status: Unknown
+          reason: DeploymentPaused
+      register: pause_deploy
+
+    - name: Check that paused deployment wait worked
+      assert:
+        that:
+          - condition.reason == "DeploymentPaused"
+          - condition.status == "Unknown"
+      vars:
+        condition: '{{ pause_deploy.result.status.conditions[1] }}'
+
+    - name: Add a service based on the deployment
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: wait-svc
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              app: "{{ k8s_pod_name }}"
+            ports:
+              - port: 8080
+                targetPort: 8080
+                protocol: TCP
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-deploy
+      register: service
+
+    - name: Assert that waiting for service works
+      assert:
+        that:
+          - service is successful
+
+    - name: Add a crashing deployment
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: wait-crash-deploy
+            namespace: "{{ wait_namespace }}"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-crash-deploy
+        k8s_pod_image: alpine:3.8
+        k8s_pod_command:
+          - /bin/false
+      register: wait_crash_deploy
+      ignore_errors: yes
+
+    - name: Check that task failed
+      assert:
+        that:
+          - wait_crash_deploy is failed
+
+    - name: Remove Pod with very short timeout
+      k8s:
+        api_version: v1
+        kind: Pod
+        name: wait-pod
+        namespace: "{{ wait_namespace }}"
+        state: absent
+        wait: yes
+        wait_sleep: 2
+        wait_timeout: 5
+      ignore_errors: yes
+      register: short_wait_remove_pod
+
+    - name: Check that task failed
+      assert:
+        that:
+          - short_wait_remove_pod is failed
+
+  always:
+    - name: Remove namespace
+      k8s:
+        kind: Namespace
+        name: "{{ wait_namespace }}"
+        state: absent
+      ignore_errors: yes
