@@ -170,9 +170,9 @@ DOCUMENTATION = r"""
         aliases: [ kubectl_verify_ssl ]
 """
 
-import distutils.spawn
 import os
 import os.path
+import shutil
 import subprocess
 
 from ansible.parsing.yaml.loader import AnsibleLoader
@@ -217,13 +217,10 @@ class Connection(ConnectionBase):
 
         # Note: kubectl runs commands as the user that started the container.
         # It is impossible to set the remote user for a kubectl connection.
-        cmd_arg = '{0}_command'.format(self.transport)
-        if cmd_arg in kwargs:
-            self.transport_cmd = kwargs[cmd_arg]
-        else:
-            self.transport_cmd = distutils.spawn.find_executable(self.transport)
-            if not self.transport_cmd:
-                raise AnsibleError("{0} command not found in PATH".format(self.transport))
+        cmd_arg = "{0}_command".format(self.transport)
+        self.transport_cmd = kwargs.get(cmd_arg, shutil.which(self.transport))
+        if not self.transport_cmd:
+            raise AnsibleError("{0} command not found in PATH".format(self.transport))
 
     def _build_exec_cmd(self, cmd):
         """ Build the local kubectl exec command to run cmd on remote_host
