@@ -6,10 +6,9 @@ __metaclass__ = type
 
 DOCUMENTATION = '''
     name: k8s
-    plugin_type: inventory
     author:
-      - Chris Houseknecht <@chouseknecht>
-      - Fabian von Feilitzsch <@fabianvf>
+      - Chris Houseknecht (@chouseknecht)
+      - Fabian von Feilitzsch (@fabianvf)
 
     short_description: Kubernetes (K8s) inventory source
 
