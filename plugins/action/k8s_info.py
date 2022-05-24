@@ -11,6 +11,7 @@ import copy
 import traceback
 import os
 from contextlib import contextmanager
+import platform
 
 from ansible.config.manager import ensure_type
 from ansible.errors import (
@@ -48,6 +49,9 @@ class RemoveOmit(object):
 
     def output(self):
         return [self.remove_omit(d) for d in self.data]
+
+
+ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
 
 
 class ActionModule(ActionBase):
@@ -308,11 +312,15 @@ class ActionModule(ActionBase):
             if not remote_transport:
                 # kubeconfig is local
                 # find in expected paths
-                kubeconfig = self._find_needle("files", kubeconfig)
+                configs = []
+                for config in kubeconfig.split(ENV_KUBECONFIG_PATH_SEPARATOR):
+                    config = self._find_needle("files", config)
 
-                # decrypt kubeconfig found
-                actual_file = self._loader.get_real_file(kubeconfig, decrypt=True)
-                new_module_args["kubeconfig"] = actual_file
+                    # decrypt kubeconfig found
+                    configs.append(self._loader.get_real_file(config, decrypt=True))
+                new_module_args["kubeconfig"] = ENV_KUBECONFIG_PATH_SEPARATOR.join(
+                    configs
+                )
 
         elif isinstance(kubeconfig, dict):
             new_module_args["kubeconfig"] = kubeconfig
