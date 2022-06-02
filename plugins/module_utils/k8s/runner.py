@@ -114,7 +114,9 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                 result["msg"] = (
                     "resource 'kind={kind},name={name},namespace={namespace}' "
                     "filtered by label_selectors.".format(
-                        kind=kind, name=origin_name, namespace=namespace,
+                        kind=kind,
+                        name=origin_name,
+                        namespace=namespace,
                     )
                 )
                 return result

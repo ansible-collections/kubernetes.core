@@ -291,7 +291,9 @@ def execute_module(client, module):
                 if module.check_mode:
                     result["result"] = existing.to_dict()
                 else:
-                    result["result"] = client.patch(resource, existing.to_dict()).to_dict()
+                    result["result"] = client.patch(
+                        resource, existing.to_dict()
+                    ).to_dict()
             else:
                 try:
                     result = scale(
@@ -336,7 +338,14 @@ def argspec():
 
 
 def scale(
-    client, module, resource, existing_object, replicas, wait, wait_time, wait_sleep,
+    client,
+    module,
+    resource,
+    existing_object,
+    replicas,
+    wait,
+    wait_time,
+    wait_sleep,
 ):
     name = existing_object.metadata.name
     namespace = existing_object.metadata.namespace
@@ -375,7 +384,10 @@ def scale(
         if wait:
             waiter = get_waiter(client, resource)
             success, result["result"], result["duration"] = waiter.wait(
-                timeout=wait_time, sleep=wait_sleep, name=name, namespace=namespace,
+                timeout=wait_time,
+                sleep=wait_sleep,
+                name=name,
+                namespace=namespace,
             )
             if not success:
                 raise ResourceTimeout("Resource scaling timed out", **result)

@@ -281,7 +281,10 @@ class K8sService:
             name = instance["metadata"].get("name")
             namespace = instance["metadata"].get("namespace")
             success, res, duration = waiter.wait(
-                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
+                timeout=wait_timeout,
+                sleep=wait_sleep,
+                name=name,
+                namespace=namespace,
             )
             if not success:
                 raise CoreException(
@@ -352,7 +355,10 @@ class K8sService:
         return k8s_obj
 
     def replace(
-        self, resource: Resource, definition: Dict, existing: ResourceInstance,
+        self,
+        resource: Resource,
+        definition: Dict,
+        existing: ResourceInstance,
     ) -> Dict:
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
@@ -395,7 +401,11 @@ class K8sService:
             ]:
                 try:
                     k8s_obj = self.patch_resource(
-                        resource, definition, name, namespace, merge_type=merge_type,
+                        resource,
+                        definition,
+                        name,
+                        namespace,
+                        merge_type=merge_type,
                     )
                     exception = None
                 except CoreException as e:
