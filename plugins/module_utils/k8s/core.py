@@ -1,5 +1,8 @@
-from distutils.version import LooseVersion
 from typing import Optional
+
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.basic import missing_required_lib

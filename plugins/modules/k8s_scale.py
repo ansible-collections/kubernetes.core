@@ -373,7 +373,7 @@ def scale(
         k8s_obj = client.get(resource, name=name, namespace=namespace).to_dict()
         result["result"] = k8s_obj
         if wait:
-            waiter = get_waiter(svc.client, resource)
+            waiter = get_waiter(client, resource)
             success, result["result"], result["duration"] = waiter.wait(
                 timeout=wait_time, sleep=wait_sleep, name=name, namespace=namespace,
             )
