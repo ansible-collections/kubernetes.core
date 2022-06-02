@@ -12,7 +12,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     AUTH_ARG_SPEC,
     AUTH_PROXY_HEADERS_SPEC,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import requires
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    requires as _requires,
+)
 
 try:
     from ansible_collections.kubernetes.core.plugins.module_utils import (
@@ -252,11 +254,15 @@ class K8SClient:
 
 def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
     auth_spec = _create_auth_spec(module, **kwargs)
+    if module:
+        requires = module.requires
+    else:
+        requires = _requires
     if isinstance(auth_spec.get("kubeconfig"), dict):
-        if module:
-            module.requires("kubernetes", "17.17.0", "to use in-memory config")
-        else:
-            requires("kubernetes", "17.17.0", "to use in-memory config")
+        requires("kubernetes", "17.17.0", "to use in-memory config")
+    if auth_spec.get("no_proxy"):
+        requires("kubernetes", "19.15.0", "to use the no_proxy feature")
+
     configuration = _create_configuration(auth_spec)
     client = create_api_client(configuration)
 
