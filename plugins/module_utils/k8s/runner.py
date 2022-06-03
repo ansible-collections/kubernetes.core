@@ -65,6 +65,10 @@ def run_module(module) -> None:
                 error = e.result
             except AttributeError:
                 error = {}
+            try:
+                error["reason"] = e.__cause__.reason
+            except AttributeError:
+                pass
             error["msg"] = to_native(e)
             if warnings:
                 error.setdefault("warnings", []).extend(warnings)

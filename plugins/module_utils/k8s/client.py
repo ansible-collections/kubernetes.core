@@ -51,6 +51,25 @@ except ImportError:
 _pool = {}
 
 
+class unique_string(str):
+    _low = None
+
+    def __hash__(self):
+        return id(self)
+
+    def __eq__(self, other):
+        return self is other
+
+    def lower(self):
+        if self._low is None:
+            lower = str.lower(self)
+            if str.__eq__(lower, self):
+                self._low = self
+            else:
+                self._low = unique_string(lower)
+        return self._low
+
+
 def _create_auth_spec(module=None, **kwargs) -> Dict:
     auth: Dict = {}
     # If authorization variables aren't defined, look for them in environment variables
@@ -150,7 +169,30 @@ def _create_configuration(auth: Dict):
     return configuration
 
 
-def _configuration_digest(configuration) -> str:
+def _create_headers(module=None, **kwargs):
+    header_map = {
+        "impersonate_user": "Impersonate-User",
+        "impersonate_groups": "Impersonate-Group",
+    }
+
+    headers = {}
+    for arg_name, header_name in header_map.items():
+        value = None
+        if module and module.params.get(arg_name) is not None:
+            value = module.params.get(arg_name)
+        elif arg_name in kwargs and kwargs.get(arg_name) is not None:
+            value = kwargs.get(arg_name)
+        else:
+            value = os.getenv("K8S_AUTH_{0}".format(arg_name.upper()), None)
+            if value is not None:
+                if AUTH_ARG_SPEC[arg_name].get("type") == "list":
+                    value = [x for x in value.split(",") if x != ""]
+        if value:
+            headers[header_name] = value
+    return headers
+
+
+def _configuration_digest(configuration, **kwargs) -> str:
     m = hashlib.sha256()
     for k in AUTH_ARG_MAP:
         if not hasattr(configuration, k):
@@ -163,19 +205,36 @@ def _configuration_digest(configuration) -> str:
                 m.update(content.encode())
         else:
             m.update(str(v).encode())
+    for k, v in kwargs.items():
+        content = "{0}: {1}".format(k, v)
+        m.update(content.encode())
     digest = m.hexdigest()
 
     return digest
 
 
+def _set_header(client, header, value):
+    if isinstance(value, list):
+        for v in value:
+            client.set_default_header(header_name=unique_string(header), header_value=v)
+    else:
+        client.set_default_header(header_name=header, header_value=value)
+
+
 def cache(func):
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         client = None
-        digest = _configuration_digest(*args)
+        hashable_kwargs = {}
+        for k, v in kwargs.items():
+            if isinstance(v, list):
+                hashable_kwargs[k] = ",".join(sorted(v))
+            else:
+                hashable_kwargs[k] = v
+        digest = _configuration_digest(*args, **hashable_kwargs)
         if digest in _pool:
             client = _pool[digest]
         else:
-            client = func(*args)
+            client = func(*args, **kwargs)
             _pool[digest] = client
 
         return client
@@ -184,10 +243,11 @@ def cache(func):
 
 
 @cache
-def create_api_client(configuration):
-    return k8sdynamicclient.K8SDynamicClient(
-        kubernetes.client.ApiClient(configuration), discoverer=LazyDiscoverer
-    )
+def create_api_client(configuration, **headers):
+    client = kubernetes.client.ApiClient(configuration)
+    for header, value in headers.items():
+        _set_header(client, header, value)
+    return k8sdynamicclient.K8SDynamicClient(client, discoverer=LazyDiscoverer)
 
 
 class K8SClient:
@@ -264,7 +324,8 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
         requires("kubernetes", "19.15.0", "to use the no_proxy feature")
 
     configuration = _create_configuration(auth_spec)
-    client = create_api_client(configuration)
+    headers = _create_headers(module, **kwargs)
+    client = create_api_client(configuration, **headers)
 
     k8s_client = K8SClient(
         configuration=configuration,
