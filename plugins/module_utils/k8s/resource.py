@@ -90,7 +90,7 @@ def from_yaml(definition: Union[str, List, Dict]) -> Iterable[Dict]:
 def from_file(filepath: str) -> Iterable[Dict]:
     """Load resource definitions from a path to a yaml file."""
     path = os.path.normpath(filepath)
-    with open(path, "r") as f:
+    with open(path, "rb") as f:
         definitions = list(yaml.safe_load_all(f))
     return filter(None, definitions)
 
