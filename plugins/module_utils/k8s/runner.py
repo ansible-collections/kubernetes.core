@@ -60,7 +60,7 @@ def run_module(module) -> None:
 
         try:
             result = perform_action(svc, definition, module.params)
-        except CoreException as e:
+        except Exception as e:
             try:
                 error = e.result
             except AttributeError:

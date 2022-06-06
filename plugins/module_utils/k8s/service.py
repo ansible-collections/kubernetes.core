@@ -14,6 +14,10 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
     get_waiter,
 )
 
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    requires,
+)
+
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
 )
@@ -334,6 +338,9 @@ class K8sService:
     ) -> Dict:
         namespace = definition["metadata"].get("namespace")
 
+        server_side_apply = self.module.params.get("server_side_apply")
+        if server_side_apply:
+            requires("kubernetes", "19.15.0", reason="to use server side apply")
         if self.module.check_mode and not self.client.dry_run:
             ignored, patch = apply_object(resource, _encode_stringdata(definition))
             if existing:
@@ -345,6 +352,9 @@ class K8sService:
                 params = {}
                 if self.module.check_mode:
                     params["dry_run"] = "All"
+                if server_side_apply:
+                    params["server_side"] = True
+                    params.update(server_side_apply)
                 k8s_obj = self.client.apply(
                     resource, definition, namespace=namespace, **params
                 ).to_dict()
