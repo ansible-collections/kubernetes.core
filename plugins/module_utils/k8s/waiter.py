@@ -51,14 +51,17 @@ def daemonset_ready(daemonset: ResourceInstance) -> bool:
 
 
 def statefulset_ready(statefulset: ResourceInstance) -> bool:
+    # These may be None
+    updated_replicas = statefulset.status.updatedReplicas or 0
+    ready_replicas = statefulset.status.readyReplicas or 0
     return bool(
         statefulset.status
         and statefulset.spec.updateStrategy.type == "RollingUpdate"
         and statefulset.status.observedGeneration
         == (statefulset.metadata.generation or 0)
         and statefulset.status.updateRevision == statefulset.status.currentRevision
-        and statefulset.status.updatedReplicas == statefulset.spec.replicas
-        and statefulset.status.readyReplicas == statefulset.spec.replicas
+        and updated_replicas == statefulset.spec.replicas
+        and ready_replicas == statefulset.spec.replicas
         and statefulset.status.replicas == statefulset.spec.replicas
     )
 
