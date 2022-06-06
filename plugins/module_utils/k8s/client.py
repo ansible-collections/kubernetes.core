@@ -266,20 +266,32 @@ class K8SClient:
     def resources(self) -> List[Any]:
         return self.client.resources
 
+    def _find_resource_with_prefix(
+        self, prefix: str, kind: str, api_version: str
+    ) -> Resource:
+        for attribute in ["kind", "name", "singular_name"]:
+            try:
+                return self.client.resources.get(
+                    **{"prefix": prefix, "api_version": api_version, attribute: kind}
+                )
+            except (ResourceNotFoundError, ResourceNotUniqueError):
+                pass
+        return self.client.resources.get(
+            prefix=prefix, api_version=api_version, short_names=[kind]
+        )
+
     def resource(self, kind: str, api_version: str) -> Resource:
         """Fetch a kubernetes client resource.
 
         This will attempt to find a kubernetes resource trying, in order, kind,
         name, singular_name and short_names.
         """
-        for attribute in ["kind", "name", "singular_name"]:
-            try:
-                return self.client.resources.get(
-                    **{"api_version": api_version, attribute: kind}
-                )
-            except (ResourceNotFoundError, ResourceNotUniqueError):
-                pass
-        return self.client.resources.get(api_version=api_version, short_names=[kind])
+        try:
+            if api_version == "v1":
+                return self._find_resource_with_prefix("api", kind, api_version)
+        except ResourceNotFoundError:
+            pass
+        return self._find_resource_with_prefix(None, kind, api_version)
 
     def _ensure_dry_run(self, params: Dict) -> Dict:
         if self.dry_run:
