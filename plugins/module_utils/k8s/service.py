@@ -23,6 +23,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
 )
 
 from ansible.module_utils.common.dict_transformations import dict_merge
+from ansible.module_utils._text import to_native
 
 try:
     from kubernetes.dynamic.exceptions import (
@@ -263,6 +264,9 @@ class K8sService:
                 field_selectors=field_selectors,
             )
         except BadRequestError:
+            return result
+        except CoreException as e:
+            result["msg"] = to_native(e)
             return result
 
         # There is either no result or there is a List resource with no items
