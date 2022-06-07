@@ -106,7 +106,13 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
-        instance = svc.delete(resource, definition, existing)
+        if exists(existing) and existing.kind.endswith("List"):
+            instance = []
+            for item in existing.items:
+                r = svc.delete(resource, item, existing)
+                instance.append(r)
+        else:
+            instance = svc.delete(resource, definition, existing)
         result["method"] = "delete"
         if exists(existing):
             result["changed"] = True
