@@ -16,7 +16,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
     diff_objects,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
-    CoreException,
     ResourceTimeout,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import exists
