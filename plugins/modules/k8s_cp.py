@@ -191,9 +191,9 @@ def execute_module(module):
 
     state = module.params.get("state")
     if state == "to_pod":
-        k8s_copy = K8SCopyToPod(module, client)
+        k8s_copy = K8SCopyToPod(module, client.client)
     else:
-        k8s_copy = K8SCopyFromPod(module, client)
+        k8s_copy = K8SCopyFromPod(module, client.client)
 
     try:
         k8s_copy.run()

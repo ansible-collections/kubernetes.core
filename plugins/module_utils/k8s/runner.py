@@ -16,7 +16,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
     diff_objects,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
-    CoreException,
     ResourceTimeout,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import exists
@@ -60,11 +59,15 @@ def run_module(module) -> None:
 
         try:
             result = perform_action(svc, definition, module.params)
-        except CoreException as e:
+        except Exception as e:
             try:
                 error = e.result
             except AttributeError:
                 error = {}
+            try:
+                error["reason"] = e.__cause__.reason
+            except AttributeError:
+                pass
             error["msg"] = to_native(e)
             if warnings:
                 error.setdefault("warnings", []).extend(warnings)
@@ -102,7 +105,13 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     existing = svc.retrieve(resource, definition)
 
     if state == "absent":
-        instance = svc.delete(resource, definition, existing)
+        if exists(existing) and existing.kind.endswith("List"):
+            instance = []
+            for item in existing.items:
+                r = svc.delete(resource, item, existing)
+                instance.append(r)
+        else:
+            instance = svc.delete(resource, definition, existing)
         result["method"] = "delete"
         if exists(existing):
             result["changed"] = True
@@ -114,7 +123,9 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                 result["msg"] = (
                     "resource 'kind={kind},name={name},namespace={namespace}' "
                     "filtered by label_selectors.".format(
-                        kind=kind, name=origin_name, namespace=namespace,
+                        kind=kind,
+                        name=origin_name,
+                        namespace=namespace,
                     )
                 )
                 return result

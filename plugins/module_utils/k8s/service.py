@@ -14,11 +14,16 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
     get_waiter,
 )
 
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    requires,
+)
+
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
 )
 
 from ansible.module_utils.common.dict_transformations import dict_merge
+from ansible.module_utils._text import to_native
 
 try:
     from kubernetes.dynamic.exceptions import (
@@ -260,6 +265,9 @@ class K8sService:
             )
         except BadRequestError:
             return result
+        except CoreException as e:
+            result["msg"] = to_native(e)
+            return result
 
         # There is either no result or there is a List resource with no items
         if (
@@ -281,7 +289,10 @@ class K8sService:
             name = instance["metadata"].get("name")
             namespace = instance["metadata"].get("namespace")
             success, res, duration = waiter.wait(
-                timeout=wait_timeout, sleep=wait_sleep, name=name, namespace=namespace,
+                timeout=wait_timeout,
+                sleep=wait_sleep,
+                name=name,
+                namespace=namespace,
             )
             if not success:
                 raise CoreException(
@@ -331,6 +342,9 @@ class K8sService:
     ) -> Dict:
         namespace = definition["metadata"].get("namespace")
 
+        server_side_apply = self.module.params.get("server_side_apply")
+        if server_side_apply:
+            requires("kubernetes", "19.15.0", reason="to use server side apply")
         if self.module.check_mode and not self.client.dry_run:
             ignored, patch = apply_object(resource, _encode_stringdata(definition))
             if existing:
@@ -342,6 +356,9 @@ class K8sService:
                 params = {}
                 if self.module.check_mode:
                     params["dry_run"] = "All"
+                if server_side_apply:
+                    params["server_side"] = True
+                    params.update(server_side_apply)
                 k8s_obj = self.client.apply(
                     resource, definition, namespace=namespace, **params
                 ).to_dict()
@@ -352,7 +369,10 @@ class K8sService:
         return k8s_obj
 
     def replace(
-        self, resource: Resource, definition: Dict, existing: ResourceInstance,
+        self,
+        resource: Resource,
+        definition: Dict,
+        existing: ResourceInstance,
     ) -> Dict:
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
@@ -395,7 +415,11 @@ class K8sService:
             ]:
                 try:
                     k8s_obj = self.patch_resource(
-                        resource, definition, name, namespace, merge_type=merge_type,
+                        resource,
+                        definition,
+                        name,
+                        namespace,
+                        merge_type=merge_type,
                     )
                     exception = None
                 except CoreException as e:

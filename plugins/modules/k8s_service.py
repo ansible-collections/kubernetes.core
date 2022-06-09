@@ -235,7 +235,7 @@ def perform_action(svc, resource, definition, params):
 
 
 def execute_module(svc):
-    """ Module execution """
+    """Module execution"""
     module = svc.module
     api_version = "v1"
     selector = module.params.get("selector")
@@ -269,7 +269,9 @@ def execute_module(svc):
 
 def main():
     module = AnsibleK8SModule(
-        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True,
+        module_class=AnsibleModule,
+        argument_spec=argspec(),
+        supports_check_mode=True,
     )
 
     client = get_api_client(module=module)

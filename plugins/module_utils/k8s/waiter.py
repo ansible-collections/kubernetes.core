@@ -4,6 +4,10 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from ansible.module_utils.parsing.convert_bool import boolean
 
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
+
 try:
     from kubernetes.dynamic.exceptions import NotFoundError
     from kubernetes.dynamic.resource import Resource, ResourceField, ResourceInstance
@@ -11,6 +15,12 @@ except ImportError:
     # These are defined only for the sake of Ansible's checked import requirement
     Resource = Any  # type: ignore
     ResourceInstance = Any  # type: ignore
+    pass
+
+try:
+    from urllib3.exceptions import HTTPError
+except ImportError:
+    # Handled during module setup
     pass
 
 
@@ -51,14 +61,17 @@ def daemonset_ready(daemonset: ResourceInstance) -> bool:
 
 
 def statefulset_ready(statefulset: ResourceInstance) -> bool:
+    # These may be None
+    updated_replicas = statefulset.status.updatedReplicas or 0
+    ready_replicas = statefulset.status.readyReplicas or 0
     return bool(
         statefulset.status
         and statefulset.spec.updateStrategy.type == "RollingUpdate"
         and statefulset.status.observedGeneration
         == (statefulset.metadata.generation or 0)
         and statefulset.status.updateRevision == statefulset.status.currentRevision
-        and statefulset.status.updatedReplicas == statefulset.spec.replicas
-        and statefulset.status.readyReplicas == statefulset.spec.replicas
+        and updated_replicas == statefulset.spec.replicas
+        and ready_replicas == statefulset.spec.replicas
         and statefulset.status.replicas == statefulset.spec.replicas
     )
 
@@ -153,13 +166,24 @@ class Waiter:
         response = None
         elapsed = 0
         for i in clock(timeout, sleep):
+            exception = None
             elapsed = i
             try:
                 response = self.client.get(self.resource, **params)
             except NotFoundError:
                 response = None
+            # Retry connection errors as it may be intermittent network issues
+            except HTTPError as e:
+                exception = e
             if self.predicate(response):
                 break
+        if exception:
+            msg = (
+                "Exception '{0}' raised while trying to get resource using {1}".format(
+                    exception, params
+                )
+            )
+            raise CoreException(msg) from exception
         if response:
             instance = response.to_dict()
         return self.predicate(response), instance, elapsed

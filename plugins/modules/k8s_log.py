@@ -201,10 +201,8 @@ def execute_module(svc, params):
             {"sinceSeconds": params["since_seconds"]}
         )
 
-    if module.params.get("previous"):
-        kwargs.setdefault("query_params", {}).update(
-            {"previous": module.params["previous"]}
-        )
+    if params.get("previous"):
+        kwargs.setdefault("query_params", {}).update({"previous": params["previous"]})
 
     response = resource.log.get(
         name=name, namespace=namespace, serialize=False, **kwargs
