@@ -5,6 +5,15 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.3.2
+======
+
+Minor Changes
+-------------
+
+- helm_repository - mark `pass_credentials` as no_log=True to silence false warning (https://github.com/ansible-collections/kubernetes.core/issues/412).
+- kubectl.py - replace distutils.spawn.find_executable with shutil.which in the kubectl connection plugin (https://github.com/ansible-collections/kubernetes.core/pull/456).
+
 v2.3.1
 ======
 
