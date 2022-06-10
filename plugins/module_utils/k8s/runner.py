@@ -8,6 +8,9 @@ from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
     create_definitions,
 )
@@ -48,7 +51,11 @@ def run_module(module) -> None:
     changed = False
     client = get_api_client(module)
     svc = K8sService(client, module)
-    definitions = create_definitions(module.params)
+    try:
+        definitions = create_definitions(module.params)
+    except Exception as e:
+        msg = "Failed to load resource definition: {0}".format(e)
+        raise CoreException(msg) from e
 
     for definition in definitions:
         result = {"changed": False, "result": {}}

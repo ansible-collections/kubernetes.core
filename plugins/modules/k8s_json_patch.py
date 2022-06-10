@@ -142,6 +142,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import 
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     diff_objects,
 )
@@ -283,8 +286,11 @@ def main():
     module = AnsibleK8SModule(
         module_class=AnsibleModule, argument_spec=args, supports_check_mode=True
     )
-    client = get_api_client(module)
-    execute_module(module, client)
+    try:
+        client = get_api_client(module)
+        execute_module(module, client)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+import traceback
+
 from typing import Optional
 
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
@@ -71,6 +73,13 @@ class AnsibleK8SModule:
 
     def fail_json(self, *args, **kwargs):
         return self._module.fail_json(*args, **kwargs)
+
+    def fail_from_exception(self, exception):
+        msg = to_text(exception)
+        tb = "".join(
+            traceback.format_exception(None, exception, exception.__traceback__)
+        )
+        return self.fail_json(msg=msg, exception=tb)
 
     def has_at_least(
         self, dependency: str, minimum: Optional[str] = None, warn: bool = False

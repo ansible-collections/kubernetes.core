@@ -144,6 +144,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 
 try:
     from kubernetes.client.apis import core_v1_api
@@ -240,8 +243,11 @@ def main():
         supports_check_mode=True,
     )
 
-    client = get_api_client(module)
-    execute_module(module, client.client)
+    try:
+        client = get_api_client(module)
+        execute_module(module, client.client)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

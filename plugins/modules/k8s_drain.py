@@ -142,6 +142,10 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import 
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
+
 from ansible.module_utils._text import to_native
 
 try:
@@ -497,9 +501,12 @@ def main():
             error=to_native(k8s_import_exception),
         )
 
-    client = get_api_client(module=module)
-    k8s_drain = K8sDrainAnsible(module, client.client)
-    k8s_drain.execute_module()
+    try:
+        client = get_api_client(module=module)
+        k8s_drain = K8sDrainAnsible(module, client.client)
+        k8s_drain.execute_module()
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

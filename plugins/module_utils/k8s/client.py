@@ -15,6 +15,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     requires as _requires,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 
 try:
     from ansible_collections.kubernetes.core.plugins.module_utils import (
@@ -335,9 +338,13 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
     if auth_spec.get("no_proxy"):
         requires("kubernetes", "19.15.0", "to use the no_proxy feature")
 
-    configuration = _create_configuration(auth_spec)
-    headers = _create_headers(module, **kwargs)
-    client = create_api_client(configuration, **headers)
+    try:
+        configuration = _create_configuration(auth_spec)
+        headers = _create_headers(module, **kwargs)
+        client = create_api_client(configuration, **headers)
+    except kubernetes.config.ConfigException as e:
+        msg = "Could not create API client: {0}".format(e)
+        raise CoreException(msg) from e
 
     k8s_client = K8SClient(
         configuration=configuration,

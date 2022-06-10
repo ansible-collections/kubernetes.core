@@ -262,9 +262,12 @@ def main():
         module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
     )
 
-    client = get_api_client(module=module)
-    svc = K8sService(client, module)
-    execute_module(svc)
+    try:
+        client = get_api_client(module=module)
+        svc = K8sService(client, module)
+        execute_module(svc)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":
