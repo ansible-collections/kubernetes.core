@@ -587,3 +587,14 @@ releases:
     - 432-fix-issue-when-using-template-parameter.yaml
     - 434-fix-k8s-delete-using-label_selector.yaml
     release_date: '2022-05-02'
+  2.3.2:
+    changes:
+      minor_changes:
+      - helm_repository - mark `pass_credentials` as no_log=True to silence false
+        warning (https://github.com/ansible-collections/kubernetes.core/issues/412).
+      - kubectl.py - replace distutils.spawn.find_executable with shutil.which in
+        the kubectl connection plugin (https://github.com/ansible-collections/kubernetes.core/pull/456).
+    fragments:
+    - 412_pass_creds.yml
+    - 456-replace-distutils.yml
+    release_date: '2022-06-09'
