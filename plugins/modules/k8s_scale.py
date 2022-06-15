@@ -250,7 +250,7 @@ def execute_module(client, module):
             module.exit_json(warning=warn, **return_attributes)
 
     for existing in existing_items:
-        if module.params["kind"].lower() == "job":
+        if kind.lower() == "job":
             existing_count = existing.spec.parallelism
         elif hasattr(existing.spec, "replicas"):
             existing_count = existing.spec.replicas
@@ -285,7 +285,7 @@ def execute_module(client, module):
             continue
 
         if existing_count != replicas:
-            if module.params["kind"].lower() == "job":
+            if kind.lower() == "job":
                 existing.spec.parallelism = replicas
                 result = {"changed": True}
                 if module.check_mode:

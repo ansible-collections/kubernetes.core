@@ -1,0 +1,64 @@
+---
+test_namespace: "k8s-manifest-url"
+file_server_container_name: "nginx-server"
+file_server_published_port: 30001
+file_server_container_image: "docker.io/nginx"
+
+pod_manifest:
+  file_name: pod.yaml
+  definition: |
+    ---
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: yaml-pod
+    spec:
+      containers:
+      - name: busy
+        image: busybox
+        command:
+          - /bin/sh
+          - -c
+          - while true;do date;sleep 5; done
+
+deployment_manifest:
+  file_name: deployment.yaml
+  definition: |
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deployment
+      labels:
+        app: nginx
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+        spec:
+          containers:
+          - name: nginx
+            image: nginx
+
+service_manifest:
+  file_name: service.yaml
+  definition: |
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      ports:
+        - name: http
+          port: 80
+      selector:
+        app: nginx
+    status:
+      loadBalancer: {}
