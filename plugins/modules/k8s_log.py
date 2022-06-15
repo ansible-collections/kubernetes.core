@@ -272,7 +272,7 @@ def main():
         result = execute_module(svc, module.params)
         module.exit_json(**result)
     except CoreException as e:
-        module.fail_json(msg=e)
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

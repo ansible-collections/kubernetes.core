@@ -148,6 +148,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import 
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
 )
@@ -212,7 +215,10 @@ def main():
         supports_check_mode=True,
     )
 
-    execute_module(module)
+    try:
+        execute_module(module)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

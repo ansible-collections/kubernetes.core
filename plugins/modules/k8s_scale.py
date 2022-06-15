@@ -411,8 +411,11 @@ def main():
         supports_check_mode=True,
     )
 
-    client = get_api_client(module=module)
-    execute_module(client, module)
+    try:
+        client = get_api_client(module=module)
+        execute_module(client, module)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

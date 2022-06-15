@@ -394,6 +394,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
     run_module,
 )
@@ -458,7 +461,10 @@ def main():
         mutually_exclusive=mutually_exclusive,
         supports_check_mode=True,
     )
-    run_module(module)
+    try:
+        run_module(module)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

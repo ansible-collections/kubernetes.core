@@ -157,6 +157,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule impo
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
 )
@@ -219,7 +222,10 @@ def main():
         get_api_client,
     )
 
-    execute_module(module, client=get_api_client(module=module))
+    try:
+        execute_module(module, client=get_api_client(module=module))
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":
