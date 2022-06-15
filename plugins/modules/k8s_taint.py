@@ -126,22 +126,29 @@ result:
 
 import copy
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_native
 
-from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-    K8sAnsibleMixin,
-    get_api_client,
+from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
+    AnsibleModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
 )
 
 try:
     from kubernetes.client.api import core_v1_api
     from kubernetes.client.exceptions import ApiException
 except ImportError:
-    # ImportError are managed by the common module already.
+    # ImportErrors are handled during module setup
     pass
 
 
@@ -191,21 +198,9 @@ def argspec():
 
 
 class K8sTaintAnsible:
-    def __init__(self, module):
+    def __init__(self, module, client):
         self.module = module
-        self.k8s_ansible_mixin = K8sAnsibleMixin(module=self.module)
-        self.k8s_ansible_mixin.client = get_api_client(module=self.module)
-        self.k8s_ansible_mixin.module = self.module
-        self.k8s_ansible_mixin.argspec = self.module.argument_spec
-        self.k8s_ansible_mixin.check_mode = self.module.check_mode
-        self.k8s_ansible_mixin.params = self.module.params
-        self.k8s_ansible_mixin.fail_json = self.module.fail_json
-        self.k8s_ansible_mixin.fail = self.module.fail_json
-        self.k8s_ansible_mixin.exit_json = self.module.exit_json
-        self.k8s_ansible_mixin.warn = self.module.warn
-        self.k8s_ansible_mixin.warnings = []
-        self.api_instance = core_v1_api.CoreV1Api(self.k8s_ansible_mixin.client.client)
-        self.k8s_ansible_mixin.check_library_version()
+        self.api_instance = core_v1_api.CoreV1Api(client.client)
         self.changed = False
 
     def get_node(self, name):
@@ -301,12 +296,17 @@ class K8sTaintAnsible:
 
 
 def main():
-    module = AnsibleModule(
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule,
         argument_spec=argspec(),
         supports_check_mode=True,
     )
-    k8s_taint = K8sTaintAnsible(module)
-    k8s_taint.execute_module()
+    try:
+        client = get_api_client(module)
+        k8s_taint = K8sTaintAnsible(module, client.client)
+        k8s_taint.execute_module()
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":
