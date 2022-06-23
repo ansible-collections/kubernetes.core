@@ -143,6 +143,14 @@ result:
 
 import copy
 
+try:
+    from kubernetes.dynamic.exceptions import NotFoundError
+except ImportError:
+    # Handled in module setup
+    pass
+
+from ansible.module_utils._text import to_native
+
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
@@ -151,7 +159,25 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     RESOURCE_ARG_SPEC,
     NAME_ARG_SPEC,
 )
-
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+    ResourceTimeout,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    diff_objects,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
+    get_waiter,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
+    create_definitions,
+)
 
 SCALE_ARG_SPEC = {
     "replicas": {"type": "int", "required": True},
@@ -163,27 +189,20 @@ SCALE_ARG_SPEC = {
 }
 
 
-def execute_module(
-    module,
-    k8s_ansible_mixin,
-):
-    k8s_ansible_mixin.set_resource_definitions(module)
-
-    definition = k8s_ansible_mixin.resource_definitions[0]
-
-    name = definition["metadata"]["name"]
-    namespace = definition["metadata"].get("namespace")
-    api_version = definition["apiVersion"]
-    kind = definition["kind"]
+def execute_module(client, module):
     current_replicas = module.params.get("current_replicas")
     replicas = module.params.get("replicas")
     resource_version = module.params.get("resource_version")
-
+    definitions = create_definitions(module.params)
+    definition = definitions[0]
+    name = definition["metadata"].get("name")
+    namespace = definition["metadata"].get("namespace")
+    api_version = definition["apiVersion"]
+    kind = definition["kind"]
     label_selectors = module.params.get("label_selectors")
     if not label_selectors:
         label_selectors = []
     continue_on_error = module.params.get("continue_on_error")
-
     wait = module.params.get("wait")
     wait_time = module.params.get("wait_timeout")
     wait_sleep = module.params.get("wait_sleep")
@@ -195,12 +214,7 @@ def execute_module(
     if wait:
         return_attributes["duration"] = 0
 
-    resource = k8s_ansible_mixin.find_resource(kind, api_version, fail=True)
-
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        NotFoundError,
-    )
-
+    resource = client.resource(kind, api_version)
     multiple_scale = False
     try:
         existing = resource.get(
@@ -211,11 +225,10 @@ def execute_module(
             multiple_scale = len(existing_items) > 1
         else:
             existing_items = [existing]
-    except NotFoundError as exc:
-        module.fail_json(
-            msg="Failed to retrieve requested object: {0}".format(exc),
-            error=exc.value.get("status"),
-        )
+    except NotFoundError as e:
+        reason = e.body if hasattr(e, "body") else e
+        msg = "Failed to retrieve requested object: {0}".format(reason)
+        raise CoreException(msg) from e
 
     if multiple_scale:
         # when scaling multiple resource, the 'result' is changed to 'results' and is a list
@@ -278,23 +291,28 @@ def execute_module(
                 if module.check_mode:
                     result["result"] = existing.to_dict()
                 else:
-                    result["result"] = resource.patch(existing.to_dict()).to_dict()
+                    result["result"] = client.patch(
+                        resource, existing.to_dict()
+                    ).to_dict()
             else:
-                result = scale(
-                    module,
-                    k8s_ansible_mixin,
-                    resource,
-                    existing,
-                    replicas,
-                    wait,
-                    wait_time,
-                    wait_sleep,
-                )
+                try:
+                    result = scale(
+                        client,
+                        module,
+                        resource,
+                        existing,
+                        replicas,
+                        wait,
+                        wait_time,
+                        wait_sleep,
+                    )
+                except CoreException as e:
+                    module.fail_json(msg=to_native(e))
                 changed = changed or result["changed"]
         else:
             name = existing.metadata.name
             namespace = existing.metadata.namespace
-            existing = resource.get(name=name, namespace=namespace)
+            existing = client.get(resource, name=name, namespace=namespace)
             result = {"changed": False, "result": existing.to_dict()}
             if module._diff:
                 result["diff"] = {}
@@ -320,8 +338,8 @@ def argspec():
 
 
 def scale(
+    client,
     module,
-    k8s_ansible_mixin,
     resource,
     existing_object,
     replicas,
@@ -334,8 +352,8 @@ def scale(
     kind = existing_object.kind
 
     if not hasattr(resource, "scale"):
-        module.fail_json(
-            msg="Cannot perform scale on resource of kind {0}".format(resource.kind)
+        raise CoreException(
+            "Cannot perform scale on resource of kind {0}".format(resource.kind)
         )
 
     scale_obj = {
@@ -344,32 +362,37 @@ def scale(
         "spec": {"replicas": replicas},
     }
 
-    existing = resource.get(name=name, namespace=namespace)
+    existing = client.get(resource, name=name, namespace=namespace)
 
     result = dict()
     if module.check_mode:
         k8s_obj = copy.deepcopy(existing.to_dict())
         k8s_obj["spec"]["replicas"] = replicas
-        match, diffs = k8s_ansible_mixin.diff_objects(existing.to_dict(), k8s_obj)
         if wait:
             result["duration"] = 0
         result["result"] = k8s_obj
     else:
         try:
             resource.scale.patch(body=scale_obj)
-        except Exception as exc:
-            module.fail_json(msg="Scale request failed: {0}".format(exc))
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Scale request failed: {0}".format(reason)
+            raise CoreException(msg) from e
 
-        k8s_obj = resource.get(name=name, namespace=namespace).to_dict()
+        k8s_obj = client.get(resource, name=name, namespace=namespace).to_dict()
         result["result"] = k8s_obj
-        if wait and not module.check_mode:
-            success, result["result"], result["duration"] = k8s_ansible_mixin.wait(
-                resource, scale_obj, wait_sleep, wait_time
+        if wait:
+            waiter = get_waiter(client, resource)
+            success, result["result"], result["duration"] = waiter.wait(
+                timeout=wait_time,
+                sleep=wait_sleep,
+                name=name,
+                namespace=namespace,
             )
             if not success:
-                module.fail_json(msg="Resource scaling timed out", **result)
+                raise ResourceTimeout("Resource scaling timed out", **result)
 
-    match, diffs = k8s_ansible_mixin.diff_objects(existing.to_dict(), k8s_obj)
+    match, diffs = diff_objects(existing.to_dict(), result["result"])
     result["changed"] = not match
     if module._diff:
         result["diff"] = diffs
@@ -381,19 +404,18 @@ def main():
     mutually_exclusive = [
         ("resource_definition", "src"),
     ]
-    module = AnsibleModule(
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule,
         argument_spec=argspec(),
         mutually_exclusive=mutually_exclusive,
         supports_check_mode=True,
     )
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
-    )
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    try:
+        client = get_api_client(module=module)
+        execute_module(client, module)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

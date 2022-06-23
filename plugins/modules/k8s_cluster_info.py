@@ -141,25 +141,24 @@ apis:
 
 
 import copy
-import traceback
 from collections import defaultdict
 
-HAS_K8S = False
 try:
     from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import (
         ResourceList,
     )
+except ImportError:
+    # Handled during module setup
+    pass
 
-    HAS_K8S = True
-except ImportError as e:
-    K8S_IMP_ERR = e
-    K8S_IMP_EXC = traceback.format_exc()
-
-from ansible.module_utils._text import to_native
-from ansible.module_utils.basic import missing_required_lib
-from ansible.module_utils.parsing.convert_bool import boolean
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
@@ -167,10 +166,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
 
 
 def execute_module(module, client):
-    invalidate_cache = boolean(
-        module.params.get("invalidate_cache", True), strict=False
-    )
-    if invalidate_cache:
+    if module.params.get("invalidate_cache"):
         client.resources.invalidate_cache()
     results = defaultdict(dict)
     for resource in list(client.resources):
@@ -204,7 +200,7 @@ def execute_module(module, client):
 
     version_info = {
         "client": version,
-        "server": client.version,
+        "server": client.client.version,
     }
     module.exit_json(
         changed=False, apis=results, connection=connection, version=version_info
@@ -218,18 +214,18 @@ def argspec():
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    if not HAS_K8S:
-        module.fail_json(
-            msg=missing_required_lib("kubernetes"),
-            exception=K8S_IMP_EXC,
-            error=to_native(K8S_IMP_ERR),
-        )
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
+    )
+
+    from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
         get_api_client,
     )
 
-    execute_module(module, client=get_api_client(module=module))
+    try:
+        execute_module(module, client=get_api_client(module=module))
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

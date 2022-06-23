@@ -1,0 +1,48 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: deploy-1
+  namespace: test-1
+  generation: 1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+        - image: busybox
+          name: busybox
+status:
+  availableReplicas: 2
+  replicas: 2
+  observedGeneration: 1
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: deploy-2
+  namespace: test-1
+  generation: 1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+        - image: busybox
+          name: busybox
+status:
+  availableReplicas: 1
+  replicas: 2
+  observedGeneration: 1

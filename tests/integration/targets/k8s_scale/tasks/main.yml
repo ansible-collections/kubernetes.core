@@ -150,7 +150,7 @@
     - name: Reapply the earlier deployment
       k8s:
         definition:
-          api_version: apps/v1
+          apiVersion: apps/v1
           kind: Deployment
           metadata:
             name: scale-deploy

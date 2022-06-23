@@ -1,39 +1,124 @@
 #!/usr/bin/env python3
 
+
+import itertools
+
 from pathlib import Path
 
-target_dir = Path('.')
 
-ignore_dir = target_dir / "tests" / "sanity"
-module_dir = target_dir / "plugins" / "modules"
-module_utils_dir = target_dir / "plugins" / "module_utils"
-ignore_dir.mkdir(parents=True, exist_ok=True)
+# Mapping of Ansible versions to supported Python versions
+ANSIBLE_VERSIONS = {
+    "2.9": ["3.6", "3.7", "3.8"],
+    "2.10": ["3.6", "3.7", "3.8", "3.9"],
+    "2.11": ["3.6", "3.7", "3.8", "3.9"],
+    "2.12": ["3.6", "3.7", "3.8", "3.9", "3.10"],
+    "2.13": ["3.6", "3.7", "3.8", "3.9", "3.10"],
+    "2.14": ["3.6", "3.7", "3.8", "3.9", "3.10"],
+}
 
-skip_list = [
-    "compile-2.6!skip",  # Py3.8+
-    "compile-2.7!skip",  # Py3.8+
-    "compile-3.5!skip",  # Py3.8+
-    "import-2.6!skip",  # Py3.8+
-    "import-2.7!skip",  # Py3.8+
-    "import-3.5!skip",  # Py3.8+
-    "future-import-boilerplate!skip",  # Py2 only
-    "metaclass-boilerplate!skip",  # Py2 only
+IMPORT_SKIPS = [
+    "plugins/module_utils/client/discovery.py",
+    "plugins/module_utils/client/resource.py",
+    "plugins/module_utils/k8sdynamicclient.py",
 ]
 
-for version in ["2.9", "2.10", "2.11", "2.12"]:
-    ignore_file = ignore_dir / f"ignore-{version}.txt"
-    ignore_content = ignore_file.read_text().split("\n")
-    ignore_content.append(f"tests/sanity/refresh_ignore_files shebang!skip")
+# Adds validate-modules:parameter-type-not-in-doc
+PARAM_TYPE_SKIPS = [
+    "plugins/modules/k8s.py",
+    "plugins/modules/k8s_scale.py",
+    "plugins/modules/k8s_service.py",
+]
 
-    for f in module_dir.glob("*.py"):
-        if f.is_symlink():
-            continue
-        for test in skip_list:
-            ignore_content.append(f"{f} {test}")
-    for f in module_utils_dir.glob("*.py"):
-        if f.is_symlink():
-            continue
-        for test in skip_list:
-            ignore_content.append(f"{f} {test}")
-    ignore_file = ignore_dir / f"ignore-{version}.txt"
-    ignore_file.write_text("\n".join(sorted(set(ignore_content))).lstrip("\n"))
+# Adds validate-modules:return-syntax-error
+RETURN_SYNTAX_SKIPS = [
+    "plugins/modules/k8s.py",
+    "plugins/modules/k8s_scale.py",
+    "plugins/modules/k8s_service.py",
+    "plugins/modules/k8s_taint.py",
+]
+
+YAML_LINT_SKIPS = [
+    "tests/unit/module_utils/fixtures/definitions.yml",
+    "tests/unit/module_utils/fixtures/deployments.yml",
+    "tests/unit/module_utils/fixtures/pods.yml",
+    "tests/integration/targets/helm/files/appversionless-chart-v2/templates/configmap.yaml",
+    "tests/integration/targets/helm/files/appversionless-chart/templates/configmap.yaml",
+    "tests/integration/targets/helm/files/test-chart-v2/templates/configmap.yaml",
+    "tests/integration/targets/helm/files/test-chart/templates/configmap.yaml",
+    "tests/integration/targets/k8s_scale/files/deployment.yaml",
+]
+
+# Add shebang!skip
+SHEBANG_SKIPS = [
+    "tests/sanity/refresh_ignore_files",
+]
+
+
+def import_skips(*versions):
+    for f in IMPORT_SKIPS:
+        for v in versions:
+            yield f"{f} import-{v}!skip"
+
+def param_type_skips():
+    for f in PARAM_TYPE_SKIPS:
+        yield f"{f} validate-modules:parameter-type-not-in-doc"
+
+
+def return_syntax_skips(ansible_version):
+    if ansible_version != "2.9":
+        for f in RETURN_SYNTAX_SKIPS:
+            yield f"{f} validate-modules:return-syntax-error"
+    else:
+        yield
+
+
+def yaml_lint_skips():
+    for f in YAML_LINT_SKIPS:
+        yield f"{f} yamllint!skip"
+
+
+def shebang_skips():
+    for f in SHEBANG_SKIPS:
+        yield f"{f} shebang!skip"
+
+
+def import_boilerplate(path, ansible_version):
+    if ansible_version in ("2.9", "2.10", "2.11"):
+        for f in (p for p in path.glob("**/*.py") if not p.is_symlink()):
+            yield f"{f} future-import-boilerplate!skip"
+    else:
+        yield
+
+
+def metaclass_boilerplate(path, ansible_version):
+    if ansible_version in ("2.9", "2.10", "2.11"):
+        for f in (p for p in path.glob("**/*.py") if not p.is_symlink()):
+            yield f"{f} metaclass-boilerplate!skip"
+    else:
+        yield
+
+
+def main():
+    target_dir = Path('.')
+    sanity_dir = target_dir / "tests" / "sanity"
+    plugins = target_dir / "plugins"
+    units = target_dir / "tests" / "unit"
+
+    for ansible, python in ANSIBLE_VERSIONS.items():
+        with open(sanity_dir / f"ignore-{ansible}.txt", "w") as fp:
+            ignores = itertools.chain(
+                import_skips(*python),
+                param_type_skips(),
+                yaml_lint_skips(),
+                shebang_skips(),
+                return_syntax_skips(ansible),
+                import_boilerplate(plugins, ansible),
+                import_boilerplate(units, ansible),
+                metaclass_boilerplate(plugins, ansible),
+                metaclass_boilerplate(units, ansible))
+            for f in filter(None, ignores):
+                fp.write(f + "\n")
+
+
+if __name__ == "__main__":
+    main()

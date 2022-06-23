@@ -24,6 +24,9 @@ from abc import ABCMeta, abstractmethod
 import tarfile
 
 # from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 from ansible.module_utils._text import to_native
 
 try:
@@ -376,11 +379,16 @@ class K8SCopyToPod(K8SCopy):
         )
 
 
-def check_pod(k8s_ansible_mixin, module):
-    resource = k8s_ansible_mixin.find_resource("Pod", None, True)
+def check_pod(svc):
+    module = svc.module
     namespace = module.params.get("namespace")
     name = module.params.get("pod")
     container = module.params.get("container")
+
+    try:
+        resource = svc.find_resource("Pod", None, True)
+    except CoreException as e:
+        module.fail_json(msg=to_native(e))
 
     def _fail(exc):
         arg = {}
@@ -398,7 +406,7 @@ def check_pod(k8s_ansible_mixin, module):
         module.fail_json(msg=msg, **arg)
 
     try:
-        result = resource.get(name=name, namespace=namespace)
+        result = svc.client.get(resource, name=name, namespace=namespace)
         containers = [
             c["name"] for c in result.to_dict()["status"]["containerStatuses"]
         ]

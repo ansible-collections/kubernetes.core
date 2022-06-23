@@ -86,12 +86,23 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     AUTH_ARG_SPEC,
     NAME_ARG_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
 
 
-def get_managed_resource(module):
+def get_managed_resource(kind):
     managed_resource = {}
 
-    kind = module.params["kind"]
     if kind == "DaemonSet":
         managed_resource["kind"] = "ControllerRevision"
         managed_resource["api_version"] = "apps/v1"
@@ -99,14 +110,17 @@ def get_managed_resource(module):
         managed_resource["kind"] = "ReplicaSet"
         managed_resource["api_version"] = "apps/v1"
     else:
-        module.fail(msg="Cannot perform rollback on resource of kind {0}".format(kind))
+        raise CoreException(
+            "Cannot perform rollback on resource of kind {0}".format(kind)
+        )
     return managed_resource
 
 
-def execute_module(module, k8s_ansible_mixin):
+def execute_module(svc):
     results = []
+    module = svc.module
 
-    resources = k8s_ansible_mixin.kubernetes_facts(
+    resources = svc.find(
         module.params["kind"],
         module.params["api_version"],
         module.params["name"],
@@ -117,14 +131,16 @@ def execute_module(module, k8s_ansible_mixin):
 
     changed = False
     for resource in resources["resources"]:
-        result = perform_action(module, k8s_ansible_mixin, resource)
+        result = perform_action(svc, resource)
         changed = result["changed"] or changed
         results.append(result)
 
     module.exit_json(**{"changed": changed, "rollback_info": results})
 
 
-def perform_action(module, k8s_ansible_mixin, resource):
+def perform_action(svc, resource):
+    module = svc.module
+
     if module.params["kind"] == "DaemonSet":
         current_revision = resource["metadata"]["generation"]
     elif module.params["kind"] == "Deployment":
@@ -132,8 +148,8 @@ def perform_action(module, k8s_ansible_mixin, resource):
             "deployment.kubernetes.io/revision"
         ]
 
-    managed_resource = get_managed_resource(module)
-    managed_resources = k8s_ansible_mixin.kubernetes_facts(
+    managed_resource = get_managed_resource(module.params["kind"])
+    managed_resources = svc.find(
         managed_resource["kind"],
         managed_resource["api_version"],
         "",
@@ -185,7 +201,7 @@ def perform_action(module, k8s_ansible_mixin, resource):
 
     rollback = resource
     if not module.check_mode:
-        rollback = k8s_ansible_mixin.client.request(
+        rollback = svc.client.client.request(
             "PATCH",
             "/apis/{0}/namespaces/{1}/{2}/{3}".format(
                 module.params["api_version"],
@@ -242,15 +258,16 @@ def get_previous_revision(all_resources, current_revision):
 
 
 def main():
-    module = AnsibleModule(argument_spec=argspec(), supports_check_mode=True)
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
     )
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    try:
+        client = get_api_client(module=module)
+        svc = K8sService(client, module)
+        execute_module(svc)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

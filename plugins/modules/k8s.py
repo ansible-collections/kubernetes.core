@@ -391,6 +391,15 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     RESOURCE_ARG_SPEC,
     DELETE_OPTS_ARG_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
+    run_module,
+)
 
 
 def validate_spec():
@@ -437,28 +446,6 @@ def argspec():
     return argument_spec
 
 
-def execute_module(module, k8s_ansible_mixin):
-    k8s_ansible_mixin.module = module
-    k8s_ansible_mixin.argspec = module.argument_spec
-    k8s_ansible_mixin.check_mode = k8s_ansible_mixin.module.check_mode
-    k8s_ansible_mixin.params = k8s_ansible_mixin.module.params
-    k8s_ansible_mixin.fail_json = k8s_ansible_mixin.module.fail_json
-    k8s_ansible_mixin.fail = k8s_ansible_mixin.module.fail_json
-    k8s_ansible_mixin.exit_json = k8s_ansible_mixin.module.exit_json
-    k8s_ansible_mixin.warn = k8s_ansible_mixin.module.warn
-    k8s_ansible_mixin.warnings = []
-
-    k8s_ansible_mixin.kind = k8s_ansible_mixin.params.get("kind")
-    k8s_ansible_mixin.api_version = k8s_ansible_mixin.params.get("api_version")
-    k8s_ansible_mixin.name = k8s_ansible_mixin.params.get("name")
-    k8s_ansible_mixin.generate_name = k8s_ansible_mixin.params.get("generate_name")
-    k8s_ansible_mixin.namespace = k8s_ansible_mixin.params.get("namespace")
-
-    k8s_ansible_mixin.check_library_version()
-    k8s_ansible_mixin.set_resource_definitions(module)
-    k8s_ansible_mixin.execute_module()
-
-
 def main():
     mutually_exclusive = [
         ("resource_definition", "src"),
@@ -467,19 +454,17 @@ def main():
         ("template", "src"),
         ("name", "generate_name"),
     ]
-    module = AnsibleModule(
+
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule,
         argument_spec=argspec(),
         mutually_exclusive=mutually_exclusive,
         supports_check_mode=True,
     )
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
-    )
-
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    try:
+        run_module(module)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":

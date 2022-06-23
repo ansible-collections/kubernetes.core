@@ -52,7 +52,7 @@
       assert:
         that:
           - patch_resource.changed
-          - patch_resource.result.results | selectattr('warning', 'defined') | list | length == 1
+          - patch_resource.result.results | selectattr('warnings', 'defined') | list | length == 1
 
     - name: Ensure namespace {{ patch_only_namespace[0] }} was patched correctly
       kubernetes.core.k8s_info:

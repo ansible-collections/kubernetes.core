@@ -130,6 +130,7 @@ except ImportError as e:
 
 
 def configuration_digest(configuration, **kwargs):
+    """This function has been deprecated and will be removed in version 4.0.0."""
     m = hashlib.sha256()
     for k in AUTH_ARG_MAP:
         if not hasattr(configuration, k):
@@ -150,6 +151,8 @@ def configuration_digest(configuration, **kwargs):
 
 
 class unique_string(str):
+    """This function has been deprecated and will be removed in version 4.0.0."""
+
     _low = None
 
     def __hash__(self):
@@ -169,6 +172,7 @@ class unique_string(str):
 
 
 def get_api_client(module=None, **kwargs):
+    """This function has been deprecated and will be removed in version 4.0.0. Please use module_utils.k8s.client.get_api_client() instead."""
     auth = {}
 
     def _raise_or_fail(exc, msg):
@@ -340,6 +344,11 @@ get_api_client._pool = {}
 
 class K8sAnsibleMixin(object):
     def __init__(self, module, pyyaml_required=True, *args, **kwargs):
+        module.deprecate(
+            msg="The K8sAnsibleMixin class has been deprecated and refactored into the module_utils/k8s/ directory.",
+            version="4.0.0",
+            collection_name="kubernetes.core",
+        )
         if not HAS_K8S_MODULE_HELPER:
             module.fail_json(
                 msg=missing_required_lib("kubernetes"),

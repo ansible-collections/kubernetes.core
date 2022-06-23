@@ -138,6 +138,15 @@ from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     AUTH_ARG_SPEC,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 
 try:
     from kubernetes.client.apis import core_v1_api
@@ -157,10 +166,9 @@ def argspec():
     return spec
 
 
-def execute_module(module, k8s_ansible_mixin):
-
+def execute_module(module, client):
     # Load kubernetes.client.Configuration
-    api = core_v1_api.CoreV1Api(k8s_ansible_mixin.client.client)
+    api = core_v1_api.CoreV1Api(client.client)
 
     # hack because passing the container as None breaks things
     optional_kwargs = {}
@@ -228,18 +236,18 @@ def execute_module(module, k8s_ansible_mixin):
 
 
 def main():
-    module = AnsibleModule(
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule,
+        check_pyyaml=False,
         argument_spec=argspec(),
         supports_check_mode=True,
     )
-    from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-        K8sAnsibleMixin,
-        get_api_client,
-    )
 
-    k8s_ansible_mixin = K8sAnsibleMixin(module)
-    k8s_ansible_mixin.client = get_api_client(module=module)
-    execute_module(module, k8s_ansible_mixin)
+    try:
+        client = get_api_client(module)
+        execute_module(module, client.client)
+    except CoreException as e:
+        module.fail_from_exception(e)
 
 
 if __name__ == "__main__":
