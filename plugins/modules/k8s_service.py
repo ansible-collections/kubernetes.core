@@ -198,7 +198,7 @@ def merge_dicts(x, y):
             if isinstance(x[k], dict) and isinstance(y[k], dict):
                 yield (k, dict(merge_dicts(x[k], y[k])))
             else:
-                yield (k, x[k] if x[k] else y[k])
+                yield (k, y[k] if y[k] else x[k])
         elif k in x:
             yield (k, x[k])
         else:
