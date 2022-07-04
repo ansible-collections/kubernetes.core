@@ -26,6 +26,7 @@ import traceback
 import sys
 import hashlib
 from datetime import datetime
+from tempfile import NamedTemporaryFile
 
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
@@ -47,6 +48,7 @@ from ansible.module_utils.six import iteritems, string_types
 from ansible.module_utils._text import to_native, to_bytes, to_text
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible.module_utils.parsing.convert_bool import boolean
+from ansible.module_utils.urls import Request
 
 K8S_IMP_ERR = None
 try:
@@ -342,6 +344,28 @@ def get_api_client(module=None, **kwargs):
 get_api_client._pool = {}
 
 
+def fetch_file_from_url(module, url):
+    # Download file
+    bufsize = 65536
+    file_name, file_ext = os.path.splitext(str(url.rsplit("/", 1)[1]))
+    temp_file = NamedTemporaryFile(
+        dir=module.tmpdir, prefix=file_name, suffix=file_ext, delete=False
+    )
+    module.add_cleanup_file(temp_file.name)
+    try:
+        rsp = Request().open("GET", url)
+        if not rsp:
+            module.fail_json(msg="Failure downloading %s" % url)
+        data = rsp.read(bufsize)
+        while data:
+            temp_file.write(data)
+            data = rsp.read(bufsize)
+        temp_file.close()
+    except Exception as e:
+        module.fail_json(msg="Failure downloading %s, %s" % (url, to_native(e)))
+    return temp_file.name
+
+
 class K8sAnsibleMixin(object):
     def __init__(self, module, pyyaml_required=True, *args, **kwargs):
         module.deprecate(
@@ -529,8 +553,15 @@ class K8sAnsibleMixin(object):
                     if alias in self.params:
                         self.params.pop(alias)
 
-    def load_resource_definitions(self, src):
+    def load_resource_definitions(self, src, module=None):
         """Load the requested src path"""
+        if module and (
+            src.startswith("https://")
+            or src.startswith("http://")
+            or src.startswith("ftp://")
+        ):
+            src = fetch_file_from_url(module, src)
+
         result = None
         path = os.path.normpath(src)
         if not os.path.exists(path):
@@ -745,7 +776,7 @@ class K8sAnsibleMixin(object):
 
         src = module.params.get("src")
         if src:
-            self.resource_definitions = self.load_resource_definitions(src)
+            self.resource_definitions = self.load_resource_definitions(src, module)
         try:
             self.resource_definitions = [
                 item for item in self.resource_definitions if item
@@ -853,9 +884,9 @@ class K8sAnsibleMixin(object):
         definition["apiVersion"] = resource.group_version
         metadata = definition.get("metadata", {})
         if not metadata.get("name") and not metadata.get("generateName"):
-            if self.name:
+            if hasattr(self, "name") and self.name:
                 metadata["name"] = self.name
-            elif self.generate_name:
+            elif hasattr(self, "generate_name") and self.generate_name:
                 metadata["generateName"] = self.generate_name
         if resource.namespaced and self.namespace and not metadata.get("namespace"):
             metadata["namespace"] = self.namespace

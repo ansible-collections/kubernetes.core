@@ -5,6 +5,7 @@ import os
 from typing import cast, Dict, Iterable, List, Optional, Union
 
 from ansible.module_utils.six import string_types
+from ansible.module_utils.urls import Request
 
 try:
     import yaml
@@ -53,7 +54,11 @@ def create_definitions(params: Dict) -> List[ResourceDefinition]:
         definitions = from_yaml(d)
     elif params.get("src"):
         d = cast(str, params.get("src"))
-        definitions = from_file(d)
+        if hasattr(d, "startswith") and d.startswith(("https://", "http://", "ftp://")):
+            data = Request().open("GET", d).read().decode("utf8")
+            definitions = from_yaml(data)
+        else:
+            definitions = from_file(d)
     else:
         # We'll create an empty definition and let merge_params set values
         # from the module parameters.

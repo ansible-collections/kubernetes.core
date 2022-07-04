@@ -169,6 +169,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
     create_definitions,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
+    perform_action,
+)
 
 
 SERVICE_ARG_SPEC = {
@@ -195,7 +198,7 @@ def merge_dicts(x, y):
             if isinstance(x[k], dict) and isinstance(y[k], dict):
                 yield (k, dict(merge_dicts(x[k], y[k])))
             else:
-                yield (k, y[k])
+                yield (k, y[k] if y[k] else x[k])
         elif k in x:
             yield (k, x[k])
         else:
@@ -209,32 +212,6 @@ def argspec():
     argument_spec.update(RESOURCE_ARG_SPEC)
     argument_spec.update(SERVICE_ARG_SPEC)
     return argument_spec
-
-
-def perform_action(svc, resource, definition, params):
-    state = params.get("state", None)
-    result = {}
-
-    existing = svc.retrieve(resource, definition)
-
-    if state == "absent":
-        result = svc.delete(resource, definition, existing)
-        result["method"] = "delete"
-    else:
-        if params.get("apply"):
-            result = svc.apply(resource, definition, existing)
-            result["method"] = "apply"
-        elif not existing:
-            result = svc.create(resource, definition)
-            result["method"] = "create"
-        elif params.get("force", False):
-            result = svc.replace(resource, definition, existing)
-            result["method"] = "replace"
-        else:
-            result = svc.update(resource, definition, existing)
-            result["method"] = "update"
-
-    return result
 
 
 def execute_module(svc):
@@ -263,9 +240,8 @@ def execute_module(svc):
 
     # 'resource_definition:' has lower priority than module parameters
     definition = dict(merge_dicts(definitions[0], definition))
-    resource = svc.find_resource("Service", api_version, fail=True)
 
-    result = perform_action(svc, resource, definition, module.params)
+    result = perform_action(svc, definition, module.params)
 
     module.exit_json(**result)
 

@@ -305,7 +305,6 @@ class K8sService:
     def create(self, resource: Resource, definition: Dict) -> Dict:
         namespace = definition["metadata"].get("namespace")
         name = definition["metadata"].get("name")
-        results = {"changed": False, "result": {}}
 
         if self.module.check_mode and not self.client.dry_run:
             k8s_obj = _encode_stringdata(definition)
@@ -327,7 +326,7 @@ class K8sService:
                         name
                     )
                 )
-                return results
+                return dict()
             except Exception as e:
                 reason = e.body if hasattr(e, "body") else e
                 msg = "Failed to create object: {0}".format(reason)

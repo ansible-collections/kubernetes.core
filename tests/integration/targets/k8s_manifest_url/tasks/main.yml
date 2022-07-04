@@ -1,0 +1,132 @@
+- name: check if docker is installed
+  shell: "command -v docker"
+  register: result
+  ignore_errors: true
+
+- block:
+    - name: Check running server
+      shell:
+        cmd: >
+          docker container ps -a
+          -f name={{ file_server_container_name }}
+          --format '{{ '{{' }} .Names {{ '}}' }}'
+      register: server
+
+    - name: Create static file server using on docker
+      block:
+        - name: Create temporary directory for file to server
+          tempfile:
+            state: directory
+            suffix: .manifests
+          register: manifests_dir
+
+        - name: Update directory permissions
+          file:
+            path: "{{ manifests_dir.path }}"
+            mode: 0755
+
+        - name: Create manifests files
+          copy:
+            content: "{{ item.definition }}"
+            dest: "{{ manifests_dir.path }}/{{ item.file_name }}"
+          with_items:
+            - "{{ pod_manifest }}"
+            - "{{ deployment_manifest }}"
+            - "{{ service_manifest }}"
+
+        - name: Create static file server
+          shell:
+            cmd: >
+              docker run
+              --name {{ file_server_container_name }}
+              -p {{ file_server_published_port }}:80
+              -v {{ manifests_dir.path }}:/usr/share/nginx/html:ro
+              -d {{ file_server_container_image }}
+
+      when: server.stdout == ""
+
+    - set_fact:
+        file_server_host: "http://127.0.0.1:{{ file_server_published_port }}"
+
+    # k8s
+    - name: Create Pod using manifest URL
+      k8s:
+        namespace: "{{ test_namespace }}"
+        src: "{{ file_server_host }}/{{ pod_manifest.file_name }}"
+        wait: true
+
+    - name: Read Pod created
+      k8s_info:
+        kind: Pod
+        namespace: "{{ test_namespace }}"
+        name: "yaml-pod"
+      register: yaml_pod
+
+    - name: Ensure Pod exists
+      assert:
+        that:
+          - yaml_pod.resources | length == 1
+
+    # k8s_scale
+    - name: Create Deployment using manifest URL
+      k8s:
+        namespace: "{{ test_namespace }}"
+        src: "{{ file_server_host }}/{{ deployment_manifest.file_name }}"
+        wait: true
+
+    - name: Scale deployment using manifest URL
+      k8s_scale:
+        namespace: "{{ test_namespace }}"
+        src: "{{ file_server_host }}/{{ deployment_manifest.file_name }}"
+        replicas: 1
+        current_replicas: 3
+        wait: true
+      register: scale
+
+    - name: Read deployment
+      k8s_info:
+        kind: Deployment
+        version: apps/v1
+        namespace: "{{ test_namespace }}"
+        name: "nginx-deployment"
+      register: deployment
+
+    - name: Ensure number of replicas has been set as requested
+      assert:
+        that:
+          - scale is changed
+          - deployment.resources | length == 1
+          - deployment.resources.0.status.replicas == 1
+
+    # k8s_service
+    - name: Create service from manifest URL
+      k8s_service:
+        name: "myservice"
+        namespace: "{{ test_namespace }}"
+        src: "{{ file_server_host }}/{{ service_manifest.file_name }}"
+      register: svc
+
+    - assert:
+        that:
+          - svc is changed
+
+  always:
+    - name: Delete namespace
+      k8s:
+        kind: Namespace
+        name: "{{ test_namespace }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete static file server
+      shell: "docker container rm -f {{ file_server_container_name }}"
+      ignore_errors: true
+
+    - name: Delete temporary directory
+      file:
+        state: absent
+        path: "{{ manifests_dir.path }}"
+      ignore_errors: true
+      when: manifests_dir is defined
+
+  when: result.rc == 0
