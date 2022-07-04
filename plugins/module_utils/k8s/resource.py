@@ -54,11 +54,7 @@ def create_definitions(params: Dict) -> List[ResourceDefinition]:
         definitions = from_yaml(d)
     elif params.get("src"):
         d = cast(str, params.get("src"))
-        if hasattr(d, "startswith") and (
-            d.startswith("https://")
-            or d.startswith("http://")
-            or d.startswith("ftp://")
-        ):
+        if hasattr(d, "startswith") and d.startswith(("https://", "http://", "ftp://")):
             data = Request().open("GET", d).read().decode("utf8")
             definitions = from_yaml(data)
         else:

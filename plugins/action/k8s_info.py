@@ -359,12 +359,7 @@ class ActionModule(ActionBase):
         # find the file in the expected search path
         src = self._task.args.get("src", None)
 
-        if (
-            src
-            and not src.startswith("http://")
-            and not src.startswith("https://")
-            and not src.startswith("ftp://")
-        ):
+        if src and not src.startswith(("http://", "https://", "ftp://")):
             if remote_transport:
                 # src is on remote node
                 result.update(
