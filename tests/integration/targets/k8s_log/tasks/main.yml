@@ -112,6 +112,46 @@
       assert:
         that: job_logs.log_lines[0] == "7"
 
+    - name: create a job that has 10 log lines
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        wait_condition:
+          type: Complete
+          status: 'True'
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: multiline-log
+            namespace: "{{ test_namespace }}"
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: busybox
+                    image: busybox
+                    command: ['sh']
+                    args: ['-c', 'for i in $(seq 0 9); do echo $i; done']
+                restartPolicy: Never
+            backoffLimit: 4
+
+    - name: retrieve last 5 log lines from the job
+      k8s_log:
+        api_version: batch/v1
+        kind: Job
+        namespace: "{{ test_namespace }}"
+        name: multiline-log
+        tail_lines: 5
+      register: tailed_log
+
+    # The log_lines by k8s_log always contain a trailing empty element,
+    # so if "tail"ing 5 lines, the length will be 6.
+    - name: verify that specific number of logs have been retrieved
+      assert:
+        that: tailed_log.log_lines | length == 5 + 1
+
   always:
     - name: ensure that namespace is removed
       k8s:
