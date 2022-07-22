@@ -152,6 +152,12 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
     K8sService,
 )
 
+try:
+    from kubernetes.client.exceptions import ApiException
+except ImportError:
+    # ImportError are managed by the common module already.
+    pass
+
 
 def argspec():
     args = copy.deepcopy(AUTH_ARG_SPEC)
@@ -217,9 +223,17 @@ def execute_module(svc, params):
             {"tailLines": params["tail_lines"]}
         )
 
-    response = resource.log.get(
-        name=name, namespace=namespace, serialize=False, **kwargs
-    )
+    try:
+        response = resource.log.get(
+            name=name, namespace=namespace, serialize=False, **kwargs
+        )
+    except ApiException as exc:
+        if exc.reason == "Not Found":
+            raise CoreException("Pod {0}/{1} not found.".format(namespace, name))
+        raise CoreException(
+            "Unable to retrieve log from Pod due to: {0}".format(exc.reason)
+        )
+
     log = response.data.decode("utf8")
 
     return {"changed": False, "log": log, "log_lines": log.split("\n")}
