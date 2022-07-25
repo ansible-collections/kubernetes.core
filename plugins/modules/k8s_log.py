@@ -67,6 +67,12 @@ options:
     type: bool
     default: False
     version_added: '2.4.0'
+  tail_lines:
+    description:
+    - A number of lines from the end of the logs to retrieve.
+    required: no
+    type: int
+    version_added: '2.4.0'
 
 requirements:
   - "python >= 3.6"
@@ -106,6 +112,7 @@ EXAMPLES = r"""
     kind: DeploymentConfig
     namespace: testing
     name: example
+    tail_lines: 100
   register: log
 """
 
@@ -156,6 +163,7 @@ def argspec():
             since_seconds=dict(),
             label_selectors=dict(type="list", elements="str", default=[]),
             previous=dict(type="bool", default=False),
+            tail_lines=dict(type="int"),
         )
     )
     return args
@@ -203,6 +211,11 @@ def execute_module(svc, params):
 
     if params.get("previous"):
         kwargs.setdefault("query_params", {}).update({"previous": params["previous"]})
+
+    if params.get("tail_lines"):
+        kwargs.setdefault("query_params", {}).update(
+            {"tailLines": params["tail_lines"]}
+        )
 
     response = resource.log.get(
         name=name, namespace=namespace, serialize=False, **kwargs
