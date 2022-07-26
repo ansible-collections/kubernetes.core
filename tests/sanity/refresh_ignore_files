@@ -98,11 +98,42 @@ def metaclass_boilerplate(path, ansible_version):
         yield
 
 
+def unsupported_compile_skips(path, ansible_version):
+    """This adds rules for compile skips for all unsupported versions of python.
+
+    These aren't needed for Ansible version 2.12+ as that can be managed on a
+    global level in tests/config.yml.
+    """
+    if ansible_version in ("2.9", "2.10", "2.11"):
+        for f in (p for p in path.glob("**/*.py") if not p.is_symlink()):
+            yield (
+                f"{f} compile-2.6!skip\n"
+                f"{f} compile-2.7!skip\n"
+                f"{f} compile-3.5!skip"
+            )
+
+
+def unsupported_ignore_skips(path, ansible_version):
+    """This adds rules for ignore skips for all unsupported versions of python.
+
+    These aren't needed for Ansible version 2.12+ as that can be managed on a
+    global level in tests/config.yml.
+    """
+    if ansible_version in ("2.9", "2.10", "2.11"):
+        for f in (p for p in path.glob("**/*.py") if not p.is_symlink()):
+            yield (
+                f"{f} import-2.6!skip\n"
+                f"{f} import-2.7!skip\n"
+                f"{f} import-3.5!skip"
+            )
+
+
 def main():
     target_dir = Path('.')
     sanity_dir = target_dir / "tests" / "sanity"
     plugins = target_dir / "plugins"
     units = target_dir / "tests" / "unit"
+    integration = target_dir / "tests" / "integration"
 
     for ansible, python in ANSIBLE_VERSIONS.items():
         with open(sanity_dir / f"ignore-{ansible}.txt", "w") as fp:
@@ -115,7 +146,11 @@ def main():
                 import_boilerplate(plugins, ansible),
                 import_boilerplate(units, ansible),
                 metaclass_boilerplate(plugins, ansible),
-                metaclass_boilerplate(units, ansible))
+                metaclass_boilerplate(units, ansible),
+                unsupported_ignore_skips(plugins, ansible),
+                unsupported_compile_skips(plugins, ansible),
+                unsupported_compile_skips(units, ansible),
+                unsupported_compile_skips(integration, ansible))
             for f in filter(None, ignores):
                 fp.write(f + "\n")
 
