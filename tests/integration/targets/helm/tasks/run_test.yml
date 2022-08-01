@@ -43,6 +43,9 @@
 - name: Test Skip CRDS feature in helm chart install
   include_tasks: test_crds.yml
 
+- name: Test in-memory kubeconfig
+  include_tasks: tests_in_memory_kubeconfig.yml
+
 - name: Clean helm install
   file:
     path: "{{ item }}"

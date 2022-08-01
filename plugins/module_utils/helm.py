@@ -7,14 +7,14 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-from contextlib import contextmanager
 import os
 import tempfile
 import traceback
 import re
+import json
 
 from ansible.module_utils.basic import missing_required_lib
-
+from ansible.module_utils.six import string_types
 
 try:
     import yaml
@@ -25,11 +25,18 @@ except ImportError:
     HAS_YAML = False
 
 
-@contextmanager
 def prepare_helm_environ_update(module):
     environ_update = {}
-    file_to_cleam_up = None
-    kubeconfig_path = module.params.get("kubeconfig")
+    kubeconfig_path = None
+    if module.params.get("kubeconfig") is not None:
+        kubeconfig = module.params.get("kubeconfig")
+        if isinstance(kubeconfig, string_types):
+            kubeconfig_path = kubeconfig
+        elif isinstance(kubeconfig, dict):
+            fd, kubeconfig_path = tempfile.mkstemp()
+            with os.fdopen(fd, "w") as fp:
+                json.dump(kubeconfig, fp)
+            module.add_cleanup_file(kubeconfig_path)
     if module.params.get("context") is not None:
         environ_update["HELM_KUBECONTEXT"] = module.params.get("context")
     if module.params.get("release_namespace"):
@@ -44,23 +51,19 @@ def prepare_helm_environ_update(module):
             validate_certs=module.params["validate_certs"],
             ca_cert=module.params["ca_cert"],
         )
-        file_to_cleam_up = kubeconfig_path
+        module.add_cleanup_file(kubeconfig_path)
     if kubeconfig_path is not None:
         environ_update["KUBECONFIG"] = kubeconfig_path
 
-    try:
-        yield environ_update
-    finally:
-        if file_to_cleam_up:
-            os.remove(file_to_cleam_up)
+    return environ_update
 
 
 def run_helm(module, command, fails_on_error=True):
     if not HAS_YAML:
         module.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
 
-    with prepare_helm_environ_update(module) as environ_update:
-        rc, out, err = module.run_command(command, environ_update=environ_update)
+    environ_update = prepare_helm_environ_update(module)
+    rc, out, err = module.run_command(command, environ_update=environ_update)
     if fails_on_error and rc != 0:
         module.fail_json(
             msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
@@ -118,7 +121,7 @@ def get_helm_plugin_list(module, helm_bin=None):
     """
     if not helm_bin:
         return []
-    helm_plugin_list = helm_bin + " list"
+    helm_plugin_list = helm_bin + " plugin list"
     rc, out, err = run_helm(module, helm_plugin_list)
     if rc != 0 or (out == "" and err == ""):
         module.fail_json(
@@ -162,3 +165,9 @@ def get_helm_version(module, helm_bin):
         if m:
             return m.group(1)
     return None
+
+
+def get_helm_binary(module):
+    return module.params.get("binary_path") or module.get_bin_path(
+        "helm", required=True
+    )

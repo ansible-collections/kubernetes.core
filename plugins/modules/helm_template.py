@@ -181,7 +181,10 @@ except ImportError:
     IMP_YAML = False
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
+    run_helm,
+    get_helm_binary,
+)
 
 
 def template(
@@ -266,7 +269,6 @@ def main():
     )
 
     check_mode = module.check_mode
-    bin_path = module.params.get("binary_path")
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
@@ -284,7 +286,7 @@ def main():
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
-    helm_cmd = bin_path or module.get_bin_path("helm", required=True)
+    helm_cmd = get_helm_binary(module)
 
     if update_repo_cache:
         update_cmd = helm_cmd + " repo update"

@@ -97,6 +97,21 @@ options:
     type: path
     aliases: [ ssl_ca_cert ]
     version_added: "2.3.0"
+  context:
+    description:
+      - Helm option to specify which kubeconfig context to use.
+      - If the value is not specified in the task, the value of environment variable C(K8S_AUTH_CONTEXT) will be used instead.
+    type: str
+    aliases: [ kube_context ]
+    version_added: "2.4.0"
+  kubeconfig:
+    description:
+      - Helm option to specify kubeconfig path to use.
+      - If the value is not specified in the task, the value of environment variable C(K8S_AUTH_KUBECONFIG) will be used instead.
+      - The configuration can be provided as dictionary.
+    type: raw
+    aliases: [ kubeconfig_path ]
+    version_added: "2.4.0"
 """
 
 EXAMPLES = r"""
@@ -145,6 +160,7 @@ msg:
 """
 
 import traceback
+import copy
 
 try:
     import yaml
@@ -154,8 +170,15 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback, missing_required_lib
-from ansible_collections.kubernetes.core.plugins.module_utils.helm import run_helm
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
+    run_helm,
+    get_helm_binary,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
+    HELM_AUTH_ARG_SPEC,
+    HELM_AUTH_MUTUALLY_EXCLUSIVE,
+)
 
 
 # Get repository from all repositories added
@@ -215,12 +238,10 @@ def delete_repository(command, repository_name):
     return remove_command
 
 
-def main():
-    global module
-
-    module = AnsibleModule(
-        argument_spec=dict(
-            binary_path=dict(type="path"),
+def argument_spec():
+    arg_spec = copy.deepcopy(HELM_AUTH_ARG_SPEC)
+    arg_spec.update(
+        dict(
             repo_name=dict(type="str", aliases=["name"], required=True),
             repo_url=dict(type="str", aliases=["url"]),
             repo_username=dict(type="str", aliases=["username"]),
@@ -229,25 +250,19 @@ def main():
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
             pass_credentials=dict(type="bool", default=False, no_log=True),
-            # Generic auth key
-            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
-            ca_cert=dict(
-                type="path",
-                aliases=["ssl_ca_cert"],
-                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
-            ),
-            validate_certs=dict(
-                type="bool",
-                default=True,
-                aliases=["verify_ssl"],
-                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
-            ),
-            api_key=dict(
-                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
-            ),
-        ),
+        )
+    )
+    return arg_spec
+
+
+def main():
+    global module
+
+    module = AnsibleModule(
+        argument_spec=argument_spec(),
         required_together=[["repo_username", "repo_password"]],
         required_if=[("repo_state", "present", ["repo_url"])],
+        mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
         supports_check_mode=True,
     )
 
@@ -256,7 +271,6 @@ def main():
 
     changed = False
 
-    bin_path = module.params.get("binary_path")
     repo_name = module.params.get("repo_name")
     repo_url = module.params.get("repo_url")
     repo_username = module.params.get("repo_username")
@@ -264,10 +278,7 @@ def main():
     repo_state = module.params.get("repo_state")
     pass_credentials = module.params.get("pass_credentials")
 
-    if bin_path is not None:
-        helm_cmd = bin_path
-    else:
-        helm_cmd = module.get_bin_path("helm", required=True)
+    helm_cmd = get_helm_binary(module)
 
     repository_status = get_repository_status(module, helm_cmd, repo_name)
 
