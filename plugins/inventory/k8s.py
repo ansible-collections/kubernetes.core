@@ -118,9 +118,10 @@ import json
 
 from ansible.errors import AnsibleError
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-    K8sAnsibleMixin,
     HAS_K8S_MODULE_HELPER,
     k8s_import_exception,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
 from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
@@ -146,7 +147,7 @@ class K8sInventoryException(Exception):
     pass
 
 
-class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable, K8sAnsibleMixin):
+class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     NAME = "kubernetes.core.k8s"
 
     connection_plugin = "kubernetes.core.kubectl"

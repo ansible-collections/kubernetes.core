@@ -1,0 +1,46 @@
+---
+- name: Create inventory files
+  hosts: localhost
+  gather_facts: false
+
+  collections:
+    - kubernetes.core
+
+  roles:
+    - role: setup_kubeconfig
+      kubeconfig_operation: 'save'
+
+  tasks:
+    - name: Create inventory files
+      copy:
+        content: "{{ item.content }}"
+        dest: "{{ item.path }}"
+      vars:
+        hostname: "{{ lookup('file', user_credentials_dir + '/host_data.txt') }}"
+        test_cert_file: "{{ user_credentials_dir | realpath + '/cert_file_data.txt' }}"
+        test_key_file: "{{ user_credentials_dir | realpath + '/key_file_data.txt' }}"
+        test_ca_cert: "{{ user_credentials_dir | realpath + '/ssl_ca_cert_data.txt' }}"
+      with_items:
+        - path: "test_inventory_aliases_with_ssl_k8s.yml"
+          content: |
+            ---
+            plugin: kubernetes.core.k8s
+            connections:
+              - namespaces:
+                - inventory
+                host: "{{ hostname }}"
+                cert_file: "{{ test_cert_file }}"
+                key_file: "{{ test_key_file }}"
+                verify_ssl: true
+                ssl_ca_cert: "{{ test_ca_cert }}"
+        - path: "test_inventory_aliases_no_ssl_k8s.yml"
+          content: |
+            ---
+            plugin: kubernetes.core.k8s
+            connections:
+              - namespaces:
+                - inventory
+                host: "{{ hostname }}"
+                cert_file: "{{ test_cert_file }}"
+                key_file: "{{ test_key_file }}"
+                verify_ssl: false

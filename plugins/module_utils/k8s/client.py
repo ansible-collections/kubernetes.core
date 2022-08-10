@@ -81,6 +81,9 @@ def _create_auth_spec(module=None, **kwargs) -> Dict:
             auth[true_name] = module.params.get(arg_name)
         elif arg_name in kwargs and kwargs.get(arg_name) is not None:
             auth[true_name] = kwargs.get(arg_name)
+        elif true_name in kwargs and kwargs.get(true_name) is not None:
+            # Aliases in kwargs
+            auth[true_name] = kwargs.get(true_name)
         elif arg_name == "proxy_headers":
             # specific case for 'proxy_headers' which is a dictionary
             proxy_headers = {}
@@ -131,7 +134,11 @@ def _create_configuration(auth: Dict):
         # Removing trailing slashes if any from hostname
         auth["host"] = auth.get("host").rstrip("/")
 
-    if auth_set("username", "password", "host") or auth_set("api_key", "host"):
+    if (
+        auth_set("username", "password", "host")
+        or auth_set("api_key", "host")
+        or auth_set("cert_file", "key_file", "host")
+    ):
         # We have enough in the parameters to authenticate, no need to load incluster or kubeconfig
         pass
     elif auth_set("kubeconfig") or auth_set("context"):
@@ -346,10 +353,14 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
         msg = "Could not create API client: {0}".format(e)
         raise CoreException(msg) from e
 
+    dry_run = False
+    if module:
+        dry_run = module.params.get("dry_run", False)
+
     k8s_client = K8SClient(
         configuration=configuration,
         client=client,
-        dry_run=module.params.get("dry_run", False),
+        dry_run=dry_run,
     )
 
     return k8s_client

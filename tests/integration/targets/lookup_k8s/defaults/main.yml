@@ -2,3 +2,6 @@
 test_namespace:
   - app-development-one
   - app-development-two
+  - app-development-three
+configmap_data: "This is a simple config map data."
+configmap_name: "test-configmap"

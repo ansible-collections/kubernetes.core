@@ -5,6 +5,8 @@
         pre_test2: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
         pre_test3: "{{ query('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
         pre_test4: "{{ query('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
+        cluster_version: "{{ query('kubernetes.core.k8s', cluster_info='version') }}"
+        cluster_api_groups: "{{ query('kubernetes.core.k8s', cluster_info='api_groups') }}"
 
     # https://github.com/ansible-collections/kubernetes.core/issues/147
     - name: Create a namespace with label
@@ -101,6 +103,130 @@
           - test8 is mapping
           - test9 is mapping
 
+    # test using resource_definition
+    - k8s:
+        name: "{{ test_namespace[2] }}"
+        kind: Namespace
+
+    - set_fact:
+        configmap_def:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ configmap_name }}"
+            namespace: "{{ test_namespace[2] }}"
+          data:
+            value: "{{ configmap_data }}"
+
+    - name: Create simple configmap
+      k8s:
+        definition: "{{ configmap_def }}"
+
+    - name: Retrieve configmap using resource_definition parameter
+      set_fact:
+        result_configmap: "{{ lookup('kubernetes.core.k8s', resource_definition=configmap_def) }}"
+
+    - name: Validate configmap result
+      assert:
+        that:
+          - result_configmap.apiVersion == 'v1'
+          - result_configmap.metadata.name == "{{ configmap_name }}"
+          - result_configmap.metadata.namespace == "{{ test_namespace[2] }}"
+          - result_configmap.data.value == "{{ configmap_data }}"
+
+    # test lookup plugin using src parameter
+    - block:
+        - name: Create temporary file to store content
+          tempfile:
+            suffix: ".yaml"
+          register: tmpfile
+
+        - name: Copy content into file
+          copy:
+            content: |
+              kind: ConfigMap
+              apiVersion: v1
+              metadata:
+                name: "{{ configmap_name }}"
+                namespace: "{{ test_namespace[2] }}"
+            dest: "{{ tmpfile.path }}"
+
+        - name: Retrieve configmap using src parameter
+          set_fact:
+            src_configmap: "{{ lookup('kubernetes.core.k8s', src=tmpfile.path) }}"
+
+        - name: Validate configmap result
+          assert:
+            that:
+              - src_configmap.apiVersion == 'v1'
+              - src_configmap.metadata.name == "{{ configmap_name }}"
+              - src_configmap.metadata.namespace == "{{ test_namespace[2] }}"
+              - src_configmap.data.value == "{{ configmap_data }}"
+
+      always:
+        - name: Delete temporary file created
+          file:
+            state: absent
+            path: "{{ tmpfile.path }}"
+          ignore_errors: true
+
+    # test using aliases for user authentication
+    - block:
+        - name: Create temporary directory to save user credentials
+          tempfile:
+            state: directory
+            suffix: ".config"
+          register: tmpdir
+
+        - include_role:
+            name: setup_kubeconfig
+          vars:
+            user_credentials_dir: "{{ tmpdir.path }}"
+            kubeconfig_operation: "save"
+
+        - set_fact:
+            cluster_host: "{{ lookup('file', tmpdir.path + '/host_data.txt') }}"
+            user_cert_file: "{{ tmpdir.path }}/cert_file_data.txt"
+            user_key_file: "{{ tmpdir.path }}/key_file_data.txt"
+            ssl_ca_cert: "{{ tmpdir.path }}/ssl_ca_cert_data.txt"
+
+        - name: Retrieve configmap using authentication aliases (validate_certs=false)
+          set_fact:
+            configmap_no_ssl: "{{ lookup('kubernetes.core.k8s', host=cluster_host, cert_file=user_cert_file, key_file=user_key_file, verify_ssl=false, resource_definition=configmap_def) }}"
+
+        - name: Validate configmap result
+          assert:
+            that:
+              - configmap_no_ssl.apiVersion == 'v1'
+              - configmap_no_ssl.metadata.name == "{{ configmap_name }}"
+              - configmap_no_ssl.metadata.namespace == "{{ test_namespace[2] }}"
+              - configmap_no_ssl.data.value == "{{ configmap_data }}"
+
+        - name: Retrieve configmap using authentication aliases (validate_certs=true)
+          set_fact:
+            configmap_with_ssl: "{{ lookup('kubernetes.core.k8s', host=cluster_host, cert_file=user_cert_file, key_file=user_key_file, ssl_ca_cert=ssl_ca_cert, verify_ssl=true, resource_definition=configmap_def) }}"
+
+        - name: Validate configmap result
+          assert:
+            that:
+              - configmap_with_ssl.apiVersion == 'v1'
+              - configmap_with_ssl.metadata.name == "{{ configmap_name }}"
+              - configmap_with_ssl.metadata.namespace == "{{ test_namespace[2] }}"
+              - configmap_with_ssl.data.value == "{{ configmap_data }}"
+
+      always:
+        - name: Delete temporary directory
+          file:
+            state: absent
+            path: "{{ tmpdir.path }}"
+          ignore_errors: true
+
+        - include_role:
+            name: setup_kubeconfig
+          ignore_errors: true
+          vars:
+            kubeconfig_operation: revert
+
   always:
     - name: Ensure that namespace is removed
       k8s:
@@ -110,4 +236,5 @@
       with_items:
         - one
         - two
+        - three
       ignore_errors: true
