@@ -1,0 +1,6 @@
+---
+# When set to 'revert', the role will copy saved kubeconfig to the default location
+# When set to 'save', the role will copy default kubeconfig to the custom location
+kubeconfig_operation: "revert"
+kubeconfig_default_path: "~/.kube/config"
+kubeconfig_custom_path: "~/.kube/customconfig"

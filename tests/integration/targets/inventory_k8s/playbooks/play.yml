@@ -88,15 +88,3 @@
     - name: Assert the file content matches expectations
       assert:
         that: (slurped_file.content|b64decode) == file_content
-
-- name: Delete inventory namespace
-  hosts: localhost
-  connection: local
-  gather_facts: no
-  tasks:
-    - name: Remove inventory namespace
-      k8s:
-        api_version: v1
-        kind: Namespace
-        name: inventory
-        state: absent

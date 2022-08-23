@@ -160,3 +160,25 @@ def test_load_kube_config_from_dict():
 
     assert expected_configuration.items() <= actual_configuration.__dict__.items()
     _remove_temp_file()
+
+
+def test_create_auth_spec_with_aliases_in_kwargs():
+    auth_options = {
+        "host": TEST_HOST,
+        "cert_file": TEST_CLIENT_CERT,
+        "ssl_ca_cert": TEST_CERTIFICATE_AUTH,
+        "key_file": TEST_CLIENT_KEY,
+        "verify_ssl": True,
+    }
+
+    expected_auth_spec = {
+        "host": TEST_HOST,
+        "cert_file": TEST_CLIENT_CERT,
+        "ssl_ca_cert": TEST_CERTIFICATE_AUTH,
+        "key_file": TEST_CLIENT_KEY,
+        "verify_ssl": True,
+    }
+
+    actual_auth_spec = _create_auth_spec(module=None, **auth_options)
+    for key, value in expected_auth_spec.items():
+        assert value == actual_auth_spec.get(key)

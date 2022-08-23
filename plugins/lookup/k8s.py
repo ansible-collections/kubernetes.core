@@ -180,9 +180,11 @@ from ansible.errors import AnsibleError
 from ansible.module_utils.common._collections_compat import KeysView
 from ansible.module_utils.common.validation import check_type_bool
 
-from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-    K8sAnsibleMixin,
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
+    create_definitions,
 )
 
 try:
@@ -210,7 +212,7 @@ except ImportError as e:
     k8s_import_exception = e
 
 
-class KubernetesLookup(K8sAnsibleMixin):
+class KubernetesLookup(object):
     def __init__(self):
 
         if not HAS_K8S_MODULE_HELPER:
@@ -240,7 +242,7 @@ class KubernetesLookup(K8sAnsibleMixin):
 
         cluster_info = kwargs.get("cluster_info")
         if cluster_info == "version":
-            return [self.client.version]
+            return [self.client.client.version]
         if cluster_info == "api_groups":
             if isinstance(self.client.resources.api_groups, KeysView):
                 return [list(self.client.resources.api_groups)]
@@ -257,7 +259,12 @@ class KubernetesLookup(K8sAnsibleMixin):
         resource_definition = kwargs.get("resource_definition")
         src = kwargs.get("src")
         if src:
-            resource_definition = self.load_resource_definitions(src)[0]
+            definitions = create_definitions(params=dict(src=src))
+            if definitions:
+                self.kind = definitions[0].kind
+                self.name = definitions[0].name
+                self.namespace = definitions[0].namespace
+                self.api_version = definitions[0].api_version or "v1"
         if resource_definition:
             self.kind = resource_definition.get("kind", self.kind)
             self.api_version = resource_definition.get("apiVersion", self.api_version)
@@ -272,14 +279,15 @@ class KubernetesLookup(K8sAnsibleMixin):
                 "using the 'resource_definition' parameter."
             )
 
-        resource = self.find_resource(self.kind, self.api_version, fail=True)
+        resource = self.client.resource(self.kind, self.api_version)
         try:
-            k8s_obj = resource.get(
+            params = dict(
                 name=self.name,
                 namespace=self.namespace,
                 label_selector=self.label_selector,
                 field_selector=self.field_selector,
             )
+            k8s_obj = self.client.get(resource, **params)
         except NotFoundError:
             return []
 

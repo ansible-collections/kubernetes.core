@@ -1,0 +1,30 @@
+---
+- name: Delete inventory namespace
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  roles:
+    - role: setup_kubeconfig
+      kubeconfig_operation: 'revert'
+
+  tasks:
+    - name: Delete temporary files
+      file:
+        state: absent
+        path: "{{ user_credentials_dir ~ '/' ~ item }}"
+      ignore_errors: true
+      with_items:
+        - test_inventory_aliases_with_ssl_k8s.yml
+        - test_inventory_aliases_no_ssl_k8s.yml
+        - ssl_ca_cert_data.txt
+        - key_file_data.txt
+        - cert_file_data.txt
+        - host_data.txt
+
+    - name: Remove inventory namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: inventory
+        state: absent

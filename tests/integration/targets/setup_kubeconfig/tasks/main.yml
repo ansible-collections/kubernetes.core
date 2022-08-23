@@ -1,0 +1,46 @@
+---
+- fail:
+    msg: "kubeconfig_operation must be one of 'revert' or 'save'"
+  when: kubeconfig_operation not in ["revert", "save"]
+
+- set_fact:
+    src_kubeconfig: "{{ (kubeconfig_operation == 'save') | ternary(kubeconfig_default_path, kubeconfig_custom_path) }}"
+    dest_kubeconfig: "{{ (kubeconfig_operation == 'save') | ternary(kubeconfig_custom_path, kubeconfig_default_path) }}"
+
+- name: check if source kubeconfig exists
+  stat:
+    path: "{{ src_kubeconfig }}"
+  register: _src
+
+- name: check if destination kubeconfig exists
+  stat:
+    path: "{{ dest_kubeconfig }}"
+  register: _dest
+
+- fail:
+    msg: "Both {{ src_kubeconfig }} and {{ dest_kubeconfig }} do not exist."
+  when:
+    - not _src.stat.exists
+    - not _dest.stat.exists
+
+- name: Generate user cert_file, key_file, and hostname
+  block:
+    - name: Generate user credentials files
+      test_inventory_read_credentials:
+        kube_config: "{{ (_src.stat.exists) | ternary(src_kubeconfig, dest_kubeconfig) }}"
+        dest_dir: "{{ user_credentials_dir }}"
+  when: user_credentials_dir is defined
+
+- block:
+    - name: "Copy {{ src_kubeconfig }} into {{ dest_kubeconfig }}"
+      copy:
+        remote_src: true
+        src: "{{ src_kubeconfig }}"
+        dest: "{{ dest_kubeconfig }}"
+
+    - name: "Delete {{ src_kubeconfig }}"
+      file:
+        state: absent
+        path: "{{ src_kubeconfig }}"
+
+  when: _src.stat.exists
