@@ -238,8 +238,7 @@ EXAMPLES = r"""
     If the definition file has been encrypted with Ansible Vault it will automatically be decrypted.
   kubernetes.core.k8s:
     state: present
-    definition: "{{ item }}"
-  loop: "{{ lookup('file', '/testing/deployment.yml') | from_yaml_all | list }}"
+    definition: "{{ lookup('file', '/testing/deployment.yml') | from_yaml_all }}"
 
 - name: Read definition template file from the Ansible controller file system
   kubernetes.core.k8s:
