@@ -75,6 +75,7 @@ DOCUMENTATION = r"""
       kubectl_kubeconfig:
         description:
           - Path to a kubectl config file. Defaults to I(~/.kube/config)
+          - The configuration can be provided as dictionary. Added in version 2.4.0.
         default: ''
         vars:
           - name: ansible_kubectl_kubeconfig
@@ -175,6 +176,8 @@ import os
 import os.path
 import shutil
 import subprocess
+import tempfile
+import json
 
 from ansible.parsing.yaml.loader import AnsibleLoader
 from ansible.errors import AnsibleError, AnsibleFileNotFound
@@ -222,6 +225,12 @@ class Connection(ConnectionBase):
         self.transport_cmd = kwargs.get(cmd_arg, shutil.which(self.transport))
         if not self.transport_cmd:
             raise AnsibleError("{0} command not found in PATH".format(self.transport))
+        self._file_to_delete = None
+
+    def delete_temporary_file(self):
+        if self._file_to_delete is not None:
+            os.remove(self._file_to_delete)
+            self._file_to_delete = None
 
     def _build_exec_cmd(self, cmd):
         """Build the local kubectl exec command to run cmd on remote_host"""
@@ -244,6 +253,18 @@ class Connection(ConnectionBase):
                         self.connection_options[key], str(skip_verify_ssl).lower()
                     )
                 )
+            elif key.endswith("kubeconfig") and self.get_option(key) != "":
+                kubeconfig_path = self.get_option(key)
+                if isinstance(kubeconfig_path, dict):
+                    fd, tmpfile = tempfile.mkstemp()
+                    with os.fdopen(fd, "w") as fp:
+                        json.dump(kubeconfig_path, fp)
+                    kubeconfig_path = tmpfile
+                    self._file_to_delete = tmpfile
+
+                cmd_arg = self.connection_options[key]
+                local_cmd += [cmd_arg, kubeconfig_path]
+                censored_local_cmd += [cmd_arg, kubeconfig_path]
             elif (
                 not key.endswith("container")
                 and self.get_option(key)
@@ -311,6 +332,7 @@ class Connection(ConnectionBase):
         )
 
         stdout, stderr = p.communicate(in_data)
+        self.delete_temporary_file()
         return (p.returncode, stdout, stderr)
 
     def _prefix_login_path(self, remote_path):
@@ -363,6 +385,7 @@ class Connection(ConnectionBase):
                     "kubectl connection requires dd command in the container to put files"
                 )
             stdout, stderr = p.communicate()
+            self.delete_temporary_file()
 
             if p.returncode != 0:
                 raise AnsibleError(
@@ -401,6 +424,7 @@ class Connection(ConnectionBase):
                     )
                 )
             stdout, stderr = p.communicate()
+            self.delete_temporary_file()
 
             if p.returncode != 0:
                 raise AnsibleError(

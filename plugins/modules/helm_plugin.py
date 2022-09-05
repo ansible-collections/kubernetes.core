@@ -145,6 +145,12 @@ def argument_spec():
     return arg_spec
 
 
+def mutually_exclusive():
+    mutually_ex = copy.deepcopy(HELM_AUTH_MUTUALLY_EXCLUSIVE)
+    mutually_ex.append(("plugin_name", "plugin_path"))
+    return mutually_ex
+
+
 def main():
     module = AnsibleModule(
         argument_spec=argument_spec(),
@@ -154,7 +160,7 @@ def main():
             ("state", "absent", ("plugin_name",)),
             ("state", "latest", ("plugin_name",)),
         ],
-        mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
+        mutually_exclusive=mutually_exclusive(),
     )
 
     state = module.params.get("state")

@@ -360,7 +360,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
     HELM_AUTH_ARG_SPEC,
-    HELM_AUTH_MUTUALLY_EXCLUSIVE,
 )
 
 
@@ -650,13 +649,6 @@ def argument_spec():
     return arg_spec
 
 
-def mutually_exclusive():
-    mutual_ex = copy.deepcopy(HELM_AUTH_MUTUALLY_EXCLUSIVE)
-    mutual_ex.append(("replace", "history_max"))
-    mutual_ex.append(("wait_timeout", "timeout"))
-    return mutual_ex
-
-
 def main():
     global module
     module = AnsibleModule(
@@ -665,7 +657,12 @@ def main():
             ("release_state", "present", ["release_name", "chart_ref"]),
             ("release_state", "absent", ["release_name"]),
         ],
-        mutually_exclusive=mutually_exclusive(),
+        mutually_exclusive=[
+            ("context", "ca_cert"),
+            ("kubeconfig", "ca_cert"),
+            ("replace", "history_max"),
+            ("wait_timeout", "timeout"),
+        ],
         supports_check_mode=True,
     )
 
