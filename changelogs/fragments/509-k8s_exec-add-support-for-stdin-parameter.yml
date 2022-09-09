@@ -1,0 +1,3 @@
+---
+minor_changes:
+- k8s_exec - added support for `stdin` parameter allowing to pass stdin to the container (https://github.com/ansible-collections/kubernetes.core/issues/506).

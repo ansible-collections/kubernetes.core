@@ -64,6 +64,12 @@ options:
     - The command to execute.
     type: str
     required: yes
+  stdin:
+    description:
+    - Content to pass to the container.
+    type: str
+    required: yes
+    version_added: "2.4.0"
 """
 
 EXAMPLES = r"""
@@ -92,6 +98,13 @@ EXAMPLES = r"""
     pod: busybox-test
     container: manager
     command: echo "hello"
+
+- name: Pass stdin content to the container
+  kubernetes.core.k8s_exec:
+    namespace: myproject
+    pod: mypod
+    command:  bash -e -c "cat - > /tmp/some_file.txt"
+    stdin: "some content to pass to the container"
 """
 
 RETURN = r"""
@@ -163,6 +176,7 @@ def argspec():
     spec["pod"] = dict(type="str", required=True)
     spec["container"] = dict(type="str")
     spec["command"] = dict(type="str", required=True)
+    spec["stdin"] = dict(type="str")
     return spec
 
 
@@ -187,6 +201,7 @@ def execute_module(module, client):
         if resp and len(resp.spec.containers) >= 1:
             optional_kwargs["container"] = resp.spec.containers[0].name
 
+    stream_stdin = module.params.get("stdin") is not None
     try:
         resp = stream(
             api.connect_get_namespaced_pod_exec,
@@ -195,7 +210,7 @@ def execute_module(module, client):
             command=shlex.split(module.params["command"]),
             stdout=True,
             stderr=True,
-            stdin=False,
+            stdin=stream_stdin,
             tty=False,
             _preload_content=False,
             **optional_kwargs
@@ -205,16 +220,22 @@ def execute_module(module, client):
             msg="Failed to execute on pod %s"
             " due to : %s" % (module.params.get("pod"), to_native(e))
         )
-    stdout, stderr, rc = [], [], 0
+    stdout, stderr, rc, stdin = [], [], 0, False
     while resp.is_open():
         resp.update(timeout=1)
         if resp.peek_stdout():
             stdout.append(resp.read_stdout())
         if resp.peek_stderr():
             stderr.append(resp.read_stderr())
+        if stream_stdin:
+            if not stdin:
+                stdin = True
+                resp.write_stdin(module.params.get("stdin"))
+            else:
+                break
     err = resp.read_channel(3)
     err = yaml.safe_load(err)
-    if err["status"] == "Success":
+    if err is None or err["status"] == "Success":
         rc = 0
     else:
         rc = int(err["details"]["causes"][0]["message"])

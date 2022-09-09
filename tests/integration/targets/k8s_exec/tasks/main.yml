@@ -86,6 +86,31 @@
         that:
           - "'hello' in output.stdout"
 
+    # Pass stdin to the container
+    - set_fact:
+        stdin_content: >-
+          Simple file created using ansible
+          key={{ lookup('password', '/dev/null chars=ascii_letters,digits,hexdigits,punctuation') }}
+
+    - name: Execute command into Pod with stdin pass to the container
+      k8s_exec:
+        namespace: "{{ test_namespace }}"
+        pod: "{{ pod }}"
+        command: sh -c "cat - > /tmp/ansible_k8s.txt"
+        stdin: "{{ stdin_content }}"
+
+    - name: Read file content created before
+      k8s_exec:
+        namespace: "{{ test_namespace }}"
+        pod: "{{ pod }}"
+        command: "cat /tmp/ansible_k8s.txt"
+      register: result
+
+    - name: Ensure content is the same
+      assert:
+        that:
+          - result.stdout == stdin_content
+
   always:
     - name: "Cleanup namespace"
       k8s:
