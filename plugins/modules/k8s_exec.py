@@ -68,7 +68,6 @@ options:
     description:
     - Content to pass to the container.
     type: str
-    required: yes
     version_added: "2.4.0"
 """
 
@@ -220,25 +219,36 @@ def execute_module(module, client):
             msg="Failed to execute on pod %s"
             " due to : %s" % (module.params.get("pod"), to_native(e))
         )
-    stdout, stderr, rc, stdin = [], [], 0, False
+    stdout, stderr, rc, command = [], [], 0, []
+    if module.params.get("stdin"):
+        command.append(module.params.get("stdin"))
+
+    def catch_error(resp):
+        err = resp.read_channel(3)
+        err = yaml.safe_load(err)
+        rc = None
+        if err is None or err["status"] == "Success":
+            rc = 0
+        else:
+            try:
+                rc = int(err["details"]["causes"][0]["message"])
+            except ValueError:
+                rc = err.get("Code", -1)
+            stderr.append(err["message"])
+        return rc
+
     while resp.is_open():
         resp.update(timeout=1)
         if resp.peek_stdout():
             stdout.append(resp.read_stdout())
         if resp.peek_stderr():
             stderr.append(resp.read_stderr())
-        if stream_stdin:
-            if not stdin:
-                stdin = True
-                resp.write_stdin(module.params.get("stdin"))
+        if module.params.get("stdin"):
+            if command:
+                resp.write_stdin(command.pop(0))
             else:
                 break
-    err = resp.read_channel(3)
-    err = yaml.safe_load(err)
-    if err is None or err["status"] == "Success":
-        rc = 0
-    else:
-        rc = int(err["details"]["causes"][0]["message"])
+    rc = catch_error(resp) or rc
 
     module.deprecate(
         "The 'return_code' return key is being renamed to 'rc'. "
