@@ -112,6 +112,7 @@ status:
 """
 
 import traceback
+import copy
 
 try:
     import yaml
@@ -121,10 +122,15 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib, env_fallback
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     run_helm,
     get_values,
+    get_helm_binary,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
+    HELM_AUTH_ARG_SPEC,
+    HELM_AUTH_MUTUALLY_EXCLUSIVE,
 )
 
 
@@ -176,63 +182,34 @@ def get_release_status(module, command, release_name, release_state):
     return release
 
 
+def argument_spec():
+    arg_spec = copy.deepcopy(HELM_AUTH_ARG_SPEC)
+    arg_spec.update(
+        dict(
+            release_name=dict(type="str", required=True, aliases=["name"]),
+            release_namespace=dict(type="str", required=True, aliases=["namespace"]),
+            release_state=dict(type="list", default=[], elements="str"),
+        )
+    )
+    return arg_spec
+
+
 def main():
     global module
 
     module = AnsibleModule(
-        argument_spec=dict(
-            binary_path=dict(type="path"),
-            release_name=dict(type="str", required=True, aliases=["name"]),
-            release_namespace=dict(type="str", required=True, aliases=["namespace"]),
-            # Helm options
-            context=dict(
-                type="str",
-                aliases=["kube_context"],
-                fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
-            ),
-            kubeconfig=dict(
-                type="path",
-                aliases=["kubeconfig_path"],
-                fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
-            ),
-            # Generic auth key
-            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
-            ca_cert=dict(
-                type="path",
-                aliases=["ssl_ca_cert"],
-                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
-            ),
-            validate_certs=dict(
-                type="bool",
-                default=True,
-                aliases=["verify_ssl"],
-                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
-            ),
-            api_key=dict(
-                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
-            ),
-            release_state=dict(type="list", default=[], elements="str"),
-        ),
-        mutually_exclusive=[
-            ("context", "ca_cert"),
-            ("context", "validate_certs"),
-            ("kubeconfig", "ca_cert"),
-            ("kubeconfig", "validate_certs"),
-        ],
+        argument_spec=argument_spec(),
+        mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
         supports_check_mode=True,
     )
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
-    bin_path = module.params.get("binary_path")
     release_name = module.params.get("release_name")
     release_state = module.params.get("release_state")
 
-    if bin_path is not None:
-        helm_cmd_common = bin_path
-    else:
-        helm_cmd_common = module.get_bin_path("helm", required=True)
+    helm_cmd_common = get_helm_binary(module)
 
     release_status = get_release_status(
         module, helm_cmd_common, release_name, release_state

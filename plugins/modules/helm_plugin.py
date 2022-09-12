@@ -108,21 +108,24 @@ rc:
   sample: 1
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
+import copy
+from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     run_helm,
     get_helm_plugin_list,
     parse_helm_plugin_list,
+    get_helm_binary,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
+    HELM_AUTH_ARG_SPEC,
+    HELM_AUTH_MUTUALLY_EXCLUSIVE,
 )
 
 
-def main():
-    module = AnsibleModule(
-        argument_spec=dict(
-            binary_path=dict(type="path"),
-            state=dict(
-                type="str", default="present", choices=["present", "absent", "latest"]
-            ),
+def argument_spec():
+    arg_spec = copy.deepcopy(HELM_AUTH_ARG_SPEC)
+    arg_spec.update(
+        dict(
             plugin_path=dict(
                 type="str",
             ),
@@ -132,60 +135,38 @@ def main():
             plugin_version=dict(
                 type="str",
             ),
-            # Helm options
-            context=dict(
+            state=dict(
                 type="str",
-                aliases=["kube_context"],
-                fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
+                default="present",
+                choices=["present", "absent", "latest"],
             ),
-            kubeconfig=dict(
-                type="path",
-                aliases=["kubeconfig_path"],
-                fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
-            ),
-            # Generic auth key
-            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
-            ca_cert=dict(
-                type="path",
-                aliases=["ssl_ca_cert"],
-                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
-            ),
-            validate_certs=dict(
-                type="bool",
-                default=True,
-                aliases=["verify_ssl"],
-                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
-            ),
-            api_key=dict(
-                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
-            ),
-        ),
+        )
+    )
+    return arg_spec
+
+
+def mutually_exclusive():
+    mutually_ex = copy.deepcopy(HELM_AUTH_MUTUALLY_EXCLUSIVE)
+    mutually_ex.append(("plugin_name", "plugin_path"))
+    return mutually_ex
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec=argument_spec(),
         supports_check_mode=True,
         required_if=[
             ("state", "present", ("plugin_path",)),
             ("state", "absent", ("plugin_name",)),
             ("state", "latest", ("plugin_name",)),
         ],
-        mutually_exclusive=[
-            ("plugin_name", "plugin_path"),
-            ("context", "ca_cert"),
-            ("context", "validate_certs"),
-            ("kubeconfig", "ca_cert"),
-            ("kubeconfig", "validate_certs"),
-        ],
+        mutually_exclusive=mutually_exclusive(),
     )
 
-    bin_path = module.params.get("binary_path")
     state = module.params.get("state")
+    helm_bin = get_helm_binary(module)
 
-    if bin_path is not None:
-        helm_cmd_common = bin_path
-    else:
-        helm_cmd_common = "helm"
-
-    helm_cmd_common = module.get_bin_path(helm_cmd_common, required=True)
-
-    helm_cmd_common += " plugin"
+    helm_cmd_common = helm_bin + " plugin"
 
     if state == "present":
         helm_cmd_common += " install %s" % module.params.get("plugin_path")
@@ -227,7 +208,7 @@ def main():
             )
     elif state == "absent":
         plugin_name = module.params.get("plugin_name")
-        rc, output, err = get_helm_plugin_list(module, helm_bin=helm_cmd_common)
+        rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
         out = parse_helm_plugin_list(module, output=output.splitlines())
 
         if not out:
@@ -281,7 +262,7 @@ def main():
         )
     elif state == "latest":
         plugin_name = module.params.get("plugin_name")
-        rc, output, err = get_helm_plugin_list(module, helm_bin=helm_cmd_common)
+        rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
         out = parse_helm_plugin_list(module, output=output.splitlines())
 
         if not out:

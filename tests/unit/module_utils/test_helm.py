@@ -7,8 +7,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import os.path
-
 import yaml
+import tempfile
+import json
 
 
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
@@ -31,10 +32,21 @@ class MockedModule:
         }
 
         self.r = {}
+        self.files_to_delete = []
 
     def run_command(self, command, environ_update=None):
         self.r = {"command": command, "environ_update": environ_update}
         return 0, "", ""
+
+    def add_cleanup_file(self, file_path):
+        self.files_to_delete.append(file_path)
+
+    def do_cleanup_files(self):
+        for file in self.files_to_delete:
+            try:
+                os.remove(file)
+            except Exception:
+                pass
 
 
 def test_write_temp_kubeconfig_server_only():
@@ -97,4 +109,60 @@ def test_run_helm_with_params():
     assert module.r["environ_update"]["HELM_KUBETOKEN"] == "my-api-key"
     assert module.r["environ_update"]["HELM_NAMESPACE"] == "a-release-namespace"
     assert module.r["environ_update"]["KUBECONFIG"]
-    assert not os.path.exists(module.r["environ_update"]["KUBECONFIG"])
+    assert os.path.exists(module.r["environ_update"]["KUBECONFIG"])
+    module.do_cleanup_files()
+
+
+def test_run_helm_with_kubeconfig():
+
+    custom_config = {
+        "apiVersion": "v1",
+        "clusters": [
+            {
+                "cluster": {
+                    "certificate-authority-data": "LS0tLS1CRUdJTiBDRV",
+                    "server": "https://api.cluster.testing:6443",
+                },
+                "name": "api-cluster-testing:6443",
+            }
+        ],
+        "contexts": [
+            {
+                "context": {
+                    "cluster": "api-cluster-testing:6443",
+                    "namespace": "default",
+                    "user": "kubeadmin",
+                },
+                "name": "context-1",
+            }
+        ],
+        "current-context": "context-1",
+        "kind": "Config",
+        "users": [
+            {
+                "name": "developer",
+                "user": {"token": "sha256~jbIvVieBC_8W6Pb-iH5vqC_BvvPHIxQMxUPLDnYvHYM"},
+            }
+        ],
+    }
+
+    # kubeconfig defined as path
+    _fd, tmpfile_name = tempfile.mkstemp()
+    with os.fdopen(_fd, "w") as fp:
+        yaml.dump(custom_config, fp)
+
+    k1_module = MockedModule()
+    k1_module.params = {"kubeconfig": tmpfile_name}
+    run_helm(k1_module, "helm foo")
+    assert k1_module.r["environ_update"] == {"KUBECONFIG": tmpfile_name}
+    os.remove(tmpfile_name)
+
+    # kubeconfig defined as string
+    k2_module = MockedModule()
+    k2_module.params = {"kubeconfig": custom_config}
+    run_helm(k2_module, "helm foo")
+
+    assert os.path.exists(k2_module.r["environ_update"]["KUBECONFIG"])
+    with open(k2_module.r["environ_update"]["KUBECONFIG"]) as f:
+        assert json.loads(f.read()) == custom_config
+    k2_module.do_cleanup_files()

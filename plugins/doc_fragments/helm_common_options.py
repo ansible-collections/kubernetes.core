@@ -30,7 +30,8 @@ options:
     description:
       - Helm option to specify kubeconfig path to use.
       - If the value is not specified in the task, the value of environment variable C(K8S_AUTH_KUBECONFIG) will be used instead.
-    type: path
+      - The configuration can be provided as dictionary. Added in version 2.4.0.
+    type: raw
     aliases: [ kubeconfig_path ]
   host:
     description:

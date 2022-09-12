@@ -70,73 +70,43 @@ rc:
   sample: 1
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
+import copy
+from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     get_helm_plugin_list,
     parse_helm_plugin_list,
+    get_helm_binary,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
+    HELM_AUTH_ARG_SPEC,
+    HELM_AUTH_MUTUALLY_EXCLUSIVE,
 )
 
 
 def main():
-    module = AnsibleModule(
-        argument_spec=dict(
-            binary_path=dict(type="path"),
+
+    argument_spec = copy.deepcopy(HELM_AUTH_ARG_SPEC)
+    argument_spec.update(
+        dict(
             plugin_name=dict(
                 type="str",
             ),
-            # Helm options
-            context=dict(
-                type="str",
-                aliases=["kube_context"],
-                fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
-            ),
-            kubeconfig=dict(
-                type="path",
-                aliases=["kubeconfig_path"],
-                fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
-            ),
-            # Generic auth key
-            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
-            ca_cert=dict(
-                type="path",
-                aliases=["ssl_ca_cert"],
-                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
-            ),
-            validate_certs=dict(
-                type="bool",
-                default=True,
-                aliases=["verify_ssl"],
-                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
-            ),
-            api_key=dict(
-                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
-            ),
-        ),
-        mutually_exclusive=[
-            ("context", "ca_cert"),
-            ("context", "validate_certs"),
-            ("kubeconfig", "ca_cert"),
-            ("kubeconfig", "validate_certs"),
-        ],
+        )
+    )
+
+    module = AnsibleModule(
+        argument_spec=argument_spec,
+        mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
         supports_check_mode=True,
     )
 
-    bin_path = module.params.get("binary_path")
-
-    if bin_path is not None:
-        helm_cmd_common = bin_path
-    else:
-        helm_cmd_common = "helm"
-
-    helm_cmd_common = module.get_bin_path(helm_cmd_common, required=True)
-
-    helm_cmd_common += " plugin"
+    helm_bin = get_helm_binary(module)
 
     plugin_name = module.params.get("plugin_name")
 
     plugin_list = []
 
-    rc, output, err = get_helm_plugin_list(module, helm_bin=helm_cmd_common)
+    rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
 
     out = parse_helm_plugin_list(module, output=output.splitlines())
 
@@ -155,7 +125,7 @@ def main():
 
     module.exit_json(
         changed=True,
-        command=helm_cmd_common + " list",
+        command=helm_bin + " plugin list",
         stdout=output,
         stderr=err,
         rc=rc,

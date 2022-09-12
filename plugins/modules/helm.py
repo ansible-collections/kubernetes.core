@@ -336,6 +336,7 @@ command:
 import re
 import tempfile
 import traceback
+import copy
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -348,13 +349,17 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib, env_fallback
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     run_helm,
     get_values,
     get_helm_plugin_list,
     parse_helm_plugin_list,
     get_helm_version,
+    get_helm_binary,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
+    HELM_AUTH_ARG_SPEC,
 )
 
 
@@ -531,13 +536,12 @@ def load_values_files(values_files):
     return values
 
 
-def get_plugin_version(command, plugin):
+def get_plugin_version(helm_bin, plugin):
     """
     Check if helm plugin is installed and return corresponding version
     """
 
-    cmd = command + " plugin"
-    rc, output, err = get_helm_plugin_list(module, helm_bin=cmd)
+    rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
     out = parse_helm_plugin_list(module, output=output.splitlines())
 
     if not out:
@@ -612,11 +616,10 @@ def default_check(release_status, chart_info, values=None, values_files=None):
     )
 
 
-def main():
-    global module
-    module = AnsibleModule(
-        argument_spec=dict(
-            binary_path=dict(type="path"),
+def argument_spec():
+    arg_spec = copy.deepcopy(HELM_AUTH_ARG_SPEC)
+    arg_spec.update(
+        dict(
             chart_ref=dict(type="path"),
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
@@ -629,19 +632,8 @@ def main():
             release_values=dict(type="dict", default={}, aliases=["values"]),
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
-            # Helm options
             disable_hook=dict(type="bool", default=False),
             force=dict(type="bool", default=False),
-            context=dict(
-                type="str",
-                aliases=["kube_context"],
-                fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
-            ),
-            kubeconfig=dict(
-                type="path",
-                aliases=["kubeconfig_path"],
-                fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
-            ),
             purge=dict(type="bool", default=True),
             wait=dict(type="bool", default=False),
             wait_timeout=dict(type="str"),
@@ -652,23 +644,15 @@ def main():
             replace=dict(type="bool", default=False),
             skip_crds=dict(type="bool", default=False),
             history_max=dict(type="int"),
-            # Generic auth key
-            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
-            ca_cert=dict(
-                type="path",
-                aliases=["ssl_ca_cert"],
-                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
-            ),
-            validate_certs=dict(
-                type="bool",
-                default=True,
-                aliases=["verify_ssl"],
-                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
-            ),
-            api_key=dict(
-                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
-            ),
-        ),
+        )
+    )
+    return arg_spec
+
+
+def main():
+    global module
+    module = AnsibleModule(
+        argument_spec=argument_spec(),
         required_if=[
             ("release_state", "present", ["release_name", "chart_ref"]),
             ("release_state", "absent", ["release_name"]),
@@ -687,7 +671,6 @@ def main():
 
     changed = False
 
-    bin_path = module.params.get("binary_path")
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
@@ -712,10 +695,8 @@ def main():
     history_max = module.params.get("history_max")
     timeout = module.params.get("timeout")
 
-    if bin_path is not None:
-        helm_cmd_common = bin_path
-    else:
-        helm_cmd_common = module.get_bin_path("helm", required=True)
+    helm_cmd_common = get_helm_binary(module)
+    helm_bin = helm_cmd_common
 
     if update_repo_cache:
         run_repo_update(module, helm_cmd_common)
@@ -808,7 +789,7 @@ def main():
 
         else:
 
-            helm_diff_version = get_plugin_version(helm_cmd_common, "diff")
+            helm_diff_version = get_plugin_version(helm_bin, "diff")
             if helm_diff_version and (
                 not chart_repo_url
                 or (
