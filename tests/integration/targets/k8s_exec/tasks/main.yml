@@ -88,9 +88,7 @@
 
     # Pass stdin to the container
     - set_fact:
-        stdin_content: >-
-          Simple file created using ansible
-          key={{ lookup('password', '/dev/null chars=ascii_letters,digits,hexdigits,punctuation') }}
+        stdin_content: "Simple file created using ansible k8s_exec module."
 
     - name: Execute command into Pod with stdin pass to the container
       k8s_exec:
