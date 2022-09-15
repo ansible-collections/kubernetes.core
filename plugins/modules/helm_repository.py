@@ -261,6 +261,7 @@ def argument_spec():
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
             pass_credentials=dict(type="bool", default=False, no_log=True),
+            force_update=dict(type="bool", default=False, aliases=["force"]),
         )
     )
     return arg_spec
@@ -271,28 +272,6 @@ def main():
 
     module = AnsibleModule(
         argument_spec=argument_spec(),
-            # Generic auth key
-            host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
-            ca_cert=dict(
-                type="path",
-                aliases=["ssl_ca_cert"],
-                fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
-            ),
-            validate_certs=dict(
-                type="bool",
-                default=True,
-                aliases=["verify_ssl"],
-                fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
-            ),
-            force_update=dict(
-                type="bool",
-                default=False,
-                aliases=["force"],
-            ),
-            api_key=dict(
-                type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
-            ),
-        ),
         required_together=[["repo_username", "repo_password"]],
         required_if=[("repo_state", "present", ["repo_url"])],
         mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
