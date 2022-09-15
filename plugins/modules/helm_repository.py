@@ -237,7 +237,7 @@ def install_repository(
         install_command += " --pass-credentials"
 
     if force_update:
-      install_command += " --force-update"
+        install_command += " --force-update"
 
     return install_command
 
