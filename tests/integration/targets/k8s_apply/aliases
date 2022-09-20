@@ -1,5 +1,4 @@
-# duration 9min
 slow
 k8s_service
 k8s
-time=192
+time=9m

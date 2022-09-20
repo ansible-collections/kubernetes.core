@@ -1,0 +1,3 @@
+---
+trivial:
+- "tests - Adjust the duration of some test targets (https://github.com/ansible-collections/kubernetes.core/pull/513)."
