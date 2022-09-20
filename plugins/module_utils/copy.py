@@ -64,6 +64,50 @@ class K8SCopy(metaclass=ABCMeta):
         self.container_arg = {}
         if module.params.get("container"):
             self.container_arg["container"] = module.params.get("container")
+        self.check_mode = self.module.check_mode
+
+    def _run_from_pod(self, cmd):
+        try:
+            resp = stream(
+                self.api_instance.connect_get_namespaced_pod_exec,
+                self.name,
+                self.namespace,
+                command=cmd,
+                async_req=False,
+                stderr=True,
+                stdin=False,
+                stdout=True,
+                tty=False,
+                _preload_content=False,
+                **self.container_arg
+            )
+        except Exception as e:
+            self.module.fail_json(
+                msg="Failed to execute command [{0}] on pod {1}/{2} due to : {3}".format(
+                    cmd, self.namespace, self.name, to_native(e)
+                )
+            )
+        stderr, stdout = [], []
+        while resp.is_open():
+            resp.update(timeout=1)
+            if resp.peek_stdout():
+                stdout.extend(resp.read_stdout().rstrip("\n").split("\n"))
+            if resp.peek_stderr():
+                stderr.extend(resp.read_stderr().rstrip("\n").split("\n"))
+        error = resp.read_channel(ERROR_CHANNEL)
+        resp.close()
+        error = yaml.safe_load(error)
+        return error, stdout, stderr
+
+    def is_directory_path_from_pod(self, file_path, failed_if_not_exists=True):
+        # check if file exists
+        error, out, err = self._run_from_pod(cmd=["test", "-e", file_path])
+        if error.get("status") != "Success":
+            if failed_if_not_exists:
+                return None, "%s does not exist in remote pod filesystem" % file_path
+            return False, None
+        error, out, err = self._run_from_pod(cmd=["test", "-d", file_path])
+        return error.get("status") == "Success", None
 
     @abstractmethod
     def run(self):
@@ -79,55 +123,72 @@ class K8SCopyFromPod(K8SCopy):
         super(K8SCopyFromPod, self).__init__(module, client)
         self.is_remote_path_dir = None
         self.files_to_copy = list()
+        self._shellname = None
+
+    @property
+    def pod_shell(self):
+        if self._shellname is None:
+            for s in ("/bin/sh", "/bin/bash"):
+                error, out, err = self._run_from_pod(s)
+                if error.get("status") == "Success":
+                    self._shellname = s
+                    break
+        return self._shellname
+
+    def listfiles_with_find(self, path):
+        find_cmd = ["find", path, "-type", "f", "-name", "*"]
+        error, out, err = self._run_from_pod(cmd=find_cmd)
+        if error.get("status") != "Success":
+            return [], error.get("message")
+        return out, None
+
+    def listfile_with_echo(self, path):
+        echo_cmd = [self.pod_shell, "-c", "echo {path}/* {path}/.*".format(path=path)]
+        error, out, err = self._run_from_pod(cmd=echo_cmd)
+        if error.get("status") != "Success":
+            return [], error.get("message")
+        files = []
+        for f in out:
+            files.extend(f.rstrip("\n").split(" "))
+        result = []
+        for file in files:
+            if os.path.basename(file) not in (".", ".."):
+                # list files from sub directory
+                is_dir, error = self.is_directory_path_from_pod(file)
+                if error:
+                    continue
+                if not is_dir:
+                    result.append(file)
+                else:
+                    tmp, err = self.listfile_with_echo(path=file)
+                    if tmp:
+                        result.extend(tmp)
+        return result, None
 
     def list_remote_files(self):
         """
         This method will check if the remote path is a dir or file
         if it is a directory the file list will be updated accordingly
         """
-        try:
-            find_cmd = ["find", self.remote_path, "-type", "f", "-name", "*"]
-            response = stream(
-                self.api_instance.connect_get_namespaced_pod_exec,
-                self.name,
-                self.namespace,
-                command=find_cmd,
-                stdout=True,
-                stderr=True,
-                stdin=False,
-                tty=False,
-                _preload_content=False,
-                **self.container_arg
+        # check is remote path exists and is a file or directory
+        is_dir, error = self.is_directory_path_from_pod(self.remote_path)
+        if error:
+            self.module.fail_json(msg=error)
+
+        if not is_dir:
+            self.files_to_copy.append(self.remote_path)
+        else:
+            # find executable to list dir with
+            executables = dict(
+                find=self.listfiles_with_find,
+                echo=self.listfile_with_echo,
             )
-        except Exception as e:
-            self.module.fail_json(
-                msg="Failed to execute on pod {0}/{1} due to : {2}".format(
-                    self.namespace, self.name, to_native(e)
-                )
-            )
-        stderr = []
-        while response.is_open():
-            response.update(timeout=1)
-            if response.peek_stdout():
-                self.files_to_copy.extend(
-                    response.read_stdout().rstrip("\n").split("\n")
-                )
-            if response.peek_stderr():
-                err = response.read_stderr()
-                if "No such file or directory" in err:
-                    self.module.fail_json(
-                        msg="{0} does not exist in remote pod filesystem".format(
-                            self.remote_path
-                        )
-                    )
-                stderr.append(err)
-        error = response.read_channel(ERROR_CHANNEL)
-        response.close()
-        error = yaml.safe_load(error)
-        if error["status"] != "Success":
-            self.module.fail_json(
-                msg="Failed to execute on Pod due to: {0}".format(error)
-            )
+            for item in executables:
+                error, out, err = self._run_from_pod(item)
+                if error.get("status") == "Success":
+                    self.files_to_copy, error = executables.get(item)(self.remote_path)
+                    if error:
+                        self.module.fail_json(msg=error)
 
     def read(self):
         self.stdout = None
@@ -162,40 +223,42 @@ class K8SCopyFromPod(K8SCopy):
         if is_remote_path_dir and os.path.isdir(self.local_path):
             relpath_start = os.path.dirname(self.remote_path)
 
-        for remote_file in self.files_to_copy:
-            dest_file = self.local_path
-            if is_remote_path_dir:
-                dest_file = os.path.join(
-                    self.local_path, os.path.relpath(remote_file, start=relpath_start)
-                )
-                # create directory to copy file in
-                os.makedirs(os.path.dirname(dest_file), exist_ok=True)
+        if not self.check_mode:
+            for remote_file in self.files_to_copy:
+                dest_file = self.local_path
+                if is_remote_path_dir:
+                    dest_file = os.path.join(
+                        self.local_path,
+                        os.path.relpath(remote_file, start=relpath_start),
+                    )
+                    # create directory to copy file in
+                    os.makedirs(os.path.dirname(dest_file), exist_ok=True)
 
-            pod_command = ["cat", remote_file]
-            self.response = stream(
-                self.api_instance.connect_get_namespaced_pod_exec,
-                self.name,
-                self.namespace,
-                command=pod_command,
-                stderr=True,
-                stdin=True,
-                stdout=True,
-                tty=False,
-                _preload_content=False,
-                **self.container_arg
-            )
-            errors = []
-            with open(dest_file, "wb") as fh:
-                while self.response._connected:
-                    self.read()
-                    if self.stdout:
-                        fh.write(self.stdout)
-                    if self.stderr:
-                        errors.append(self.stderr)
-            if errors:
-                self.module.fail_json(
-                    msg="Failed to copy file from Pod: {0}".format("".join(errors))
+                pod_command = ["cat", remote_file]
+                self.response = stream(
+                    self.api_instance.connect_get_namespaced_pod_exec,
+                    self.name,
+                    self.namespace,
+                    command=pod_command,
+                    stderr=True,
+                    stdin=True,
+                    stdout=True,
+                    tty=False,
+                    _preload_content=False,
+                    **self.container_arg
                 )
+                errors = []
+                with open(dest_file, "wb") as fh:
+                    while self.response._connected:
+                        self.read()
+                        if self.stdout:
+                            fh.write(self.stdout)
+                        if self.stderr:
+                            errors.append(self.stderr)
+                if errors:
+                    self.module.fail_json(
+                        msg="Failed to copy file from Pod: {0}".format("".join(errors))
+                    )
         self.module.exit_json(
             changed=True,
             result="{0} successfully copied locally into {1}".format(
@@ -224,56 +287,6 @@ class K8SCopyToPod(K8SCopy):
         super(K8SCopyToPod, self).__init__(module, client)
         self.files_to_copy = list()
 
-    def run_from_pod(self, command):
-        response = stream(
-            self.api_instance.connect_get_namespaced_pod_exec,
-            self.name,
-            self.namespace,
-            command=command,
-            stderr=True,
-            stdin=False,
-            stdout=True,
-            tty=False,
-            _preload_content=False,
-            **self.container_arg
-        )
-        errors = []
-        while response.is_open():
-            response.update(timeout=1)
-            if response.peek_stderr():
-                errors.append(response.read_stderr())
-        response.close()
-        err = response.read_channel(ERROR_CHANNEL)
-        err = yaml.safe_load(err)
-        response.close()
-        if err["status"] != "Success":
-            self.module.fail_json(
-                msg="Failed to run {0} on Pod.".format(command), errors=errors
-            )
-
-    def is_remote_path_dir(self):
-        pod_command = ["test", "-d", self.remote_path]
-        response = stream(
-            self.api_instance.connect_get_namespaced_pod_exec,
-            self.name,
-            self.namespace,
-            command=pod_command,
-            stdout=True,
-            stderr=True,
-            stdin=False,
-            tty=False,
-            _preload_content=False,
-            **self.container_arg
-        )
-        while response.is_open():
-            response.update(timeout=1)
-        err = response.read_channel(ERROR_CHANNEL)
-        err = yaml.safe_load(err)
-        response.close()
-        if err["status"] == "Success":
-            return True
-        return False
-
     def close_temp_file(self):
         if self.named_temp_file:
             self.named_temp_file.close()
@@ -296,7 +309,12 @@ class K8SCopyToPod(K8SCopy):
             if not os.access(self.local_path, os.R_OK):
                 self.module.fail_json(msg="{0} not readable".format(self.local_path))
 
-        if self.is_remote_path_dir():
+        is_dir, err = self.is_directory_path_from_pod(
+            self.remote_path, failed_if_not_exists=False
+        )
+        if err:
+            self.module.fail_json(msg=err)
+        if is_dir:
             if self.content:
                 self.module.fail_json(
                     msg="When content is specified, remote path should not be an existing directory"
@@ -304,66 +322,67 @@ class K8SCopyToPod(K8SCopy):
             else:
                 dest_file = os.path.join(dest_file, os.path.basename(src_file))
 
-        if self.no_preserve:
-            tar_command = [
-                "tar",
-                "--no-same-permissions",
-                "--no-same-owner",
-                "-xmf",
-                "-",
-            ]
-        else:
-            tar_command = ["tar", "-xmf", "-"]
+        if not self.check_mode:
+            if self.no_preserve:
+                tar_command = [
+                    "tar",
+                    "--no-same-permissions",
+                    "--no-same-owner",
+                    "-xmf",
+                    "-",
+                ]
+            else:
+                tar_command = ["tar", "-xmf", "-"]
 
-        if dest_file.startswith("/"):
-            tar_command.extend(["-C", "/"])
+            if dest_file.startswith("/"):
+                tar_command.extend(["-C", "/"])
 
-        response = stream(
-            self.api_instance.connect_get_namespaced_pod_exec,
-            self.name,
-            self.namespace,
-            command=tar_command,
-            stderr=True,
-            stdin=True,
-            stdout=True,
-            tty=False,
-            _preload_content=False,
-            **self.container_arg
-        )
-        with TemporaryFile() as tar_buffer:
-            with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
-                tar.add(src_file, dest_file)
-            tar_buffer.seek(0)
-            commands = []
-            # push command in chunk mode
-            size = 1024 * 1024
-            while True:
-                data = tar_buffer.read(size)
-                if not data:
-                    break
-                commands.append(data)
+            response = stream(
+                self.api_instance.connect_get_namespaced_pod_exec,
+                self.name,
+                self.namespace,
+                command=tar_command,
+                stderr=True,
+                stdin=True,
+                stdout=True,
+                tty=False,
+                _preload_content=False,
+                **self.container_arg
+            )
+            with TemporaryFile() as tar_buffer:
+                with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
+                    tar.add(src_file, dest_file)
+                tar_buffer.seek(0)
+                commands = []
+                # push command in chunk mode
+                size = 1024 * 1024
+                while True:
+                    data = tar_buffer.read(size)
+                    if not data:
+                        break
+                    commands.append(data)
 
-            stderr, stdout = [], []
-            while response.is_open():
-                if response.peek_stdout():
-                    stdout.append(response.read_stdout().rstrip("\n"))
-                if response.peek_stderr():
-                    stderr.append(response.read_stderr().rstrip("\n"))
-                if commands:
-                    cmd = commands.pop(0)
-                    response.write_stdin(cmd)
-                else:
-                    break
-            response.close()
-            if stderr:
-                self.close_temp_file()
-                self.module.fail_json(
-                    command=tar_command,
-                    msg="Failed to copy local file/directory into Pod due to: {0}".format(
-                        "".join(stderr)
-                    ),
-                )
-        self.close_temp_file()
+                stderr, stdout = [], []
+                while response.is_open():
+                    if response.peek_stdout():
+                        stdout.append(response.read_stdout().rstrip("\n"))
+                    if response.peek_stderr():
+                        stderr.append(response.read_stderr().rstrip("\n"))
+                    if commands:
+                        cmd = commands.pop(0)
+                        response.write_stdin(cmd)
+                    else:
+                        break
+                response.close()
+                if stderr:
+                    self.close_temp_file()
+                    self.module.fail_json(
+                        command=tar_command,
+                        msg="Failed to copy local file/directory into Pod due to: {0}".format(
+                            "".join(stderr)
+                        ),
+                    )
+            self.close_temp_file()
         if self.content:
             self.module.exit_json(
                 changed=True,

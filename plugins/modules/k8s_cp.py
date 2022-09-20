@@ -119,7 +119,7 @@ EXAMPLES = r"""
     state: from_pod
 
 # copy content into a file in the remote pod
-- name: Copy /tmp/foo from a remote pod to /tmp/bar locally
+- name: Copy content into a file in the remote pod
   kubernetes.core.k8s_cp:
     state: to_pod
     namespace: some-namespace
