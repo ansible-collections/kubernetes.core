@@ -20,6 +20,7 @@ try:
     import yaml
 
     HAS_YAML = True
+    YAML_IMP_ERR = None
 except ImportError:
     YAML_IMP_ERR = traceback.format_exc()
     HAS_YAML = False

@@ -118,6 +118,7 @@ try:
     import yaml
 
     IMP_YAML = True
+    IMP_YAML_ERR = None
 except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
