@@ -118,7 +118,7 @@ options:
     type: bool
     aliases: [ force ]
     default: False
-    version_added: "2.3.3"
+    version_added: "2.4.0"
 """
 
 EXAMPLES = r"""
