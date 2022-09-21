@@ -225,7 +225,7 @@ def install_repository(
     repository_username,
     repository_password,
     pass_credentials,
-    force_update
+    force_update,
 ):
     install_command = command + " repo add " + repository_name + " " + repository_url
 
@@ -307,7 +307,7 @@ def main():
                 repo_username,
                 repo_password,
                 pass_credentials,
-                force_update
+                force_update,
             )
             changed = True
         elif repository_status["url"] != repo_url:
