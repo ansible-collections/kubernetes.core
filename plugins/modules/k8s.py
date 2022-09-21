@@ -232,6 +232,14 @@ EXAMPLES = r"""
     state: present
     definition: "{{ lookup('file', '/testing/deployment.yml') | from_yaml }}"
 
+- name: >-
+    (Alternative) Read definition file from the Ansible controller file system.
+    In this case, the definition file contains multiple YAML documents, separated by ---.
+    If the definition file has been encrypted with Ansible Vault it will automatically be decrypted.
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('file', '/testing/deployment.yml') | from_yaml_all }}"
+
 - name: Read definition template file from the Ansible controller file system
   kubernetes.core.k8s:
     state: present
