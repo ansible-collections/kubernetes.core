@@ -172,6 +172,15 @@ options:
         - When set to True, server-side apply will force the changes against conflicts.
         type: bool
         default: False
+  select_all:
+    description:
+    - When this option is set to I(true), action will be performed on all resources, in the namespace of the specified resource type.
+    - This option requires C(kind) and C(namespace) to be provided.
+    - Ignored if one of C(src), C(name) or C(resource_definition) is set.
+    type: bool
+    default: false
+    aliases:
+    - all
 
 requirements:
   - "python >= 3.6"
@@ -343,6 +352,25 @@ EXAMPLES = r"""
     apply: yes
     server_side_apply:
       field_manager: ansible
+
+# Delete all Deployment from specified namespace
+- name: Delete all Deployment from specified namespace
+  kubernetes.core.k8s:
+    api_version: apps/v1
+    namespace: testing
+    kind: Deployment
+    select_all: true
+
+# Pause all Deployment from specified namespace
+- name: Delete all Deployment from specified namespace
+  kubernetes.core.k8s:
+    api_version: apps/v1
+    namespace: testing
+    kind: Deployment
+    definition:
+      spec:
+        paused: True
+    select_all: true
 """
 
 RETURN = r"""
@@ -450,6 +478,7 @@ def argspec():
     argument_spec["server_side_apply"] = dict(
         type="dict", default=None, options=server_apply_spec()
     )
+    argument_spec["select_all"] = dict(type="bool", default=False, aliases=["all"])
 
     return argument_spec
 
@@ -468,6 +497,7 @@ def main():
         argument_spec=argspec(),
         mutually_exclusive=mutually_exclusive,
         supports_check_mode=True,
+        required_if=[["select_all", True, ["kind", "namespace"]]],
     )
     try:
         run_module(module)

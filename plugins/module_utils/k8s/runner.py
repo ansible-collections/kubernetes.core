@@ -25,6 +25,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
 )
+from ansible.module_utils.common.dict_transformations import dict_merge
 
 
 def validate(client, module, resource):
@@ -56,6 +57,38 @@ def run_module(module) -> None:
     except Exception as e:
         msg = "Failed to load resource definition: {0}".format(e)
         raise CoreException(msg) from e
+
+    select_all = module.params.get("select_all")
+    src = module.params.get("src")
+    resource_definition = module.params.get("resource_definition")
+    name = module.params.get("name")
+    state = module.params.get("state")
+    if (
+        state == "absent"
+        and name is None
+        and resource_definition is None
+        and src is None
+        and select_all
+    ):
+        # Delete all resources in the namespace for the specified resource type
+        resource = svc.find_resource(
+            module.params.get("kind"), module.params.get("api_version"), fail=True
+        )
+        definitions = svc.retrieve_all(resource, module.params.get("namespace"))
+    elif (
+        state == "patched"
+        and len(definitions) == 1
+        and definitions[0].get("metadata", {}).get("name") is None
+    ):
+        resource = svc.find_resource(
+            module.params.get("kind"), module.params.get("api_version"), fail=True
+        )
+        existing = svc.retrieve_all(
+            resource,
+            module.params.get("namespace"),
+            module.params.get("label_selectors"),
+        )
+        definitions = [dict_merge(d, definitions[0]) for d in existing]
 
     for definition in definitions:
         result = {"changed": False, "result": {}}

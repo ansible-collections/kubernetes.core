@@ -109,6 +109,127 @@
         that:
           - second_namespace.resources | length == 1
 
+    # test Patch for all resources from namespace
+    - name: Create deployments
+      k8s:
+        namespace: "{{ patch_only_namespace[0] }}"
+        src: files/deployments.yaml
+        wait: true
+      register: result
+
+    - name: Patch all deployments using label_selectors
+      k8s:
+        namespace: "{{ patch_only_namespace[0] }}"
+        kind: Deployment
+        api_version: apps/v1
+        label_selectors:
+          - context=ansible
+        state: patched
+        definition:
+          metadata:
+            labels:
+              patched: "true"
+      register: _patch
+
+    - name: Ensure task is changed
+      assert:
+        that:
+          - _patch is changed
+
+    - name: Retrieve deployments
+      k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        namespace: "{{ patch_only_namespace[0] }}"
+        label_selectors:
+          - context=ansible
+      register: _deployments
+      failed_when: _deployments.resources | length != 3
+
+    - name: Ensure all deployments were patched
+      assert:
+        that:
+          - '"patched" in item.metadata.labels'
+          - 'item.metadata.labels.patched == "true"'
+      with_items: "{{ _deployments.resources }}"
+
+    - name: Patch all deployments using select_all=true
+      k8s:
+        namespace: "{{ patch_only_namespace[0] }}"
+        kind: Deployment
+        api_version: apps/v1
+        select_all: true
+        state: patched
+        definition:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: container2
+                    image: redis
+      register: _patch
+
+    - name: Ensure task is changed
+      assert:
+        that:
+          - _patch is changed
+
+    - name: Retrieve deployments
+      k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        namespace: "{{ patch_only_namespace[0] }}"
+        label_selectors:
+          - context=ansible
+      register: _deployments
+      failed_when: _deployments.resources | length != 3
+
+    - name: Ensure all deployments were patched
+      assert:
+        that:
+          - item.spec.template.spec.containers | length == 2
+          - '"container2" in item.spec.template.spec.containers | map(attribute="name") | list'
+      with_items: "{{ _deployments.resources }}"
+
+    - name: Patch deployment using select_all=true and name (should patched only specified deployment)
+      k8s:
+        namespace: "{{ patch_only_namespace[0] }}"
+        kind: Deployment
+        api_version: apps/v1
+        select_all: true
+        state: patched
+        definition:
+          metadata:
+            name: alpine
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: container3
+                    image: httpd
+      register: _patch
+
+    - name: Ensure task is changed
+      assert:
+        that:
+          - _patch is changed
+
+    - name: Ensure only alpine deployment was patched
+      k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        namespace: "{{ patch_only_namespace[0] }}"
+        name: "{{ item.name }}"
+      register: _deployment
+      failed_when: _deployment.resources.0.spec.template.spec.containers | length != item.containers
+      with_items:
+        - name: alpine
+          containers: 3
+        - name: openjdk
+          containers: 2
+        - name: nginx
+          containers: 2
+
   always:
     - name: Remove namespace
       kubernetes.core.k8s:

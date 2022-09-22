@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s - make name optional when trying to delete or patch all resources from namespace. (https://github.com/ansible-collections/kubernetes.core/issues/504)
