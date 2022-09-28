@@ -1,0 +1,3 @@
+---
+trivial:
+- "Speed up the tests of k8s_rollback with lower timeout value (https://github.com/ansible-collections/kubernetes.core/pull/518)."

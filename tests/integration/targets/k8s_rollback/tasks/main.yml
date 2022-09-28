@@ -3,12 +3,12 @@
     - name: Set variables
       set_fact:
         namespace: "{{ test_namespace }}"
-
+        k8s_wait_timeout: 180
     - name: Create a deployment
       k8s:
         state: present
         wait: yes
-        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        wait_timeout: "{{ k8s_wait_timeout }}"
         inline: &deploy
           apiVersion: apps/v1
           kind: Deployment
@@ -38,7 +38,7 @@
       k8s:
         state: present
         wait: yes
-        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        wait_timeout: 30
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -134,7 +134,7 @@
       k8s:
         state: present
         wait: yes
-        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        wait_timeout: 30
         definition:
           apiVersion: apps/v1
           kind: DaemonSet
