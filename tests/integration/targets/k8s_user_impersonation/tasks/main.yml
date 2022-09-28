@@ -27,6 +27,21 @@
     - "{{ user_01 }}"
     - "{{ user_02 }}"
 
+  - name: Create Service token
+    kubernetes.core.k8s:
+      definition:
+        apiVersion: v1
+        kind: Secret
+        type: kubernetes.io/service-account-token
+        metadata:
+          name: "{{ item }}"
+          annotations:
+            kubernetes.io/service-account.name: "{{ item }}"
+          namespace: "{{ test_ns }}"
+    with_items:
+    - "{{ user_01 }}"
+    - "{{ user_02 }}"
+
   - name: Read Service Account - user_01
     kubernetes.core.k8s_info:
       kind: ServiceAccount
@@ -38,7 +53,7 @@
     kubernetes.core.k8s_info:
       kind: Secret
       namespace: '{{ test_ns }}'
-      name: '{{ result.resources[0].secrets[0].name }}'
+      name: '{{ user_01 }}'
     no_log: true
     register: _secret
 
@@ -47,7 +62,7 @@
 
   - name: Read Service Account - user_02
     kubernetes.core.k8s_info:
-      kind: ServiceAccount
+      kind: Secret
       namespace: "{{ test_ns }}"
       name: "{{ user_02 }}"
     register: result
@@ -56,7 +71,7 @@
     kubernetes.core.k8s_info:
       kind: Secret
       namespace: '{{ test_ns }}'
-      name: '{{ result.resources[0].secrets[0].name }}'
+      name: '{{ user_02 }}'
     no_log: true
     register: _secret
 
