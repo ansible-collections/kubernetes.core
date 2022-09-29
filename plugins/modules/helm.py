@@ -380,11 +380,14 @@ def run_repo_update(module, command):
     rc, out, err = run_helm(module, repo_update_command)
 
 
-def fetch_chart_info(module, command, chart_ref):
+def fetch_chart_info(module, command, chart_ref, validate_certs):
     """
     Get chart info
     """
     inspect_command = command + " show chart " + chart_ref
+
+    if not validate_certs:
+       inspect_command += " --insecure-skip-tls-verify"
 
     rc, out, err = run_helm(module, inspect_command)
 
@@ -407,6 +410,7 @@ def deploy(
     replace=False,
     skip_crds=False,
     timeout=None,
+    validate_certs=False
 ):
     """
     Install/upgrade/rollback release chart
@@ -419,6 +423,10 @@ def deploy(
 
         # Always reset values to keep release_values equal to values released
         deploy_command += " --reset-values"
+
+    if not validate_certs:
+        deploy_command += " --insecure-skip-tls-verify"
+
 
     if wait:
         deploy_command += " --wait"
@@ -671,6 +679,8 @@ def main():
     wait_timeout = module.params.get("wait_timeout")
     atomic = module.params.get("atomic")
     create_namespace = module.params.get("create_namespace")
+    kubeconfig = module.params.get("kubeconfig")
+    validate_certs = module.params.get("validate_certs")
     replace = module.params.get("replace")
     skip_crds = module.params.get("skip_crds")
     history_max = module.params.get("history_max")
@@ -680,6 +690,9 @@ def main():
         helm_cmd_common = bin_path
     else:
         helm_cmd_common = module.get_bin_path("helm", required=True)
+
+    if kubeconfig is not None:
+       helm_cmd_common += " --kubeconfig=" + kubeconfig
 
     if update_repo_cache:
         run_repo_update(module, helm_cmd_common)
@@ -716,7 +729,7 @@ def main():
             helm_cmd += " --repo=" + chart_repo_url
 
         # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
-        chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
+        chart_info = fetch_chart_info(module, helm_cmd, chart_ref, validate_certs)
 
         if release_status is None:  # Not installed
             helm_cmd = deploy(
@@ -735,6 +748,7 @@ def main():
                 skip_crds=skip_crds,
                 history_max=history_max,
                 timeout=timeout,
+                validate_certs=validate_certs
             )
             changed = True
 
