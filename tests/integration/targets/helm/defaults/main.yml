@@ -4,9 +4,9 @@ helm_binary: "/tmp/helm/{{ ansible_system | lower }}-amd64/helm"
 
 chart_test: "ingress-nginx"
 chart_test_local_path: "nginx-ingress"
-chart_test_version: 3.8.0
+chart_test_version: 4.2.4
 chart_test_version_local_path: 1.32.0
-chart_test_version_upgrade: 3.9.0
+chart_test_version_upgrade: 4.2.5
 chart_test_version_upgrade_local_path: 1.33.0
 chart_test_repo: "https://kubernetes.github.io/ingress-nginx"
 chart_test_git_repo: "http://github.com/helm/charts.git"

@@ -335,6 +335,13 @@
         that:
           - not (install is changed)
 
+    - name: "Remove {{ chart_release_name }} release"
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: "{{ chart_release_name }}"
+        namespace: "{{ helm_namespace }}"
+        state: absent
+
     - name: Render templates
       helm_template:
         binary_path: "{{ helm_binary }}"
