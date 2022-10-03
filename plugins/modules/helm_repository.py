@@ -112,6 +112,13 @@ options:
     type: raw
     aliases: [ kubeconfig_path ]
     version_added: "2.4.0"
+  force_update:
+    description:
+    - Whether or not to replace (overwrite) the repo if it already exists.
+    type: bool
+    aliases: [ force ]
+    default: False
+    version_added: "2.4.0"
 """
 
 EXAMPLES = r"""
@@ -218,6 +225,7 @@ def install_repository(
     repository_username,
     repository_password,
     pass_credentials,
+    force_update,
 ):
     install_command = command + " repo add " + repository_name + " " + repository_url
 
@@ -227,6 +235,9 @@ def install_repository(
 
     if pass_credentials:
         install_command += " --pass-credentials"
+
+    if force_update:
+        install_command += " --force-update"
 
     return install_command
 
@@ -250,6 +261,7 @@ def argument_spec():
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
             pass_credentials=dict(type="bool", default=False, no_log=True),
+            force_update=dict(type="bool", default=False, aliases=["force"]),
         )
     )
     return arg_spec
@@ -277,6 +289,7 @@ def main():
     repo_password = module.params.get("repo_password")
     repo_state = module.params.get("repo_state")
     pass_credentials = module.params.get("pass_credentials")
+    force_update = module.params.get("force_update")
 
     helm_cmd = get_helm_binary(module)
 
@@ -286,7 +299,7 @@ def main():
         helm_cmd = delete_repository(helm_cmd, repo_name)
         changed = True
     elif repo_state == "present":
-        if repository_status is None:
+        if repository_status is None or force_update:
             helm_cmd = install_repository(
                 helm_cmd,
                 repo_name,
@@ -294,6 +307,7 @@ def main():
                 repo_username,
                 repo_password,
                 pass_credentials,
+                force_update,
             )
             changed = True
         elif repository_status["url"] != repo_url:

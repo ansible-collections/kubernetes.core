@@ -42,6 +42,19 @@
     that:
       - repository_errors is failed
 
+- name: Succesfully add repository with the same name when forcing
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    repo_url: "{{ chart_test_repo }}"
+    force: true
+  register: repository
+
+- name: Assert that test_helm_repo repository is changed
+  assert:
+    that:
+      - repository is changed
+
 - name: Remove test_helm_repo chart repository
   helm_repository:
     binary_path: "{{ helm_binary }}"
