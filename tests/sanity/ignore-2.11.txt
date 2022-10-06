@@ -38,6 +38,7 @@ plugins/doc_fragments/k8s_resource_options.py future-import-boilerplate!skip
 plugins/module_utils/helm.py future-import-boilerplate!skip
 plugins/module_utils/apply.py future-import-boilerplate!skip
 plugins/module_utils/hashes.py future-import-boilerplate!skip
+plugins/module_utils/helm_args_common.py future-import-boilerplate!skip
 plugins/module_utils/version.py future-import-boilerplate!skip
 plugins/module_utils/_version.py future-import-boilerplate!skip
 plugins/module_utils/copy.py future-import-boilerplate!skip
@@ -113,6 +114,7 @@ plugins/doc_fragments/k8s_resource_options.py metaclass-boilerplate!skip
 plugins/module_utils/helm.py metaclass-boilerplate!skip
 plugins/module_utils/apply.py metaclass-boilerplate!skip
 plugins/module_utils/hashes.py metaclass-boilerplate!skip
+plugins/module_utils/helm_args_common.py metaclass-boilerplate!skip
 plugins/module_utils/version.py metaclass-boilerplate!skip
 plugins/module_utils/_version.py metaclass-boilerplate!skip
 plugins/module_utils/copy.py metaclass-boilerplate!skip
@@ -212,6 +214,9 @@ plugins/module_utils/apply.py import-3.5!skip
 plugins/module_utils/hashes.py import-2.6!skip
 plugins/module_utils/hashes.py import-2.7!skip
 plugins/module_utils/hashes.py import-3.5!skip
+plugins/module_utils/helm_args_common.py import-2.6!skip
+plugins/module_utils/helm_args_common.py import-2.7!skip
+plugins/module_utils/helm_args_common.py import-3.5!skip
 plugins/module_utils/version.py import-2.6!skip
 plugins/module_utils/version.py import-2.7!skip
 plugins/module_utils/version.py import-3.5!skip
@@ -380,6 +385,9 @@ plugins/module_utils/apply.py compile-3.5!skip
 plugins/module_utils/hashes.py compile-2.6!skip
 plugins/module_utils/hashes.py compile-2.7!skip
 plugins/module_utils/hashes.py compile-3.5!skip
+plugins/module_utils/helm_args_common.py compile-2.6!skip
+plugins/module_utils/helm_args_common.py compile-2.7!skip
+plugins/module_utils/helm_args_common.py compile-3.5!skip
 plugins/module_utils/version.py compile-2.6!skip
 plugins/module_utils/version.py compile-2.7!skip
 plugins/module_utils/version.py compile-3.5!skip
@@ -575,6 +583,9 @@ tests/integration/targets/k8s_copy/library/k8s_create_file.py compile-3.5!skip
 tests/integration/targets/k8s_copy/library/kubectl_file_compare.py compile-2.6!skip
 tests/integration/targets/k8s_copy/library/kubectl_file_compare.py compile-2.7!skip
 tests/integration/targets/k8s_copy/library/kubectl_file_compare.py compile-3.5!skip
+tests/integration/targets/setup_kubeconfig/library/test_inventory_read_credentials.py compile-2.6!skip
+tests/integration/targets/setup_kubeconfig/library/test_inventory_read_credentials.py compile-2.7!skip
+tests/integration/targets/setup_kubeconfig/library/test_inventory_read_credentials.py compile-3.5!skip
 tests/integration/targets/helm/library/helm_test_version.py compile-2.6!skip
 tests/integration/targets/helm/library/helm_test_version.py compile-2.7!skip
 tests/integration/targets/helm/library/helm_test_version.py compile-3.5!skip
