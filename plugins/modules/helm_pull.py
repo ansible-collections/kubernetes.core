@@ -108,6 +108,11 @@ options:
     - Identify HTTPS client using this SSL key file
     - Requires helm >= 3.1.0.
     type: path
+  binary_path:
+    description:
+      - The path of a helm binary to use.
+    required: false
+    type: path
 """
 
 EXAMPLES = r"""
@@ -164,7 +169,7 @@ rc:
   sample: 1
 """
 
-from ansible.module_utils.basic import AnsibleModule, env_fallback
+from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     run_helm,
     get_helm_version,
@@ -194,6 +199,7 @@ def main():
         chart_ca_cert=dict(type="path"),
         chart_ssl_cert_file=dict(type="path"),
         chart_ssl_key_file=dict(type="path"),
+        binary_path=dict(type="path"),
     )
     module = AnsibleModule(
         argument_spec=argspec,
