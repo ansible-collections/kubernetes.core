@@ -108,9 +108,6 @@ options:
     - Identify HTTPS client using this SSL key file
     - Requires helm >= 3.1.0.
     type: path
-
-extends_documentation_fragment:
-  - kubernetes.core.helm_common_options
 """
 
 EXAMPLES = r"""
@@ -197,34 +194,6 @@ def main():
         chart_ca_cert=dict(type="path"),
         chart_ssl_cert_file=dict(type="path"),
         chart_ssl_key_file=dict(type="path"),
-        # Helm options
-        binary_path=dict(type="path"),
-        context=dict(
-            type="str",
-            aliases=["kube_context"],
-            fallback=(env_fallback, ["K8S_AUTH_CONTEXT"]),
-        ),
-        kubeconfig=dict(
-            type="path",
-            aliases=["kubeconfig_path"],
-            fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
-        ),
-        # Generic auth key
-        host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
-        ca_cert=dict(
-            type="path",
-            aliases=["ssl_ca_cert"],
-            fallback=(env_fallback, ["K8S_AUTH_SSL_CA_CERT"]),
-        ),
-        validate_certs=dict(
-            type="bool",
-            default=True,
-            aliases=["verify_ssl"],
-            fallback=(env_fallback, ["K8S_AUTH_VERIFY_SSL"]),
-        ),
-        api_key=dict(
-            type="str", no_log=True, fallback=(env_fallback, ["K8S_AUTH_API_KEY"])
-        ),
     )
     module = AnsibleModule(
         argument_spec=argspec,
