@@ -1,5 +1,18 @@
 ---
 - block:
+    - name: Retrieve log from unexisting Pod
+      k8s_log:
+        namespace: "{{ test_namespace }}"
+        name: "this_pod_does_exist"
+      ignore_errors: true
+      register: fake_pod
+
+    - name: Assert that task failed with proper message
+      assert:
+        that:
+          - fake_pod is failed
+          - 'fake_pod.msg == "Pod {{ test_namespace }}/this_pod_does_exist not found."'
+
     - name: create hello-world deployment
       k8s:
         wait: yes
