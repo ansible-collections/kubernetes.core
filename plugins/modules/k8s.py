@@ -175,8 +175,13 @@ options:
   select_all:
     description:
     - When this option is set to I(true), action will be performed on all resources, in the namespace of the specified resource type.
-    - This option requires C(kind) and C(namespace) to be provided.
-    - Ignored if one of C(src), C(name) or C(resource_definition) is set.
+    - When I(select_all=True) and I(state=absent), C(kind) is required.
+    - When I(select_all=True) and I(state=patched) a valid YAML definition must be provided using option C(src) or C(resource_definition),
+      resource type must be defined using C(kind) option or into provided YAML definition.
+    - Ignored when I(state=present).
+    - Ignored when I(state=absent) and one of C(src), C(name) or C(resource_definition) is provided.
+    - Ignored when I(state=patched) and C(name) is provided or C(src) or C(resource_definition) is provided with a list containing
+      more than one YAML definition, or if the resource definition contains a metadata.name field.
     type: bool
     default: false
     aliases:
@@ -497,7 +502,6 @@ def main():
         argument_spec=argspec(),
         mutually_exclusive=mutually_exclusive,
         supports_check_mode=True,
-        required_if=[["select_all", True, ["kind", "namespace"]]],
     )
     try:
         run_module(module)

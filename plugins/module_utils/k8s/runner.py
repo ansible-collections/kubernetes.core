@@ -63,6 +63,7 @@ def run_module(module) -> None:
     resource_definition = module.params.get("resource_definition")
     name = module.params.get("name")
     state = module.params.get("state")
+
     if (
         state == "absent"
         and name is None
@@ -71,18 +72,34 @@ def run_module(module) -> None:
         and select_all
     ):
         # Delete all resources in the namespace for the specified resource type
+        if module.params.get("kind") is None:
+            raise CoreException(
+                "'kind' option is required to sepcify the resource type."
+            )
+
         resource = svc.find_resource(
             module.params.get("kind"), module.params.get("api_version"), fail=True
         )
-        definitions = svc.retrieve_all(resource, module.params.get("namespace"))
+        definitions = svc.retrieve_all(
+            resource,
+            module.params.get("namespace"),
+            module.params.get("label_selectors"),
+        )
     elif (
         state == "patched"
+        and select_all
         and len(definitions) == 1
         and definitions[0].get("metadata", {}).get("name") is None
     ):
-        resource = svc.find_resource(
-            module.params.get("kind"), module.params.get("api_version"), fail=True
+        kind = definitions[0].get("kind") or module.params.get("kind")
+        api_version = module.params.get("apiVersion") or definitions[0].get(
+            "api_version"
         )
+        if kind is None:
+            raise CoreException(
+                "'kind' option is required to sepcify the resource type."
+            )
+        resource = svc.find_resource(kind, api_version, fail=True)
         existing = svc.retrieve_all(
             resource,
             module.params.get("namespace"),
