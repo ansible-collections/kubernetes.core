@@ -55,10 +55,12 @@ options:
     version_added: "2.3.0"
   get_all_values:
     description:
-      - Set to true if you want to get all (computed) values of the release.
+      - Set to C(True) if you want to get all (computed) values of the release.
+      - When C(False) (default), only user supplied values are returned.
     required: false
     default: false
     type: bool
+    version_added: "2.4.0"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -151,7 +153,9 @@ def get_release(state, release_name):
 
 
 # Get Release state from deployed release
-def get_release_status(module, command, release_name, release_state, get_all_values=False):
+def get_release_status(
+    module, command, release_name, release_state, get_all_values=False
+):
     list_command = command + " list --output=yaml"
 
     valid_release_states = [
