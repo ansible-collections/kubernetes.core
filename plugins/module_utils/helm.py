@@ -77,7 +77,7 @@ def run_helm(module, command, fails_on_error=True):
     return rc, out, err
 
 
-def get_values(module, command, release_name):
+def get_values(module, command, release_name, get_all=False):
     """
     Get Values from deployed release
     """
@@ -85,6 +85,9 @@ def get_values(module, command, release_name):
         module.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
 
     get_command = command + " get values --output=yaml " + release_name
+
+    if get_all:
+        get_command += " -a"
 
     rc, out, err = run_helm(module, get_command)
     # Helm 3 return "null" string when no values are set

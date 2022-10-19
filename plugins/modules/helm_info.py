@@ -53,6 +53,14 @@ options:
     type: list
     elements: str
     version_added: "2.3.0"
+  get_all_values:
+    description:
+      - Set to C(True) if you want to get all (computed) values of the release.
+      - When C(False) (default), only user supplied values are returned.
+    required: false
+    default: false
+    type: bool
+    version_added: "2.4.0"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -145,7 +153,9 @@ def get_release(state, release_name):
 
 
 # Get Release state from deployed release
-def get_release_status(module, command, release_name, release_state):
+def get_release_status(
+    module, command, release_name, release_state, get_all_values=False
+):
     list_command = command + " list --output=yaml"
 
     valid_release_states = [
@@ -178,7 +188,7 @@ def get_release_status(module, command, release_name, release_state):
     if release is None:  # not install
         return None
 
-    release["values"] = get_values(module, command, release_name)
+    release["values"] = get_values(module, command, release_name, get_all_values)
 
     return release
 
@@ -190,6 +200,7 @@ def argument_spec():
             release_name=dict(type="str", required=True, aliases=["name"]),
             release_namespace=dict(type="str", required=True, aliases=["namespace"]),
             release_state=dict(type="list", default=[], elements="str"),
+            get_all_values=dict(type="bool", required=False, default=False),
         )
     )
     return arg_spec
@@ -209,11 +220,12 @@ def main():
 
     release_name = module.params.get("release_name")
     release_state = module.params.get("release_state")
+    get_all_values = module.params.get("get_all_values")
 
     helm_cmd_common = get_helm_binary(module)
 
     release_status = get_release_status(
-        module, helm_cmd_common, release_name, release_state
+        module, helm_cmd_common, release_name, release_state, get_all_values
     )
 
     if release_status is not None:
