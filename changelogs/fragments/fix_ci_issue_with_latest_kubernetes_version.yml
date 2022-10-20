@@ -1,0 +1,2 @@
+trivial:
+  - fix k8s_validate integration test, set version to 1.20 for kubernetes-validate calls. (https://github.com/ansible-collections/kubernetes.core/pull/533).

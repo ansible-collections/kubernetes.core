@@ -34,6 +34,7 @@
             mykey: myval
         validate:
           fail_on_error: true
+          version: 1.20
       ignore_errors: true
       register: k8s_no_validate
       vars:
@@ -71,6 +72,7 @@
             validate:
               fail_on_error: true
               strict: false
+              version: 1.20
 
         - name: ConfigMap with extra properties should not validate with strict
           k8s:
@@ -80,6 +82,7 @@
             validate:
               fail_on_error: true
               strict: true
+              version: 1.20
           ignore_errors: true
           register: result
 
@@ -114,6 +117,7 @@
             validate:
               fail_on_error: true
               strict: false
+              version: 1.20
           ignore_errors: true
           register: result
 
@@ -163,6 +167,7 @@
             validate:
               fail_on_error: true
               strict: true
+              version: 1.20
           register: result
 
         - assert:
