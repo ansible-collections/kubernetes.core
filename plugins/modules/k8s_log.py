@@ -267,10 +267,19 @@ def execute_module(svc, params):
             {"tailLines": params["tail_lines"]}
         )
 
+    pod_containers = [None]
+    if params.get("all_containers"):
+        pod_containers = list_containers_in_pod(svc, resource, namespace, name)
+
+    log = ""
     try:
-        response = resource.log.get(
-            name=name, namespace=namespace, serialize=False, **kwargs
-        )
+        for container in pod_containers:
+            if container is not None:
+                kwargs.setdefault("query_params", {}).update({"container": container})
+            response = resource.log.get(
+                name=name, namespace=namespace, serialize=False, **kwargs
+            )
+            log += response.data.decode("utf8")
     except ApiException as exc:
         if exc.reason == "Not Found":
             raise CoreException("Pod {0}/{1} not found.".format(namespace, name))

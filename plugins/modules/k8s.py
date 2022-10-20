@@ -172,18 +172,16 @@ options:
         - When set to True, server-side apply will force the changes against conflicts.
         type: bool
         default: False
-  select_all:
+  delete_all:
     description:
-    - When this option is set to I(true), action will be performed on all resources, in the namespace of the specified resource type.
-    - When I(select_all=True) and I(state=absent), C(kind) is required.
-    - When I(select_all=True) and I(state=patched) a valid YAML definition must be provided using option C(src) or C(resource_definition),
-      resource type must be defined using C(kind) option or into provided YAML definition.
-    - Ignored when I(state=present).
-    - Ignored when I(state=absent) and one of C(src), C(name) or C(resource_definition) is provided.
-    - Ignored when I(state=patched) and C(name) is provided or C(src) or C(resource_definition) is provided with a list containing
-      more than one YAML definition, or if the resource definition contains a metadata.name field.
+    - When this option is set to I(true) and I(state=absent),
+      module will delete on all resources, in the namespace of the specified resource type.
+    - Ignored when C(state) is not set to I(absent) or when one of (src),
+      C(name)  or C(resource_definition) is provided.
+    - Parameter C(kind) is required to use this option.
     type: bool
     default: false
+    version_added: 2.5.0
     aliases:
     - all
 
@@ -364,18 +362,7 @@ EXAMPLES = r"""
     api_version: apps/v1
     namespace: testing
     kind: Deployment
-    select_all: true
-
-# Pause all Deployment from specified namespace
-- name: Delete all Deployment from specified namespace
-  kubernetes.core.k8s:
-    api_version: apps/v1
-    namespace: testing
-    kind: Deployment
-    definition:
-      spec:
-        paused: True
-    select_all: true
+    delete_all: true
 """
 
 RETURN = r"""
@@ -483,7 +470,7 @@ def argspec():
     argument_spec["server_side_apply"] = dict(
         type="dict", default=None, options=server_apply_spec()
     )
-    argument_spec["select_all"] = dict(type="bool", default=False, aliases=["all"])
+    argument_spec["delete_all"] = dict(type="bool", default=False, aliases=["all"])
 
     return argument_spec
 

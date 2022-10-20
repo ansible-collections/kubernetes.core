@@ -121,7 +121,7 @@
         that:
           - _result.resources | length == 0
 
-    # test deletion using select_all=true
+    # test deletion using delete_all=true
     - name: Create deployments
       k8s:
         namespace: "{{ test_namespace }}"
@@ -152,11 +152,11 @@
       register: _deployment
       failed_when: _deployment.resources | length == 0
 
-    - name: Trying to delete using select_all=true but missing kind option
+    - name: Trying to delete using delete_all=true but missing kind option
       k8s:
         api_version: apps/v1
         namespace: "{{ test_namespace }}"
-        select_all: true
+        delete_all: true
         state: absent
       register: _delete
       ignore_errors: true
@@ -167,12 +167,12 @@
           - _delete is failed
           - _delete.msg == "'kind' option is required to sepcify the resource type."
 
-    - name: Trying to delete deployments without name and label_selectors and select_all=true
+    - name: Trying to delete deployments without name and label_selectors and delete_all=true
       k8s:
         kind: Deployment
         api_version: apps/v1
         namespace: "{{ test_namespace }}"
-        select_all: true
+        delete_all: true
         wait: true
         state: absent
       register: _delete

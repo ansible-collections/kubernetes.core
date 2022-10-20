@@ -25,7 +25,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
 )
-from ansible.module_utils.common.dict_transformations import dict_merge
 
 
 def validate(client, module, resource):
@@ -47,65 +46,51 @@ def validate(client, module, resource):
     return [_prepend_resource_info(resource, msg) for msg in warnings + errors]
 
 
-def run_module(module) -> None:
-    results = []
-    changed = False
-    client = get_api_client(module)
-    svc = K8sService(client, module)
+def get_definitions(svc, params):
     try:
-        definitions = create_definitions(module.params)
+        definitions = create_definitions(params)
     except Exception as e:
         msg = "Failed to load resource definition: {0}".format(e)
         raise CoreException(msg) from e
 
-    select_all = module.params.get("select_all")
-    src = module.params.get("src")
-    resource_definition = module.params.get("resource_definition")
-    name = module.params.get("name")
-    state = module.params.get("state")
+    delete_all = params.get("delete_all")
+    src = params.get("src")
+    resource_definition = params.get("resource_definition")
+    name = params.get("name")
+    state = params.get("state")
 
     if (
-        state == "absent"
+        delete_all
+        and state == "absent"
         and name is None
         and resource_definition is None
         and src is None
-        and select_all
     ):
         # Delete all resources in the namespace for the specified resource type
-        if module.params.get("kind") is None:
+        if params.get("kind") is None:
             raise CoreException(
                 "'kind' option is required to sepcify the resource type."
             )
 
         resource = svc.find_resource(
-            module.params.get("kind"), module.params.get("api_version"), fail=True
+            params.get("kind"), params.get("api_version"), fail=True
         )
         definitions = svc.retrieve_all(
             resource,
-            module.params.get("namespace"),
-            module.params.get("label_selectors"),
+            params.get("namespace"),
+            params.get("label_selectors"),
         )
-    elif (
-        state == "patched"
-        and select_all
-        and len(definitions) == 1
-        and definitions[0].get("metadata", {}).get("name") is None
-    ):
-        kind = definitions[0].get("kind") or module.params.get("kind")
-        api_version = module.params.get("apiVersion") or definitions[0].get(
-            "api_version"
-        )
-        if kind is None:
-            raise CoreException(
-                "'kind' option is required to sepcify the resource type."
-            )
-        resource = svc.find_resource(kind, api_version, fail=True)
-        existing = svc.retrieve_all(
-            resource,
-            module.params.get("namespace"),
-            module.params.get("label_selectors"),
-        )
-        definitions = [dict_merge(d, definitions[0]) for d in existing]
+
+    return definitions
+
+
+def run_module(module) -> None:
+    results = []
+    changed = False
+    client = get_api_client(module)
+    svc = K8sService(client, module)
+
+    definitions = get_definitions(svc, module.params)
 
     for definition in definitions:
         result = {"changed": False, "result": {}}
