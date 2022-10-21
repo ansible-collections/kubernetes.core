@@ -52,7 +52,7 @@ options:
     - Use to specify the container within a pod to grab the log from.
     - If there is only one container, this will default to that container.
     - If there is more than one container, this option is required or set I(all_containers) to C(true).
-    - Ignored when I(all_containers) is set to C(true).
+    - mutually exclusive with C(all_containers).
     required: no
     type: str
   since_seconds:
@@ -77,6 +77,7 @@ options:
   all_containers:
     description:
     - If set to C(true), retrieve all containers' logs in the pod(s).
+    - mutually exclusive with C(container).
     type: bool
     version_added: '2.4.0'
 
@@ -342,7 +343,10 @@ def extract_selectors(instance):
 
 def main():
     module = AnsibleK8SModule(
-        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
+        module_class=AnsibleModule,
+        argument_spec=argspec(),
+        supports_check_mode=True,
+        mutually_exclusive=[("container", "all_containers")],
     )
 
     try:
