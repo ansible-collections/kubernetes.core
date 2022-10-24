@@ -165,6 +165,79 @@
       assert:
         that: tailed_log.log_lines | length == 5 + 1
 
+    # Trying to call module without name and label_selectors
+    - name: Retrieve without neither name nor label_selectors provided
+      k8s_log:
+        namespace: "{{ test_namespace }}"
+      register: noname_log
+      ignore_errors: true
+
+    - name: Ensure task failed
+      assert:
+        that:
+          - noname_log is failed
+          - 'noname_log.msg == "name must be provided for resources that do not support namespaced base url"'
+
+    # Test retrieve all containers logs
+    - name: Create deployments
+      k8s:
+        namespace: "{{ test_namespace }}"
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        wait_condition:
+          type: Complete
+          status: 'True'
+        definition:
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: multicontainer-log
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: p01
+                    image: busybox
+                    command: ['sh']
+                    args: ['-c', 'for i in $(seq 0 9); do echo $i; done']
+                  - name: p02
+                    image: busybox
+                    command: ['sh']
+                    args: ['-c', 'for i in $(seq 10 19); do echo $i; done']
+                restartPolicy: Never
+
+    - name: Retrieve logs from all containers
+      k8s_log:
+        api_version: batch/v1
+        kind: Job
+        namespace: "{{ test_namespace }}"
+        name: multicontainer-log
+        all_containers: true
+      register: all_logs
+
+    - name: Retrieve logs from first job
+      k8s_log:
+        api_version: batch/v1
+        kind: Job
+        namespace: "{{ test_namespace }}"
+        name: multicontainer-log
+        container: p01
+      register: log_1
+
+    - name: Retrieve logs from second job
+      k8s_log:
+        api_version: batch/v1
+        kind: Job
+        namespace: "{{ test_namespace }}"
+        name: multicontainer-log
+        container: p02
+      register: log_2
+
+    - name: Validate that log using all_containers=true is the sum of all logs
+      assert:
+        that:
+          - all_logs.log == (log_1.log + log_2.log)
+
   always:
     - name: ensure that namespace is removed
       k8s:

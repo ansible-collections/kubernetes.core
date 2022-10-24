@@ -51,7 +51,8 @@ options:
     description:
     - Use to specify the container within a pod to grab the log from.
     - If there is only one container, this will default to that container.
-    - If there is more than one container, this option is required.
+    - If there is more than one container, this option is required or set I(all_containers) to C(true).
+    - mutually exclusive with C(all_containers).
     required: no
     type: str
   since_seconds:
@@ -72,6 +73,12 @@ options:
     - A number of lines from the end of the logs to retrieve.
     required: no
     type: int
+    version_added: '2.4.0'
+  all_containers:
+    description:
+    - If set to C(true), retrieve all containers' logs in the pod(s).
+    - mutually exclusive with C(container).
+    type: bool
     version_added: '2.4.0'
 
 requirements:
@@ -114,6 +121,13 @@ EXAMPLES = r"""
     name: example
     tail_lines: 100
   register: log
+
+# This will get the logs from all containers in Pod
+- name: Get the logs from all containers in pod
+  kubernetes.core.k8s_log:
+    namespace: testing
+    name: some-pod
+    all_containers: true
 """
 
 RETURN = r"""
@@ -131,6 +145,7 @@ log_lines:
 
 
 import copy
+import json
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
@@ -170,9 +185,33 @@ def argspec():
             label_selectors=dict(type="list", elements="str", default=[]),
             previous=dict(type="bool", default=False),
             tail_lines=dict(type="int"),
+            all_containers=dict(type="bool"),
         )
     )
     return args
+
+
+def get_exception_message(exc):
+    try:
+        d = json.loads(exc.body.decode("utf8"))
+        return d["message"]
+    except Exception:
+        return exc
+
+
+def list_containers_in_pod(svc, resource, namespace, name):
+    try:
+        result = svc.client.get(resource, name=name, namespace=namespace)
+        containers = [
+            c["name"] for c in result.to_dict()["status"]["containerStatuses"]
+        ]
+        return containers
+    except Exception as exc:
+        raise CoreException(
+            "Unable to retrieve log from Pod due to: {0}".format(
+                get_exception_message(exc)
+            )
+        )
 
 
 def execute_module(svc, params):
@@ -206,6 +245,11 @@ def execute_module(svc, params):
         name = instances.items[0].metadata.name
         resource = v1_pods
 
+    if "base" not in resource.log.urls and not name:
+        raise CoreException(
+            "name must be provided for resources that do not support namespaced base url"
+        )
+
     kwargs = {}
     if params.get("container"):
         kwargs["query_params"] = {"container": params["container"]}
@@ -223,18 +267,27 @@ def execute_module(svc, params):
             {"tailLines": params["tail_lines"]}
         )
 
+    pod_containers = [None]
+    if params.get("all_containers"):
+        pod_containers = list_containers_in_pod(svc, resource, namespace, name)
+
+    log = ""
     try:
-        response = resource.log.get(
-            name=name, namespace=namespace, serialize=False, **kwargs
-        )
+        for container in pod_containers:
+            if container is not None:
+                kwargs.setdefault("query_params", {}).update({"container": container})
+            response = resource.log.get(
+                name=name, namespace=namespace, serialize=False, **kwargs
+            )
+            log += response.data.decode("utf8")
     except ApiException as exc:
         if exc.reason == "Not Found":
             raise CoreException("Pod {0}/{1} not found.".format(namespace, name))
         raise CoreException(
-            "Unable to retrieve log from Pod due to: {0}".format(exc.reason)
+            "Unable to retrieve log from Pod due to: {0}".format(
+                get_exception_message(exc)
+            )
         )
-
-    log = response.data.decode("utf8")
 
     return {"changed": False, "log": log, "log_lines": log.split("\n")}
 
@@ -290,7 +343,10 @@ def extract_selectors(instance):
 
 def main():
     module = AnsibleK8SModule(
-        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
+        module_class=AnsibleModule,
+        argument_spec=argspec(),
+        supports_check_mode=True,
+        mutually_exclusive=[("container", "all_containers")],
     )
 
     try:
