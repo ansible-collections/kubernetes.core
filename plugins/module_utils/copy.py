@@ -79,25 +79,26 @@ class K8SCopy(metaclass=ABCMeta):
                 stdout=True,
                 tty=False,
                 _preload_content=False,
-                **self.container_arg
+                **self.container_arg,
             )
+
+            stderr, stdout = [], []
+            while resp.is_open():
+                resp.update(timeout=1)
+                if resp.peek_stdout():
+                    stdout.extend(resp.read_stdout().rstrip("\n").split("\n"))
+                if resp.peek_stderr():
+                    stderr.extend(resp.read_stderr().rstrip("\n").split("\n"))
+            error = resp.read_channel(ERROR_CHANNEL)
+            resp.close()
+            error = yaml.safe_load(error)
+            return error, stdout, stderr
         except Exception as e:
             self.module.fail_json(
-                msg="Failed to execute command [{0}] on pod {1}/{2} due to : {3}".format(
-                    cmd, self.namespace, self.name, to_native(e)
+                msg="Error while running/parsing from pod {1}/{2} command='{0}' : {3}".format(
+                    self.namespace, self.name, cmd, to_native(e)
                 )
             )
-        stderr, stdout = [], []
-        while resp.is_open():
-            resp.update(timeout=1)
-            if resp.peek_stdout():
-                stdout.extend(resp.read_stdout().rstrip("\n").split("\n"))
-            if resp.peek_stderr():
-                stderr.extend(resp.read_stderr().rstrip("\n").split("\n"))
-        error = resp.read_channel(ERROR_CHANNEL)
-        resp.close()
-        error = yaml.safe_load(error)
-        return error, stdout, stderr
 
     def is_directory_path_from_pod(self, file_path, failed_if_not_exists=True):
         # check if file exists
@@ -136,7 +137,7 @@ class K8SCopyFromPod(K8SCopy):
         return self._shellname
 
     def listfiles_with_find(self, path):
-        find_cmd = ["find", path, "-type", "f", "-name", "*"]
+        find_cmd = ["find", path, "-type", "f"]
         error, out, err = self._run_from_pod(cmd=find_cmd)
         if error.get("status") != "Success":
             return [], error.get("message")
@@ -147,9 +148,21 @@ class K8SCopyFromPod(K8SCopy):
         error, out, err = self._run_from_pod(cmd=echo_cmd)
         if error.get("status") != "Success":
             return [], error.get("message")
+
         files = []
-        for f in out:
-            files.extend(f.rstrip("\n").split(" "))
+        # construct file list
+        for raw in out:
+            raw_list = raw.split(f"{path}/")
+            for i, v in enumerate(raw_list):
+                if v == "":
+                    continue
+                if i == (len(raw_list) + 1):
+                    # the last element does not contain additional space
+                    files.append(os.path.join(path, v))
+                else:
+                    # remove last space character
+                    files.append(os.path.join(path, v[:-1]))
+
         result = []
         for file in files:
             if os.path.basename(file) not in (".", ".."):
@@ -189,6 +202,7 @@ class K8SCopyFromPod(K8SCopy):
                     self.files_to_copy, error = executables.get(item)(self.remote_path)
                     if error:
                         self.module.fail_json(msg=error)
+                    break
 
     def read(self):
         self.stdout = None
@@ -245,7 +259,7 @@ class K8SCopyFromPod(K8SCopy):
                     stdout=True,
                     tty=False,
                     _preload_content=False,
-                    **self.container_arg
+                    **self.container_arg,
                 )
                 errors = []
                 with open(dest_file, "wb") as fh:
@@ -347,7 +361,7 @@ class K8SCopyToPod(K8SCopy):
                 stdout=True,
                 tty=False,
                 _preload_content=False,
-                **self.container_arg
+                **self.container_arg,
             )
             with TemporaryFile() as tar_buffer:
                 with tarfile.open(fileobj=tar_buffer, mode="w") as tar:

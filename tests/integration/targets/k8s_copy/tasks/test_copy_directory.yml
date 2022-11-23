@@ -69,48 +69,49 @@
     ignore_errors: true
     register: _result
 
-  - block:
-    - name: Copy files into container
-      k8s_cp:
-        namespace: "{{ copy_namespace }}"
-        pod: '{{ pod_without_executable_find.name }}'
-        remote_path: '{{ item.path }}'
-        content: '{{ item.content }}'
-        state: to_pod
-      with_items:
-      - path: /ansible/root.txt
-        content: this file is located at the root directory
-      - path: /ansible/.hidden_root.txt
-        content: this hidden file is located at the root directory
-      - path: /ansible/.sudir/root.txt
-        content: this file is located at the root of the sub directory
-      - path: /ansible/.sudir/.hidden_root.txt
-        content: this hidden file is located at the root of the sub directory
+  - name: Validate that 'find' executable is missing from Pod
+    assert:
+      that:
+      - _result is failed
+      fail_msg: "Pod contains 'find' executable, therefore we cannot run the next tasks."
 
-    - name: Delete existing directory
-      file:
-        path: /tmp/openjdk-files
-        state: absent
-      ignore_errors: true
+  - name: Copy files into container
+    k8s_cp:
+      namespace: "{{ copy_namespace }}"
+      pod: '{{ pod_without_executable_find.name }}'
+      remote_path: '{{ item.path }}'
+      content: '{{ item.content }}'
+      state: to_pod
+    with_items:
+    - path: /ansible/root.txt
+      content: this file is located at the root directory
+    - path: /ansible/.hidden_root.txt
+      content: this hidden file is located at the root directory
+    - path: /ansible/.sudir/root.txt
+      content: this file is located at the root of the sub directory
+    - path: /ansible/.sudir/.hidden_root.txt
+      content: this hidden file is located at the root of the sub directory
 
-    - name: copy directory from Pod into local filesystem (new directory to create)
-      k8s_cp:
-        namespace: '{{ copy_namespace }}'
-        pod: '{{ pod_without_executable_find.name }}'
-        remote_path: /ansible
-        local_path: /tmp/openjdk-files
-        state: from_pod
+  - name: Delete existing directory
+    file:
+      path: /tmp/openjdk-files
+      state: absent
+    ignore_errors: true
 
-    - name: Compare directories
-      kubectl_file_compare:
-        namespace: '{{ copy_namespace }}'
-        pod: '{{ pod_without_executable_find.name }}'
-        remote_path: /ansible
-        local_path: /tmp/openjdk-files
+  - name: copy directory from Pod into local filesystem (new directory to create)
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_without_executable_find.name }}'
+      remote_path: /ansible
+      local_path: /tmp/openjdk-files
+      state: from_pod
 
-    when:
-    - _result is failed
-    - '"error executing command in container: failed to exec in container" in _result.module_stderr'
+  - name: Compare directories
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_without_executable_find.name }}'
+      remote_path: /ansible
+      local_path: /tmp/openjdk-files
 
   always:
   - name: Remove directories created into remote Pod
