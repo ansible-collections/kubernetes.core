@@ -123,7 +123,7 @@ class K8SCopyFromPod(K8SCopy):
     def __init__(self, module, client):
         super(K8SCopyFromPod, self).__init__(module, client)
         self.is_remote_path_dir = None
-        self.files_to_copy = list()
+        self.files_to_copy = []
         self._shellname = None
 
     @property
@@ -138,45 +138,36 @@ class K8SCopyFromPod(K8SCopy):
 
     def listfiles_with_find(self, path):
         find_cmd = ["find", path, "-type", "f"]
-        error, out, err = self._run_from_pod(cmd=find_cmd)
+        error, files, err = self._run_from_pod(cmd=find_cmd)
         if error.get("status") != "Success":
-            return [], error.get("message")
-        return out, None
+            self.module.fail_json(msg=error.get("message"))
+        return files
 
     def listfile_with_echo(self, path):
         echo_cmd = [self.pod_shell, "-c", "echo {path}/* {path}/.*".format(path=path)]
         error, out, err = self._run_from_pod(cmd=echo_cmd)
         if error.get("status") != "Success":
-            return [], error.get("message")
+            self.module.fail_json(msg=error.get("message"))
 
         files = []
-        # construct file list
-        for raw in out:
-            raw_list = raw.split(f"{path}/")
-            for i, v in enumerate(raw_list):
-                if v == "":
-                    continue
-                if i == (len(raw_list) + 1):
-                    # the last element does not contain additional space
-                    files.append(os.path.join(path, v))
-                else:
-                    # remove last space character
-                    files.append(os.path.join(path, v[:-1]))
+        if out:
+            output = out[0] + " "
+            files = [
+                os.path.join(path, p[:-1])
+                for p in output.split(f"{path}/")
+                if p and p[:-1] not in (".", "..")
+            ]
 
         result = []
-        for file in files:
-            if os.path.basename(file) not in (".", ".."):
-                # list files from sub directory
-                is_dir, error = self.is_directory_path_from_pod(file)
-                if error:
-                    continue
-                if not is_dir:
-                    result.append(file)
-                else:
-                    tmp, err = self.listfile_with_echo(path=file)
-                    if tmp:
-                        result.extend(tmp)
-        return result, None
+        for f in files:
+            is_dir, err = self.is_directory_path_from_pod(f)
+            if err:
+                continue
+            if not is_dir:
+                result.append(f)
+                continue
+            result += self.listfile_with_echo(f)
+        return result
 
     def list_remote_files(self):
         """
@@ -189,7 +180,7 @@ class K8SCopyFromPod(K8SCopy):
             self.module.fail_json(msg=error)
 
         if not is_dir:
-            self.files_to_copy.append(self.remote_path)
+            return [self.remote_path]
         else:
             # find executable to list dir with
             executables = dict(
@@ -199,10 +190,7 @@ class K8SCopyFromPod(K8SCopy):
             for item in executables:
                 error, out, err = self._run_from_pod(item)
                 if error.get("status") == "Success":
-                    self.files_to_copy, error = executables.get(item)(self.remote_path)
-                    if error:
-                        self.module.fail_json(msg=error)
-                    break
+                    return executables.get(item)(self.remote_path)
 
     def read(self):
         self.stdout = None
@@ -281,7 +269,7 @@ class K8SCopyFromPod(K8SCopy):
         )
 
     def run(self):
-        self.list_remote_files()
+        self.files_to_copy = self.list_remote_files()
         if self.files_to_copy == []:
             self.module.exit_json(
                 changed=False,
