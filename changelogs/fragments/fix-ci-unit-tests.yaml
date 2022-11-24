@@ -1,0 +1,3 @@
+---
+trivial:
+- "unit tests - add missing pytest-forked into test-requirements.txt (https://github.com/ansible-collections/kubernetes.core/pull/545)."

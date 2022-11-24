@@ -4,3 +4,4 @@ mock
 pytest
 pytest-xdist
 pytest-mock
+pytest-forked
