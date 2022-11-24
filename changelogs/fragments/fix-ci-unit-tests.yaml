@@ -1,0 +1,3 @@
+---
+trivial:
+- "unit tests - Fix unit tests on CI (https://github.com/ansible-collections/kubernetes.core/pull/xxx)."
