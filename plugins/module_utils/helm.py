@@ -230,3 +230,26 @@ class AnsibleHelmModule(object):
                 rc=rc,
             )
         return (rc, out, err, helm_plugin_list)
+
+    def get_helm_set_values_args(self, set_values):
+        if any(v.get("value_type") == "json" for v in set_values):
+            if LooseVersion(self.get_helm_version()) < LooseVersion("3.10.0"):
+                self.fail_json(
+                    msg="This module requires helm >= 3.10.0, to use set_values parameter with value type set to 'json'. current version is {0}".format(
+                        self.get_helm_version()
+                    )
+                )
+
+        options = []
+        for opt in set_values:
+            value_type = opt.get("value_type", "raw")
+            value = opt.get("value")
+
+            if value_type == "raw":
+                options.append("--set " + value)
+            elif value_type == "json":
+                options.append("--set-" + value_type + " " + json.dumps(value))
+            else:
+                options.append("--set-" + value_type + " " + value)
+
+        return " ".join(options)

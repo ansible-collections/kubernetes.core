@@ -114,6 +114,31 @@ options:
       - Run C(helm repo update) before the operation. Can be run as part of the template generation or as a separate step.
     default: false
     type: bool
+  set_values:
+    description:
+      - Values to pass to chart configuration.
+    required: false
+    type: list
+    elements: dict
+    suboptions:
+      value:
+        description:
+          - Value to pass to chart configuration (e.g phase=prod).
+        type: str
+        required: true
+      value_type:
+        description:
+          - Use C(raw) set individual value.
+          - Use C(string) to force a string for an individual value.
+          - Use C(file) to set individual values from a file when the value itself is too long for the command line or is dynamically generated.
+          - Use C(json) to set json values (scalars/objects/arrays). This feature requires helm>=3.10.0.
+        default: raw
+        choices:
+          - raw
+          - string
+          - json
+          - file
+    version_added: '2.4.0'
 """
 
 EXAMPLES = r"""
@@ -201,6 +226,7 @@ def template(
     release_values=None,
     values_files=None,
     include_crds=False,
+    set_values=None,
 ):
     cmd += " template "
 
@@ -244,6 +270,9 @@ def template(
     if include_crds:
         cmd += " --include-crds"
 
+    if set_values:
+        cmd += " " + set_values
+
     return cmd
 
 
@@ -264,6 +293,7 @@ def main():
             show_only=dict(type="list", default=[], elements="str"),
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
+            set_values=dict(type="list", elements="dict"),
         ),
         supports_check_mode=True,
     )
@@ -282,6 +312,7 @@ def main():
     release_values = module.params.get("release_values")
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
+    set_values = module.params.get("set_values")
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
@@ -291,6 +322,10 @@ def main():
     if update_repo_cache:
         update_cmd = helm_cmd + " repo update"
         module.run_helm_command(update_cmd)
+
+    set_values_args = None
+    if set_values:
+        set_values_args = module.get_helm_set_values_args(set_values)
 
     tmpl_cmd = template(
         helm_cmd,
@@ -306,6 +341,7 @@ def main():
         show_only=show_only,
         values_files=values_files,
         include_crds=include_crds,
+        set_values=set_values_args,
     )
 
     if not check_mode:
