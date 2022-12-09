@@ -1,0 +1,24 @@
+- set_fact:
+    kubernetes_version: "kubernetes=={{ item }}"
+    virtualenv_path: "{{ virtualenv_src }}/venv{{ item | replace('.', '') }}"
+
+- name: Install kubernetes version
+  pip:
+    name:
+      - '{{ kubernetes_version }}'
+    virtualenv_command: "virtualenv --python {{ ansible_python_interpreter }}"
+    virtualenv: "{{ virtualenv_path }}"
+
+- name: Update namespace using server side apply
+  k8s:
+    apply: true
+    server_side_apply:
+      field_manager: "ansible{{ item | replace('.', '') }}"
+      force_conflicts: true
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: testing
+  vars:
+    ansible_python_interpreter: "{{ virtualenv_path }}/bin/python"

@@ -362,6 +362,7 @@ class K8sService:
                     resource, definition, namespace=namespace, **params
                 ).to_dict()
             except Exception as e:
+                raise e
                 reason = e.body if hasattr(e, "body") else e
                 msg = "Failed to apply object: {0}".format(reason)
                 raise CoreException(msg) from e

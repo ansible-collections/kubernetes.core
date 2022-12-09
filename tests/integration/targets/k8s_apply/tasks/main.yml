@@ -717,9 +717,34 @@
           - result.result.metadata.managedFields[0].manager == 'manager-02'
           - result.result.data.key == 'value-1'
 
+    # server side apply over kubernetes client releases
+    - name: Create temporary directory
+      tempfile:
+        state: directory
+        suffix: .server
+      register: path
+
+    - set_fact:
+        virtualenv_src: "{{ path.path }}"
+
+    - include_tasks: tasks/server_side_apply.yml
+      with_items:
+        - '24.2.0'
+        - '25.2.0a1'
+        - '25.3.0b1'
+        - '25.3.0'
+        - '23.6.0'
+
   always:
     - name: Remove namespace
       k8s:
         kind: Namespace
         name: "{{ test_namespace }}"
         state: absent
+
+    - name: Delete temporary directory
+      file:
+        path: "{{ virtualenv_src }}"
+        state: absent
+      ignore_errors: true
+      when: virtualenv_src is defined
