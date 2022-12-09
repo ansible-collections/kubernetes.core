@@ -1,0 +1,142 @@
+---
+- name: Create temporary directory for testing
+  tempfile:
+    state: directory
+    suffix: ansible-k8s-copy
+  register: tmpdir
+
+- block:
+  # setup
+  - name: Create local files for testing
+    copy:
+      content: "{{ item.content }}"
+      dest: "{{ local_dir_path }}/{{ item.dest }}"
+    with_items: "{{ test_files }}"
+
+  - name: Create directory into Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: "mkdir {{ pod_dir_path }}"
+
+  - name: Create files into Pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: "{{ pod_dir_path }}/{{ item.dest }}"
+      content: "{{ item.content }}"
+      state: to_pod
+    with_items: "{{ test_files }}"
+
+  # Test copy into Pod using check_mode=true
+  - name: Copy text file into remote pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: "{{ pod_dir_path }}/ansible.txt"
+      local_path: "{{ local_dir_path }}/{{ test_files[0].dest }}"
+      state: to_pod
+    check_mode: true
+    register: copy_file
+
+  - name: Ensure task is changed
+    assert:
+      that:
+      - copy_file is changed
+
+  - name: Ensure file does not exists into Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: "test -e {{ pod_dir_path }}/ansible.txt"
+    register: test_file
+    failed_when: test_file.return_code == 0
+
+  - name: Copy directory into Pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: "{{ pod_dir_path }}/mydir"
+      local_path: "{{ local_dir_path }}"
+      state: to_pod
+    check_mode: true
+    register: copy_dir
+
+  - name: Ensure task is changed
+    assert:
+      that:
+      - copy_dir is changed
+
+  - name: Ensure file does not exists into Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: "test -e {{ pod_dir_path }}/mydir"
+    register: test_dir
+    failed_when: test_dir.return_code == 0
+
+  # Test copy from pod using check_mode=true
+  - name: Copy file from Pod into local file system
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: "{{ pod_dir_path }}/{{ test_files[0].dest }}"
+      local_path: "{{ local_dir_path }}/ansible.txt"
+      state: from_pod
+    check_mode: true
+    register: copy_file
+
+  - name: Ensure task is changed
+    assert:
+      that:
+      - copy_file is changed
+
+  - name: Ensure file does not exists into local file system
+    stat:
+      path: "{{ local_dir_path }}/ansible.txt"
+    register: testfile
+    failed_when: testfile.stat.exists
+
+  - name: Copy directory from Pod into local file system
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: "{{ pod_dir_path }}"
+      local_path: "{{ local_dir_path }}/mydir"
+      state: from_pod
+    check_mode: true
+    register: _dir
+
+  - name: Ensure task is changed
+    assert:
+      that:
+      - _dir is changed
+
+  - name: Ensure directory does not exist into local file system
+    stat:
+      path: "{{ local_dir_path }}/mydir"
+    register: testdir
+    failed_when: testdir.stat.exists
+
+  vars:
+    local_dir_path: "{{ tmpdir.path }}"
+    pod_dir_path: "/tmp/test_check_mode"
+    test_files:
+    - content: "collection = kubernetes.core"
+      dest: collection.txt
+    - content: "modules = k8s_cp and k8s_exec"
+      dest: modules.txt
+
+  always:
+  - name: Delete temporary directory
+    file:
+      state: absent
+      path: "{{ local_dir_path }}"
+    ignore_errors: true
+
+  - name: Delete temporary directory created into Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: 'rm -r {{ pod_dir_path }}'
+    ignore_errors: true

@@ -19,6 +19,7 @@
         template: pods_definition.j2
 
     - include_tasks: test_copy_errors.yml
+    - include_tasks: test_check_mode.yml
     - include_tasks: test_copy_file.yml
     - include_tasks: test_multi_container_pod.yml
     - include_tasks: test_copy_directory.yml

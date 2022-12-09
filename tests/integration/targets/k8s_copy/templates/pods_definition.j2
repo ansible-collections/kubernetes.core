@@ -30,4 +30,16 @@ spec:
       - /bin/sh
       - -c
       - while true;do date;sleep 5; done
-
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: '{{ pod_without_executable_find.name }}'
+spec:
+  containers:
+  - name: openjdk17
+    image: openjdk:17
+    command:
+    - /bin/sh
+    - -c
+    - while true;do date;sleep 5; done
