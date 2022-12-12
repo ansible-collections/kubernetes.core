@@ -1,0 +1,3 @@
+---
+trivial:
+- "tests - Fix the integration test failing with ansible release 2.9 (https://github.com/ansible-collections/kubernetes.core/pull/550)."
