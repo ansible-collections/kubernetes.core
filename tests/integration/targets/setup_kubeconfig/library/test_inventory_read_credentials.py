@@ -70,16 +70,10 @@ auth:
 import os
 import shutil
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-
-try:
-    from kubernetes import client, config
-    from kubernetes.dynamic import DynamicClient, LazyDiscoverer
-
-    HAS_KUBERNETES_MODULE = True
-
-except ImportError:
-    HAS_KUBERNETES_MODULE = False
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
+    get_api_client,
+)
 
 
 class K8SInventoryTestModule(AnsibleModule):
@@ -91,10 +85,6 @@ class K8SInventoryTestModule(AnsibleModule):
         )
 
         super(K8SInventoryTestModule, self).__init__(argument_spec=argument_spec)
-
-        if not HAS_KUBERNETES_MODULE:
-            self.fail_json(msg=missing_required_lib("kubernetes"))
-
         self.execute_module()
 
     def execute_module(self):
@@ -114,19 +104,15 @@ class K8SInventoryTestModule(AnsibleModule):
                 )
             )
 
-        client_config = type.__call__(client.Configuration)
-        config.load_kube_config(
-            config_file=kubeconfig_path, client_configuration=client_config
-        )
-        DynamicClient(client.ApiClient(client_config), discoverer=LazyDiscoverer)
+        client = get_api_client(kubeconfig=kubeconfig_path)
 
         result = dict(host=os.path.join(dest_dir, "host_data.txt"))
         # create file containing host information
         with open(result["host"], "w") as fd:
-            fd.write(client_config.host)
+            fd.write(client.configuration.host)
         for key in ("cert_file", "key_file", "ssl_ca_cert"):
             dest_file = os.path.join(dest_dir, "{0}_data.txt".format(key))
-            shutil.copyfile(getattr(client_config, key), dest_file)
+            shutil.copyfile(getattr(client.configuration, key), dest_file)
             result[key] = dest_file
 
         self.exit_json(auth=result)

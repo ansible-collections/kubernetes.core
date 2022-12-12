@@ -25,26 +25,10 @@
 
 - name: Generate user cert_file, key_file, and hostname
   block:
-    - name: Create temporary directory for virtual env
-      tempfile:
-        state: directory
-        suffix: .virtualenv
-      register: _virtualenv
-
-    - name: Install required version of Kubernetes
-      pip:
-        name:
-          - "kubernetes<25.0.3"
-        virtualenv: "{{ _virtualenv.path }}/env"
-        virtualenv_command: "virtualenv --python {{ ansible_python_interpreter }}"
-
     - name: Generate user credentials files
       test_inventory_read_credentials:
         kube_config: "{{ (_src.stat.exists) | ternary(src_kubeconfig, dest_kubeconfig) }}"
         dest_dir: "{{ user_credentials_dir }}"
-      vars:
-        ansible_python_interpreter: "{{ _virtualenv.path }}/env/bin/python"
-
   when: user_credentials_dir is defined
 
 - block:
@@ -53,13 +37,6 @@
         remote_src: true
         src: "{{ src_kubeconfig }}"
         dest: "{{ dest_kubeconfig }}"
-
-    - name: Delete temporary directory for virtual env
-      file:
-        state: absent
-        path: "{{ _virtualenv.path }}"
-      ignore_errors: true
-      when: _virtualenv is defined
 
     - name: "Delete {{ src_kubeconfig }}"
       file:
