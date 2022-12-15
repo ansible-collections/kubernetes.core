@@ -1,0 +1,3 @@
+---
+trivial:
+  - k8s_cp - Fix issue when copying directory with space in its name from Pod without 'find' executable (https://github.com/ansible-collections/kubernetes.core/pull/552).

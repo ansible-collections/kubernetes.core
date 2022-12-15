@@ -144,7 +144,13 @@ class K8SCopyFromPod(K8SCopy):
         return files
 
     def listfile_with_echo(self, path):
-        echo_cmd = [self.pod_shell, "-c", "echo {path}/* {path}/.*".format(path=path)]
+        echo_cmd = [
+            self.pod_shell,
+            "-c",
+            "echo {path}/* {path}/.*".format(
+                path=path.translate(str.maketrans({" ": r"\ "}))
+            ),
+        ]
         error, out, err = self._run_from_pod(cmd=echo_cmd)
         if error.get("status") != "Success":
             self.module.fail_json(msg=error.get("message"))

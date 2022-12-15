@@ -1,0 +1,120 @@
+---
+- name: create temporary directory for testing
+  tempfile:
+    state: directory
+    suffix: .space
+  register: _tmpdir
+
+- block:
+    - set_fact:
+        some_file_content: 'this content will be stored into a file in the remote pod which has space in its name'
+
+    - name: create file with space in the name on remote pod
+      kubernetes.core.k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_without_executable_find.name }}'
+        remote_path: "/file name space .txt"
+        content: '{{ some_file_content }}'
+        state: to_pod
+
+    - set_fact:
+        local_file_path: '{{ _tmpdir.path }}/file_from_pod.txt'
+
+    - name: copy file (with space in its name) from pod to local filesystem
+      kubernetes.core.k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_without_executable_find.name }}'
+        remote_path: "/file name space .txt"
+        local_path: '{{ local_file_path }}'
+        state: from_pod
+
+    - name: Ensure file was successfully copied
+      assert:
+        that:
+          - lookup('file', local_file_path) == some_file_content
+
+    - set_fact:
+        dir_config:
+          - 'test\ dir\ 01/file1.txt'
+          - 'test\ dir\ 01/file with space in its name.txt'
+          - 'test\ dir\ 02/file2.txt'
+          - 'test\ dir\ 02/another file with space in its name '
+          - 'test\ dir\ 03/file3.txt'
+          - 'test\ dir\ 03/a third file with space in its name'
+
+    - set_fact:
+        escape_char: \
+
+    - name: create directories on Pod
+      kubernetes.core.k8s_exec:
+        namespace: "{{ copy_namespace }}"
+        pod: "{{ pod_without_executable_find.name }}"
+        command: "mkdir -p /ansible_testing/{{ item | dirname }}"
+      with_items: '{{ dir_config }}'
+
+    - name: create files on remote pod
+      kubernetes.core.k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_without_executable_find.name }}'
+        remote_path: "/ansible_testing/{{ item | replace(escape_char, '') }}"
+        content: "This content is from file named: {{ item | replace(escape_char, '') }}"
+        state: to_pod
+      with_items: '{{ dir_config }}'
+
+    - set_fact:
+        local_copy: '{{ _tmpdir.path }}/local_partial_copy'
+        full_copy: '{{ _tmpdir.path }}/local_full_copy'
+
+    - name: create local directories
+      file:
+        state: directory
+        path: '{{ item }}'
+      with_items:
+        - '{{ local_copy }}'
+        - '{{ full_copy }}'
+
+    - name: Copy directory from Pod into local filesystem
+      kubernetes.core.k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_without_executable_find.name }}'
+        remote_path: "/ansible_testing/{{ item }}"
+        local_path: '{{ local_copy }}'
+        state: from_pod
+      with_items:
+        - 'test dir 01'
+        - 'test dir 02'
+        - 'test dir 03'
+
+    - name: Compare resulting directory
+      kubectl_file_compare:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_without_executable_find.name }}'
+        remote_path: "/ansible_testing/{{ item }}"
+        local_path: '{{ local_copy }}/{{ item }}'
+      with_items:
+        - 'test dir 01'
+        - 'test dir 02'
+        - 'test dir 03'
+
+    - name: Copy remote directory into local file system
+      kubernetes.core.k8s_cp:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_without_executable_find.name }}'
+        remote_path: "/ansible_testing"
+        local_path: '{{ full_copy }}'
+        state: from_pod
+
+    - name: Compare resulting directory
+      kubectl_file_compare:
+        namespace: '{{ copy_namespace }}'
+        pod: '{{ pod_without_executable_find.name }}'
+        remote_path: "/ansible_testing"
+        local_path: '{{ full_copy }}/ansible_testing'
+
+  always:
+    - name: Delete temporary directory
+      file:
+        state: absent
+        path: '{{ _tmpdir.path }}'
+      ignore_errors: true
+      when: _tmpdir is defined
