@@ -140,7 +140,7 @@ def k8s_apply(resource, definition, **kwargs):
     if server_side:
         versions = gather_versions()
         body = definition
-        if LooseVersion(versions["kubernetes"]) < LooseVersion("25.0.3"):
+        if LooseVersion(versions["kubernetes"]) < LooseVersion("25.0.0"):
             body = json.dumps(definition).encode()
         # server_side_apply is forces content_type to 'application/apply-patch+yaml'
         return resource.server_side_apply(
