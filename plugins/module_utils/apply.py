@@ -24,6 +24,13 @@ from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import (
     ApplyException,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    gather_versions,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
+
 
 try:
     from kubernetes.dynamic.exceptions import NotFoundError
@@ -131,7 +138,10 @@ def k8s_apply(resource, definition, **kwargs):
     existing, desired = apply_object(resource, definition)
     server_side = kwargs.get("server_side", False)
     if server_side:
-        body = json.dumps(definition).encode()
+        versions = gather_versions()
+        body = definition
+        if LooseVersion(versions["kubernetes"]) < LooseVersion("25.0.0"):
+            body = json.dumps(definition).encode()
         # server_side_apply is forces content_type to 'application/apply-patch+yaml'
         return resource.server_side_apply(
             body=body,
@@ -139,6 +149,7 @@ def k8s_apply(resource, definition, **kwargs):
             namespace=definition["metadata"].get("namespace"),
             force_conflicts=kwargs.get("force_conflicts"),
             field_manager=kwargs.get("field_manager"),
+            dry_run=kwargs.get("dry_run"),
         )
     if not existing:
         return resource.create(

@@ -1,0 +1,4 @@
+---
+bugfixes:
+  - k8s - Fix issue with server side apply with kubernetes release '25.3.0' (https://github.com/ansible-collections/kubernetes.core/issues/548).
+  - k8s - Fix issue with check_mode when using server side apply (https://github.com/ansible-collections/kubernetes.core/issues/547).

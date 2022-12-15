@@ -717,9 +717,67 @@
           - result.result.metadata.managedFields[0].manager == 'manager-02'
           - result.result.data.key == 'value-1'
 
+    # check_mode with server side apply
+    - name: Ensure namespace does not exist
+      k8s:
+        state: absent
+        kind: Namespace
+        name: testing
+        wait: true
+
+    - name: Create namespace using server_side_apply=true and check_mode=true
+      k8s:
+        apply: true
+        server_side_apply:
+          field_manager: ansible
+        definition:
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: testing
+      check_mode: true
+      register: _create
+
+    - name: Ensure namespace was not created
+      k8s_info:
+        kind: Namespace
+        name: testing
+      register: _info
+
+    - name: Validate that check_mode reported change even if namespace was not created
+      assert:
+        that:
+          - _create is changed
+          - not _info.resources
+
+    # server side apply over kubernetes client releases
+    - name: Create temporary directory
+      tempfile:
+        state: directory
+        suffix: .server
+      register: path
+
+    - set_fact:
+        virtualenv_src: "{{ path.path }}"
+
+    - include_tasks: tasks/server_side_apply.yml
+      with_items:
+        - '24.2.0'
+        - '25.2.0a1'
+        - '25.3.0b1'
+        - '25.3.0'
+        - '23.6.0'
+
   always:
     - name: Remove namespace
       k8s:
         kind: Namespace
         name: "{{ test_namespace }}"
         state: absent
+
+    - name: Delete temporary directory
+      file:
+        path: "{{ virtualenv_src }}"
+        state: absent
+      ignore_errors: true
+      when: virtualenv_src is defined
