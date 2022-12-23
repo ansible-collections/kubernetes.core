@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - add missing documentation for filter plugin kubernetes.core.k8s_config_resource_name (https://github.com/ansible-collections/kubernetes.core/issues/558).
