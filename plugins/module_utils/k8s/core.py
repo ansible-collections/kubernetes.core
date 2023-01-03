@@ -48,6 +48,10 @@ class AnsibleK8SModule:
         return self._module.check_mode
 
     @property
+    def server_side_dry_run(self):
+        return self.check_mode and self.has_at_least("kubernetes", "18.20.0")
+
+    @property
     def _diff(self):
         return self._module._diff
 

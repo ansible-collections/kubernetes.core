@@ -267,6 +267,8 @@ class K8SClient:
     If there is a need for other methods or attributes to be proxied, they can be added here.
     """
 
+    K8S_SERVER_DRY_RUN = "All"
+
     def __init__(self, configuration, client, dry_run: bool = False) -> None:
         self.configuration = configuration
         self.client = client
@@ -305,7 +307,7 @@ class K8SClient:
 
     def _ensure_dry_run(self, params: Dict) -> Dict:
         if self.dry_run:
-            params["dry_run"] = True
+            params["dry_run"] = self.K8S_SERVER_DRY_RUN
         return params
 
     def validate(
@@ -354,8 +356,8 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
         raise CoreException(msg) from e
 
     dry_run = False
-    if module:
-        dry_run = module.params.get("dry_run", False)
+    if module and module.server_side_dry_run:
+        dry_run = True
 
     k8s_client = K8SClient(
         configuration=configuration,

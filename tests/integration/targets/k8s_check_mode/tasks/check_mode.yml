@@ -1,0 +1,32 @@
+- name: Create virtualenv with kubernetes release
+  pip:
+    name:
+      - '{{ item.k8s_release }}'
+    virtualenv_command: "virtualenv --python {{ ansible_python_interpreter }}"
+    virtualenv: "{{ tmpdir }}/{{ item.virtualenv }}"
+
+- name: Create resource using check mode
+  k8s:
+    kind: Namespace
+    name: '{{ test_namespace }}'
+  check_mode: true
+  register: _create
+
+- name: Ensure namespace was not created
+  k8s_info:
+    kind: Namespace
+    name: '{{ test_namespace }}'
+  register: info
+  failed_when: info.resources | length > 0
+
+- name: Ensure server side dry_run has being used
+  assert:
+    that:
+      - '"creationTimestamp" in _create.result.metadata'
+  when: item.dry_run
+
+- name: Ensure server side dry_run was not used
+  assert:
+    that:
+      - '"creationTimestamp" in _create.result.metadata'
+  when: not item.dry_run
