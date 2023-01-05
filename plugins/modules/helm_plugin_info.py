@@ -71,11 +71,9 @@ rc:
 """
 
 import copy
-from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    get_helm_plugin_list,
     parse_helm_plugin_list,
-    get_helm_binary,
+    AnsibleHelmModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
     HELM_AUTH_ARG_SPEC,
@@ -94,21 +92,19 @@ def main():
         )
     )
 
-    module = AnsibleModule(
+    module = AnsibleHelmModule(
         argument_spec=argument_spec,
         mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
         supports_check_mode=True,
     )
 
-    helm_bin = get_helm_binary(module)
-
     plugin_name = module.params.get("plugin_name")
 
     plugin_list = []
 
-    rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
+    rc, output, err, command = module.get_helm_plugin_list()
 
-    out = parse_helm_plugin_list(module, output=output.splitlines())
+    out = parse_helm_plugin_list(output=output.splitlines())
 
     for line in out:
         if plugin_name is None:
@@ -125,7 +121,7 @@ def main():
 
     module.exit_json(
         changed=True,
-        command=helm_bin + " plugin list",
+        command=command,
         stdout=output,
         stderr=err,
         rc=rc,

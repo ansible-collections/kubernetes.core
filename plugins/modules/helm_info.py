@@ -131,11 +131,9 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    run_helm,
-    get_values,
-    get_helm_binary,
+    AnsibleHelmModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
     HELM_AUTH_ARG_SPEC,
@@ -153,10 +151,8 @@ def get_release(state, release_name):
 
 
 # Get Release state from deployed release
-def get_release_status(
-    module, command, release_name, release_state, get_all_values=False
-):
-    list_command = command + " list --output=yaml"
+def get_release_status(module, release_name, release_state, get_all_values=False):
+    list_command = module.get_helm_binary() + " list --output=yaml"
 
     valid_release_states = [
         "all",
@@ -173,7 +169,7 @@ def get_release_status(
             list_command += " --%s" % local_release_state
 
     list_command += " --filter " + release_name
-    rc, out, err = run_helm(module, list_command)
+    rc, out, err = module.run_helm_command(list_command)
 
     if rc != 0:
         module.fail_json(
@@ -188,7 +184,7 @@ def get_release_status(
     if release is None:  # not install
         return None
 
-    release["values"] = get_values(module, command, release_name, get_all_values)
+    release["values"] = module.get_values(release_name, get_all_values)
 
     return release
 
@@ -209,7 +205,7 @@ def argument_spec():
 def main():
     global module
 
-    module = AnsibleModule(
+    module = AnsibleHelmModule(
         argument_spec=argument_spec(),
         mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
         supports_check_mode=True,
@@ -222,10 +218,8 @@ def main():
     release_state = module.params.get("release_state")
     get_all_values = module.params.get("get_all_values")
 
-    helm_cmd_common = get_helm_binary(module)
-
     release_status = get_release_status(
-        module, helm_cmd_common, release_name, release_state, get_all_values
+        module, release_name, release_state, get_all_values
     )
 
     if release_status is not None:

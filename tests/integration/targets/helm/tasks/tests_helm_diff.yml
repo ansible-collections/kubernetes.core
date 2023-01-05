@@ -2,6 +2,7 @@
 - name: Test helm diff functionality
   vars:
     test_chart_ref: "/tmp/test-chart"
+    redis_chart_version: '17.0.5'
 
   block:
     - set_fact:
@@ -182,7 +183,7 @@
         chart_ref: redis
         namespace: "{{ helm_namespace }}"
         name: redis-chart
-        chart_version: '16.0.0'
+        chart_version: "{{ redis_chart_version }}"
         release_values: "{{ redis_chart_values }}"
 
     - name: Upgrade Redis chart
@@ -192,7 +193,7 @@
         chart_ref: redis
         namespace: "{{ helm_namespace }}"
         name: redis-chart
-        chart_version: '16.0.0'
+        chart_version: "{{ redis_chart_version }}"
         release_values: "{{ redis_chart_values }}"
       check_mode: yes
       register: redis_upgrade
@@ -226,7 +227,7 @@
         chart_ref: redis
         namespace: "{{ helm_namespace }}"
         name: redis-chart
-        chart_version: '16.0.0'
+        chart_version: "{{ redis_chart_version }}"
         release_values: "{{ redis_chart_values }}"
       check_mode: yes
       register: redis_upgrade_2

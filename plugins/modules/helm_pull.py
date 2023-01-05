@@ -169,10 +169,8 @@ rc:
   sample: 1
 """
 
-from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    run_helm,
-    get_helm_version,
+    AnsibleHelmModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
@@ -201,7 +199,7 @@ def main():
         chart_ssl_key_file=dict(type="path"),
         binary_path=dict(type="path"),
     )
-    module = AnsibleModule(
+    module = AnsibleHelmModule(
         argument_spec=argspec,
         supports_check_mode=True,
         required_by=dict(
@@ -211,15 +209,7 @@ def main():
         mutually_exclusive=[("chart_version", "chart_devel")],
     )
 
-    bin_path = module.params.get("binary_path")
-    if bin_path is not None:
-        helm_cmd_common = bin_path
-    else:
-        helm_cmd_common = "helm"
-
-    helm_cmd_common = module.get_bin_path(helm_cmd_common, required=True)
-
-    helm_version = get_helm_version(module, helm_cmd_common)
+    helm_version = module.get_helm_version()
     if LooseVersion(helm_version) < LooseVersion("3.0.0"):
         module.fail_json(
             msg="This module requires helm >= 3.0.0, current version is {0}".format(
@@ -279,10 +269,12 @@ def main():
             helm_pull_opts.append("--{0}".format(v["key"]))
 
     helm_cmd_common = "{0} pull {1} {2}".format(
-        helm_cmd_common, module.params.get("chart_ref"), " ".join(helm_pull_opts)
+        module.get_helm_binary(),
+        module.params.get("chart_ref"),
+        " ".join(helm_pull_opts),
     )
     if not module.check_mode:
-        rc, out, err = run_helm(module, helm_cmd_common, fails_on_error=False)
+        rc, out, err = module.run_helm_command(helm_cmd_common, fails_on_error=False)
     else:
         rc, out, err = (0, "", "")
 

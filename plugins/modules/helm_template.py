@@ -181,10 +181,9 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    run_helm,
-    get_helm_binary,
+    AnsibleHelmModule,
 )
 
 
@@ -249,7 +248,7 @@ def template(
 
 
 def main():
-    module = AnsibleModule(
+    module = AnsibleHelmModule(
         argument_spec=dict(
             binary_path=dict(type="path"),
             chart_ref=dict(type="path", required=True),
@@ -287,11 +286,11 @@ def main():
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
-    helm_cmd = get_helm_binary(module)
+    helm_cmd = module.get_helm_binary()
 
     if update_repo_cache:
         update_cmd = helm_cmd + " repo update"
-        run_helm(module, update_cmd)
+        module.run_helm_command(update_cmd)
 
     tmpl_cmd = template(
         helm_cmd,
@@ -310,7 +309,7 @@ def main():
     )
 
     if not check_mode:
-        rc, out, err = run_helm(module, tmpl_cmd)
+        rc, out, err = module.run_helm_command(tmpl_cmd)
     else:
         out = err = ""
         rc = 0

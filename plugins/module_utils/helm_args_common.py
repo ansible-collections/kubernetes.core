@@ -39,6 +39,4 @@ HELM_AUTH_ARG_SPEC = dict(
 HELM_AUTH_MUTUALLY_EXCLUSIVE = [
     ("context", "ca_cert"),
     ("context", "validate_certs"),
-    ("kubeconfig", "ca_cert"),
-    ("kubeconfig", "validate_certs"),
 ]
