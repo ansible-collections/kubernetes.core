@@ -101,16 +101,17 @@ class AnsibleHelmModule(object):
         return self._module.params
 
     def _prepare_helm_environment(self):
-        key_mapping = [
+        param_to_env_mapping = [
             ("context", "HELM_KUBECONTEXT"),
             ("release_namespace", "HELM_NAMESPACE"),
             ("api_key", "HELM_KUBETOKEN"),
             ("host", "HELM_KUBEAPISERVER"),
         ]
 
-        env_update = {
-            v: self.params.get(k) for k, v in key_mapping if self.params.get(k)
-        }
+        env_update = {}
+        for p, env in param_to_env_mapping:
+            if self.params.get(p):
+                env_update[env] = self.params.get(p)
 
         kubeconfig_content = None
         kubeconfig = self.params.get("kubeconfig")
