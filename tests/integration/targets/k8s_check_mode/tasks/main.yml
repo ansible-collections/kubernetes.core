@@ -1,0 +1,19 @@
+- name: create temporary directory for tests
+  tempfile:
+    suffix: .k8s
+    state: directory
+  register: _path
+
+- block:
+    - include_tasks: tasks/check_mode.yml
+      with_items: '{{ test_config }}'
+
+  vars:
+    tmpdir: '{{ _path.path }}'
+
+  always:
+    - name: Delete temporaray directory
+      file:
+        state: absent
+        path: '{{ tmpdir }}'
+      ignore_errors: true

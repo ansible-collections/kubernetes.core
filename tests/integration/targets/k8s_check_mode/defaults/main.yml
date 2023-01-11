@@ -1,0 +1,10 @@
+---
+test_namespace: "check-mode-ns"
+
+test_config:
+  - k8s_release: "kubernetes < 18.20.0"
+    dry_run: false
+    virtualenv: 'env1'
+  - k8s_release: "kubernetes >= 18.20.0"
+    dry_run: true
+    virtualenv: 'env2'

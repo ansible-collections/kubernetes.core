@@ -80,6 +80,10 @@ class K8sService:
         self.client = client
         self.module = module
 
+    @property
+    def _client_side_dry_run(self):
+        return self.module.check_mode and not self.client.dry_run
+
     def find_resource(
         self, kind: str, api_version: str, fail: bool = False
     ) -> Optional[Resource]:
@@ -153,8 +157,6 @@ class K8sService:
             )
         try:
             params = dict(name=name, namespace=namespace)
-            if self.module.check_mode:
-                params["dry_run"] = "All"
             if merge_type:
                 params["content_type"] = "application/{0}-patch+json".format(merge_type)
             return self.client.patch(resource, definition, **params).to_dict()
@@ -306,15 +308,12 @@ class K8sService:
         namespace = definition["metadata"].get("namespace")
         name = definition["metadata"].get("name")
 
-        if self.module.check_mode and not self.client.dry_run:
+        if self._client_side_dry_run:
             k8s_obj = _encode_stringdata(definition)
         else:
-            params = {}
-            if self.module.check_mode:
-                params["dry_run"] = "All"
             try:
                 k8s_obj = self.client.create(
-                    resource, definition, namespace=namespace, **params
+                    resource, definition, namespace=namespace
                 ).to_dict()
             except ConflictError:
                 # Some resources, like ProjectRequests, can't be created multiple times,
@@ -344,7 +343,7 @@ class K8sService:
         server_side_apply = self.module.params.get("server_side_apply")
         if server_side_apply:
             requires("kubernetes", "19.15.0", reason="to use server side apply")
-        if self.module.check_mode and not self.client.dry_run:
+        if self._client_side_dry_run:
             ignored, patch = apply_object(resource, _encode_stringdata(definition))
             if existing:
                 k8s_obj = dict_merge(existing.to_dict(), patch)
@@ -353,8 +352,6 @@ class K8sService:
         else:
             try:
                 params = {}
-                if self.module.check_mode:
-                    params["dry_run"] = "All"
                 if server_side_apply:
                     params["server_side"] = True
                     params.update(server_side_apply)
@@ -377,12 +374,9 @@ class K8sService:
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
 
-        if self.module.check_mode and not self.module.client.dry_run:
+        if self._client_side_dry_run:
             k8s_obj = _encode_stringdata(definition)
         else:
-            params = {}
-            if self.module.check_mode:
-                params["dry_run"] = "All"
             try:
                 k8s_obj = self.client.replace(
                     resource,
@@ -390,7 +384,6 @@ class K8sService:
                     name=name,
                     namespace=namespace,
                     append_hash=append_hash,
-                    **params
                 ).to_dict()
             except Exception as e:
                 reason = e.body if hasattr(e, "body") else e
@@ -404,7 +397,7 @@ class K8sService:
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
 
-        if self.module.check_mode and not self.client.dry_run:
+        if self._client_side_dry_run:
             k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
         else:
             exception = None
@@ -445,7 +438,7 @@ class K8sService:
             return {}
 
         # Delete the object
-        if self.module.check_mode and not self.client.dry_run:
+        if self._client_side_dry_run:
             return {}
 
         if name:
@@ -465,8 +458,6 @@ class K8sService:
             body.update(delete_options)
             params["body"] = body
 
-        if self.module.check_mode:
-            params["dry_run"] = "All"
         try:
             k8s_obj = self.client.delete(resource, **params).to_dict()
         except Exception as e:
