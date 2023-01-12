@@ -43,8 +43,8 @@
 - name: Test Skip CRDS feature in helm chart install
   include_tasks: test_crds.yml
 
-- name: Test in-memory kubeconfig
-  include_tasks: tests_in_memory_kubeconfig.yml
+- name: Test helm modules with custom kube config, validate_certs and/or ca_cert
+  include_tasks: tests_helm_kubeconfig.yml
 
 - name: Test helm pull
   include_tasks: tests_helm_pull.yml

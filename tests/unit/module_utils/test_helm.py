@@ -9,53 +9,43 @@ __metaclass__ = type
 import os.path
 import yaml
 import tempfile
-import json
+import pytest
 
 
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    run_helm,
+    AnsibleHelmModule,
     write_temp_kubeconfig,
 )
+from unittest.mock import MagicMock
+import random
+import string
 
 
-class MockedModule:
-    def __init__(self):
+@pytest.fixture()
+def ansible_helm_module():
+    module = MagicMock()
+    module.params = {
+        "api_key": None,
+        "ca_cert": None,
+        "host": None,
+        "kube_context": None,
+        "kubeconfig": None,
+        "release_namespace": None,
+        "validate_certs": None,
+    }
+    module.fail_json = MagicMock()
+    module.fail_json.side_effect = SystemExit(1)
+    module.run_command = MagicMock()
 
-        self.params = {
-            "api_key": None,
-            "ca_cert": None,
-            "host": None,
-            "kube_context": None,
-            "kubeconfig": None,
-            "release_namespace": None,
-            "validate_certs": None,
-        }
+    helm_module = AnsibleHelmModule(module=module)
+    helm_module.get_helm_binary = MagicMock()
+    helm_module.get_helm_binary.return_value = "some/path/to/helm/executable"
 
-        self.r = {}
-        self.files_to_delete = []
-
-    def run_command(self, command, environ_update=None):
-        self.r = {"command": command, "environ_update": environ_update}
-        return 0, "", ""
-
-    def add_cleanup_file(self, file_path):
-        self.files_to_delete.append(file_path)
-
-    def do_cleanup_files(self):
-        for file in self.files_to_delete:
-            try:
-                os.remove(file)
-            except Exception:
-                pass
+    return helm_module
 
 
 def test_write_temp_kubeconfig_server_only():
-    file_name = write_temp_kubeconfig("ff")
-    try:
-        with open(file_name, "r") as fd:
-            content = yaml.safe_load(fd)
-    finally:
-        os.remove(file_name)
+    content = write_temp_kubeconfig("ff")
 
     assert content == {
         "apiVersion": "v1",
@@ -69,12 +59,7 @@ def test_write_temp_kubeconfig_server_only():
 
 
 def test_write_temp_kubeconfig_server_inscure_certs():
-    file_name = write_temp_kubeconfig("ff", False, "my-certificate")
-    try:
-        with open(file_name, "r") as fd:
-            content = yaml.safe_load(fd)
-    finally:
-        os.remove(file_name)
+    content = write_temp_kubeconfig("ff", False, "my-certificate")
 
     assert content["clusters"][0]["cluster"]["insecure-skip-tls-verify"] is True
     assert (
@@ -82,87 +67,351 @@ def test_write_temp_kubeconfig_server_inscure_certs():
     )
 
 
-def test_run_helm_naked():
-    module = MockedModule()
-    run_helm(module, "helm foo")
-
-    assert module.r["command"] == "helm foo"
-    assert module.r["environ_update"] == {}
-
-
-def test_run_helm_with_params():
-    module = MockedModule()
-    module.params = {
-        "api_key": "my-api-key",
-        "ca_cert": "my-ca-cert",
-        "host": "some-host",
-        "context": "my-context",
-        "release_namespace": "a-release-namespace",
-        "validate_certs": False,
-    }
-
-    run_helm(module, "helm foo")
-
-    assert module.r["command"] == "helm foo"
-    assert module.r["environ_update"]["HELM_KUBEAPISERVER"] == "some-host"
-    assert module.r["environ_update"]["HELM_KUBECONTEXT"] == "my-context"
-    assert module.r["environ_update"]["HELM_KUBETOKEN"] == "my-api-key"
-    assert module.r["environ_update"]["HELM_NAMESPACE"] == "a-release-namespace"
-    assert module.r["environ_update"]["KUBECONFIG"]
-    assert os.path.exists(module.r["environ_update"]["KUBECONFIG"])
-    module.do_cleanup_files()
-
-
-def test_run_helm_with_kubeconfig():
-
-    custom_config = {
+def test_write_temp_kubeconfig_with_kubeconfig():
+    kubeconfig = {
         "apiVersion": "v1",
+        "kind": "Config",
+        "clusters": [
+            {"cluster": {"server": "myfirstserver"}, "name": "cluster-01"},
+            {"cluster": {"server": "mysecondserver"}, "name": "cluster-02"},
+        ],
+        "contexts": [{"context": {"cluster": "cluster-01"}, "name": "test-context"}],
+        "current-context": "test-context",
+    }
+    content = write_temp_kubeconfig(
+        server="mythirdserver",
+        validate_certs=False,
+        ca_cert="some-ca-cert-for-test",
+        kubeconfig=kubeconfig,
+    )
+
+    expected = {
+        "apiVersion": "v1",
+        "kind": "Config",
         "clusters": [
             {
                 "cluster": {
-                    "certificate-authority-data": "LS0tLS1CRUdJTiBDRV",
-                    "server": "https://api.cluster.testing:6443",
+                    "server": "mythirdserver",
+                    "insecure-skip-tls-verify": True,
+                    "certificate-authority": "some-ca-cert-for-test",
                 },
-                "name": "api-cluster-testing:6443",
-            }
-        ],
-        "contexts": [
+                "name": "cluster-01",
+            },
             {
-                "context": {
-                    "cluster": "api-cluster-testing:6443",
-                    "namespace": "default",
-                    "user": "kubeadmin",
+                "cluster": {
+                    "server": "mythirdserver",
+                    "insecure-skip-tls-verify": True,
+                    "certificate-authority": "some-ca-cert-for-test",
                 },
-                "name": "context-1",
-            }
+                "name": "cluster-02",
+            },
         ],
-        "current-context": "context-1",
-        "kind": "Config",
-        "users": [
-            {
-                "name": "developer",
-                "user": {"token": "sha256~jbIvVieBC_8W6Pb-iH5vqC_BvvPHIxQMxUPLDnYvHYM"},
-            }
-        ],
+        "contexts": [{"context": {"cluster": "cluster-01"}, "name": "test-context"}],
+        "current-context": "test-context",
     }
 
-    # kubeconfig defined as path
-    _fd, tmpfile_name = tempfile.mkstemp()
-    with os.fdopen(_fd, "w") as fp:
-        yaml.dump(custom_config, fp)
+    assert content == expected
 
-    k1_module = MockedModule()
-    k1_module.params = {"kubeconfig": tmpfile_name}
-    run_helm(k1_module, "helm foo")
-    assert k1_module.r["environ_update"] == {"KUBECONFIG": tmpfile_name}
-    os.remove(tmpfile_name)
 
-    # kubeconfig defined as string
-    k2_module = MockedModule()
-    k2_module.params = {"kubeconfig": custom_config}
-    run_helm(k2_module, "helm foo")
+def test_module_get_helm_binary_from_params():
 
-    assert os.path.exists(k2_module.r["environ_update"]["KUBECONFIG"])
-    with open(k2_module.r["environ_update"]["KUBECONFIG"]) as f:
-        assert json.loads(f.read()) == custom_config
-    k2_module.do_cleanup_files()
+    helm_binary_path = MagicMock()
+    helm_sys_binary_path = MagicMock()
+
+    module = MagicMock()
+    module.params = {
+        "binary_path": helm_binary_path,
+    }
+    module.get_bin_path.return_value = helm_sys_binary_path
+
+    helm_module = AnsibleHelmModule(module=module)
+    assert helm_module.get_helm_binary() == helm_binary_path
+
+
+def test_module_get_helm_binary_from_system():
+
+    helm_sys_binary_path = MagicMock()
+    module = MagicMock()
+    module.params = {}
+    module.get_bin_path.return_value = helm_sys_binary_path
+
+    helm_module = AnsibleHelmModule(module=module)
+    assert helm_module.get_helm_binary() == helm_sys_binary_path
+
+
+def test_module_get_helm_plugin_list(ansible_helm_module):
+
+    ansible_helm_module.run_helm_command = MagicMock()
+    ansible_helm_module.run_helm_command.return_value = (0, "output", "error")
+
+    rc, out, err, command = ansible_helm_module.get_helm_plugin_list()
+
+    assert (rc, out, err) == (0, "output", "error")
+    assert command == "some/path/to/helm/executable plugin list"
+
+    ansible_helm_module.get_helm_binary.assert_called_once()
+    ansible_helm_module.run_helm_command.assert_called_once_with(
+        "some/path/to/helm/executable plugin list"
+    )
+
+
+def test_module_get_helm_plugin_list_failure(ansible_helm_module):
+
+    ansible_helm_module.run_helm_command = MagicMock()
+    ansible_helm_module.run_helm_command.return_value = (-1, "output", "error")
+
+    with pytest.raises(SystemExit):
+        ansible_helm_module.get_helm_plugin_list()
+
+    ansible_helm_module.fail_json.assert_called_once_with(
+        msg="Failed to get Helm plugin info",
+        command="some/path/to/helm/executable plugin list",
+        stdout="output",
+        stderr="error",
+        rc=-1,
+    )
+
+
+@pytest.mark.parametrize("no_values", [True, False])
+@pytest.mark.parametrize("get_all", [True, False])
+def test_module_get_values(ansible_helm_module, no_values, get_all):
+
+    expected = {"test": "units"}
+    output = "---\ntest: units\n"
+
+    if no_values:
+        expected = {}
+        output = "null"
+
+    ansible_helm_module.run_helm_command = MagicMock()
+    ansible_helm_module.run_helm_command.return_value = (0, output, "error")
+
+    release_name = "".join(
+        random.choice(string.ascii_letters + string.digits) for x in range(10)
+    )
+    result = ansible_helm_module.get_values(release_name, get_all=get_all)
+
+    ansible_helm_module.get_helm_binary.assert_called_once()
+    command = f"some/path/to/helm/executable get values --output=yaml {release_name}"
+    if get_all:
+        command += " -a"
+    ansible_helm_module.run_helm_command.assert_called_once_with(command)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "output,expected",
+    [
+        (
+            'version.BuildInfo{Version:"v3.10.3", GitCommit:7870ab3ed4135f136eec, GoVersion:"go1.18.9"}',
+            "3.10.3",
+        ),
+        ('Client: &version.Version{SemVer:"v3.12.3", ', "3.12.3"),
+        ('Client: &version.Version{SemVer:"v3.12.3"', None),
+    ],
+)
+def test_module_get_helm_version(ansible_helm_module, output, expected):
+
+    ansible_helm_module.run_command = MagicMock()
+    ansible_helm_module.run_command.return_value = (0, output, "error")
+
+    result = ansible_helm_module.get_helm_version()
+
+    ansible_helm_module.get_helm_binary.assert_called_once()
+    command = "some/path/to/helm/executable version"
+    ansible_helm_module.run_command.assert_called_once_with(command)
+    assert result == expected
+
+
+def test_module_run_helm_command(ansible_helm_module):
+
+    error = "".join(
+        random.choice(string.ascii_letters + string.digits) for x in range(10)
+    )
+    output = "".join(
+        random.choice(string.ascii_letters + string.digits) for x in range(10)
+    )
+
+    ansible_helm_module.run_command.return_value = (0, output, error)
+
+    ansible_helm_module._prepare_helm_environment = MagicMock()
+    env_update = {x: random.choice(string.ascii_letters) for x in range(10)}
+    ansible_helm_module._prepare_helm_environment.return_value = env_update
+
+    command = "".join(
+        random.choice(string.ascii_letters + string.digits) for x in range(10)
+    )
+    rc, out, err = ansible_helm_module.run_helm_command(command)
+
+    assert (rc, out, err) == (0, output, error)
+
+    ansible_helm_module.run_command.assert_called_once_with(
+        command, environ_update=env_update
+    )
+
+
+@pytest.mark.parametrize("fails_on_error", [True, False])
+def test_module_run_helm_command_failure(ansible_helm_module, fails_on_error):
+
+    error = "".join(
+        random.choice(string.ascii_letters + string.digits) for x in range(10)
+    )
+    output = "".join(
+        random.choice(string.ascii_letters + string.digits) for x in range(10)
+    )
+    return_code = random.randint(1, 10)
+    ansible_helm_module.run_command.return_value = (return_code, output, error)
+
+    ansible_helm_module._prepare_environment = MagicMock()
+
+    command = "".join(
+        random.choice(string.ascii_letters + string.digits) for x in range(10)
+    )
+
+    if fails_on_error:
+        with pytest.raises(SystemExit):
+            rc, out, err = ansible_helm_module.run_helm_command(
+                command, fails_on_error=fails_on_error
+            )
+        ansible_helm_module.fail_json.assert_called_with(
+            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
+                return_code, output, error
+            ),
+            stdout=output,
+            stderr=error,
+            command=command,
+        )
+    else:
+        rc, out, err = ansible_helm_module.run_helm_command(
+            command, fails_on_error=fails_on_error
+        )
+        assert (rc, out, err) == (return_code, output, error)
+
+
+@pytest.mark.parametrize(
+    "params,env_update,kubeconfig",
+    [
+        (
+            {
+                "api_key": "my-api-key",
+                "host": "some-host",
+                "context": "my-context",
+                "release_namespace": "a-release-namespace",
+            },
+            {
+                "HELM_KUBEAPISERVER": "some-host",
+                "HELM_KUBECONTEXT": "my-context",
+                "HELM_KUBETOKEN": "my-api-key",
+                "HELM_NAMESPACE": "a-release-namespace",
+            },
+            False,
+        ),
+        ({"kubeconfig": {"kube": "config"}}, {}, True),
+        ({"kubeconfig": "path_to_a_config_file"}, {}, True),
+    ],
+)
+def test_module_prepare_helm_environment(params, env_update, kubeconfig):
+
+    module = MagicMock()
+    module.params = params
+
+    helm_module = AnsibleHelmModule(module=module)
+
+    p_kubeconfig = params.get("kubeconfig")
+    tmpfile_name = None
+    if isinstance(p_kubeconfig, str):
+        _fd, tmpfile_name = tempfile.mkstemp()
+        with os.fdopen(_fd, "w") as fp:
+            yaml.dump({"some_custom": "kube_config"}, fp)
+        params["kubeconfig"] = tmpfile_name
+
+    result = helm_module._prepare_helm_environment()
+
+    kubeconfig_path = result.pop("KUBECONFIG", None)
+
+    assert env_update == result
+
+    if kubeconfig:
+        assert os.path.exists(kubeconfig_path)
+        if not tmpfile_name:
+            module.add_cleanup_file.assert_called_with(kubeconfig_path)
+    else:
+        assert kubeconfig_path is None
+
+    if tmpfile_name:
+        os.remove(tmpfile_name)
+
+
+@pytest.mark.parametrize(
+    "helm_version, is_env_var_set",
+    [
+        ("3.10.1", True),
+        ("3.10.0", True),
+        ("3.5.0", False),
+        ("3.8.0", False),
+        ("3.9.35", False),
+    ],
+)
+def test_module_prepare_helm_environment_with_validate_certs(
+    helm_version, is_env_var_set
+):
+
+    module = MagicMock()
+    module.params = {"validate_certs": False}
+
+    helm_module = AnsibleHelmModule(module=module)
+    helm_module.get_helm_version = MagicMock()
+    helm_module.get_helm_version.return_value = helm_version
+
+    result = helm_module._prepare_helm_environment()
+
+    if is_env_var_set:
+        assert result == {"HELM_KUBEINSECURE_SKIP_TLS_VERIFY": "true"}
+    else:
+        assert list(result.keys()) == ["KUBECONFIG"]
+        kubeconfig_path = result["KUBECONFIG"]
+        assert os.path.exists(kubeconfig_path)
+
+        with open(kubeconfig_path) as fd:
+            content = yaml.safe_load(fd)
+            assert content["clusters"][0]["cluster"]["insecure-skip-tls-verify"] is True
+        os.remove(kubeconfig_path)
+
+
+@pytest.mark.parametrize(
+    "helm_version, is_env_var_set",
+    [
+        ("3.10.0", True),
+        ("3.5.0", True),
+        ("3.4.9", False),
+    ],
+)
+def test_module_prepare_helm_environment_with_ca_cert(helm_version, is_env_var_set):
+
+    ca_cert = "".join(
+        random.choice(string.ascii_letters + string.digits) for i in range(50)
+    )
+    module = MagicMock()
+    module.params = {"ca_cert": ca_cert}
+
+    helm_module = AnsibleHelmModule(module=module)
+    helm_module.get_helm_version = MagicMock()
+    helm_module.get_helm_version.return_value = helm_version
+
+    result = helm_module._prepare_helm_environment()
+
+    if is_env_var_set:
+        assert list(result.keys()) == ["HELM_KUBECAFILE"]
+        assert result["HELM_KUBECAFILE"] == ca_cert
+    else:
+        assert list(result.keys()) == ["KUBECONFIG"]
+        kubeconfig_path = result["KUBECONFIG"]
+        assert os.path.exists(kubeconfig_path)
+
+        with open(kubeconfig_path) as fd:
+            content = yaml.safe_load(fd)
+            import json
+
+            print(json.dumps(content, indent=2))
+            assert content["clusters"][0]["cluster"]["certificate-authority"] == ca_cert
+        os.remove(kubeconfig_path)

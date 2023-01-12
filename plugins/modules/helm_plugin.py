@@ -109,12 +109,9 @@ rc:
 """
 
 import copy
-from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    run_helm,
-    get_helm_plugin_list,
+    AnsibleHelmModule,
     parse_helm_plugin_list,
-    get_helm_binary,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
     HELM_AUTH_ARG_SPEC,
@@ -152,7 +149,7 @@ def mutually_exclusive():
 
 
 def main():
-    module = AnsibleModule(
+    module = AnsibleHelmModule(
         argument_spec=argument_spec(),
         supports_check_mode=True,
         required_if=[
@@ -164,9 +161,8 @@ def main():
     )
 
     state = module.params.get("state")
-    helm_bin = get_helm_binary(module)
 
-    helm_cmd_common = helm_bin + " plugin"
+    helm_cmd_common = module.get_helm_binary() + " plugin"
 
     if state == "present":
         helm_cmd_common += " install %s" % module.params.get("plugin_path")
@@ -174,7 +170,9 @@ def main():
         if plugin_version is not None:
             helm_cmd_common += " --version=%s" % plugin_version
         if not module.check_mode:
-            rc, out, err = run_helm(module, helm_cmd_common, fails_on_error=False)
+            rc, out, err = module.run_helm_command(
+                helm_cmd_common, fails_on_error=False
+            )
         else:
             rc, out, err = (0, "", "")
 
@@ -208,15 +206,15 @@ def main():
             )
     elif state == "absent":
         plugin_name = module.params.get("plugin_name")
-        rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
-        out = parse_helm_plugin_list(module, output=output.splitlines())
+        rc, output, err, command = module.get_helm_plugin_list()
+        out = parse_helm_plugin_list(output=output.splitlines())
 
         if not out:
             module.exit_json(
                 failed=False,
                 changed=False,
                 msg="Plugin not found or is already uninstalled",
-                command=helm_cmd_common + " list",
+                command=command,
                 stdout=output,
                 stderr=err,
                 rc=rc,
@@ -232,7 +230,7 @@ def main():
                 failed=False,
                 changed=False,
                 msg="Plugin not found or is already uninstalled",
-                command=helm_cmd_common + " list",
+                command=command,
                 stdout=output,
                 stderr=err,
                 rc=rc,
@@ -240,7 +238,9 @@ def main():
 
         helm_uninstall_cmd = "%s uninstall %s" % (helm_cmd_common, plugin_name)
         if not module.check_mode:
-            rc, out, err = run_helm(module, helm_uninstall_cmd, fails_on_error=False)
+            rc, out, err = module.run_helm_command(
+                helm_uninstall_cmd, fails_on_error=False
+            )
         else:
             rc, out, err = (0, "", "")
 
@@ -262,15 +262,15 @@ def main():
         )
     elif state == "latest":
         plugin_name = module.params.get("plugin_name")
-        rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
-        out = parse_helm_plugin_list(module, output=output.splitlines())
+        rc, output, err, command = module.get_helm_plugin_list()
+        out = parse_helm_plugin_list(output=output.splitlines())
 
         if not out:
             module.exit_json(
                 failed=False,
                 changed=False,
                 msg="Plugin not found",
-                command=helm_cmd_common + " list",
+                command=command,
                 stdout=output,
                 stderr=err,
                 rc=rc,
@@ -286,7 +286,7 @@ def main():
                 failed=False,
                 changed=False,
                 msg="Plugin not found",
-                command=helm_cmd_common + " list",
+                command=command,
                 stdout=output,
                 stderr=err,
                 rc=rc,
@@ -294,7 +294,9 @@ def main():
 
         helm_update_cmd = "%s update %s" % (helm_cmd_common, plugin_name)
         if not module.check_mode:
-            rc, out, err = run_helm(module, helm_update_cmd, fails_on_error=False)
+            rc, out, err = module.run_helm_command(
+                helm_update_cmd, fails_on_error=False
+            )
         else:
             rc, out, err = (0, "", "")
 

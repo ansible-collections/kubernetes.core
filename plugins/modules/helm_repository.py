@@ -178,10 +178,9 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    run_helm,
-    get_helm_binary,
+    AnsibleHelmModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
     HELM_AUTH_ARG_SPEC,
@@ -199,10 +198,10 @@ def get_repository(state, repo_name):
 
 
 # Get repository status
-def get_repository_status(module, command, repository_name):
-    list_command = command + " repo list --output=yaml"
+def get_repository_status(module, repository_name):
+    list_command = module.get_helm_binary() + " repo list --output=yaml"
 
-    rc, out, err = run_helm(module, list_command, fails_on_error=False)
+    rc, out, err = module.run_helm_command(list_command, fails_on_error=False)
 
     # no repo => rc=1 and 'no repositories to show' in output
     if rc == 1 and "no repositories to show" in err:
@@ -271,7 +270,7 @@ def argument_spec():
 def main():
     global module
 
-    module = AnsibleModule(
+    module = AnsibleHelmModule(
         argument_spec=argument_spec(),
         required_together=[["repo_username", "repo_password"]],
         required_if=[("repo_state", "present", ["repo_url"])],
@@ -292,9 +291,9 @@ def main():
     pass_credentials = module.params.get("pass_credentials")
     force_update = module.params.get("force_update")
 
-    helm_cmd = get_helm_binary(module)
+    helm_cmd = module.get_helm_binary()
 
-    repository_status = get_repository_status(module, helm_cmd, repo_name)
+    repository_status = get_repository_status(module, repo_name)
 
     if repo_state == "absent" and repository_status is not None:
         helm_cmd = delete_repository(helm_cmd, repo_name)
@@ -321,7 +320,7 @@ def main():
     elif not changed:
         module.exit_json(changed=False, repo_name=repo_name, repo_url=repo_url)
 
-    rc, out, err = run_helm(module, helm_cmd)
+    rc, out, err = module.run_helm_command(helm_cmd)
 
     if repo_password is not None:
         helm_cmd = helm_cmd.replace(repo_password, "******")

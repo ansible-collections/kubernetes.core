@@ -350,14 +350,10 @@ except ImportError:
     IMP_YAML_ERR = traceback.format_exc()
     IMP_YAML = False
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
-    run_helm,
-    get_values,
-    get_helm_plugin_list,
+    AnsibleHelmModule,
     parse_helm_plugin_list,
-    get_helm_version,
-    get_helm_binary,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
     HELM_AUTH_ARG_SPEC,
@@ -376,39 +372,41 @@ def get_release(state, release_name):
     return None
 
 
-def get_release_status(module, command, release_name):
+def get_release_status(module, release_name):
     """
     Get Release state from deployed release
     """
 
-    list_command = command + " list --output=yaml --filter " + release_name
+    list_command = (
+        module.get_helm_binary() + " list --output=yaml --filter " + release_name
+    )
 
-    rc, out, err = run_helm(module, list_command)
+    rc, out, err = module.run_helm_command(list_command)
 
     release = get_release(yaml.safe_load(out), release_name)
 
     if release is None:  # not install
         return None
 
-    release["values"] = get_values(module, command, release_name)
+    release["values"] = module.get_values(release_name)
 
     return release
 
 
-def run_repo_update(module, command):
+def run_repo_update(module):
     """
     Run Repo update
     """
-    repo_update_command = command + " repo update"
-    rc, out, err = run_helm(module, repo_update_command)
+    repo_update_command = module.get_helm_binary() + " repo update"
+    rc, out, err = module.run_helm_command(repo_update_command)
 
 
-def run_dep_update(module, command, chart_ref):
+def run_dep_update(module, chart_ref):
     """
     Run dependency update
     """
-    dep_update = command + " dependency update " + chart_ref
-    rc, out, err = run_helm(module, dep_update)
+    dep_update = module.get_helm_binary() + " dependency update " + chart_ref
+    rc, out, err = module.run_helm_command(dep_update)
 
 
 def fetch_chart_info(module, command, chart_ref):
@@ -417,7 +415,7 @@ def fetch_chart_info(module, command, chart_ref):
     """
     inspect_command = command + " show chart " + chart_ref
 
-    rc, out, err = run_helm(module, inspect_command)
+    rc, out, err = module.run_helm_command(inspect_command)
 
     return yaml.safe_load(out)
 
@@ -537,13 +535,13 @@ def load_values_files(values_files):
     return values
 
 
-def get_plugin_version(helm_bin, plugin):
+def get_plugin_version(plugin):
     """
     Check if helm plugin is installed and return corresponding version
     """
 
-    rc, output, err = get_helm_plugin_list(module, helm_bin=helm_bin)
-    out = parse_helm_plugin_list(module, output=output.splitlines())
+    rc, output, err, command = module.get_helm_plugin_list()
+    out = parse_helm_plugin_list(output=output.splitlines())
 
     if not out:
         return None
@@ -556,7 +554,6 @@ def get_plugin_version(helm_bin, plugin):
 
 def helmdiff_check(
     module,
-    helm_cmd,
     release_name,
     chart_ref,
     release_values,
@@ -568,7 +565,7 @@ def helmdiff_check(
     """
     Use helm diff to determine if a release would change by upgrading a chart.
     """
-    cmd = helm_cmd + " diff upgrade"
+    cmd = module.get_helm_binary() + " diff upgrade"
     cmd += " " + release_name
     cmd += " " + chart_ref
 
@@ -584,12 +581,13 @@ def helmdiff_check(
         with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         cmd += " -f=" + path
+        module.add_cleanup_file(path)
 
     if values_files:
         for values_file in values_files:
             cmd += " -f=" + values_file
 
-    rc, out, err = run_helm(module, cmd)
+    rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
 
 
@@ -652,7 +650,7 @@ def argument_spec():
 
 def main():
     global module
-    module = AnsibleModule(
+    module = AnsibleHelmModule(
         argument_spec=argument_spec(),
         required_if=[
             ("release_state", "present", ["release_name", "chart_ref"]),
@@ -660,7 +658,6 @@ def main():
         ],
         mutually_exclusive=[
             ("context", "ca_cert"),
-            ("kubeconfig", "ca_cert"),
             ("replace", "history_max"),
             ("wait_timeout", "timeout"),
         ],
@@ -696,24 +693,20 @@ def main():
     history_max = module.params.get("history_max")
     timeout = module.params.get("timeout")
 
-    helm_cmd_common = get_helm_binary(module)
-    helm_bin = helm_cmd_common
-
     if update_repo_cache:
-        run_repo_update(module, helm_cmd_common)
+        run_repo_update(module)
 
     # Get real/deployed release status
-    release_status = get_release_status(module, helm_cmd_common, release_name)
+    release_status = get_release_status(module, release_name)
 
-    # keep helm_cmd_common for get_release_status in module_exit_json
-    helm_cmd = helm_cmd_common
+    helm_cmd = module.get_helm_binary()
     opt_result = {}
     if release_state == "absent" and release_status is not None:
         if replace:
             module.fail_json(msg="replace is not applicable when state is absent")
 
         if wait:
-            helm_version = get_helm_version(module, helm_cmd_common)
+            helm_version = module.get_helm_version()
             if LooseVersion(helm_version) < LooseVersion("3.7.0"):
                 opt_result["warnings"] = []
                 opt_result["warnings"].append(
@@ -746,7 +739,7 @@ def main():
                 if not chart_repo_url and not re.fullmatch(
                     r"^http[s]*://[\w.:/?&=-]+$", chart_ref
                 ):
-                    run_dep_update(module, helm_cmd_common, chart_ref)
+                    run_dep_update(module, chart_ref)
 
                     # To not add --dependency-update option in the deploy function
                     dependency_update = False
@@ -790,7 +783,7 @@ def main():
 
         else:
 
-            helm_diff_version = get_plugin_version(helm_bin, "diff")
+            helm_diff_version = get_plugin_version("diff")
             if helm_diff_version and (
                 not chart_repo_url
                 or (
@@ -800,7 +793,6 @@ def main():
             ):
                 (would_change, prepared) = helmdiff_check(
                     module,
-                    helm_cmd_common,
                     release_name,
                     chart_ref,
                     release_values,
@@ -866,13 +858,13 @@ def main():
             **opt_result,
         )
 
-    rc, out, err = run_helm(module, helm_cmd)
+    rc, out, err = module.run_helm_command(helm_cmd)
 
     module.exit_json(
         changed=changed,
         stdout=out,
         stderr=err,
-        status=get_release_status(module, helm_cmd_common, release_name),
+        status=get_release_status(module, release_name),
         command=helm_cmd,
         **opt_result,
     )
