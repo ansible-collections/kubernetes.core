@@ -49,6 +49,9 @@
 - name: Test helm pull
   include_tasks: tests_helm_pull.yml
 
+- name: Test helm set values
+  include_tasks: tests_helm_set.yml
+
 - name: Clean helm install
   file:
     path: "{{ item }}"

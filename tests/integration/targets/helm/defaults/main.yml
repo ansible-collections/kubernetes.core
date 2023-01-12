@@ -31,3 +31,4 @@ test_namespace:
   - "helm-in-memory-kubeconfig"
   - "helm-kubeconfig-with-insecure-skip-tls-verify"
   - "helm-kubeconfig-with-ca-cert"
+  - "helm-set-values"
