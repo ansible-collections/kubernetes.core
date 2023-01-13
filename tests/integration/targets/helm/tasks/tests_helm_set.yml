@@ -49,6 +49,7 @@
 
   - name: Get release info
     helm_info:
+      binary_path: "{{ helm_binary }}"
       release_name: test-apache
       release_namespace: "{{ helm_namespace }}"
     register: values
@@ -90,6 +91,7 @@
 
     - name: Get release info
       helm_info:
+        binary_path: "{{ helm_binary }}"
         release_name: test-minio
         release_namespace: "{{ helm_namespace }}"
       register: values
