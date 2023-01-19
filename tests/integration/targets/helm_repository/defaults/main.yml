@@ -1,0 +1,3 @@
+---
+chart_test_repo: "https://kubernetes.github.io/ingress-nginx"
+helm_binary: "/tmp/helm/{{ ansible_system | lower }}-amd64/helm"

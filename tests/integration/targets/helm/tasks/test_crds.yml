@@ -2,11 +2,12 @@
 - name: Test CRDs
   vars:
     test_chart: "test-crds"
+    helm_namespace: "{{ test_namespace[0] }}"
   block:
     - name: Create namespace
       k8s:
         kind: Namespace
-        name: "{{ test_namespace[4] }}"
+        name: "{{ helm_namespace }}"
 
     - name: Copy test chart
       copy:
@@ -17,7 +18,7 @@
       helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/helm_test_crds/{{ test_chart }}"
-        namespace: "{{ test_namespace[4] }}"
+        namespace: "{{ helm_namespace }}"
         name: test-crds
         skip_crds: true
       register: install
@@ -33,7 +34,7 @@
           apiVersion: ansible.com/v1
           kind: Foo
           metadata:
-            namespace: "{{ test_namespace[4] }}"
+            namespace: "{{ helm_namespace }}"
             name: test-foo
           foobar: footest
       ignore_errors: true
@@ -48,7 +49,7 @@
     - name: Uninstall chart
       helm:
         binary_path: "{{ helm_binary }}"
-        namespace: "{{ test_namespace[4] }}"
+        namespace: "{{ helm_namespace }}"
         name: test-crds
         state: absent
 
@@ -56,7 +57,7 @@
       helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/helm_test_crds/{{ test_chart }}"
-        namespace: "{{ test_namespace[4] }}"
+        namespace: "{{ helm_namespace }}"
         name: test-crds
 
     - name: Create custom resource
@@ -65,7 +66,7 @@
           apiVersion: ansible.com/v1
           kind: Foo
           metadata:
-            namespace: "{{ test_namespace[4] }}"
+            namespace: "{{ helm_namespace }}"
             name: test-foo
           foobar: footest
       register: result
@@ -85,7 +86,7 @@
     - name: Remove namespace
       k8s:
         kind: Namespace
-        name: "{{ test_namespace[4] }}"
+        name: "{{ helm_namespace }}"
         state: absent
       ignore_errors: true
 

@@ -5,10 +5,6 @@
   register: test_version
 
 - block:
-  - set_fact:
-      chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
-      chart_name: "test-wait-uninstall"
-      helm_namespace: "{{ test_namespace[2] }}"
 
   - name: Install chart
     helm:
@@ -63,6 +59,11 @@
       namespace: "{{ helm_namespace }}"
       wait: yes
     register: uninstall
+
+  vars:
+    chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
+    chart_name: "test-wait-uninstall"
+    helm_namespace: "{{ test_namespace[1] }}"
 
   always:
   - name: Delete temp directory

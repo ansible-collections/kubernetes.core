@@ -1,40 +1,23 @@
 ---
-- name: Ensure helm is not installed
-  file:
-    path: "{{ item }}"
-    state: absent
-  with_items:
-    - "/tmp/helm"
+# - name: Ensure helm is not installed
+#   file:
+#     path: "{{ item }}"
+#     state: absent
+#   with_items:
+#     - "/tmp/helm"
 
-- name: Check failed if helm is not installed
-  include_tasks: test_helm_not_installed.yml
+# - name: Check failed if helm is not installed
+#   include_tasks: test_helm_not_installed.yml
 
-- name: "Install {{ helm_version }}"
-  include_tasks: install.yml
+# - name: "Install {{ helm_version }}"
+#   include_role:
+#     name: install_helm
 
 - name: "Ensure we honor the environment variables"
   include_tasks: test_read_envvars.yml
 
-- name: tests_repository
-  include_tasks: tests_repository.yml
-
-- name: Deploy charts
-  include_tasks: "tests_chart/{{ test_chart_type }}.yml"
-  loop_control:
-    loop_var: test_chart_type
-  with_items:
-    - from_local_path
-    - from_repository
-    - from_url
-
 - name: test helm dependency update
   include_tasks: test_up_dep.yml
-
-- name: Test helm plugin
-  include_tasks: tests_helm_plugin.yml
-
-- name: Test helm diff
-  include_tasks: tests_helm_diff.yml
 
 - name: Test helm uninstall
   include_tasks: test_helm_uninstall.yml
@@ -42,15 +25,6 @@
 # https://github.com/ansible-collections/community.kubernetes/issues/296
 - name: Test Skip CRDS feature in helm chart install
   include_tasks: test_crds.yml
-
-- name: Test helm modules with custom kube config, validate_certs and/or ca_cert
-  include_tasks: tests_helm_kubeconfig.yml
-
-- name: Test helm pull
-  include_tasks: tests_helm_pull.yml
-
-- name: Test helm set values
-  include_tasks: tests_helm_set.yml
 
 - name: Clean helm install
   file:

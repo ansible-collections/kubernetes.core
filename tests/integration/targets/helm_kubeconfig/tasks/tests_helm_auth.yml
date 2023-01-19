@@ -1,0 +1,197 @@
+---
+- name: create temporary directory
+  tempfile:
+    state: directory
+    suffix: .helm
+  register: _dir
+
+- name: Install helm binary
+  block:
+    - name: "Install {{ test_helm_version }}"
+      include_role:
+        name: install_helm
+      vars:
+        helm_version: "{{ test_helm_version }}"
+
+  when: test_helm_version is defined
+
+- set_fact:
+    saved_kubeconfig_path: "{{ _dir.path }}/config"
+
+- block:
+    - name: Copy default kubeconfig
+      copy:
+        remote_src: true
+        src: "{{ default_kubeconfig_path }}"
+        dest: "{{ saved_kubeconfig_path }}"
+
+    - name: Delete default kubeconfig
+      file:
+        path: "{{ default_kubeconfig_path }}"
+        state: absent
+
+    # helm_plugin and helm_plugin_info
+    - name: Install subenv plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+        state: present
+        plugin_path: https://github.com/hydeenoble/helm-subenv
+      register: plugin
+
+    - assert:
+        that:
+          - plugin is changed
+
+    - name: Gather info about all plugin
+      helm_plugin_info:
+        binary_path: "{{ helm_binary }}"
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+      register: plugin_info
+
+    - assert:
+        that:
+          - '"plugin_list" in plugin_info'
+          - plugin_info.plugin_list != []
+
+    # helm_repository, helm, helm_info
+    - name: Add test_bitnami chart repository
+      helm_repository:
+        binary_path: "{{ helm_binary }}"
+        name: test_bitnami
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+        repo_url: https://charts.bitnami.com/bitnami
+      register: repository
+
+    - name: Assert that repository was added
+      assert:
+        that:
+          - repository is changed
+
+    - name: Install chart from repository added before
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: rabbitmq
+        chart_ref: test_bitnami/rabbitmq
+        namespace: "{{ helm_namespace }}"
+        update_repo_cache: true
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+        create_namespace: true
+      register: deploy
+
+    - name: Assert chart was successfully deployed
+      assert:
+        that:
+          - deploy is changed
+
+    - name: Get chart content
+      helm_info:
+        binary_path: "{{ helm_binary }}"
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+        name: "rabbitmq"
+        namespace: "{{ helm_namespace }}"
+      register: chart_info
+
+    - name: Assert chart was successfully deployed
+      assert:
+        that:
+          - '"status" in chart_info'
+          - chart_info.status.status is defined
+          - chart_info.status.status == "deployed"
+
+    - name: Remove chart
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: rabbitmq
+        namespace: "{{ helm_namespace }}"
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+        state: absent
+      register: remove_chart
+
+    - name: Assert chart was successfully removed
+      assert:
+        that:
+          - remove_chart is changed
+
+    - name: Get chart content
+      helm_info:
+        binary_path: "{{ helm_binary }}"
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+        name: "rabbitmq"
+        namespace: "{{ helm_namespace }}"
+      register: chart_info
+
+    - name: Assert chart was successfully deployed
+      assert:
+        that:
+          - '"status" not in chart_info'
+
+    - name: Remove chart repository
+      helm_repository:
+        binary_path: "{{ helm_binary }}"
+        name: test_bitnami
+        kubeconfig: "{{ test_kubeconfig | default(omit) }}"
+        validate_certs: "{{ test_validate_certs | default(omit) }}"
+        ca_cert: "{{ test_ca_cert | default(omit) }}"
+        state: absent
+      register: remove
+
+    - name: Assert that repository was removed
+      assert:
+        that:
+          - remove is changed
+
+  always:
+    - name: Return kubeconfig
+      copy:
+        remote_src: true
+        src: "{{ saved_kubeconfig_path }}"
+        dest: "{{ default_kubeconfig_path }}"
+      ignore_errors: true
+
+    - name: Delete temporary directory
+      file:
+        path: "{{ _dir.path }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Delete temporary directory for helm install
+      file:
+        path: "{{ _helm_install.path }}"
+        state: absent
+      ignore_errors: true
+      when: _helm_install is defined
+
+    - name: Remove subenv plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_name: subenv
+        state: absent
+      ignore_errors: true
+
+    - name: Delete namespace
+      k8s:
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+      ignore_errors: true
+
+    - name: Delete helm repository
+      helm_repository:
+        binary_path: "{{ helm_binary }}"
+        name: test_bitnami
+        state: absent
+      ignore_errors: true

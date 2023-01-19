@@ -1,0 +1,7 @@
+---
+helm_binary: "/tmp/helm/{{ ansible_system | lower }}-amd64/helm"
+default_kubeconfig_path: "~/.kube/config"
+test_namespace:
+  - "helm-in-memory-kubeconfig"
+  - "helm-kubeconfig-with-ca-cert"
+  - "helm-kubeconfig-with-insecure-skip-tls-verify"

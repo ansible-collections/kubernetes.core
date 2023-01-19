@@ -1,0 +1,232 @@
+---
+- name: Define helm versions to test
+  set_fact:
+    helm_versions:
+      - 3.8.0
+      - 3.1.0
+      - 3.0.0
+      - 2.3.0
+
+- block:
+    - name: Create temp directory for helm tests
+      tempfile:
+        state: directory
+      register: tmpdir
+
+    - name: Set temp directory fact
+      set_fact:
+        temp_dir: "{{ tmpdir.path }}"
+
+    - set_fact:
+        destination: "{{ temp_dir }}"
+
+    - name: Create Helm directories
+      file:
+        state: directory
+        path: "{{ temp_dir }}/{{ item }}"
+      with_items: "{{ helm_versions }}"
+
+    - name: Unarchive Helm binary
+      unarchive:
+        src: "https://get.helm.sh/helm-v{{ item }}-linux-amd64.tar.gz"
+        dest: "{{ temp_dir }}/{{ item }}"
+        remote_src: yes
+      with_items: "{{ helm_versions }}"
+
+    # Testing helm pull with helm version == 2.3.0
+    - block:
+        - name: Assert that helm pull failed with helm <= 3.0.0
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
+            destination: "{{ destination }}"
+          ignore_errors: true
+          register: _result
+
+        - name: assert that module failed with proper message
+          assert:
+            that:
+              - _result is failed
+              - _result.msg == "This module requires helm >= 3.0.0, current version is 2.3.0"
+
+      vars:
+        helm_path: "{{ temp_dir }}/2.3.0/linux-amd64/helm"
+
+    # Testing helm pull with helm version == 3.0.0
+    - block:
+        - name: Download chart using chart_ssl_cert_file
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
+            destination: "{{ destination }}"
+            chart_ssl_cert_file: ssl_cert_file
+          ignore_errors: true
+          check_mode: true
+          register: _result
+
+        - name: assert that module failed with proper message
+          assert:
+            that:
+              - _result is failed
+              - _result.msg == "Parameter chart_ssl_cert_file requires helm >= 3.1.0, current version is 3.0.0"
+
+        - name: Download chart using chart_ssl_key_file
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
+            destination: "{{ destination }}"
+            chart_ssl_key_file: ssl_key_file
+          ignore_errors: true
+          check_mode: true
+          register: _result
+
+        - name: assert that module failed with proper message
+          assert:
+            that:
+              - _result is failed
+              - _result.msg == "Parameter chart_ssl_key_file requires helm >= 3.1.0, current version is 3.0.0"
+
+        - name: Download chart using chart_ca_cert
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
+            destination: "{{ destination }}"
+            chart_ca_cert: ca_cert_file
+          ignore_errors: true
+          check_mode: true
+          register: _result
+
+        - name: assert that module failed with proper message
+          assert:
+            that:
+              - _result is failed
+              - _result.msg == "Parameter chart_ca_cert requires helm >= 3.1.0, current version is 3.0.0"
+
+      vars:
+        helm_path: "{{ temp_dir }}/3.0.0/linux-amd64/helm"
+
+    # Testing helm pull with helm version == 3.1.0
+    - block:
+        - name: Download chart using chart_ssl_cert_file, chart_ca_cert, chart_ssl_key_file
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
+            destination: "{{ destination }}"
+            chart_ssl_cert_file: ssl_cert_file
+            chart_ssl_key_file: ssl_key_file
+            chart_ca_cert: ca_cert_file
+          check_mode: true
+          register: _result
+
+        - name: assert that module failed with proper message
+          assert:
+            that:
+              - _result is changed
+              - '"--ca-file ca_cert_file" in _result.command'
+              - '"--cert-file ssl_cert_file" in _result.command'
+              - '"--key-file ssl_key_file" in _result.command'
+
+        - name: Download chart using skip_tls_certs_check
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
+            destination: "{{ destination }}"
+            skip_tls_certs_check: true
+          ignore_errors: true
+          check_mode: true
+          register: _result
+
+        - name: assert that module failed with proper message
+          assert:
+            that:
+              - _result is failed
+              - _result.msg == "Parameter skip_tls_certs_check requires helm >= 3.3.0, current version is 3.1.0"
+
+      vars:
+        helm_path: "{{ temp_dir }}/3.1.0/linux-amd64/helm"
+
+    # Testing helm pull with helm version == 3.8.0
+    - block:
+        # Test options chart_version, verify, pass-credentials, provenance, untar_chart
+        # skip_tls_certs_check, repo_url, repo_username, repo_password
+        - name: Testing chart version
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: redis
+            destination: "{{ destination }}"
+            chart_version: "0.2.1"
+            verify_chart: true
+            pass_credentials: true
+            provenance: true
+            untar_chart: true
+            skip_tls_certs_check: true
+            repo_url: "https://charts.bitnami.com/bitnami"
+            repo_username: ansible
+            repo_password: testing123
+            verify_chart_keyring: pubring.gpg
+          check_mode: true
+          register: _result
+
+        - assert:
+            that:
+              - _result is changed
+              - '"--version 0.2.1" in _result.command'
+              - '"--verify" in _result.command'
+              - '"--pass-credentials" in _result.command'
+              - '"--prov" in _result.command'
+              - '"--untar" in _result.command'
+              - '"--insecure-skip-tls-verify" in _result.command'
+              - '"--repo https://charts.bitnami.com/bitnami" in _result.command'
+              - '"--username ansible" in _result.command'
+              - '"--password ***" in _result.command'
+              - '"--keyring pubring.gpg" in _result.command'
+
+        - name: Download chart using chart_ref
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
+            destination: "{{ destination }}"
+          register: _result
+
+        - name: Check chart on local filesystem
+          stat:
+            path: "{{ destination }}/grafana-5.6.0.tgz"
+          register: _chart
+
+        - name: Validate that chart was downloaded
+          assert:
+            that:
+              - _result is changed
+              - _chart.stat.exists
+              - _chart.stat.isreg
+
+        - name: Download chart using untar_chart
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: redis
+            destination: "{{ destination }}"
+            repo_url: "https://charts.bitnami.com/bitnami"
+            untar_chart: true
+          register: _result
+
+        - name: Check chart on local filesystem
+          stat:
+            path: "{{ destination }}/redis"
+          register: _chart
+
+        - name: Validate that chart was downloaded
+          assert:
+            that:
+              - _result is changed
+              - _chart.stat.exists
+              - _chart.stat.isdir
+
+      vars:
+        helm_path: "{{ temp_dir }}/3.8.0/linux-amd64/helm"
+
+
+  always:
+    - name: Delete temp directory
+      file:
+        state: absent
+        path: "{{ temp_dir }}"

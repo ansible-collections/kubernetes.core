@@ -9,9 +9,6 @@
         - test-chart
         - dep-up
 
-    - set_fact:
-        helm_namespace: "{{ test_namespace[10] }}"
-
     - name: "Test chart with dependency_update false"
       helm:
         binary_path: "{{ helm_binary }}"
@@ -74,6 +71,9 @@
           - stat_result.stat.exists
         success_msg: "subchart exist in the chart directory"
         fail_msg: "subchart not exist in the charts directory"
+  vars:
+    helm_namespace: "{{ test_namespace[3] }}"
+
   always:
     - name: Remove helm namespace
       k8s:
@@ -81,8 +81,6 @@
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
-        wait: true
-        wait_timeout: 180
 
     - name: "Remove charts"
       file:
@@ -152,6 +150,10 @@
           - stat_result.results[1].stat.exists
         success_msg: "subchart not exist in the charts directory"
         fail_msg: "There is no Subchart pulled"
+
+  vars:
+    helm_namespace: "{{ test_namespace[4] }}"
+
   always:
     - name: Remove helm namespace
       k8s:
@@ -159,8 +161,6 @@
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
-        wait: true
-        wait_timeout: 180
 
     - name: "Remove charts"
       file:
