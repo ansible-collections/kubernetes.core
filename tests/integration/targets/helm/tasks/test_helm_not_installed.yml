@@ -4,7 +4,7 @@
     binary_path: "{{ helm_binary}}_fake"
     name: test
     chart_ref: "{{ chart_test }}"
-    namespace: "a-namespace-to-install-in"
+    namespace: "helm-test"
   ignore_errors: yes
   register: helm_missing_binary
 

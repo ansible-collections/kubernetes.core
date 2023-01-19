@@ -3,8 +3,10 @@
     binary_path: "{{ helm_binary }}"
     state: absent
     name: does-not-exist
-    namespace: "{{ test_namespace[2] }}"
+    namespace: "{{ helm_namespace }}"
   environment:
     K8S_AUTH_HOST: somewhere
+  vars:
+    helm_namespace: "{{ test_namespace[2] }}"
   register: _helm_result
   failed_when: '"http://somewhere/version" not in _helm_result.stderr'

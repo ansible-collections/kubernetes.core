@@ -1,0 +1,111 @@
+---
+- name: Git clone stable repo
+  git:
+    repo: "{{ chart_test_git_repo }}"
+    dest: /tmp/helm_test_repo
+    version: 631eb8413f6728962439488f48d7d6fbb954a6db
+    depth: 1
+
+- name: Git clone stable repo upgrade
+  git:
+    repo: "{{ chart_test_git_repo }}"
+    dest: /tmp/helm_test_repo_upgrade
+    version: d37b5025ffc8be49699898369fbb59661e2a8ffb
+    depth: 1
+
+- name: Install Chart from local path
+  include_tasks: "../tests_chart.yml"
+  vars:
+    source: local_path
+    chart_test: "{{ chart_test_local_path }}"
+    chart_source: "/tmp/helm_test_repo/stable/{{ chart_test_local_path }}/"
+    chart_source_upgrade: "/tmp/helm_test_repo_upgrade/stable/{{ chart_test_local_path }}/"
+    chart_test_version: "{{ chart_test_version_local_path }}"
+    chart_test_version_upgrade: "{{ chart_test_version_upgrade_local_path }}"
+    chart_name: "local-path-001"
+    helm_namespace: "{{ test_namespace[4] }}"
+
+- name: Test appVersion idempotence
+  vars:
+    chart_test: "test-chart"
+    chart_test_upgrade: "test-chart-v2"
+    chart_test_version: "0.1.0"
+    chart_test_version_upgrade: "0.2.0"
+    chart_test_app_version: "v1"
+    chart_test_upgrade_app_version: "v2"
+  block:
+    - name: Copy test chart
+      copy:
+        src: "{{ chart_test }}"
+        dest: "/tmp/helm_test_appversion/test-chart/"
+
+    - name: Copy test chart v2
+      copy:
+        src: "{{ chart_test_upgrade }}"
+        dest: "/tmp/helm_test_appversion/test-chart/"
+
+    # create package with appVersion v1
+    - name: "Package chart into archive with appVersion {{ chart_test_app_version }}"
+      command: "{{ helm_binary }} package --app-version {{ chart_test_app_version }} /tmp/helm_test_appversion/test-chart/{{ chart_test }}"
+    - name: "Move appVersion {{ chart_test_app_version }} chart archive"
+      copy:
+        remote_src: true
+        src: "test-chart-{{ chart_test_version }}.tgz"
+        dest: "/tmp/helm_test_appversion/test-chart/{{ chart_test }}-{{ chart_test_app_version }}-{{ chart_test_version }}.tgz"
+
+    # create package with appVersion v2
+    - name: "Package chart into archive with appVersion {{ chart_test_upgrade_app_version }}"
+      command: "{{ helm_binary }} package --app-version {{ chart_test_upgrade_app_version }} /tmp/helm_test_appversion/test-chart/{{ chart_test_upgrade }}"
+    - name: "Move appVersion {{ chart_test_upgrade_app_version }} chart archive"
+      copy:
+        remote_src: true
+        src: "test-chart-{{ chart_test_version_upgrade }}.tgz"
+        dest: "/tmp/helm_test_appversion/test-chart/{{ chart_test }}-{{ chart_test_upgrade_app_version }}-{{ chart_test_version_upgrade }}.tgz"
+
+    - name: Install Chart from local path
+      include_tasks: "../tests_chart.yml"
+      vars:
+        source: local_path
+        chart_source: "/tmp/helm_test_appversion/test-chart/{{ chart_test }}-{{ chart_test_app_version }}-{{ chart_test_version }}.tgz"
+        chart_source_upgrade: "/tmp/helm_test_appversion/test-chart/{{ chart_test }}-{{ chart_test_upgrade_app_version }}-{{ chart_test_version_upgrade }}.tgz"
+        chart_name: "local-path-002"
+        helm_namespace: "{{ test_namespace[5] }}"
+
+- name: Test appVersion handling when null
+  vars:
+    chart_test: "appversionless-chart"
+    chart_test_upgrade: "appversionless-chart-v2"
+    chart_test_version: "0.1.0"
+    chart_test_version_upgrade: "0.2.0"
+  block:
+    - name: Copy test chart
+      copy:
+        src: "{{ chart_test }}"
+        dest: "/tmp/helm_test_appversion/test-null/"
+
+    - name: Copy test chart v2
+      copy:
+        src: "{{ chart_test_upgrade }}"
+        dest: "/tmp/helm_test_appversion/test-null/"
+
+    # create package with appVersion v1
+    - name: "Package chart into archive with appVersion v1"
+      command: "{{ helm_binary }} package --app-version v1 /tmp/helm_test_appversion/test-null/{{ chart_test_upgrade }}"
+
+    - name: Install Chart from local path
+      include_tasks: "../tests_chart.yml"
+      vars:
+        source: local_path
+        chart_source: "/tmp/helm_test_appversion/test-null/{{ chart_test }}/"
+        chart_source_upgrade: "{{ chart_test }}-{{ chart_test_version_upgrade }}.tgz"
+        chart_name: "local-path-003"
+        helm_namespace: "{{ test_namespace[6] }}"
+
+- name: Remove clone repos
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /tmp/helm_test_repo
+    - /tmp/helm_test_repo_upgrade
+    - /tmp/helm_test_appversion

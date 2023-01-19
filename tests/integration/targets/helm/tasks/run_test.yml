@@ -10,11 +10,20 @@
 #   include_tasks: test_helm_not_installed.yml
 
 # - name: "Install {{ helm_version }}"
-#   include_role:
-#     name: install_helm
+  # include_role:
+  #   name: install_helm
 
 - name: "Ensure we honor the environment variables"
   include_tasks: test_read_envvars.yml
+
+- name: Deploy charts
+  include_tasks: "tests_chart/{{ test_chart_type }}.yml"
+  loop_control:
+    loop_var: test_chart_type
+  with_items:
+    - from_local_path
+    - from_repository
+    - from_url
 
 - name: test helm dependency update
   include_tasks: test_up_dep.yml

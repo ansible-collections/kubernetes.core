@@ -2,4 +2,4 @@
 collections:
   - kubernetes.core
 dependencies:
-  # - remove_namespace
+  - remove_namespace

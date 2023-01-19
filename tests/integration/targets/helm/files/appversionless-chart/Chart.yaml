@@ -1,0 +1,5 @@
+apiVersion: v2
+name: appversionless-chart
+description: A chart used in molecule tests
+type: application
+version: 0.1.0
