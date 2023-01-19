@@ -1,17 +1,17 @@
 ---
-# - name: Ensure helm is not installed
-#   file:
-#     path: "{{ item }}"
-#     state: absent
-#   with_items:
-#     - "/tmp/helm"
+- name: Ensure helm is not installed
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/tmp/helm"
 
-# - name: Check failed if helm is not installed
-#   include_tasks: test_helm_not_installed.yml
+- name: Check failed if helm is not installed
+  include_tasks: test_helm_not_installed.yml
 
-# - name: "Install {{ helm_version }}"
-  # include_role:
-  #   name: install_helm
+- name: "Install {{ helm_version }}"
+  include_role:
+    name: install_helm
 
 - name: "Ensure we honor the environment variables"
   include_tasks: test_read_envvars.yml

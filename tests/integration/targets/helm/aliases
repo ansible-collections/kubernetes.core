@@ -1,6 +1,4 @@
-# slow - 11min
-slow
-time=334
+time=100
 helm_info
 helm_repository
 helm_template

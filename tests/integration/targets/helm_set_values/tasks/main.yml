@@ -1,4 +1,3 @@
-
 - name: Install helm using set_values parameters
   helm:
     binary_path: "{{ helm_binary }}"
