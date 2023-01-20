@@ -1,3 +1,5 @@
 ---
-test_namespace: "wait"
+test_namespace:
+  - wait
+  - python-api-caching
 k8s_wait_timeout: 400
