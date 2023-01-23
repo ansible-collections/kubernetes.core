@@ -117,6 +117,23 @@ status:
       type: str
       returned: always
       description: Dict of Values used to deploy
+    hooks:
+      type: list
+      elements: dict
+      description: Hooks of the release
+      returned: always
+      version_added: "2.4.0"
+    notes:
+      type: str
+      description: Notes of the release
+      returned: always
+      version_added: "2.4.0"
+    manifest:
+      type: list
+      elements: dict
+      description: Manifest of the release
+      returned: always
+      version_added: "2.4.0"
 """
 
 import traceback
@@ -185,6 +202,9 @@ def get_release_status(module, release_name, release_state, get_all_values=False
         return None
 
     release["values"] = module.get_values(release_name, get_all_values)
+    release["manifest"] = module.get_manifest(release_name)
+    release["notes"] = module.get_notes(release_name)
+    release["hooks"] = module.get_hooks(release_name)
 
     return release
 

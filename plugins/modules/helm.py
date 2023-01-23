@@ -105,6 +105,31 @@ options:
       - Run C(helm repo update) before the operation. Can be run as part of the package installation or as a separate step (see Examples).
     default: false
     type: bool
+  set_values:
+    description:
+      - Values to pass to chart configuration
+    required: false
+    type: list
+    elements: dict
+    suboptions:
+      value:
+        description:
+          - Value to pass to chart configuration (e.g phase=prod).
+        type: str
+        required: true
+      value_type:
+        description:
+          - Use C(raw) set individual value.
+          - Use C(string) to force a string for an individual value.
+          - Use C(file) to set individual values from a file when the value itself is too long for the command line or is dynamically generated.
+          - Use C(json) to set json values (scalars/objects/arrays). This feature requires helm>=3.10.0.
+        default: raw
+        choices:
+          - raw
+          - string
+          - json
+          - file
+    version_added: '2.4.0'
 
 #Helm options
   disable_hook:
@@ -231,6 +256,15 @@ EXAMPLES = r"""
     namespace: kube-system
     state: absent
     update_repo_cache: true
+
+- name: Deploy Grafana chart using set values on target
+  kubernetes.core.helm:
+    name: test
+    chart_ref: stable/grafana
+    release_namespace: monitoring
+    set_values:
+      - value: phase=prod
+        value_type: string
 
 # From git
 - name: Git clone stable repo on HEAD
@@ -438,6 +472,7 @@ def deploy(
     skip_crds=False,
     timeout=None,
     dependency_update=None,
+    set_value_args=None,
 ):
     """
     Install/upgrade/rollback release chart
@@ -494,6 +529,9 @@ def deploy(
 
     if history_max is not None:
         deploy_command += " --history-max=%s" % str(history_max)
+
+    if set_value_args:
+        deploy_command += " " + set_value_args
 
     deploy_command += " " + release_name + " " + chart_name
     return deploy_command
@@ -643,6 +681,7 @@ def argument_spec():
             replace=dict(type="bool", default=False),
             skip_crds=dict(type="bool", default=False),
             history_max=dict(type="int"),
+            set_values=dict(type="list", elements="dict"),
         )
     )
     return arg_spec
@@ -692,6 +731,7 @@ def main():
     skip_crds = module.params.get("skip_crds")
     history_max = module.params.get("history_max")
     timeout = module.params.get("timeout")
+    set_values = module.params.get("set_values")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -760,6 +800,10 @@ def main():
                 )
 
         if release_status is None:  # Not installed
+            set_value_args = None
+            if set_values:
+                set_value_args = module.get_helm_set_values_args(set_values)
+
             helm_cmd = deploy(
                 helm_cmd,
                 release_name,
@@ -778,6 +822,7 @@ def main():
                 skip_crds=skip_crds,
                 history_max=history_max,
                 timeout=timeout,
+                set_value_args=set_value_args,
             )
             changed = True
 
@@ -813,6 +858,10 @@ def main():
                 )
 
             if force or would_change:
+                set_value_args = None
+                if set_values:
+                    set_value_args = module.get_helm_set_values_args(set_values)
+
                 helm_cmd = deploy(
                     helm_cmd,
                     release_name,
@@ -831,6 +880,7 @@ def main():
                     history_max=history_max,
                     timeout=timeout,
                     dependency_update=dependency_update,
+                    set_value_args=set_value_args,
                 )
                 changed = True
 

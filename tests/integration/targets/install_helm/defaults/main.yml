@@ -1,0 +1,4 @@
+---
+helm_version: v3.7.0
+helm_install_path: /tmp/helm
+helm_default_archive_name: "helm-{{ helm_version }}-{{ ansible_system | lower }}-amd64.tar.gz"

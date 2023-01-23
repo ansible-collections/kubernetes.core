@@ -1,9 +1,9 @@
 ---
 - name: Test helm with in-memory kubeconfig
-  include_tasks: "tests_kubeconfig/from_in_memory_kubeconfig.yml"
+  include_tasks: "from_in_memory_kubeconfig.yml"
 
 - name: Test helm with custom kubeconfig and validate_certs=false
-  include_tasks: "tests_kubeconfig/from_kubeconfig_with_validate_certs.yml"
+  include_tasks: "from_kubeconfig_with_validate_certs.yml"
   loop_control:
     loop_var: test_helm_version
   with_items:
@@ -11,12 +11,9 @@
     - "v3.8.2"
 
 - name: Test helm with custom kubeconfig and ca_cert
-  include_tasks: "tests_kubeconfig/from_kubeconfig_with_cacert.yml"
+  include_tasks: "from_kubeconfig_with_cacert.yml"
   loop_control:
     loop_var: test_helm_version
   with_items:
     - "v3.5.1"
     - "v3.4.2"
-
-- name: install default helm archive version
-  include_tasks: install.yml

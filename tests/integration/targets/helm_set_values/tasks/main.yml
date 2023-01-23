@@ -1,0 +1,109 @@
+- name: Install helm using set_values parameters
+  helm:
+    binary_path: "{{ helm_binary }}"
+    chart_ref: mariadb
+    chart_repo_url: https://charts.bitnami.com/bitnami
+    release_name: test-mariadb
+    release_namespace: "{{ helm_namespace }}"
+    create_namespace: true
+    set_values:
+    - value: phase=integration
+      value_type: string
+    - value: versioned=false
+
+- name: Get value set as string
+  helm_info:
+    binary_path: "{{ helm_binary }}"
+    release_name: test-mariadb
+    release_namespace: "{{ helm_namespace }}"
+  register: user_values
+
+- name: Assert that release was created with user-defined variables
+  assert:
+    that:
+    - '"phase" in user_values.status["values"]'
+    - '"versioned" in user_values.status["values"]'
+    - user_values.status["values"]["phase"] == "integration"
+    - user_values.status["values"]["versioned"] is false
+
+# install chart using set_values and release_values
+- name: Install helm binary (> 3.10.0) requires to use set-json
+  include_role:
+    name: install_helm
+  vars:
+    helm_version: "v3.10.3"
+
+- name: Install helm using set_values parameters
+  helm:
+    binary_path: "{{ helm_binary }}"
+    chart_ref: apache
+    chart_repo_url: https://charts.bitnami.com/bitnami
+    release_name: test-apache
+    release_namespace: "{{ helm_namespace }}"
+    create_namespace: true
+    set_values:
+    - value: 'master.image={"registry": "docker.io", "repository": "bitnami/apache", "tag": "2.4.54-debian-11-r74"}'
+      value_type: json
+    release_values:
+      replicaCount: 3
+
+- name: Get release info
+  helm_info:
+    binary_path: "{{ helm_binary }}"
+    release_name: test-apache
+    release_namespace: "{{ helm_namespace }}"
+  register: values
+
+- name: Assert that release was created with user-defined variables
+  assert:
+    that:
+    - values.status["values"].replicaCount == 3
+    - values.status["values"].master.image.registry == "docker.io"
+    - values.status["values"].master.image.repository == "bitnami/apache"
+    - values.status["values"].master.image.tag == "2.4.54-debian-11-r74"
+
+# install chart using set_values and values_files
+- name: create temporary file to save values in
+  tempfile:
+    suffix: .yml
+  register: ymlfile
+
+- block:
+  - name: copy content into values file
+    copy:
+      content: |
+        ---
+        mode: distributed
+      dest: "{{ ymlfile.path }}"
+
+  - name: Install helm using set_values parameters
+    helm:
+      binary_path: "{{ helm_binary }}"
+      chart_ref: minio
+      chart_repo_url: https://charts.bitnami.com/bitnami
+      release_name: test-minio
+      release_namespace: "{{ helm_namespace }}"
+      create_namespace: true
+      set_values:
+      - value: 'disableWebUI=true'
+      values_files:
+      - "{{ ymlfile.path }}"
+
+  - name: Get release info
+    helm_info:
+      binary_path: "{{ helm_binary }}"
+      release_name: test-minio
+      release_namespace: "{{ helm_namespace }}"
+    register: values
+
+  - name: Assert that release was created with user-defined variables
+    assert:
+      that:
+      - values.status["values"].mode == "distributed"
+      - values.status["values"].disableWebUI is true
+
+  always:
+  - name: Delete temporary file
+    file:
+      state: absent
+      path: "{{ ymlfile.path }}"

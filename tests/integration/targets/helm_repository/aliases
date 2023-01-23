@@ -1,0 +1,5 @@
+time=20
+helm_repository
+helm_info
+helm
+helm_template

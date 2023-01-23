@@ -215,6 +215,56 @@ class AnsibleHelmModule(object):
             return {}
         return yaml.safe_load(out)
 
+    def parse_yaml_content(self, content):
+
+        if not HAS_YAML:
+            self.fail_json(msg=missing_required_lib("yaml"), exception=HAS_YAML)
+
+        try:
+            return list(yaml.safe_load_all(content))
+        except (IOError, yaml.YAMLError) as exc:
+            self.fail_json(
+                msg="Error parsing YAML content: {0}".format(exc), raw_data=content
+            )
+
+    def get_manifest(self, release_name):
+
+        command = [
+            self.get_helm_binary(),
+            "get",
+            "manifest",
+            release_name,
+        ]
+        rc, out, err = self.run_helm_command(" ".join(command))
+        if rc != 0:
+            self.fail_json(msg=err)
+        return self.parse_yaml_content(out)
+
+    def get_notes(self, release_name):
+
+        command = [
+            self.get_helm_binary(),
+            "get",
+            "notes",
+            release_name,
+        ]
+        rc, out, err = self.run_helm_command(" ".join(command))
+        if rc != 0:
+            self.fail_json(msg=err)
+        return out
+
+    def get_hooks(self, release_name):
+        command = [
+            self.get_helm_binary(),
+            "get",
+            "hooks",
+            release_name,
+        ]
+        rc, out, err = self.run_helm_command(" ".join(command))
+        if rc != 0:
+            self.fail_json(msg=err)
+        return self.parse_yaml_content(out)
+
     def get_helm_plugin_list(self):
         """
         Return `helm plugin list`
@@ -230,3 +280,24 @@ class AnsibleHelmModule(object):
                 rc=rc,
             )
         return (rc, out, err, helm_plugin_list)
+
+    def get_helm_set_values_args(self, set_values):
+        if any(v.get("value_type") == "json" for v in set_values):
+            if LooseVersion(self.get_helm_version()) < LooseVersion("3.10.0"):
+                self.fail_json(
+                    msg="This module requires helm >= 3.10.0, to use set_values parameter with value type set to 'json'. current version is {0}".format(
+                        self.get_helm_version()
+                    )
+                )
+
+        options = []
+        for opt in set_values:
+            value_type = opt.get("value_type", "raw")
+            value = opt.get("value")
+
+            if value_type == "raw":
+                options.append("--set " + value)
+            else:
+                options.append("--set-{0} '{1}'".format(value_type, value))
+
+        return " ".join(options)

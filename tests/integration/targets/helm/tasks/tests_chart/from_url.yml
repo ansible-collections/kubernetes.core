@@ -5,4 +5,4 @@
     source: url
     chart_source: "https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-{{ chart_test_version }}/{{ chart_test }}-{{ chart_test_version }}.tgz"
     chart_source_upgrade: "https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-{{ chart_test_version_upgrade }}/{{ chart_test }}-{{ chart_test_version_upgrade }}.tgz"
-    helm_namespace: "{{ test_namespace[5] }}"
+    helm_namespace: "{{ test_namespace[8] }}"

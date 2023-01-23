@@ -23,7 +23,7 @@
     chart_test_version: "{{ chart_test_version_local_path }}"
     chart_test_version_upgrade: "{{ chart_test_version_upgrade_local_path }}"
     chart_name: "local-path-001"
-    helm_namespace: "{{ test_namespace[7] }}"
+    helm_namespace: "{{ test_namespace[4] }}"
 
 - name: Test appVersion idempotence
   vars:
@@ -69,7 +69,7 @@
         chart_source: "/tmp/helm_test_appversion/test-chart/{{ chart_test }}-{{ chart_test_app_version }}-{{ chart_test_version }}.tgz"
         chart_source_upgrade: "/tmp/helm_test_appversion/test-chart/{{ chart_test }}-{{ chart_test_upgrade_app_version }}-{{ chart_test_version_upgrade }}.tgz"
         chart_name: "local-path-002"
-        helm_namespace: "{{ test_namespace[8] }}"
+        helm_namespace: "{{ test_namespace[5] }}"
 
 - name: Test appVersion handling when null
   vars:
@@ -99,7 +99,7 @@
         chart_source: "/tmp/helm_test_appversion/test-null/{{ chart_test }}/"
         chart_source_upgrade: "{{ chart_test }}-{{ chart_test_version_upgrade }}.tgz"
         chart_name: "local-path-003"
-        helm_namespace: "{{ test_namespace[9] }}"
+        helm_namespace: "{{ test_namespace[6] }}"
 
 - name: Remove clone repos
   file:

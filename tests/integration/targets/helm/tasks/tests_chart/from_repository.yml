@@ -12,7 +12,7 @@
     chart_source: "test_helm/{{ chart_test }}"
     chart_source_version: "{{ chart_test_version }}"
     chart_source_version_upgrade: "{{ chart_test_version_upgrade }}"
-    helm_namespace: "{{ test_namespace[6] }}"
+    helm_namespace: "{{ test_namespace[7] }}"
 
 - name: Remove chart repo
   helm_repository:

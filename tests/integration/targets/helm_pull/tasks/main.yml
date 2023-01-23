@@ -36,7 +36,7 @@
     # Testing helm pull with helm version == 2.3.0
     - block:
         - name: Assert that helm pull failed with helm <= 3.0.0
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -55,7 +55,7 @@
     # Testing helm pull with helm version == 3.0.0
     - block:
         - name: Download chart using chart_ssl_cert_file
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -71,7 +71,7 @@
               - _result.msg == "Parameter chart_ssl_cert_file requires helm >= 3.1.0, current version is 3.0.0"
 
         - name: Download chart using chart_ssl_key_file
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -87,7 +87,7 @@
               - _result.msg == "Parameter chart_ssl_key_file requires helm >= 3.1.0, current version is 3.0.0"
 
         - name: Download chart using chart_ca_cert
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -108,7 +108,7 @@
     # Testing helm pull with helm version == 3.1.0
     - block:
         - name: Download chart using chart_ssl_cert_file, chart_ca_cert, chart_ssl_key_file
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -127,7 +127,7 @@
               - '"--key-file ssl_key_file" in _result.command'
 
         - name: Download chart using skip_tls_certs_check
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -150,7 +150,7 @@
         # Test options chart_version, verify, pass-credentials, provenance, untar_chart
         # skip_tls_certs_check, repo_url, repo_username, repo_password
         - name: Testing chart version
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: redis
             destination: "{{ destination }}"
@@ -182,7 +182,7 @@
               - '"--keyring pubring.gpg" in _result.command'
 
         - name: Download chart using chart_ref
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -201,7 +201,7 @@
               - _chart.stat.isreg
 
         - name: Download chart using untar_chart
-          kubernetes.core.helm_pull:
+          helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: redis
             destination: "{{ destination }}"

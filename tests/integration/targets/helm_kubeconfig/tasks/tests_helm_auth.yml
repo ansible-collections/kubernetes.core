@@ -8,9 +8,10 @@
 - name: Install helm binary
   block:
     - name: "Install {{ test_helm_version }}"
-      include_tasks: install.yml
+      include_role:
+        name: install_helm
       vars:
-        helm_archive_name: "helm-{{ test_helm_version }}-{{ ansible_system | lower }}-amd64.tar.gz"
+        helm_version: "{{ test_helm_version }}"
 
   when: test_helm_version is defined
 

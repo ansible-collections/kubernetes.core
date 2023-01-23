@@ -1,5 +1,7 @@
 # Helm module
 - name: "Test dependency update for helm module"
+  vars:
+    helm_namespace: "{{ test_namespace[3] }}"
   block:
     - name: copy chart
       copy:
@@ -8,9 +10,6 @@
       loop:
         - test-chart
         - dep-up
-
-    - set_fact:
-        helm_namespace: "{{ test_namespace[10] }}"
 
     - name: "Test chart with dependency_update false"
       helm:
@@ -81,8 +80,6 @@
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
-        wait: true
-        wait_timeout: 180
 
     - name: "Remove charts"
       file:
@@ -153,14 +150,6 @@
         success_msg: "subchart not exist in the charts directory"
         fail_msg: "There is no Subchart pulled"
   always:
-    - name: Remove helm namespace
-      k8s:
-        api_version: v1
-        kind: Namespace
-        name: "{{ helm_namespace }}"
-        state: absent
-        wait: true
-        wait_timeout: 180
 
     - name: "Remove charts"
       file:

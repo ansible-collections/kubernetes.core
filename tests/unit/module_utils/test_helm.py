@@ -415,3 +415,40 @@ def test_module_prepare_helm_environment_with_ca_cert(helm_version, is_env_var_s
             print(json.dumps(content, indent=2))
             assert content["clusters"][0]["cluster"]["certificate-authority"] == ca_cert
         os.remove(kubeconfig_path)
+
+
+@pytest.mark.parametrize(
+    "set_values, expected",
+    [
+        ([{"value": "test"}], ["--set test"]),
+        ([{"value_type": "raw", "value": "test"}], ["--set test"]),
+        (
+            [{"value_type": "string", "value": "string_value"}],
+            ["--set-string 'string_value'"],
+        ),
+        ([{"value_type": "file", "value": "file_path"}], ["--set-file 'file_path'"]),
+        (
+            [{"value_type": "json", "value": '{"a": 1, "b": "some_value"}'}],
+            ['--set-json \'{"a": 1, "b": "some_value"}\''],
+        ),
+        (
+            [
+                {"value_type": "string", "value": "string_value"},
+                {"value_type": "file", "value": "file_path"},
+            ],
+            ["--set-string 'string_value'", "--set-file 'file_path'"],
+        ),
+    ],
+)
+def test_module_get_helm_set_values_args(set_values, expected):
+
+    module = MagicMock()
+    module.params = {}
+    module.fail_json.side_effect = SystemExit(1)
+
+    helm_module = AnsibleHelmModule(module=module)
+    helm_module.get_helm_version = MagicMock()
+    helm_module.get_helm_version.return_value = "3.10.1"
+
+    result = helm_module.get_helm_set_values_args(set_values)
+    assert " ".join(expected) == result

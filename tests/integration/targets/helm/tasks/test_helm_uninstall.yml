@@ -4,11 +4,11 @@
     version: "3.7.0"
   register: test_version
 
-- block:
-  - set_fact:
-      chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
-      chart_name: "test-wait-uninstall"
-      helm_namespace: "{{ test_namespace[2] }}"
+- vars:
+    chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
+    chart_name: "test-wait-uninstall"
+    helm_namespace: "{{ test_namespace[1] }}"
+  block:
 
   - name: Install chart
     helm:
