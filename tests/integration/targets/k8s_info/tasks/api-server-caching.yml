@@ -1,0 +1,91 @@
+---
+- name: create temporary directory for tests
+  tempfile:
+    state: directory
+    suffix: .test
+  register: _testdir
+
+- block:
+    - name: Create kubernetes secret
+      k8s:
+        namespace: '{{ api_namespace }}'
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: '{{ test_secret }}'
+          type: Opaque
+          stringData:
+            foo: bar
+
+    - name: save default kubeconfig
+      copy:
+        src: ~/.kube/config
+        dest: '{{ _testdir.path }}/config'
+
+    - name: create bad kubeconfig
+      copy:
+        src: '{{ _testdir.path }}/config'
+        dest: '{{ _testdir.path }}/badconfig'
+
+    - name: Remove certificate-data from badconfig
+      ansible.builtin.lineinfile:
+        path: '{{ _testdir.path }}/badconfig'
+        regexp: "(.*)certificate-authority-data(.*)"
+        state: absent
+
+    - name: Delete default config
+      file:
+        state: absent
+        path: ~/.kube/config
+
+    - name: Check for existing cluster namespace with good kubeconfig
+      k8s_info:
+        api_version: v1
+        kind: Secret
+        name: '{{ test_secret }}'
+        namespace: '{{ api_namespace }}'
+        kubeconfig: '{{ _testdir.path }}/config'
+      register: result_good_config
+
+    - name: Check for existing cluster namespace with bad kubeconfig
+      k8s_info:
+        api_version: v1
+        kind: Secret
+        name: '{{ test_secret }}'
+        namespace: '{{ api_namespace }}'
+        kubeconfig: '{{ _testdir.path }}/badconfig'
+      register: result_bad_config
+      ignore_errors: true
+
+    - name: Ensure task has failed with proper message
+      assert:
+        that:
+          - result_good_config is successful
+          - result_good_config.resources | length == 1
+          - result_bad_config is failed
+          - '"certificate verify failed" in result_bad_config.msg'
+
+  vars:
+    api_namespace: "{{ test_namespace[1] }}"
+    test_secret: "my-secret"
+
+  always:
+
+    - name: restore default kubeconfig
+      copy:
+        dest: ~/.kube/config
+        src: '{{ _testdir.path }}/config'
+
+    - name: Delete namespace
+      k8s:
+        kind: namespace
+        name: "{{ api_namespace }}"
+        state: absent
+      ignore_errors: true
+
+    - name: delete temporary directory
+      file:
+        state: absent
+        path: '{{ _testdir.path }}'
+      ignore_errors: true

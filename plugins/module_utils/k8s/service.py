@@ -23,7 +23,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
 )
 
 from ansible.module_utils.common.dict_transformations import dict_merge
-from ansible.module_utils._text import to_native
 
 try:
     from kubernetes.dynamic.exceptions import (
@@ -268,8 +267,13 @@ class K8sService:
         except BadRequestError:
             return result
         except CoreException as e:
-            result["msg"] = to_native(e)
-            return result
+            raise e
+        except Exception as e:
+            raise CoreException(
+                "Exception '{0}' raised while trying to get resource using (name={1}, namespace={2}, label_selectors={3}, field_selectors={4})".format(
+                    e, name, namespace, label_selectors, field_selectors
+                )
+            )
 
         # There is either no result or there is a List resource with no items
         if (
