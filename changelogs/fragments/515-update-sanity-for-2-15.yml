@@ -1,2 +1,0 @@
-trivial:
-  - update for ansible 2.15 sanity (https://github.com/ansible-collections/kubernetes.core/pull/515).

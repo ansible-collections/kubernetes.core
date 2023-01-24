@@ -1,3 +1,0 @@
----
-minor_changes:
-- k8s_log - added the `tail_lines` parameter to limit the number of lines to be retrieved from the end of the logs (https://github.com/ansible-collections/kubernetes.core/issues/488).

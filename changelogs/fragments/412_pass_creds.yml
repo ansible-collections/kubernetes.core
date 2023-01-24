@@ -1,3 +1,0 @@
----
-minor_changes:
-- helm_repository - mark `pass_credentials` as no_log=True to silence false warning (https://github.com/ansible-collections/kubernetes.core/issues/412).

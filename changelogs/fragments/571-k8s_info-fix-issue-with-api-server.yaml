@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s_info - fix issue when module returns successful true after the resource cache has been established during periods where communication to the api-server is not possible (https://github.com/ansible-collections/kubernetes.core/issues/508).

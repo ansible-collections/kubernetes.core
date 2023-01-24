@@ -1,3 +1,0 @@
----
-major_changes:
-  - refactor K8sAnsibleMixin into module_utils/k8s/ (https://github.com/ansible-collections/kubernetes.core/pull/481).

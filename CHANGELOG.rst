@@ -5,6 +5,91 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.4.0
+======
+
+Major Changes
+-------------
+
+- refactor K8sAnsibleMixin into module_utils/k8s/ (https://github.com/ansible-collections/kubernetes.core/pull/481).
+
+Minor Changes
+-------------
+
+- Adjust k8s_user_impersonation tests to be compatible with Kubernetes 1.24 (https://github.com/ansible-collections/kubernetes.core/pull/520).
+- add support for dry run with kubernetes client version >=18.20 (https://github.com/ansible-collections/kubernetes.core/pull/245).
+- added ignore.txt for Ansible 2.14 devel branch.
+- fixed module_defaults by removing routing hacks from runtime.yml (https://github.com/ansible-collections/kubernetes.core/pull/347).
+- helm - add support for -set-file, -set-json, -set and -set-string options when running helm install (https://github.com/ansible-collections/kubernetes.core/issues/533).
+- helm - add support for helm dependency update (https://github.com/ansible-collections/kubernetes.core/pull/208).
+- helm - add support for post-renderer flag (https://github.com/ansible-collections/kubernetes.core/issues/30).
+- helm - add support for timeout cli parameter to allow setting Helm timeout independent of wait (https://github.com/ansible-collections/kubernetes.core/issues/67).
+- helm - add support for wait parameter for helm uninstall command. (https://github.com/ansible-collections/kubernetes/core/issues/33).
+- helm - support repo location for helm diff (https://github.com/ansible-collections/kubernetes.core/issues/174).
+- helm - when ansible is executed in check mode, return the diff between what's deployed and what will be deployed.
+- helm, helm_plugin, helm_info, helm_plugin_info, kubectl - add support for in-memory kubeconfig. (https://github.com/ansible-collections/kubernetes.core/issues/492).
+- helm_info - add hooks, notes and manifest as part of returned information (https://github.com/ansible-collections/kubernetes.core/pull/546).
+- helm_info - add release state as a module argument (https://github.com/ansible-collections/kubernetes.core/issues/377).
+- helm_info - added possibility to get all values by adding get_all_values parameter (https://github.com/ansible-collections/kubernetes.core/pull/531).
+- helm_plugin - Add plugin_version parameter to the helm_plugin module (https://github.com/ansible-collections/kubernetes.core/issues/157).
+- helm_plugin - Add support for helm plugin update using state=update.
+- helm_repository - Ability to replace (overwrite) the repo if it already exists by forcing (https://github.com/ansible-collections/kubernetes.core/issues/491).
+- helm_repository - add support for pass-credentials cli parameter (https://github.com/ansible-collections/kubernetes.core/pull/282).
+- helm_repository - added support for ``host``, ``api_key``, ``validate_certs``, and ``ca_cert``.
+- helm_repository - mark `pass_credentials` as no_log=True to silence false warning (https://github.com/ansible-collections/kubernetes.core/issues/412).
+- helm_template - add name (NAME of release) and disable_hook as optional module arguments (https://github.com/ansible-collections/kubernetes.core/issues/313).
+- helm_template - add show_only and release_namespace as module arguments (https://github.com/ansible-collections/kubernetes.core/issues/313).
+- helm_template - add support for -set-file, -set-json, -set and -set-string options when running helm template (https://github.com/ansible-collections/kubernetes.core/pull/546).
+- k8s - add no_proxy support to k8s* (https://github.com/ansible-collections/kubernetes.core/pull/272).
+- k8s - add support for server_side_apply. (https://github.com/ansible-collections/kubernetes.core/issues/87).
+- k8s - add support for user impersonation. (https://github.com/ansible-collections/kubernetes/core/issues/40).
+- k8s - allow resource definition using metadata.generateName (https://github.com/ansible-collections/kubernetes.core/issues/35).
+- k8s lookup plugin - Enable turbo mode via environment variable  (https://github.com/ansible-collections/kubernetes.core/issues/291).
+- k8s, k8s_scale, k8s_service - add support for resource definition as manifest via. (https://github.com/ansible-collections/kubernetes.core/issues/451).
+- k8s_cp - remove dependency with 'find' executable on remote pod when state=from_pod (https://github.com/ansible-collections/kubernetes.core/issues/486).
+- k8s_drain - Adds ``delete_emptydir_data`` option to ``k8s_drain.delete_options`` to evict pods with an ``emptyDir`` volume attached (https://github.com/ansible-collections/kubernetes.core/pull/322).
+- k8s_exec - select first container from the pod if none specified (https://github.com/ansible-collections/kubernetes.core/issues/358).
+- k8s_exec - update deprecation warning for `return_code` (https://github.com/ansible-collections/kubernetes.core/issues/417).
+- k8s_json_patch - minor typo fix in the example section (https://github.com/ansible-collections/kubernetes.core/issues/411).
+- k8s_log - add the ``all_containers`` for retrieving all containers' logs in the pod(s).
+- k8s_log - added the `previous` parameter for retrieving the previously terminated pod logs (https://github.com/ansible-collections/kubernetes.core/issues/437).
+- k8s_log - added the `tail_lines` parameter to limit the number of lines to be retrieved from the end of the logs (https://github.com/ansible-collections/kubernetes.core/issues/488).
+- k8s_rollback - add support for check_mode. (https://github.com/ansible-collections/kubernetes/core/issues/243).
+- k8s_scale - add support for check_mode. (https://github.com/ansible-collections/kubernetes/core/issues/244).
+- kubectl - wait for dd command to complete before proceeding (https://github.com/ansible-collections/kubernetes.core/pull/321).
+- kubectl.py - replace distutils.spawn.find_executable with shutil.which in the kubectl connection plugin (https://github.com/ansible-collections/kubernetes.core/pull/456).
+
+Bugfixes
+--------
+
+- Fix dry_run logic - Pass the value dry_run=All instead of dry_run=True to the client, add conditional check on kubernetes client version as this feature is supported only for kubernetes >= 18.20.0 (https://github.com/ansible-collections/kubernetes.core/pull/561).
+- Fix kubeconfig parameter when multiple config files are provided (https://github.com/ansible-collections/kubernetes.core/issues/435).
+- Helm - Fix issue with alternative kubeconfig provided with validate_certs=False (https://github.com/ansible-collections/kubernetes.core/issues/538).
+- Various modules and plugins - use vendored version of ``distutils.version`` instead of the deprecated Python standard library ``distutils`` (https://github.com/ansible-collections/kubernetes.core/pull/314).
+- add missing documentation for filter plugin kubernetes.core.k8s_config_resource_name (https://github.com/ansible-collections/kubernetes.core/issues/558).
+- common - Ensure the label_selectors parameter of _wait_for method is optional.
+- common - handle ``aliases`` passed from inventory and lookup plugins.
+- helm_template - evaluate release_values after values_files, insuring highest precedence (now same behavior as in helm module). (https://github.com/ansible-collections/kubernetes.core/pull/348)
+- import exception from ``kubernetes.client.rest``.
+- k8s - Fix issue with check_mode when using server side apply (https://github.com/ansible-collections/kubernetes.core/issues/547).
+- k8s - Fix issue with server side apply with kubernetes release '25.3.0' (https://github.com/ansible-collections/kubernetes.core/issues/548).
+- k8s_cp - add support for check_mode (https://github.com/ansible-collections/kubernetes.core/issues/380).
+- k8s_drain - fix error caused by accessing an undefined variable when pods have local storage (https://github.com/ansible-collections/kubernetes.core/issues/292).
+- k8s_info - don't wait on empty List resources (https://github.com/ansible-collections/kubernetes.core/pull/253).
+- k8s_info - fix issue when module returns successful true after the resource cache has been established during periods where communication to the api-server is not possible (https://github.com/ansible-collections/kubernetes.core/issues/508).
+- k8s_log - Fix module traceback when no resource found (https://github.com/ansible-collections/kubernetes.core/issues/479).
+- k8s_log - fix exception raised when the name is not provided for resources requiring. (https://github.com/ansible-collections/kubernetes.core/issues/514)
+- k8s_scale - fix waiting on statefulset when scaled down to 0 replicas (https://github.com/ansible-collections/kubernetes.core/issues/203).
+- module_utils.common - change default opening mode to read-bytes to avoid bad interpretation of non ascii characters and strings, often present in 3rd party manifests.
+- module_utils/k8s/client.py - fix issue when trying to authenticate with host, client_cert and client_key parameters only.
+- remove binary file from k8s_cp test suite (https://github.com/ansible-collections/kubernetes.core/pull/298).
+- use resource prefix when finding resource and apiVersion is v1 (https://github.com/ansible-collections/kubernetes.core/issues/351).
+
+New Modules
+-----------
+
+- helm_pull - download a chart from a repository and (optionally) unpack it in local directory.
+
 v2.3.1
 ======
 

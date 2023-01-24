@@ -1,3 +1,0 @@
----
-bugfixes:
-- common - Ensure the label_selectors parameter of _wait_for method is optional.

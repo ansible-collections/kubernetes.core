@@ -1,3 +1,0 @@
----
-minor_changes:
-  - add support for dry run with kubernetes client version >=18.20 (https://github.com/ansible-collections/kubernetes.core/pull/245).

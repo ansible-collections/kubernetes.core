@@ -11,8 +11,8 @@ The collection includes a variety of Ansible content to help automate the manage
 
 This collection has been tested against following Ansible versions: **>=2.9.17**.
 
-For collections that support Ansible 2.9, please ensure you update your `network_os` to use the 
-fully qualified collection name (for example, `cisco.ios.ios`). 
+For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
+fully qualified collection name (for example, `cisco.ios.ios`).
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
@@ -61,6 +61,7 @@ Name | Description
 [kubernetes.core.helm_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_info_module.rst)|Get information from Helm package deployed inside the cluster
 [kubernetes.core.helm_plugin](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_module.rst)|Manage Helm plugins
 [kubernetes.core.helm_plugin_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_info_module.rst)|Gather information about Helm plugins
+[kubernetes.core.helm_pull](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_pull_module.rst)|download a chart from a repository and (optionally) unpack it in local directory.
 [kubernetes.core.helm_repository](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_repository_module.rst)|Manage Helm repositories.
 [kubernetes.core.helm_template](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_template_module.rst)|Render chart templates
 [kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_module.rst)|Manage Kubernetes (K8s) objects
@@ -74,6 +75,7 @@ Name | Description
 [kubernetes.core.k8s_rollback](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
 [kubernetes.core.k8s_scale](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
 [kubernetes.core.k8s_service](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_service_module.rst)|Manage Services on Kubernetes
+[kubernetes.core.k8s_taint](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_taint_module.rst)|Taint a node in a Kubernetes/OpenShift cluster
 
 <!--end collection content-->
 
@@ -91,7 +93,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 2.3.1
+    version: 2.4.0
 ```
 
 ### Installing the Kubernetes Python Library

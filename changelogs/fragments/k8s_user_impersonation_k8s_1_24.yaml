@@ -1,3 +1,0 @@
----
-minor_changes:
-- "Adjust k8s_user_impersonation tests to be compatible with Kubernetes 1.24 (https://github.com/ansible-collections/kubernetes.core/pull/520)."

@@ -1,3 +1,0 @@
-bugfixes:
-- common - handle ``aliases`` passed from inventory and lookup plugins.
-- module_utils/k8s/client.py - fix issue when trying to authenticate with host, client_cert and client_key parameters only.

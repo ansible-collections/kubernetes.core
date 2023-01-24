@@ -1,3 +1,0 @@
----
-minor_changes:
-- helm_info - add release state as a module argument (https://github.com/ansible-collections/kubernetes.core/issues/377).

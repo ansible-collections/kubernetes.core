@@ -1,3 +1,0 @@
----
-bugfixes:
-- import exception from ``kubernetes.client.rest``.

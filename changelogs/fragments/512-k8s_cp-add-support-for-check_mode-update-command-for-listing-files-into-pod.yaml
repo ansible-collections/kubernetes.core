@@ -1,5 +1,0 @@
----
-bugfixes:
-- k8s_cp - add support for check_mode (https://github.com/ansible-collections/kubernetes.core/issues/380).
-minor_changes:
-- k8s_cp - remove dependency with 'find' executable on remote pod when state=from_pod (https://github.com/ansible-collections/kubernetes.core/issues/486).

@@ -1,3 +1,0 @@
----
-minor_changes:
-- fixed module_defaults by removing routing hacks from runtime.yml (https://github.com/ansible-collections/kubernetes.core/pull/347).

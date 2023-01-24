@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s - add support for server_side_apply. (https://github.com/ansible-collections/kubernetes.core/issues/87).

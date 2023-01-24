@@ -1,5 +1,0 @@
----
-minor_changes:
-  - helm - add support for -set-file, -set-json, -set and -set-string options when running helm install (https://github.com/ansible-collections/kubernetes.core/issues/533).
-  - helm_template - add support for -set-file, -set-json, -set and -set-string options when running helm template (https://github.com/ansible-collections/kubernetes.core/pull/546).
-  - helm_info - add hooks, notes and manifest as part of returned information (https://github.com/ansible-collections/kubernetes.core/pull/546).
