@@ -455,6 +455,7 @@ def fetch_chart_info(module, command, chart_ref):
 
 
 def deploy(
+    module,
     command,
     release_name,
     release_values,
@@ -520,6 +521,7 @@ def deploy(
         with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         deploy_command += " -f=" + path
+        module.add_cleanup_file(path)
 
     if post_renderer:
         deploy_command = " --post-renderer=" + post_renderer
@@ -805,6 +807,7 @@ def main():
                 set_value_args = module.get_helm_set_values_args(set_values)
 
             helm_cmd = deploy(
+                module,
                 helm_cmd,
                 release_name,
                 release_values,
@@ -863,6 +866,7 @@ def main():
                     set_value_args = module.get_helm_set_values_args(set_values)
 
                 helm_cmd = deploy(
+                    module,
                     helm_cmd,
                     release_name,
                     release_values,
