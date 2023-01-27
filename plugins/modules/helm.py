@@ -130,6 +130,21 @@ options:
           - json
           - file
     version_added: '2.4.0'
+  reuse_values:
+    description:
+      - When upgrading package, specifies wether to reuse the last release's values and merge in any overrides from parameters I(release_values),
+        I(values_files) or I(set_values).
+      - If I(reset_values) is set to C(True), this is ignored.
+    type: bool
+    required: false
+    version_added: '2.5.0'
+  reset_values:
+    description:
+      - When upgrading package, reset the values to the ones built into the chart.
+    type: bool
+    required: false
+    default: True
+    version_added: '2.5.0'
 
 #Helm options
   disable_hook:
@@ -310,6 +325,17 @@ EXAMPLES = r"""
         enabled: True
       logging:
         enabled: True
+
+# Deploy latest version
+- name: Deploy latest version of Grafana chart using reuse_values
+  kubernetes.core.helm:
+    name: test
+    chart_ref: stable/grafana
+    release_namespace: monitoring
+    reuse_values: true
+    values:
+      replicas: 2
+      version: 3e8ec0b2dffa40fb97d5342e4af887de95faa8c61a62480dd7f8aa03dffcf533
 """
 
 RETURN = r"""
@@ -474,6 +500,8 @@ def deploy(
     timeout=None,
     dependency_update=None,
     set_value_args=None,
+    reuse_values=None,
+    reset_values=True,
 ):
     """
     Install/upgrade/rollback release chart
@@ -485,9 +513,11 @@ def deploy(
             deploy_command += " --dependency-update"
     else:
         deploy_command = command + " upgrade -i"  # install/upgrade
+        if reset_values:
+            deploy_command += " --reset-values"
 
-        # Always reset values to keep release_values equal to values released
-        deploy_command += " --reset-values"
+    if reuse_values is not None:
+        deploy_command += " --reuse-values=" + str(reuse_values)
 
     if wait:
         deploy_command += " --wait"
@@ -684,6 +714,8 @@ def argument_spec():
             skip_crds=dict(type="bool", default=False),
             history_max=dict(type="int"),
             set_values=dict(type="list", elements="dict"),
+            reuse_values=dict(type="bool"),
+            reset_values=dict(type="bool", default=True),
         )
     )
     return arg_spec
@@ -734,6 +766,8 @@ def main():
     history_max = module.params.get("history_max")
     timeout = module.params.get("timeout")
     set_values = module.params.get("set_values")
+    reuse_values = module.params.get("reuse_values")
+    reset_values = module.params.get("reset_values")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -826,6 +860,8 @@ def main():
                 history_max=history_max,
                 timeout=timeout,
                 set_value_args=set_value_args,
+                reuse_values=reuse_values,
+                reset_values=reset_values,
             )
             changed = True
 
@@ -885,6 +921,8 @@ def main():
                     timeout=timeout,
                     dependency_update=dependency_update,
                     set_value_args=set_value_args,
+                    reuse_values=reuse_values,
+                    reset_values=reset_values,
                 )
                 changed = True
 
