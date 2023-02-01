@@ -66,7 +66,7 @@ def statefulset_ready(statefulset: ResourceInstance) -> bool:
     ready_replicas = statefulset.status.readyReplicas or 0
     return bool(
         statefulset.status
-        and statefulset.spec.updateStrategy.type == "RollingUpdate"
+        and statefulset.spec.updateStrategy.type in ["RollingUpdate", "OnDelete"]
         and statefulset.status.observedGeneration
         == (statefulset.metadata.generation or 0)
         and statefulset.status.updateRevision == statefulset.status.currentRevision
