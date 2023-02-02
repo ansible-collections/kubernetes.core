@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s_log - Fix module traceback when no resource found (https://github.com/ansible-collections/kubernetes.core/issues/479).

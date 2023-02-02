@@ -1,3 +1,0 @@
----
-bugfixes:
-  - use resource prefix when finding resource and apiVersion is v1 (https://github.com/ansible-collections/kubernetes.core/issues/351).

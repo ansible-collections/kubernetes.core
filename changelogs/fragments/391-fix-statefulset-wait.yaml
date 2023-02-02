@@ -1,2 +1,0 @@
-bugfixes:
-  - k8s_scale - fix waiting on statefulset when scaled down to 0 replicas (https://github.com/ansible-collections/kubernetes.core/issues/203).

@@ -1,3 +1,0 @@
----
-trivial:
-  - add example usage for from_yaml_all (https://github.com/ansible-collections/kubernetes.core/pull/505).

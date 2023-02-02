@@ -1,3 +1,0 @@
----
-minor_changes:
-  - helm_repository - Ability to replace (overwrite) the repo if it already exists by forcing (https://github.com/ansible-collections/kubernetes.core/issues/491).

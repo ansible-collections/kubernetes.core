@@ -1,3 +1,0 @@
----
-bugfixes:
-  - helm_template - evaluate release_values after values_files, insuring highest precedence (now same behavior as in helm module). (https://github.com/ansible-collections/kubernetes.core/pull/348)

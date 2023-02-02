@@ -1,2 +1,0 @@
-minor_changes:
-  - helm - when ansible is executed in check mode, return the diff between what's deployed and what will be deployed.

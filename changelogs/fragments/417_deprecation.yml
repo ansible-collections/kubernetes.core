@@ -1,3 +1,0 @@
----
-minor_changes:
-- k8s_exec - update deprecation warning for `return_code` (https://github.com/ansible-collections/kubernetes.core/issues/417).

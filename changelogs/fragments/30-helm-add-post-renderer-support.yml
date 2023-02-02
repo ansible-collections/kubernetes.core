@@ -1,3 +1,0 @@
----
-minor_changes:
-  - helm - add support for post-renderer flag (https://github.com/ansible-collections/kubernetes.core/issues/30).

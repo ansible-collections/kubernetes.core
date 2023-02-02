@@ -1,3 +1,0 @@
----
-minor_changes:
-- k8s_json_patch - minor typo fix in the example section (https://github.com/ansible-collections/kubernetes.core/issues/411).

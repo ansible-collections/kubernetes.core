@@ -1,3 +1,0 @@
----
-minor_changes:
-- helm_repository - added support for ``host``, ``api_key``, ``validate_certs``, and ``ca_cert``.
