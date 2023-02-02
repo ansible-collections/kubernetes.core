@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s_scale - fix issue when scaling StatefulSets with updateStrategy=OnDelete (https://github.com/ansible-collections/kubernetes.core/issues/579).
