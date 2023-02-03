@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s, k8s_scale, k8s_service - add support for resource definition as manifest via. (https://github.com/ansible-collections/kubernetes.core/issues/451).

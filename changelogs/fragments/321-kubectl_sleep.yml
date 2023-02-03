@@ -1,3 +1,0 @@
----
-minor_changes:
-- kubectl - wait for dd command to complete before proceeding (https://github.com/ansible-collections/kubernetes.core/pull/321).

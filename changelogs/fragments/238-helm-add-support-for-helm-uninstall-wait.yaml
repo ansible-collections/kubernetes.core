@@ -1,2 +1,0 @@
-minor_changes:
-  - helm - add support for wait parameter for helm uninstall command. (https://github.com/ansible-collections/kubernetes/core/issues/33).

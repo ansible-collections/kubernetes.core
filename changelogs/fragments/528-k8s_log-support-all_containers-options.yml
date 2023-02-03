@@ -1,5 +1,0 @@
----
-bugfixes:
-  - k8s_log - fix exception raised when the name is not provided for resources requiring. (https://github.com/ansible-collections/kubernetes.core/issues/514)
-minor_changes:
-  - k8s_log - add the ``all_containers`` for retrieving all containers' logs in the pod(s).

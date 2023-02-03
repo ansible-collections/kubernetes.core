@@ -1,3 +1,0 @@
----
-trivial:
-  - fix helm test suite (https://github.com/ansible-collections/kubernetes.core/pull/522).

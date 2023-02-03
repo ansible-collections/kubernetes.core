@@ -1,3 +1,0 @@
----
-minor_changes:
-  - k8s lookup plugin - Enable turbo mode via environment variable  (https://github.com/ansible-collections/kubernetes.core/issues/291).

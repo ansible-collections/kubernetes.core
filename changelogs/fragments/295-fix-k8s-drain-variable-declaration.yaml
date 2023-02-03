@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s_drain - fix error caused by accessing an undefined variable when pods have local storage (https://github.com/ansible-collections/kubernetes.core/issues/292).

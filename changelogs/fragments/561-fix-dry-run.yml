@@ -1,3 +1,0 @@
----
-bugfixes:
-  - Fix dry_run logic - Pass the value dry_run=All instead of dry_run=True to the client, add conditional check on kubernetes client version as this feature is supported only for kubernetes >= 18.20.0 (https://github.com/ansible-collections/kubernetes.core/pull/561).

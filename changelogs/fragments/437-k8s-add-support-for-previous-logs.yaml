@@ -1,3 +1,0 @@
----
-minor_changes:
-- k8s_log - added the `previous` parameter for retrieving the previously terminated pod logs (https://github.com/ansible-collections/kubernetes.core/issues/437).

@@ -1,3 +1,0 @@
----
-bugfixes:
-  - k8s_info - don't wait on empty List resources (https://github.com/ansible-collections/kubernetes.core/pull/253).

@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s - allow resource definition using metadata.generateName (https://github.com/ansible-collections/kubernetes.core/issues/35).

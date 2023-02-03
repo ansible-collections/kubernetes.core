@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s - add no_proxy support to k8s* (https://github.com/ansible-collections/kubernetes.core/pull/272).

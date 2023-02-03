@@ -1,3 +1,0 @@
-minor_changes:
-  - k8s_scale - add support for check_mode. (https://github.com/ansible-collections/kubernetes/core/issues/244).
-  - k8s_rollback - add support for check_mode. (https://github.com/ansible-collections/kubernetes/core/issues/243).
