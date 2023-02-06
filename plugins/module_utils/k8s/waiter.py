@@ -61,6 +61,13 @@ def daemonset_ready(daemonset: ResourceInstance) -> bool:
 
 
 def statefulset_ready(statefulset: ResourceInstance) -> bool:
+    if statefulset.spec.updateStrategy.type == "OnDelete":
+        return bool(
+            statefulset.status
+            and statefulset.status.observedGeneration
+            == (statefulset.metadata.generation or 0)
+            and statefulset.status.replicas == statefulset.spec.replicas
+        )
     # These may be None
     updated_replicas = statefulset.status.updatedReplicas or 0
     ready_replicas = statefulset.status.readyReplicas or 0

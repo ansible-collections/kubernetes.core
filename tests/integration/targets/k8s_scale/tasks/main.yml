@@ -389,6 +389,71 @@
         that:
           - output.result.status.replicas == 0
 
+    - name: Create a StatefulSet with updateStrategy=OnDelete
+      kubernetes.core.k8s:
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+        definition:
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            namespace: "{{ scale_namespace }}"
+            name: scale-set-ondelete
+          spec:
+            replicas: 2
+            updateStrategy:
+              type: OnDelete
+            selector:
+              matchLabels:
+                app: foo
+            template:
+              metadata:
+                labels:
+                  app: foo
+              spec:
+                terminationGracePeriodSeconds: 10
+                containers:
+                  - image: busybox
+                    name: busybox
+                    command:
+                      - sleep
+                      - "600"
+      register: output
+
+    - assert:
+        that:
+          - output.result.status.replicas == 2
+
+    - name: Wait for StatefulSet to scale down to 0
+      kubernetes.core.k8s_scale:
+        kind: StatefulSet
+        api_version: apps/v1
+        name: scale-set-ondelete
+        namespace: "{{ scale_namespace }}"
+        replicas: 0
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      register: output
+
+    - assert:
+        that:
+          - output.result.status.replicas == 0
+
+    - name: Wait for StatefulSet to scale up to 2
+      kubernetes.core.k8s_scale:
+        kind: StatefulSet
+        api_version: apps/v1
+        name: scale-set-ondelete
+        namespace: "{{ scale_namespace }}"
+        replicas: 2
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      register: output
+
+    - assert:
+        that:
+          - output.result.status.replicas == 2
+
   always:
     - name: Remove namespace
       k8s:
