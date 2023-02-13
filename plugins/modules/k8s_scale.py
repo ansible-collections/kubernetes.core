@@ -390,7 +390,7 @@ def scale(
                 namespace=namespace,
             )
             if not success:
-                raise ResourceTimeout("Resource scaling timed out", **result)
+                raise ResourceTimeout("Resource scaling timed out", result)
 
     match, diffs = diff_objects(existing.to_dict(), result["result"])
     result["changed"] = not match
