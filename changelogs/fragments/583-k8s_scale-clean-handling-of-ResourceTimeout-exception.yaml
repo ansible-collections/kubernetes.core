@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s_scale - clean handling of ResourceTimeout exception (https://github.com/ansible-collections/kubernetes.core/issues/583).
