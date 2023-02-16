@@ -1,0 +1,75 @@
+---
+- name: Test helm reuse_values
+  vars:
+    helm_namespace: "{{ test_namespace[9] }}"
+    chart_release_values:
+      replica:
+        replicaCount: 3
+      master:
+        count: 1
+        kind: Deployment
+    chart_reuse_values:
+      replica:
+        replicaCount: 1
+      master:
+        count: 3
+  block:
+    - name: Initial chart installation
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: redis
+        chart_repo_url: https://charts.bitnami.com/bitnami
+        release_name: test-redis
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: true
+        release_values: "{{ chart_release_values }}"
+      register: install
+
+    - name: Get value set as string
+      helm_info:
+        binary_path: "{{ helm_binary }}"
+        release_name: test-redis
+        release_namespace: "{{ helm_namespace }}"
+      register: release_value
+
+    - name: Validate that chart values are as expected
+      assert:
+        that:
+          - install is changed
+          - '"--reuse-values=True" not in install.command'
+          - release_value["status"]["values"] == chart_release_values
+
+    - name: Upgrade chart using reuse_values=true
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: redis
+        chart_repo_url: https://charts.bitnami.com/bitnami
+        release_name: test-redis
+        release_namespace: "{{ helm_namespace }}"
+        reuse_values: true
+        reset_values: false
+        release_values: "{{ chart_reuse_values }}"
+      register: upgrade
+
+    - name: Get value set as string
+      helm_info:
+        binary_path: "{{ helm_binary }}"
+        release_name: test-redis
+        release_namespace: "{{ helm_namespace }}"
+      register: release_value
+
+    - name: Validate that chart values are as expected
+      assert:
+        that:
+          - upgrade is changed
+          - '"--reuse-values=True" in upgrade.command'
+          - '"--reset-values" not in upgrade.command'
+          - release_value["status"]["values"] == chart_release_values | combine(chart_reuse_values, recursive=true)
+
+  always:
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent

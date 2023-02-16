@@ -25,6 +25,9 @@
     - from_repository
     - from_url
 
+- name: test helm upgrade with reuse_values
+  include_tasks: test_helm_reuse_values.yml
+
 - name: test helm dependency update
   include_tasks: test_up_dep.yml
 
