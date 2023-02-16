@@ -19,6 +19,13 @@ DOCUMENTATION = """
       - Uses the kubectl connection plugin to access the Kubernetes cluster.
       - Uses k8s.(yml|yaml) YAML configuration file to set parameter values.
 
+    deprecated:
+      removed_in: 4.0.0
+      why: |
+        As discussed in U(https://github.com/ansible-collections/kubernetes.core/issues/31), we decided to
+        remove the k8s inventory plugin in release 4.0.0.
+      alternative: "Use M(kubernetes.core.k8s_info) and M(ansible.builtin.add_host) instead."
+
     options:
       plugin:
          description: token that ensures this is a source file for the 'k8s' plugin.
@@ -155,6 +162,12 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     def parse(self, inventory, loader, path, cache=True):
         super(InventoryModule, self).parse(inventory, loader, path)
+
+        self.display.deprecated(
+            "The 'k8s' inventory plugin has been deprecated and will be removed in release 4.0.0",
+            version="4.0.0",
+            collection_name="kubernetes.core",
+        )
         cache_key = self._get_cache_prefix(path)
         config_data = self._read_config_data(path)
         self.setup(config_data, cache, cache_key)

@@ -20,6 +20,12 @@ plugin_routing:
   inventory:
     openshift:
       redirect: community.okd.openshift
+    k8s:
+      deprecation:
+        removal_version: 4.0.0
+        warning_text: >-
+          The k8s inventory plugin has been deprecated and
+          will be removed in release 4.0.0.
   modules:
     k8s_auth:
       redirect: community.okd.k8s_auth
