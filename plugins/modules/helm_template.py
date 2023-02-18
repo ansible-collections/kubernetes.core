@@ -99,6 +99,13 @@ options:
     type: list
     elements: str
     version_added: 2.4.0
+  validate:
+    description:
+      - Validate your manifests against the Kubernetes cluster you are currently pointing at. This is the same validation performed on an install.
+    required: false
+    type: bool
+    default: false
+    version_added: 2.5.0
   values_files:
     description:
         - Value files to pass to chart.
@@ -226,6 +233,7 @@ def template(
     release_values=None,
     values_files=None,
     include_crds=False,
+    validate=False,
     set_values=None,
 ):
     cmd += " template "
@@ -270,6 +278,9 @@ def template(
     if include_crds:
         cmd += " --include-crds"
 
+    if validate:
+        cmd += " --validate"
+
     if set_values:
         cmd += " " + set_values
 
@@ -291,6 +302,7 @@ def main():
             release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
             show_only=dict(type="list", default=[], elements="str"),
+            validate=dict(type="bool", default=False),
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
             set_values=dict(type="list", elements="dict"),
@@ -310,6 +322,7 @@ def main():
     show_only = module.params.get("show_only")
     release_namespace = module.params.get("release_namespace")
     release_values = module.params.get("release_values")
+    validate = module.params.get("validate")
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
     set_values = module.params.get("set_values")
@@ -341,6 +354,7 @@ def main():
         show_only=show_only,
         values_files=values_files,
         include_crds=include_crds,
+        validate=validate,
         set_values=set_values_args,
     )
 
