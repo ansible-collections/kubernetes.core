@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm - use post_renderer when checking 'changed' status for a helm release (https://github.com/ansible-collections/kubernetes.core/pull/588).
