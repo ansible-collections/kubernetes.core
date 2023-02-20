@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - helm - module should allow uninstall chart releases with different statuses (pending-install, pending-rollback, etc) not only 'deployed' (https://github.com/ansible-collections/kubernetes.core/issues/319).
