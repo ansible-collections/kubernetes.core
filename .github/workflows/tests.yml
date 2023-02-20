@@ -1,0 +1,122 @@
+name: Integration
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+    tags:
+      - '*'
+
+jobs:
+  list_changes:
+    name: list test targets
+    env:
+      source_dir: "./source"
+      cloudcommon_dir: "./cloudcommon"
+    runs-on: ubuntu-latest
+    outputs:
+      test_targets: ${{ steps.display.outputs.test_targets }}
+    steps:
+      - name: Checkout the collection repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.source_dir }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: "0"
+
+      - name: checkout ansible-collections/cloud.common
+        uses: abikouo/github_actions/.github/actions/checkout_repository@cloud_splitter
+        with:
+          repository: ansible-collections/cloud.common
+          destination_directory: ${{ env.cloudcommon_dir }}
+          ref: main
+
+      - name: list changes for pull request
+        id: splitter
+        uses: abikouo/github_actions/.github/actions/cloud_integration_test_splitter@cloud_splitter
+        with:
+          collections_to_test: ${{ env.source_dir }}:${{ github.event.pull_request.base.ref }},${{ env.cloudcommon_dir }}:main
+
+      - name: display targets
+        id: display
+        run: echo "test_targets=${{ steps.splitter.outputs.test_targets }}" >> $GITHUB_OUTPUT
+        shell: bash
+
+  integration:
+    needs:
+      - list_changes
+    env:
+      source_dir: "./source"
+      cloudcommon_dir: "./cloudcommon"
+      test_targets: ${{ needs.list_changes.outputs.test_targets }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version:
+          - stable-2.9
+          # - stable-2.12
+          # - stable-2.13
+          # - stable-2.14
+          # - milestone
+          # - devel
+        python-version:
+          - "3.8"
+          # - "3.9"
+        enable-turbo-mode:
+          - true
+          - false
+        job-index:
+          - 1
+          - 2
+          - 3
+    name: "kubernetes.core-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-turbo-mode=${{ matrix.enable-turbo-mode }}-${{ matrix.job-index }}"
+    steps:
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.source_dir }}
+          fetch-depth: "0"
+
+      - name: checkout ansible-collections/cloud.common
+        uses: abikouo/github_actions/.github/actions/checkout_repository@cloud_splitter
+        with:
+          repository: ansible-collections/cloud.common
+          destination_directory: ${{ env.cloudcommon_dir }}
+          ref: main
+
+      - name: Read collection FQCN
+        run: echo "collection_fqcn=$(yq -r '.namespace' galaxy.yml).$(yq -r '.name' galaxy.yml)" >> $GITHUB_ENV
+        shell: bash
+        working-directory: ${{ env.source_dir }}
+
+      - name: Read ansible-test targets
+        id: read-targets
+        run: >-
+          echo "ansible_test_targets=$(echo "${{ env.test_targets }}" | sed s/';'/'\n'/g | 
+          grep "${{ env.collection_fqcn }}-${{ matrix.job-index }}" | cut -d ':' -f2 | sed s/','/' '/g)" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Run integration tests
+        uses: abikouo/github_actions/.github/actions/ansible_test_integration@cloud_splitter
+        with:
+          python_version: ${{ matrix.python-version }}
+          ansible_version: ${{ matrix.ansible-version }}
+          source_path: ${{ env.source_dir }}
+          dependency_path: ${{ env.cloudcommon_dir }}
+          create_k8s_cluster: 'true'
+          ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
+          ansible_test_environment: |
+            ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}
+          python_librairies: 'virtualenv coverage yamllint flake8'
+        if: steps.read-targets.outputs.ansible_test_targets != ''
