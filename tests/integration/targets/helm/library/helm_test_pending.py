@@ -3,6 +3,9 @@
 
 # Copyright: (c) 2023, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 
 DOCUMENTATION = r"""
@@ -86,7 +89,8 @@ def create_pending_install_release(helm_binary, chart_ref, chart_release, namesp
 
     data = json.loads(out)
     if not data:
-        raise HelmReleaseNotFoundError(f"Release {chart_release} not found.")
+        error = "Release %s not found." % chart_release
+        raise HelmReleaseNotFoundError(message=error)
     return data[0]["status"] == "pending-install", data[0]["status"]
 
 
@@ -111,12 +115,12 @@ def main():
         result, status = create_pending_install_release(**params)
         if not result:
             module.fail_json(
-                msg=f"unable to create pending-install release, current status is {status}"
+                msg="unable to create pending-install release, current status is %s" % status
             )
-        module.exit_json(changed=True, msg=f"Release created with status '{status}'")
+        module.exit_json(changed=True, msg="Release created with status '%s'" % status)
     except HelmReleaseNotFoundError as err:
         module.fail_json(
-            msg=f"Error while trying to create pending-install release due to '{err}'"
+            msg="Error while trying to create pending-install release due to '%s'" % err
         )
 
 
