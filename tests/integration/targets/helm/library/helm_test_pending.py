@@ -115,7 +115,8 @@ def main():
         result, status = create_pending_install_release(**params)
         if not result:
             module.fail_json(
-                msg="unable to create pending-install release, current status is %s" % status
+                msg="unable to create pending-install release, current status is %s"
+                % status
             )
         module.exit_json(changed=True, msg="Release created with status '%s'" % status)
     except HelmReleaseNotFoundError as err:
