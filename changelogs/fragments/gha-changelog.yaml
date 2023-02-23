@@ -1,0 +1,3 @@
+---
+trivial:
+  - CI - add github action to replace zuul jobs.
