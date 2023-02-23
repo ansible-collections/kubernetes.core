@@ -13,19 +13,3 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   changelog:
     uses: abikouo/github_actions/.github/workflows/cloud-changelog.yml@gha_cloud
-  all_green:
-    if: ${{ always() }}
-    needs:
-      - changelog
-      - sanity
-      - unit-galaxy
-      - unit-source
-    runs-on: ubuntu-latest
-    steps:
-      - run: >-
-          python -c "assert set([
-          '${{ needs.changelog.result }}',
-          '${{ needs.sanity.result }}',
-          '${{ needs.unit-galaxy.result }}',
-          '${{ needs.unit-source.result }}'
-          ]) == {'success'}"
