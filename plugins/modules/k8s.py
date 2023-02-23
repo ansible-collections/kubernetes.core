@@ -473,7 +473,3 @@ def main():
         run_module(module)
     except CoreException as e:
         module.fail_from_exception(e)
-
-
-if __name__ == "__main__":
-    main()
