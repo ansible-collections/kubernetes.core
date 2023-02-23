@@ -11,20 +11,8 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 
 jobs:
-  ansible-lint:
-    uses: ansible-network/github_actions/.github/workflows/ansible-lint.yml@main
   changelog:
-    uses: ansible-network/github_actions/.github/workflows/changelog.yml@main
-  sanity:
-    uses: ansible-network/github_actions/.github/workflows/sanity.yml@main
-  unit-galaxy:
-    uses: ansible-network/github_actions/.github/workflows/unit_galaxy.yml@main
-  unit-source:
-    uses: ansible-network/github_actions/.github/workflows/unit_source.yml@main
-    with:
-      collection_pre_install: >-
-        git+https://github.com/ansible-collections/ansible.utils.git
-        git+https://github.com/ansible-collections/ansible.netcommon.git
+    uses: abikouo/github_actions/.github/workflows/cloud-changelog.yml@gha_cloud
   all_green:
     if: ${{ always() }}
     needs:
