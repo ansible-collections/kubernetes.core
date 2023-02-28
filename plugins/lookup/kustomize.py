@@ -100,7 +100,14 @@ def run_command(command):
 
 class LookupModule(LookupBase):
     def run(
-        self, terms, variables=None, dir=".", binary_path=None, opt_dirs=None, enable_helm=False, **kwargs
+        self,
+        terms,
+        variables=None,
+        dir=".",
+        binary_path=None,
+        opt_dirs=None,
+        enable_helm=False,
+        **kwargs
     ):
         executable_path = binary_path
         if executable_path is None:
@@ -132,7 +139,7 @@ class LookupModule(LookupBase):
             )
 
         if enable_helm:
-          command += ["--enable-helm"]
+            command += ["--enable-helm"]
 
         (out, err) = run_command(command)
         if err:
