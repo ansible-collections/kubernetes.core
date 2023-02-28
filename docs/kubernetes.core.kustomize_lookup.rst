@@ -80,6 +80,24 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_helm</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"False"</div>
+                </td>
+                    <td>
+                    </td>
+                <td>
+                        <div>Enable the helm chart inflation generator</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>opt_dirs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -112,16 +130,20 @@ Examples
 .. code-block:: yaml
 
     - name: Run lookup using kustomize
-      set_fact:
+      ansible.builtin.set_fact:
         resources: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kustomize') }}"
 
     - name: Run lookup using kubectl kustomize
-      set_fact:
+      ansible.builtin.set_fact:
         resources: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl') }}"
 
     - name: Create kubernetes resources for lookup output
-      k8s:
+      kubernetes.core.k8s:
         definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization') }}"
+        
+    - name: Create kubernetes resources for lookup output with `--enable-helm` set
+      kubernetes.core.k8s:
+        definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
 
 
 
@@ -133,106 +155,27 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
 
     <table border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="2">Key</th>
+            <th colspan="1">Key</th>
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>_list</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">string</span>
                     </div>
                 </td>
                 <td></td>
                 <td>
-                            <div>One ore more object definitions returned from the tool execution.</div>
+                            <div>YAML string for the object definitions returned from the tool execution.</div>
                     <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">{&#x27;kind&#x27;: &#x27;ConfigMap&#x27;, &#x27;apiVersion&#x27;: &#x27;v1&#x27;, &#x27;metadata&#x27;: {&#x27;name&#x27;: &#x27;my-config-map&#x27;, &#x27;namespace&#x27;: &#x27;default&#x27;}, &#x27;data&#x27;: {&#x27;key1&#x27;: &#x27;val1&#x27;}}</div>
                 </td>
             </tr>
-                                <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>api_version</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>The versioned schema of this representation of an object.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>kind</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Represents the REST resource this object represents.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>metadata</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Standard object metadata. Includes name, namespace, annotations, labels, etc.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>spec</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Specific attributes of the object. Will vary based on the <em>api_version</em> and <em>kind</em>.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>status</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Current status details for the object.</div>
-                    <br/>
-                </td>
-            </tr>
-
     </table>
     <br/><br/>
 
@@ -244,7 +187,7 @@ Status
 Authors
 ~~~~~~~
 
-- Aubin Bikouo <@abikouo>
+- Aubin Bikouo (@abikouo)
 
 
 .. hint::

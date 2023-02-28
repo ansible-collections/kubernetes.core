@@ -34,7 +34,7 @@ DOCUMENTATION = """
         description:
         - Enable the helm chart inflation generator
         default: "False"
-        
+
     requirements:
       - "python >= 3.6"
 """
@@ -51,7 +51,7 @@ EXAMPLES = """
 - name: Create kubernetes resources for lookup output
   kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization') }}"
-    
+
 - name: Create kubernetes resources for lookup output with `--enable-helm` set
   kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
@@ -130,10 +130,10 @@ class LookupModule(LookupBase):
                     executable_path
                 )
             )
-        
+
         if enable_helm:
           command += ["--enable-helm"]
-        
+
         (out, err) = run_command(command)
         if err:
             raise AnsibleLookupError(
