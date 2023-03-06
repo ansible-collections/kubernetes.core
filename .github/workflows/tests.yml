@@ -35,7 +35,7 @@ jobs:
 
       - name: list changes for pull request
         id: splitter
-        uses: ansible-network/github_actions/.github/actions/cloud_integration_test_splitter@cloud_splitter
+        uses: ansible-network/github_actions/.github/actions/cloud_integration_test_splitter@main
         with:
           collection_path: ${{ env.source_directory }}
           base_ref: ${{ github.event.pull_request.base.ref }}
