@@ -432,14 +432,20 @@ def get_release(state, release_name):
     return None
 
 
-def get_release_status(module, release_name):
+def get_release_status(module, release_name, all_status=False):
     """
-    Get Release state from deployed release
+    Get Release state from all release status (deployed, failed, pending-install, etc)
     """
 
-    list_command = (
-        module.get_helm_binary() + " list --output=yaml --filter " + release_name
-    )
+    list_command = [
+        module.get_helm_binary(),
+        "list",
+        "--output=yaml",
+        "--filter",
+        release_name,
+    ]
+    if all_status:
+        list_command.append("--all")
 
     rc, out, err = module.run_helm_command(list_command)
 
@@ -773,29 +779,31 @@ def main():
         run_repo_update(module)
 
     # Get real/deployed release status
-    release_status = get_release_status(module, release_name)
+    all_status = release_state == "absent"
+    release_status = get_release_status(module, release_name, all_status=all_status)
 
     helm_cmd = module.get_helm_binary()
     opt_result = {}
     if release_state == "absent" and release_status is not None:
-        if replace:
-            module.fail_json(msg="replace is not applicable when state is absent")
+        # skip release statuses 'uninstalled' and 'uninstalling'
+        if not release_status["status"].startswith("uninstall"):
+            if replace:
+                module.fail_json(msg="replace is not applicable when state is absent")
 
-        if wait:
-            helm_version = module.get_helm_version()
-            if LooseVersion(helm_version) < LooseVersion("3.7.0"):
-                opt_result["warnings"] = []
-                opt_result["warnings"].append(
-                    "helm uninstall support option --wait for helm release >= 3.7.0"
-                )
-                wait = False
+            if wait:
+                helm_version = module.get_helm_version()
+                if LooseVersion(helm_version) < LooseVersion("3.7.0"):
+                    opt_result["warnings"] = []
+                    opt_result["warnings"].append(
+                        "helm uninstall support option --wait for helm release >= 3.7.0"
+                    )
+                    wait = False
 
-        helm_cmd = delete(
-            helm_cmd, release_name, purge, disable_hook, wait, wait_timeout
-        )
-        changed = True
+            helm_cmd = delete(
+                helm_cmd, release_name, purge, disable_hook, wait, wait_timeout
+            )
+            changed = True
     elif release_state == "present":
-
         if chart_version is not None:
             helm_cmd += " --version=" + chart_version
 
@@ -956,7 +964,7 @@ def main():
         changed=changed,
         stdout=out,
         stderr=err,
-        status=get_release_status(module, release_name),
+        status=get_release_status(module, release_name, all_status=True),
         command=helm_cmd,
         **opt_result,
     )
