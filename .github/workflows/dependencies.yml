@@ -1,4 +1,4 @@
-name: Testing collections dependencies
+name: ci tests
 concurrency:
   group: docs-${{ github.head_ref }}
   cancel-in-progress: true
@@ -17,12 +17,19 @@ on:
       - '*'
 
 jobs:
-  resolve_dependencies:
-    name: Resolve dependencies for collection being tested
+  resolve_dep:
+    name: Resolve dependencies
     env:
       source_directory: "./source"
     runs-on: ubuntu-latest
     steps:
-      - name: display pull request body
-        run: echo '${{ github.event.pull_request.body }}'
-        shell: bash
+      # - name: display pull request body
+      #   run: echo '${{ github.event.pull_request.body }}'
+      #   shell: bash
+      - name: checkout another pull request merge
+        uses: actions/checkout@v3
+        with:
+          repository: ansible-collections/kubernetes.core
+          path: ${{ env.source_directory }}
+          ref: refs/pull/204/merge
+          fetch-depth: "0"
