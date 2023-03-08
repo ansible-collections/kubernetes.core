@@ -3,8 +3,18 @@ concurrency:
   group: docs-${{ github.head_ref }}
   cancel-in-progress: true
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened, closed]
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+    tags:
+      - '*'
 
 jobs:
   resolve_dependencies:
