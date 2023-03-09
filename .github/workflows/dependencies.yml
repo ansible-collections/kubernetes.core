@@ -23,13 +23,9 @@ jobs:
       source_directory: "./source"
     runs-on: ubuntu-latest
     steps:
-      # - name: display pull request body
-      #   run: echo '${{ github.event.pull_request.body }}'
-      #   shell: bash
       - name: checkout another pull request merge
-        uses: actions/checkout@v3
+        uses: abikouo/github_actions/.github/actions/checkout_repositories@clone_with_dependencies
         with:
-          repository: ansible-collections/kubernetes.core
-          path: ${{ env.source_directory }}
-          ref: refs/pull/204/merge
-          fetch-depth: "0"
+          repository: ansible/ansible-zuul-jobs
+          destination_directory: ${{ env.source_directory }}
+          pull_request_body: ${{ github.event.pull_request.body }}
