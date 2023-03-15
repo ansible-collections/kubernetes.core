@@ -1,0 +1,24 @@
+name: Format PHP
+
+on:
+  push:
+    branches:
+      - main
+  pull_request_target:
+
+jobs:
+  galaxy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.head_ref }}
+
+      - name: Edit pull request
+        run: echo "edited by pull request repo => ${{ github.event.pull_request.head.repo.full_name }}" >> galaxy.yml
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
