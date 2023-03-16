@@ -21,11 +21,18 @@ jobs:
     name: Resolve dependencies
     env:
       source_directory: "./source"
+      cloudcommon_directory: "./cloudcommon"
     runs-on: ubuntu-latest
     steps:
-      - name: checkout another pull request merge
-        uses: abikouo/github_actions/.github/actions/checkout_repositories@clone_with_dependencies
+      - name: checkout repository
+        uses: actions/checkout@v3
         with:
-          repository: ansible/ansible-zuul-jobs
-          destination_directory: ${{ env.source_directory }}
-          pull_request_body: ${{ github.event.pull_request.body }}
+          path: ${{ env.source_directory }}
+          fetch-depth: "0"
+
+      - name: checkout ansible-collections/cloud.common
+        uses: abikouo/github_actions/.github/actions/checkout_repository@clone_with_dependencies
+        with:
+          repository: ansible-collections/cloud.common
+          destination_directory: ${{ env.cloudcommon_directory }}
+          ref: main
