@@ -38,7 +38,7 @@ jobs:
       - name: Download script
         run: >-
           curl -o /tmp/add_changelog.py
-          https://github.com/abikouo/gha_testing/blob/main/tools/add_changelog.py
+          https://raw.githubusercontent.com/abikouo/gha_testing/main/tools/add_changelog.py
 
       - name: Validate or add pull request changelog
         run:
