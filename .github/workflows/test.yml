@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: install PyGithub
+      - name: Install python dependencies
         run: |
           pip install -U pyyaml
         shell: bash
@@ -45,4 +45,4 @@ jobs:
           python3 /tmp/add_changelog.py
         env:
           PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
-          PR_LABELS: ${{ inputs.repository }}
+        if: "!contains(github.event.pull_request.labels.*.name, 'skip-changelog')"
