@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm - fix issue occurring when uninstalling chart with statues others than 'deployed' (https://github.com/ansible-collections/kubernetes.core/issues/319).
