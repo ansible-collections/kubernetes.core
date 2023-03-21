@@ -25,5 +25,24 @@ jobs:
       - name: Checkout the collection repository
         uses: actions/checkout@v3
 
-      - name: Download script to run test_inventory_aliases_no_ssl_k8s.yml
-      
+      - name: Set up Python '3.9'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: install PyGithub
+        run: |
+          pip install -U pyyaml
+        shell: bash
+
+      - name: Download script
+        run: >-
+          curl -o /tmp/add_changelog.py
+          https://github.com/abikouo/gha_testing/blob/main/tools/add_changelog.py
+
+      - name: Validate or add pull request changelog
+        run:
+          python3 /tmp/add_changelog.py
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_LABELS: ${{ inputs.repository }}
