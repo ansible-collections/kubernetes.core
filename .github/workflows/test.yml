@@ -1,0 +1,29 @@
+name: Integration
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+    tags:
+      - '*'
+
+jobs:
+  auto_changelog:
+    name: add changelog to pull request if required
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the collection repository
+        uses: actions/checkout@v3
+
+      - name: Download script to run test_inventory_aliases_no_ssl_k8s.yml
+      
