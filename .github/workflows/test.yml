@@ -34,7 +34,7 @@ jobs:
 
       - name: Install python dependencies
         run: |
-          pip install -U pyyaml
+          pip install -U pyyaml pygithub
         shell: bash
 
       - name: Download script
@@ -46,5 +46,5 @@ jobs:
         run:
           python3 /tmp/add_changelog.py
         env:
-          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
-        if: "!contains(github.event.pull_request.labels.*.name, 'skip-changelog')"
+          PR_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
