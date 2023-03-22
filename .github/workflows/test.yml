@@ -1,4 +1,4 @@
-name: Integration
+name: CI
 concurrency:
   group: ${{ github.head_ref }}
   cancel-in-progress: true
@@ -19,7 +19,7 @@ on:
 
 jobs:
   auto_changelog:
-    name: add changelog to pull request if required
+    name: changelog / black formatting
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the collection repository
@@ -52,16 +52,19 @@ jobs:
 
       - name: Run black check
         id: black_check
+        continue-on-error: true
         run: |
-          black -v --check --diff {toxinidir}/plugins {toxinidir}/tests 2>/tmp/black_check.txt
+          black -v --check --diff plugins tests 2>/tmp/black_check.txt
         shell: bash
-  
+
       - name: Run black formatting
         run: |
           black $(grep "would reformat" /tmp/black_check.txt | cut -d ' ' -f3 | tr '\n' ' ')
+        shell: bash
         if: steps.black_check.outcome != 'success'
 
       - name: (debug only) list files in diff
         run: |
           git status
         shell: bash
+        if: steps.black_check.outcome != 'success'
