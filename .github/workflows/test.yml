@@ -32,19 +32,36 @@ jobs:
         with:
           python-version: '3.9'
 
+      # black should be defined as input parameter of the action
       - name: Install python dependencies
         run: |
-          pip install -U pyyaml pygithub
+          pip install -U pyyaml pygithub 'black>=22.0,<23.0'
         shell: bash
 
-      - name: Download script
-        run: >-
-          curl -o /tmp/add_changelog.py
-          https://raw.githubusercontent.com/abikouo/gha_testing/main/tools/add_changelog.py
+      # - name: Download script
+      #   run: >-
+      #     curl -o /tmp/add_changelog.py
+      #     https://raw.githubusercontent.com/abikouo/gha_testing/main/tools/add_changelog.py
 
-      - name: Validate or add pull request changelog
-        run:
-          python3 /tmp/add_changelog.py
-        env:
-          PR_REPOSITORY: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+      # - name: Validate or add pull request changelog
+      #   run:
+      #     python3 /tmp/add_changelog.py
+      #   env:
+      #     PR_REPOSITORY: ${{ github.repository }}
+      #     PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      - name: Run black check
+        id: black_check
+        run: |
+          black -v --check --diff {toxinidir}/plugins {toxinidir}/tests 2>/tmp/black_check.txt
+        shell: bash
+  
+      - name: Run black formatting
+        run: |
+          black $(grep "would reformat" /tmp/black_check.txt | cut -d ' ' -f3 | tr '\n' ' ')
+        if: steps.black_check.outcome != 'success'
+
+      - name: (debug only) list files in diff
+        run: |
+          git status
+        shell: bash
