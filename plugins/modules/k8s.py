@@ -175,7 +175,7 @@ options:
   delete_all:
     description:
     - When this option is set to I(true) and I(state=absent),
-      module will delete on all resources, in the namespace of the specified resource type.
+      module will delete all resources of the specified resource type in the requested namespace.
     - Ignored when C(state) is not set to I(absent) or when one of (src),
       C(name)  or C(resource_definition) is provided.
     - Parameter C(kind) is required to use this option.
