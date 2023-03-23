@@ -69,7 +69,7 @@ def get_definitions(svc, params):
         # Delete all resources in the namespace for the specified resource type
         if params.get("kind") is None:
             raise CoreException(
-                "'kind' option is required to sepcify the resource type."
+                "'kind' option is required to specify the resource type."
             )
 
         resource = svc.find_resource(
