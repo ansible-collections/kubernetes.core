@@ -48,6 +48,7 @@ YAML_LINT_SKIPS = [
     "tests/integration/targets/helm/files/test-chart/templates/configmap.yaml",
     "tests/integration/targets/helm_diff/files/test-chart/templates/configmap.yaml",
     "tests/integration/targets/k8s_scale/files/deployment.yaml",
+    "tests/integration/targets/k8s_delete/files/deployments.yaml",
 ]
 
 # Add shebang!skip

@@ -46,16 +46,51 @@ def validate(client, module, resource):
     return [_prepend_resource_info(resource, msg) for msg in warnings + errors]
 
 
+def get_definitions(svc, params):
+    try:
+        definitions = create_definitions(params)
+    except Exception as e:
+        msg = "Failed to load resource definition: {0}".format(e)
+        raise CoreException(msg) from e
+
+    delete_all = params.get("delete_all")
+    src = params.get("src")
+    resource_definition = params.get("resource_definition")
+    name = params.get("name")
+    state = params.get("state")
+
+    if (
+        delete_all
+        and state == "absent"
+        and name is None
+        and resource_definition is None
+        and src is None
+    ):
+        # Delete all resources in the namespace for the specified resource type
+        if params.get("kind") is None:
+            raise CoreException(
+                "'kind' option is required to specify the resource type."
+            )
+
+        resource = svc.find_resource(
+            params.get("kind"), params.get("api_version"), fail=True
+        )
+        definitions = svc.retrieve_all(
+            resource,
+            params.get("namespace"),
+            params.get("label_selectors"),
+        )
+
+    return definitions
+
+
 def run_module(module) -> None:
     results = []
     changed = False
     client = get_api_client(module)
     svc = K8sService(client, module)
-    try:
-        definitions = create_definitions(module.params)
-    except Exception as e:
-        msg = "Failed to load resource definition: {0}".format(e)
-        raise CoreException(msg) from e
+
+    definitions = get_definitions(svc, module.params)
 
     for definition in definitions:
         result = {"changed": False, "result": {}}

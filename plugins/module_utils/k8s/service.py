@@ -211,6 +211,30 @@ class K8sService:
 
         return existing
 
+    def retrieve_all(
+        self, resource: Resource, namespace: str, label_selectors: List[str] = None
+    ) -> List[Dict]:
+        definitions: List[ResourceInstance] = []
+
+        try:
+            params = dict(namespace=namespace)
+            if label_selectors:
+                params["label_selector"] = ",".join(label_selectors)
+            resource_list = self.client.get(resource, **params)
+            for item in resource_list.items:
+                existing = self.client.get(
+                    resource, name=item.metadata.name, namespace=namespace
+                )
+                definitions.append(existing.to_dict())
+        except (NotFoundError, MethodNotAllowedError):
+            pass
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to retrieve requested object: {0}".format(reason)
+            raise CoreException(msg) from e
+
+        return definitions
+
     def find(
         self,
         kind: str,

@@ -172,6 +172,19 @@ options:
         - When set to True, server-side apply will force the changes against conflicts.
         type: bool
         default: False
+  delete_all:
+    description:
+    - When this option is set to I(true) and I(state=absent),
+      module will delete all resources of the specified resource type in the requested namespace.
+    - Ignored when C(state) is not set to I(absent) or when one of (src),
+      C(name)  or C(resource_definition) is provided.
+    - Parameter C(kind) is required to use this option.
+    - This parameter can be used with C(label_selectors) to restrict the resources to be deleted.
+    type: bool
+    default: false
+    version_added: 2.5.0
+    aliases:
+    - all
 
 requirements:
   - "python >= 3.6"
@@ -343,6 +356,14 @@ EXAMPLES = r"""
     apply: yes
     server_side_apply:
       field_manager: ansible
+
+# Delete all Deployment from specified namespace
+- name: Delete all Deployment from specified namespace
+  kubernetes.core.k8s:
+    api_version: apps/v1
+    namespace: testing
+    kind: Deployment
+    delete_all: true
 """
 
 RETURN = r"""
@@ -450,6 +471,7 @@ def argspec():
     argument_spec["server_side_apply"] = dict(
         type="dict", default=None, options=server_apply_spec()
     )
+    argument_spec["delete_all"] = dict(type="bool", default=False, aliases=["all"])
 
     return argument_spec
 
