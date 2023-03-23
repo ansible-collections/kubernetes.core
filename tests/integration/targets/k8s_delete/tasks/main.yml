@@ -165,7 +165,7 @@
       assert:
         that:
           - _delete is failed
-          - _delete.msg == "'kind' option is required to sepcify the resource type."
+          - _delete.msg == "'kind' option is required to specify the resource type."
 
     - name: Trying to delete deployments without name and label_selectors and delete_all=true
       k8s:
