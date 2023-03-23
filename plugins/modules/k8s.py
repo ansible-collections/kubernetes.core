@@ -179,6 +179,7 @@ options:
     - Ignored when C(state) is not set to I(absent) or when one of (src),
       C(name)  or C(resource_definition) is provided.
     - Parameter C(kind) is required to use this option.
+    - This parameter can be used with C(label_selectors) to restrict the resources to be deleted.
     type: bool
     default: false
     version_added: 2.5.0
