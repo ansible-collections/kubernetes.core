@@ -68,3 +68,9 @@ jobs:
           git status
         shell: bash
         if: steps.black_check.outcome != 'success'
+
+      - name: commit and push changes
+        id: commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "automated changes for changelog and/or black formatting"

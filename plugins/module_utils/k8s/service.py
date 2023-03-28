@@ -255,8 +255,7 @@ class K8sService:
             return dict(
                 resources=[],
                 msg='Failed to find API for resource with apiVersion "{0}" and kind "{1}"'.format(
-                api_version,
-                kind,
+                    api_version, kind
                 ),
                 api_found=False,
             )
