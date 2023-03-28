@@ -1,4 +1,10 @@
 ---
+- name: Delete existing folder
+  file:
+    path: "{{ helm_install_path }}"
+    state: absent
+  ignore_errors: true
+
 - name: Init Helm folders
   file:
     path: "{{ helm_install_path }}"
@@ -13,3 +19,7 @@
   delay: 5
   register: result
   until: result is not failed
+
+- name: set helm binary path
+  set_fact:
+    helm_binary_path: "{{ helm_install_path }}/{{ ansible_system | lower }}-amd64/helm"

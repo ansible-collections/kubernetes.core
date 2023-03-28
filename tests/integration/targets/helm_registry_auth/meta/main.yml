@@ -1,0 +1,5 @@
+---
+dependencies:
+  - remove_namespace
+  - role: install_helm
+    helm_version: v3.8.0

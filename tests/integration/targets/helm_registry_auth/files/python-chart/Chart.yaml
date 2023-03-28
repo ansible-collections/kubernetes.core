@@ -1,0 +1,7 @@
+apiVersion: v2
+name: python-app
+description: |
+  A Helm chart used to test OCI registry login for Kubernetes.core Ansible collection
+type: application
+version: 0.1.0
+appVersion: "default"

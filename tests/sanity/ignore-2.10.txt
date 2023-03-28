@@ -614,3 +614,4 @@ plugins/modules/k8s_rollback.py validate-modules!skip
 plugins/modules/k8s_scale.py validate-modules!skip
 plugins/modules/k8s_service.py validate-modules!skip
 plugins/modules/k8s_taint.py validate-modules!skip
+tests/integration/targets/helm_registry_auth/files/python-chart/templates/deployment.yaml yamllint!skip

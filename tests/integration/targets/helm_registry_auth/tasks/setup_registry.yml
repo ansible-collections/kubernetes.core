@@ -1,0 +1,65 @@
+---
+- name: Ensure docker is present
+  command: |
+    command -v docker
+  ignore_errors: true
+  register: check_docker
+
+- name: Setup OCI registry
+  block:
+    - name: create docker registry
+      tempfile:
+        state: directory
+        suffix: .auth
+      register: _tmpfile
+      notify:
+        - teardown registry
+
+    - name: create auth file
+      copy:
+        content: "{{ registry_credentials }}"
+        dest: "{{ _tmpfile.path }}/htpasswd"
+
+    - include_tasks: remove_docker_container.yml
+
+    - name: Create registry container
+      command: >-
+        docker run -d
+        -p {{ registry_port }}:5000
+        --restart=always
+        --name "{{ registry_name }}"
+        -v "{{ _tmpfile.path }}:/auth"
+        -e "REGISTRY_AUTH=htpasswd"
+        -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm"
+        -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
+        registry:2
+
+    - name: try login to OCI registry
+      command: >-
+        {{ helm_binary_path }} registry login
+        -u testuser
+        -p 'pass123!'
+        localhost:{{ registry_port }}
+
+    - name: Package helm chart
+      command: >-
+        {{ helm_binary_path }} package
+        "{{ role_path }}/files/python-chart"
+        --destination {{ _tmpfile.path }}
+
+    - name: Helm push chart to the registry
+      command: >-
+        {{ helm_binary_path }} push
+        {{ _tmpfile.path }}/python-app-0.1.0.tgz
+        oci://localhost:{{ registry_port }}/helm-charts
+
+    - name: Show chart from registry
+      command: >-
+        {{ helm_binary_path }} show all oci://localhost:{{ registry_port }}/helm-charts/python-app
+
+    - name: Logout from registry
+      command: >-
+        {{ helm_binary_path }} registry logout localhost:{{ registry_port }}
+
+  when:
+    - check_docker.rc == 0

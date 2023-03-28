@@ -31,3 +31,4 @@ plugins/modules/k8s_scale.py validate-modules:return-syntax-error
 plugins/modules/k8s_service.py validate-modules:return-syntax-error
 plugins/modules/k8s_taint.py validate-modules:return-syntax-error
 tests/integration/targets/k8s_delete/files/deployments.yaml yamllint!skip
+tests/integration/targets/helm_registry_auth/files/python-chart/templates/deployment.yaml yamllint!skip

@@ -1,0 +1,114 @@
+---
+# testing login
+- name: login to remote registry (check_mode)
+  kubernetes.core.helm_registry_auth:
+    state: present
+    host: "localhost:{{ registry_port }}"
+    validate_certs: false
+    username: testuser
+    password: pass123!
+    binary_path: "{{ helm_binary_path }}"
+  register: _login_check_mode
+  check_mode: true
+
+- assert:
+    that:
+      - _login_check_mode is changed
+
+- name: trying to install chart with login in check_mode
+  kubernetes.core.helm:
+    binary_path: "{{ helm_binary_path }}"
+    name: "test-chart-registry"
+    chart_ref: "oci://localhost:{{ registry_port }}/helm-charts/python-app"
+    chart_version: 0.1.0
+    namespace: "{{ test_namespace[0] }}"
+    create_namespace: true
+  ignore_errors: true
+  register: install_fail
+
+- name: Validate module failure
+  assert:
+    that:
+      - install_fail is failed
+
+- name: login to remote registry
+  kubernetes.core.helm_registry_auth:
+    state: present
+    host: "localhost:{{ registry_port }}"
+    validate_certs: false
+    username: testuser
+    password: pass123!
+    binary_path: "{{ helm_binary_path }}"
+  register: _login
+
+- assert:
+    that:
+      - _login is changed
+
+- name: Install chart should succeed now since login was performed
+  kubernetes.core.helm:
+    binary_path: "{{ helm_binary_path }}"
+    name: "test-chart-registry"
+    chart_ref: "oci://localhost:{{ registry_port }}/helm-charts/python-app"
+    chart_version: 0.1.0
+    namespace: "{{ test_namespace[0] }}"
+    create_namespace: true
+
+# testing logout
+- name: logout from remote registry (check_mode)
+  kubernetes.core.helm_registry_auth:
+    state: absent
+    host: "localhost:{{ registry_port }}"
+    binary_path: "{{ helm_binary_path }}"
+  register: _logout_check_mode
+  check_mode: true
+
+- assert:
+    that:
+      - _logout_check_mode is changed
+
+- name: Install chart should succeed (logout has been performed in check mode)
+  kubernetes.core.helm:
+    binary_path: "{{ helm_binary_path }}"
+    name: "test-chart-registry-2"
+    chart_ref: "oci://localhost:{{ registry_port }}/helm-charts/python-app"
+    chart_version: 0.1.0
+    namespace: "{{ test_namespace[1] }}"
+    create_namespace: true
+
+- name: logout from remote registry
+  kubernetes.core.helm_registry_auth:
+    state: absent
+    host: "localhost:{{ registry_port }}"
+    binary_path: "{{ helm_binary_path }}"
+  register: _logout
+
+- assert:
+    that:
+      - _logout is changed
+
+- name: Install chart should failed
+  kubernetes.core.helm:
+    binary_path: "{{ helm_binary_path }}"
+    name: "test-chart-registry-2"
+    chart_ref: "oci://localhost:{{ registry_port }}/helm-charts/python-app"
+    chart_version: 0.1.0
+    namespace: "{{ test_namespace[1] }}"
+    create_namespace: true
+  register: _install_fail
+  ignore_errors: true
+
+- assert:
+    that:
+      - _install_fail is failed
+
+- name: logout once again (idempotency)
+  kubernetes.core.helm_registry_auth:
+    state: absent
+    host: "localhost:{{ registry_port }}"
+    binary_path: "{{ helm_binary_path }}"
+  register: _logout
+
+- assert:
+    that:
+      - _logout is not changed
