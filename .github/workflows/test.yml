@@ -20,11 +20,13 @@ on:
 jobs:
   auto_changelog:
     name: changelog / black formatting
+    if: "!contains(github.event.pull_request.labels.*.name, 'skip-changelog')"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the collection repository
+      - name: checkout fork
         uses: actions/checkout@v3
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: "0"
 
       - name: Set up Python '3.9'
