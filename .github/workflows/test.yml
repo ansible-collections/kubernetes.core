@@ -20,6 +20,7 @@ on:
 jobs:
   auto_changelog:
     name: changelog / black formatting
+    if: "!contains(github.event.pull_request.labels.*.name, 'skip-changelog')"
     runs-on: ubuntu-latest
     steps:
       - name: checkout fork
