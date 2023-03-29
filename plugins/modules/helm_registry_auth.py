@@ -148,11 +148,11 @@ def main():
     if state == "present":
         command.extend(
             [
-            "login",
-            "--username",
-            module.params.get("username"),
-            "--password",
-            module.params.get("password"),
+                "login",
+                "--username",
+                module.params.get("username"),
+                "--password",
+                module.params.get("password"),
             ]
         )
     else:
