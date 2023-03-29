@@ -1,0 +1,76 @@
+name: CI
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+    tags:
+      - '*'
+
+jobs:
+  auto_changelog:
+    name: changelog / black formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the collection repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: "0"
+
+      - name: Set up Python '3.9'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # black should be defined as input parameter of the action
+      - name: Install python dependencies
+        run: |
+          pip install -U pyyaml pygithub tox
+        shell: bash
+
+      - name: Download script
+        run: >-
+          curl -o /tmp/add_changelog.py
+          https://raw.githubusercontent.com/abikouo/gha_testing/main/tools/add_changelog.py
+
+      - name: Validate or add pull request changelog
+        run:
+          python3 /tmp/add_changelog.py
+        env:
+          PR_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      - name: Run black check
+        id: black_check
+        continue-on-error: true
+        run: |
+          tox -e black -vv 2>/tmp/black_check.txt
+        shell: bash
+
+      - name: Run black formatting
+        run: |
+          tox -e black_format -vv -- $(grep "would reformat" /tmp/black_check.txt | cut -d ' ' -f3 | tr '\n' ' ')
+        shell: bash
+        if: steps.black_check.outcome != 'success'
+
+      - name: (debug only) list files in diff
+        run: |
+          git status
+        shell: bash
+        if: steps.black_check.outcome != 'success'
+
+      - name: commit and push changes
+        id: commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "automated changes for changelog and/or black formatting"
