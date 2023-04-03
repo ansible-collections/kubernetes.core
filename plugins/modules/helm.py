@@ -560,7 +560,7 @@ def deploy(
         module.add_cleanup_file(path)
 
     if post_renderer:
-        deploy_command = " --post-renderer=" + post_renderer
+        deploy_command += " --post-renderer=" + post_renderer
 
     if skip_crds:
         deploy_command += " --skip-crds"
