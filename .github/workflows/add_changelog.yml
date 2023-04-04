@@ -1,4 +1,4 @@
-name: CI
+name: add changelog / black formatting
 concurrency:
   group: ${{ github.head_ref }}
   cancel-in-progress: true
@@ -18,10 +18,11 @@ on:
       - '*'
 
 jobs:
-  auto_changelog:
-    name: changelog / black formatting
+  update:
     if: "!contains(github.event.pull_request.labels.*.name, 'skip-changelog')"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: checkout fork
         uses: actions/checkout@v3
