@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm - Fix broken idempotence when using Helm '--post-renderer' module arg (https://github.com/ansible-collections/kubernetes.core/pull/608)
