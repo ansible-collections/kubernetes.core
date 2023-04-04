@@ -637,6 +637,7 @@ def helmdiff_check(
     chart_version=None,
     replace=False,
     chart_repo_url=None,
+    post_renderer=None,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -651,6 +652,8 @@ def helmdiff_check(
         cmd += " " + "--version=" + chart_version
     if not replace:
         cmd += " " + "--reset-values"
+    if post_renderer:
+        cmd += " " + "--post-renderer=" + post_renderer
 
     if release_values != {}:
         fd, path = tempfile.mkstemp(suffix=".yml")
@@ -892,6 +895,7 @@ def main():
                     chart_version,
                     replace,
                     chart_repo_url,
+                    post_renderer,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
