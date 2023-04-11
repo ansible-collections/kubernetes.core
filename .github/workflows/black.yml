@@ -1,0 +1,17 @@
+---
+name: black
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.sha }}'
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+      - 'stable-*'
+  pull_request_target:
+
+jobs:
+  format:
+    uses: abikouo/github_actions/.github/workflows/black.yml@automate_changes_a
