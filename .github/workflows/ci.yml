@@ -100,7 +100,6 @@ jobs:
         shell: bash
 
       - name: Checkout kubernetes.core repository
-        id: install-collection
         uses: actions/checkout@v3
         with:
           path: ${{ env.source }}
@@ -116,6 +115,7 @@ jobs:
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: install kubernetes.core collection
+        id: install-collection
         uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
         with:
           install_python_dependencies: true
