@@ -1,0 +1,3 @@
+---
+trivial:
+  - add dependency with `install_helm` for `helm_set_values` and `helm_kubeconfig` integration tests (https://github.com/ansible-collections/kubernetes.core/pull/612).
