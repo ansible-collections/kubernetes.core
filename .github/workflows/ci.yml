@@ -114,7 +114,7 @@ jobs:
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: Run integration tests
-        uses: abikouo/github_actions/.github/actions/ansible_test_integration@cloud_splitter
+        uses: abikouo/github_actions/.github/actions/ansible_test_integration@ansible_test_integration_a
         with:
           collection_path: ${{ steps.install-collection.outputs.collection_path }}
           python_version: ${{ matrix.python-version }}
