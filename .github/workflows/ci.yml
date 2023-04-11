@@ -138,7 +138,6 @@ jobs:
         with:
           collection_path: ${{ steps.install-collection.outputs.collection_path }}
           python_version: ${{ matrix.python-version }}
-          python_librairies: 'virtualenv coverage yamllint flake8'
           ansible_version: ${{ matrix.ansible-version }}
           ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
           ansible_test_environment: |
