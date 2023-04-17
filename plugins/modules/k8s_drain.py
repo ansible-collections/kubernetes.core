@@ -510,8 +510,10 @@ def argspec():
                 ),
             ),
             pod_selectors=dict(
-                type="list", elements="str", aliases=["label_selectors"],
-            )
+                type="list",
+                elements="str",
+                aliases=["label_selectors"],
+            ),
         )
     )
     return argument_spec
