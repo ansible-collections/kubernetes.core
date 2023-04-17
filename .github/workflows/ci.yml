@@ -1,0 +1,145 @@
+name: CI
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+    tags:
+      - '*'
+
+jobs:
+  changelog:
+    uses: ansible-network/github_actions/.github/workflows/changelog.yml@main
+  splitter:
+    env:
+      source_dir: "./source"
+    runs-on: ubuntu-latest
+    outputs:
+      test_targets: ${{ steps.display.outputs.test_targets }}
+    steps:
+      - name: Checkout the collection repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.source_dir }}
+          fetch-depth: "0"
+
+      - name: list changes for pull request
+        id: splitter
+        uses: ansible-network/github_actions/.github/actions/ansible_test_splitter@main
+        with:
+          collections_to_test: ${{ env.source_dir }}
+
+      - name: display targets
+        id: display
+        run: echo "test_targets=${{ steps.splitter.outputs.test_targets }}" >> $GITHUB_OUTPUT
+        shell: bash
+  integration:
+    needs:
+      - splitter
+    env:
+      source: "./source"
+      cloud_common: "./cloudcommon"
+      test_targets: ${{ needs.splitter.outputs.test_targets }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version:
+          - stable-2.9
+          - stable-2.10
+          - stable-2.12
+          - milestone
+          - devel
+        python-version:
+          - "3.8"
+          - "3.9"
+        exclude:
+          - ansible-version: stable-2.9
+            python-version: 3.9
+          - ansible-version: stable-2.9
+            python-version: 3.10
+          - ansible-version: stable-2.9
+            python-version: 3.11
+          - ansible-version: stable-2.12
+            python-version: 3.11
+          - ansible-version: stable-2.13
+            python-version: 3.11
+          - ansible-version: stable-2.14
+            python-version: 3.8
+          - ansible-version: stable-2.15
+            python-version: 3.8
+          - ansible-version: milestone
+            python-version: 3.8
+          - ansible-version: devel
+            python-version: 3.8
+        enable-turbo-mode:
+          - true
+          - false
+        job-index:
+          - 1
+          - 2
+          - 3
+    name: "kubernetes.core-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-turbo-mode=${{ matrix.enable-turbo-mode }}-${{ matrix.job-index }}"
+    steps:
+      # could read collection name using $(yq -r '.namespace' galaxy.yml).$(yq -r '.name' galaxy.yml)
+      - name: Read ansible-test targets
+        id: read-targets
+        run: >-
+          echo "ansible_test_targets=$(echo "${{ env.test_targets }}" | sed s/';'/'\n'/g |
+          grep "kubernetes.core-${{ matrix.job-index }}" | cut -d ':' -f2 | sed s/','/' '/g)" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.source }}
+          fetch-depth: "0"
+        if: steps.read-targets.outputs.ansible_test_targets != ''
+
+      - name: checkout ansible-collections/cloud.common
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/cloud.common
+          path: ${{ env.cloud_common }}
+          ref: main
+        if: steps.read-targets.outputs.ansible_test_targets != ''
+
+      - name: install kubernetes.core collection
+        id: install-collection
+        uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.source }}
+        if: steps.read-targets.outputs.ansible_test_targets != ''
+
+      - name: install cloud.common collection
+        uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.cloud_common }}
+        if: steps.read-targets.outputs.ansible_test_targets != ''
+
+      - name: create kubernetes cluster
+        uses: helm/kind-action@v1.4.0
+        if: steps.read-targets.outputs.ansible_test_targets != ''
+
+      - name: Run integration tests
+        uses: abikouo/github_actions/.github/actions/ansible_test_integration@ansible_test_integration_a
+        with:
+          collection_path: ${{ steps.install-collection.outputs.collection_path }}
+          python_version: ${{ matrix.python-version }}
+          ansible_version: ${{ matrix.ansible-version }}
+          ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
+          ansible_test_environment: |
+            ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}
+        if: steps.read-targets.outputs.ansible_test_targets != ''
