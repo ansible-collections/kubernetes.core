@@ -7,4 +7,3 @@ pytest-mock
 pytest-forked
 virtualenv
 pytest-ansible-units ; python_version > '3.8'
-https://github.com/ansible/ansible/archive/devel.tar.gz
