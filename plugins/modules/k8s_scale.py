@@ -36,6 +36,7 @@ options:
     description: List of label selectors to use to filter results.
     type: list
     elements: str
+    default: []
     version_added: 2.0.0
   continue_on_error:
     description:

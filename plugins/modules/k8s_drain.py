@@ -43,6 +43,7 @@ options:
     type: str
   delete_options:
     type: dict
+    default: {}
     description:
       - Specify options to delete pods.
       - This option has effect only when C(state) is set to I(drain).

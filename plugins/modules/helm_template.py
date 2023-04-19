@@ -98,6 +98,7 @@ options:
     required: false
     type: list
     elements: str
+    default: []
     version_added: 2.4.0
   values_files:
     description:

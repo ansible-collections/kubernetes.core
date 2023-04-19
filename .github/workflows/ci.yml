@@ -56,12 +56,20 @@ jobs:
               "python-version": "3.8"
             },
             {
+              "ansible-version": "stable-2.14",
+              "python-version": "3.11"
+            },
+            {
               "ansible-version": "stable-2.15",
               "python-version": "3.7"
             },
             {
               "ansible-version": "stable-2.15",
               "python-version": "3.8"
+            },
+            {
+              "ansible-version": "stable-2.15",
+              "python-version": "3.11"
             },
             {
               "ansible-version": "milestone",
@@ -78,6 +86,14 @@ jobs:
             {
               "ansible-version": "devel",
               "python-version": "3.8"
+            }
+          ]
+      continue-on-error: >-
+         [
+            {
+              "ansible-version": "milestone"
+            },
+              "ansible-version": "devel"
             }
           ]
   unit-source:
