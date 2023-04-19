@@ -88,14 +88,6 @@ jobs:
               "python-version": "3.8"
             }
           ]
-      continue-on-error: >-
-         [
-            {
-              "ansible-version": "milestone"
-            },
-              "ansible-version": "devel"
-            }
-          ]
   unit-source:
     uses: ansible-network/github_actions/.github/workflows/unit_source.yml@main
     with:
@@ -310,8 +302,10 @@ jobs:
       - run: >-
           python -c "assert set([
           '${{ needs.changelog.result }}',
-          '${{ needs.sanity.result }}',
           '${{ needs.linters.result }}',
           '${{ needs.unit-source.result }}'
           '${{ needs.integration.result }}'
           ]) == {'success'}"
+      - run: >-
+          python -c "assert '${{ needs.sanity.result }}'
+          in ['success', 'failure']"
