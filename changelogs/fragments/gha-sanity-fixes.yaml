@@ -1,0 +1,3 @@
+---
+trivial:
+  - add github workflow and fix sanity failures (https://github.com/ansible-collections/kubernetes.core/pull/614).
