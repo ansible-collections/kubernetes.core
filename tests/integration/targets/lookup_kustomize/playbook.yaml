@@ -1,0 +1,6 @@
+---
+- connection: local
+  gather_facts: false
+  hosts: localhost
+  roles:
+  - lookup_kustomize
