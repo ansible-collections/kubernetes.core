@@ -303,7 +303,7 @@ jobs:
           python -c "assert set([
           '${{ needs.changelog.result }}',
           '${{ needs.linters.result }}',
-          '${{ needs.unit-source.result }}'
+          '${{ needs.unit-source.result }}',
           '${{ needs.integration.result }}'
           ]) == {'success'}"
       - run: >-
