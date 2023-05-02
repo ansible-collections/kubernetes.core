@@ -53,6 +53,7 @@ jobs:
     env:
       source: "./source"
       cloud_common: "./cloudcommon"
+      ansible_posix: "./ansible_posix"
       test_targets: ${{ needs.splitter.outputs.test_targets }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -98,6 +99,13 @@ jobs:
           grep "kubernetes.core-${{ matrix.job-index }}" | cut -d ':' -f2 | sed s/','/' '/g)" >> $GITHUB_OUTPUT
         shell: bash
 
+      - name: Display targets
+        run: >-
+          echo "targets to test: $ANSIBLE_TARGETS"
+        shell: bash
+        env:
+          ANSIBLE_TARGETS: ${{ steps.read-targets.outputs.ansible_test_targets }}
+
       - name: Checkout kubernetes.core repository
         uses: actions/checkout@v3
         with:
@@ -110,6 +118,14 @@ jobs:
         with:
           repository: ansible-collections/cloud.common
           path: ${{ env.cloud_common }}
+          ref: main
+        if: steps.read-targets.outputs.ansible_test_targets != ''
+
+      - name: checkout ansible-collections/ansible.posix
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/ansible.posix
+          path: ${{ env.ansible_posix }}
           ref: main
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
@@ -126,6 +142,13 @@ jobs:
         with:
           install_python_dependencies: true
           source_path: ${{ env.cloud_common }}
+        if: steps.read-targets.outputs.ansible_test_targets != ''
+
+      - name: install ansible.posix collection
+        uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.ansible_posix }}
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: create kubernetes cluster
