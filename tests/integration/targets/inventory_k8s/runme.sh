@@ -8,6 +8,7 @@ USER_CREDENTIALS_DIR=$(pwd)
 ansible-playbook playbooks/delete_resources.yml -e "user_credentials_dir=${USER_CREDENTIALS_DIR}" "$@"
 
 {
+export ANSIBLE_CALLBACKS_ENABLED=profile_tasks
 export ANSIBLE_INVENTORY_ENABLED=kubernetes.core.k8s,yaml
 export ANSIBLE_PYTHON_INTERPRETER=auto_silent
 
