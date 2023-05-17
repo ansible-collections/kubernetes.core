@@ -24,10 +24,12 @@ options:
     description: List of label selectors to use to filter results.
     type: list
     elements: str
+    default: []
   field_selectors:
     description: List of field selectors to use to filter results.
     type: list
     elements: str
+    default: []
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
   - kubernetes.core.k8s_name_options
