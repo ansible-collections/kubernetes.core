@@ -6,15 +6,17 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  issues:
-    types:
-      - reopened
-      - labeled
-      - unlabeled
-      - opened
-      - edited
-      - closed
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to release. e.g: '5.0.1'"
+        required: true
 
 jobs:
-  release:
-    uses: abikouo/github_actions/.github/workflows/release.yml@release_v1
+  prepare:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ansible-network/github_actions/.github/workflows/release-branch.yml@main
+    with:
+      version: ${{ github.event.inputs.version }}
