@@ -611,3 +611,4 @@ plugins/modules/k8s_rollback.py validate-modules!skip
 plugins/modules/k8s_scale.py validate-modules!skip
 plugins/modules/k8s_service.py validate-modules!skip
 plugins/modules/k8s_taint.py validate-modules!skip
+tools/prepare_release.py shebang!skip
