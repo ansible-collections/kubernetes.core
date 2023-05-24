@@ -612,3 +612,8 @@ plugins/modules/k8s_scale.py validate-modules!skip
 plugins/modules/k8s_service.py validate-modules!skip
 plugins/modules/k8s_taint.py validate-modules!skip
 tools/prepare_release.py shebang!skip
+tools/prepare_release.py compile-2.6!skip
+tools/prepare_release.py compile-2.7!skip
+tools/prepare_release.py compile-3.5!skip
+tools/prepare_release.py future-import-boilerplate!skip
+tools/prepare_release.py metaclass-boilerplate!skip
