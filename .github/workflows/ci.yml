@@ -20,8 +20,10 @@ on:
 jobs:
   changelog:
     uses: ansible-network/github_actions/.github/workflows/changelog.yml@main
+  galaxy_importer:
+    uses: ansible-network/github_actions/.github/workflows/galaxy_importer.yml@main
   linters:
-    uses: abikouo/github_actions/.github/workflows/tox-linters.yml@tox_linters
+    uses: ansible-network/github_actions/.github/workflows/tox-linters.yml@main
   sanity:
     uses: ansible-network/github_actions/.github/workflows/sanity.yml@main
     with:
@@ -255,21 +257,21 @@ jobs:
 
       - name: install kubernetes.core collection
         id: install-collection
-        uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
           source_path: ${{ env.source }}
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: install cloud.common collection
-        uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
           source_path: ${{ env.cloud_common }}
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: install ansible.posix collection
-        uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
           source_path: ${{ env.ansible_posix }}
@@ -280,7 +282,7 @@ jobs:
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: Run integration tests
-        uses: abikouo/github_actions/.github/actions/ansible_test_integration@ansible_test_integration_a
+        uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
         with:
           collection_path: ${{ steps.install-collection.outputs.collection_path }}
           python_version: ${{ matrix.python-version }}
