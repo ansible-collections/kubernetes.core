@@ -17,6 +17,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource impor
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
     diff_objects,
+    hide_fields,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     ResourceTimeout,
@@ -137,6 +138,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     state = params.get("state", None)
     kind = definition.get("kind")
     api_version = definition.get("apiVersion")
+    hidden_fields = params.get("hidden_fields")
 
     result = {"changed": False, "result": {}}
     instance = {}
@@ -212,7 +214,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             existing = existing.to_dict()
         else:
             existing = {}
-        match, diffs = diff_objects(existing, instance)
+        match, diffs = diff_objects(existing, instance, hidden_fields)
         if match and diffs:
             result.setdefault("warnings", []).append(
                 "No meaningful diff was generated, but the API may not be idempotent "
@@ -222,7 +224,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
         if svc.module._diff:
             result["diff"] = diffs
 
-    result["result"] = instance
+    result["result"] = hide_fields(instance, hidden_fields)
     if not success:
         raise ResourceTimeout(
             '"{0}" "{1}": Timed out waiting on resource'.format(
