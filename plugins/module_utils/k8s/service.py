@@ -312,7 +312,9 @@ class K8sService:
         instances = resources.get("items") or [resources]
 
         if not wait:
-            result["resources"] = [hide_fields(instance, hidden_fields) for instance in instances]
+            result["resources"] = [
+                hide_fields(instance, hidden_fields) for instance in instances
+            ]
             return result
 
         # Now wait for the specified state of any resource instances we have found.
@@ -497,7 +499,9 @@ class K8sService:
         return k8s_obj
 
 
-def diff_objects(existing: Dict, new: Dict, hidden_fields: Optional[list]) -> Tuple[bool, Dict]:
+def diff_objects(
+    existing: Dict, new: Dict, hidden_fields: Optional[list]
+) -> Tuple[bool, Dict]:
     result = {}
     diff = recursive_diff(existing, new)
     if not diff:
@@ -538,10 +542,10 @@ def hide_fields(definition: dict, hidden_fields: Optional[list]) -> dict:
 # with e.g. status or metadata.managedFields rather than e.g.
 # spec.template.spec.containers[0].env[3].value
 def hide_field(definition: dict, hidden_field: str) -> dict:
-    split = hidden_field.split('.', 1)
+    split = hidden_field.split(".", 1)
     if split[0] in definition:
         if len(split) == 2:
             definition[split[0]] = hide_field(definition[split[0]], split[1])
         else:
-            del(definition[split[0]])
+            del definition[split[0]]
     return definition
