@@ -500,7 +500,7 @@ class K8sService:
 
 
 def diff_objects(
-    existing: Dict, new: Dict, hidden_fields: Optional[list]
+    existing: Dict, new: Dict, hidden_fields: Optional[list] = None
 ) -> Tuple[bool, Dict]:
     result = {}
     diff = recursive_diff(existing, new)

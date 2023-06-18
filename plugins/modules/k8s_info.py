@@ -50,6 +50,7 @@ options:
       - An example might be C(hidden_fields=[metadata.managedFields])
       - Only field definitions that don't reference list items are supported (so V(spec.containers[0]) would not work)
     type: list
+    elements: str
     default: []
     version_added: 2.5.0
 
