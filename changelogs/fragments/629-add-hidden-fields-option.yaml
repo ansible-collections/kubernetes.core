@@ -1,0 +1,2 @@
+minor_changes:
+  - k8s, k8s_info - add a hidden_fields option to allow fields to be hidden in the results of k8s and k8s_info
