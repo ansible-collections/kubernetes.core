@@ -1,0 +1,15 @@
+---
+name: Release
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  publish:
+    uses: ansible/devtools/.github/workflows/release_collection.yml@main
+    with:
+      environment: release
+    secrets:
+      ansible_galaxy_api_key: ${{ secrets.ANSIBLE_GALAXY_API_KEY }}
+      ah_token: ${{ secrets.ANSIBLE_AUTOMATION_HUB_TOKEN }}

@@ -35,3 +35,4 @@ plugins/modules/k8s.py validate-modules:return-syntax-error
 plugins/modules/k8s_scale.py validate-modules:return-syntax-error
 plugins/modules/k8s_service.py validate-modules:return-syntax-error
 plugins/modules/k8s_taint.py validate-modules:return-syntax-error
+tools/prepare_release.py shebang!skip

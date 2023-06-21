@@ -1,0 +1,22 @@
+---
+name: Release
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.sha }}'
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to release. e.g: '5.0.1'"
+        required: true
+
+jobs:
+  prepare:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ansible-network/github_actions/.github/workflows/release-branch.yml@main
+    with:
+      version: ${{ github.event.inputs.version }}
