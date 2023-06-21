@@ -44,6 +44,14 @@ options:
     type: list
     elements: str
     default: []
+  hidden_fields:
+    description:
+      - Hide fields matching any of the field definitions in the result
+      - An example might be C(hidden_fields=[metadata.managedFields])
+      - Only field definitions that don't reference list items are supported (so V(spec.containers[0]) would not work)
+    type: list
+    elements: str
+    version_added: 2.5.0
 
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
@@ -183,6 +191,7 @@ def execute_module(module, svc):
         wait_sleep=module.params["wait_sleep"],
         wait_timeout=module.params["wait_timeout"],
         condition=module.params["wait_condition"],
+        hidden_fields=module.params["hidden_fields"],
     )
     module.exit_json(changed=False, **facts)
 
@@ -198,6 +207,7 @@ def argspec():
             namespace=dict(),
             label_selectors=dict(type="list", elements="str", default=[]),
             field_selectors=dict(type="list", elements="str", default=[]),
+            hidden_fields=dict(type="list", elements="str"),
         )
     )
     return args

@@ -185,6 +185,14 @@ options:
     version_added: 2.5.0
     aliases:
     - all
+  hidden_fields:
+    description:
+      - Hide fields matching this option in the result
+      - An example might be C(hidden_fields=[metadata.managedFields])
+      - Only field definitions that don't reference list items are supported (so V(spec.containers[0]) would not work)
+    type: list
+    elements: str
+    version_added: 2.5.0
 
 requirements:
   - "python >= 3.6"
@@ -472,6 +480,7 @@ def argspec():
         type="dict", default=None, options=server_apply_spec()
     )
     argument_spec["delete_all"] = dict(type="bool", default=False, aliases=["all"])
+    argument_spec["hidden_fields"] = dict(type="list", elements="str")
 
     return argument_spec
 

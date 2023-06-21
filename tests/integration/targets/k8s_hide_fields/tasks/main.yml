@@ -1,0 +1,108 @@
+- block:
+    - name: Creation with hidden fields should work
+      k8s:
+        definition: "{{ hide_fields_base_configmap}}"
+        hidden_fields:
+          - metadata.managedFields
+      register: hf1
+
+    - name: Ensure hidden fields are not present
+      assert:
+        that:
+          - "'managedFields' not in hf1.result['metadata']"
+
+    - name: Running without hidden fields should work
+      k8s:
+        definition: "{{ hide_fields_base_configmap}}"
+
+    - name: Running with missing hidden fields should have no effect
+      k8s:
+        definition: "{{ hide_fields_base_configmap}}"
+        hidden_fields:
+          - does.not.exist
+      register: hf2
+
+    - name: Ensure no change with missing hidden fields
+      assert:
+        that:
+          - not hf2.changed
+
+    - name: Hide status and managed fields
+      k8s:
+        definition: "{{ hide_fields_base_configmap}}"
+        hidden_fields:
+          - status
+          - metadata.managedFields
+      register: hf3
+      diff: true
+
+    - name: Ensure hidden fields are not present
+      assert:
+        that:
+          - "'status' not in hf3.result"
+          - "'managedFields' not in hf3.result['metadata']"
+
+    - name: k8s_info works with hidden fields
+      k8s_info:
+        name: "{{ hide_fields_base_configmap.metadata.name }}"
+        namespace: "{{ hide_fields_base_configmap.metadata.namespace }}"
+        kind: ConfigMap
+        hidden_fields:
+          - metadata.managedFields
+      register: hf4
+
+    - name: Ensure hidden fields are not present
+      assert:
+        that:
+          - hf4.resources | length == 1
+          - "'managedFields' not in hf4.resources[0]['metadata']"
+
+
+    - name: Hiding a changed field should still result in a change
+      k8s:
+        definition: "{{ hide_fields_base_configmap | combine({'data':{'hello':'different'}}) }}"
+        hidden_fields:
+          - data
+          - metadata.managedFields
+      register: hf5
+      diff: true
+
+    - name: Ensure that hidden changed field changed
+      assert:
+        that:
+          - hf5.changed
+
+    - name: Apply works with hidden fields
+      k8s:
+        definition: "{{ hide_fields_base_configmap | combine({'data':{'anew':'value'}}) }}"
+        hidden_fields:
+          - data
+        apply: true
+      register: hf6
+      diff: true
+
+    - name: Ensure that hidden changed field changed
+      assert:
+        that:
+          - hf6.changed
+
+    - name: Hidden field should not show up in deletion
+      k8s:
+        definition: "{{ hide_fields_base_configmap}}"
+        hidden_fields:
+          - status
+        state: absent
+      register: hf7
+
+    - name: Ensure hidden fields are not present
+      assert:
+        that:
+          - "'status' not in hf7.result"
+
+  always:
+    - name: Remove namespace
+      k8s:
+        kind: Namespace
+        name: "{{ hide_fields_namespace }}"
+        state: absent
+      ignore_errors: true

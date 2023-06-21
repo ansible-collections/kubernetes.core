@@ -1,6 +1,7 @@
 # Copyright: (c) 2021, Red Hat | Ansible
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+import copy
 from typing import Any, Dict, List, Optional, Tuple
 
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
@@ -248,6 +249,7 @@ class K8sService:
         wait_timeout: Optional[int] = 120,
         state: Optional[str] = "present",
         condition: Optional[Dict] = None,
+        hidden_fields: Optional[List] = None,
     ) -> Dict:
         resource = self.find_resource(kind, api_version)
         api_found = bool(resource)
@@ -310,7 +312,9 @@ class K8sService:
         instances = resources.get("items") or [resources]
 
         if not wait:
-            result["resources"] = instances
+            result["resources"] = [
+                hide_fields(instance, hidden_fields) for instance in instances
+            ]
             return result
 
         # Now wait for the specified state of any resource instances we have found.
@@ -329,7 +333,7 @@ class K8sService:
                     "Failed to gather information about %s(s) even"
                     " after waiting for %s seconds" % (res.get("kind"), duration)
                 )
-            result["resources"].append(res)
+            result["resources"].append(hide_fields(res, hidden_fields))
         return result
 
     def create(self, resource: Resource, definition: Dict) -> Dict:
@@ -495,7 +499,9 @@ class K8sService:
         return k8s_obj
 
 
-def diff_objects(existing: Dict, new: Dict) -> Tuple[bool, Dict]:
+def diff_objects(
+    existing: Dict, new: Dict, hidden_fields: Optional[list] = None
+) -> Tuple[bool, Dict]:
     result = {}
     diff = recursive_diff(existing, new)
     if not diff:
@@ -517,4 +523,29 @@ def diff_objects(existing: Dict, new: Dict) -> Tuple[bool, Dict]:
     if not set(result["before"]["metadata"].keys()).issubset(ignored_keys):
         return False, result
 
+    result["before"] = hide_fields(result["before"], hidden_fields)
+    result["after"] = hide_fields(result["after"], hidden_fields)
+
     return True, result
+
+
+def hide_fields(definition: dict, hidden_fields: Optional[list]) -> dict:
+    if not hidden_fields:
+        return definition
+    result = copy.deepcopy(definition)
+    for hidden_field in hidden_fields:
+        result = hide_field(result, hidden_field)
+    return result
+
+
+# hide_field is not hugely sophisticated and designed to cope
+# with e.g. status or metadata.managedFields rather than e.g.
+# spec.template.spec.containers[0].env[3].value
+def hide_field(definition: dict, hidden_field: str) -> dict:
+    split = hidden_field.split(".", 1)
+    if split[0] in definition:
+        if len(split) == 2:
+            definition[split[0]] = hide_field(definition[split[0]], split[1])
+        else:
+            del definition[split[0]]
+    return definition
