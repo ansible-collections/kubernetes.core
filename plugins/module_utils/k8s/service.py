@@ -529,16 +529,49 @@ def hide_fields(definition: dict, hidden_fields: Optional[list]) -> dict:
     return result
 
 
-# hide_field is not hugely sophisticated and designed to cope
-# with e.g. status or metadata.managedFields rather than e.g.
-# spec.template.spec.containers[0].env[3].value
+# hide_field should be able to cope with simple or more complicated
+# field definitions
+# e.g. status or metadata.managedFields or
+# spec.template.spec.containers[0].env[3].value or
+# metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]
 def hide_field(definition: dict, hidden_field: str) -> dict:
-    split = hidden_field.split(".", 1)
-    if split[0] in definition:
-        if len(split) == 2:
-            definition[split[0]] = hide_field(definition[split[0]], split[1])
-        else:
-            del definition[split[0]]
+    lbracket = hidden_field.find("[")
+    dot = hidden_field.find(".")
+
+    def dict_contains_key(field: dict, key: str) -> bool:
+        return key in field
+
+    def list_contains_key(field: list, key: str) -> bool:
+        return key < len(field)
+
+    field_contains_key = dict_contains_key
+
+    if lbracket != -1 and (dot == -1 or lbracket < dot):
+        # handle lists and dicts
+        rbracket = hidden_field.find("]")
+        key = hidden_field[lbracket + 1:rbracket]
+        field = hidden_field[:lbracket]
+        # skip past right bracket and any following dot
+        rest = hidden_field[rbracket + 2:]
+
+        if key.isdecimal():
+            key = int(key)
+            field_contains_key = list_contains_key
+        if field in definition and field_contains_key(definition[field], key):
+            if rest:
+                definition[field][key] = hide_field(definition[field][key], rest)
+            else:
+                del definition[field][key]
+                if not definition[field]:
+                    del definition[field]
+    else:
+        # handle standard fields
+        split = hidden_field.split(".", 1)
+        if split[0] in definition:
+            if len(split) == 2:
+                definition[split[0]] = hide_field(definition[split[0]], split[1])
+            else:
+                del definition[split[0]]
     return definition
 
 
