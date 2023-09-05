@@ -535,9 +535,6 @@ def hide_fields(definition: dict, hidden_fields: Optional[list]) -> dict:
 # spec.template.spec.containers[0].env[3].value or
 # metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]
 def hide_field(definition: dict, hidden_field: str) -> dict:
-    lbracket = hidden_field.find("[")
-    dot = hidden_field.find(".")
-
     def dict_contains_key(field: dict, key: str) -> bool:
         return key in field
 
@@ -546,32 +543,19 @@ def hide_field(definition: dict, hidden_field: str) -> dict:
 
     field_contains_key = dict_contains_key
 
-    if lbracket != -1 and (dot == -1 or lbracket < dot):
-        # handle lists and dicts
-        rbracket = hidden_field.find("]")
-        key = hidden_field[lbracket + 1:rbracket]
-        field = hidden_field[:lbracket]
-        # skip past right bracket and any following dot
-        rest = hidden_field[rbracket + 2:]
+    (key, rest) = hide_field_split2(hidden_field)
 
-        if key.isdecimal():
-            key = int(key)
-            field_contains_key = list_contains_key
-        if field in definition and field_contains_key(definition[field], key):
-            if rest:
-                definition[field][key] = hide_field(definition[field][key], rest)
-            else:
-                del definition[field][key]
-                if not definition[field]:
-                    del definition[field]
-    else:
-        # handle standard fields
-        split = hidden_field.split(".", 1)
-        if split[0] in definition:
-            if len(split) == 2:
-                definition[split[0]] = hide_field(definition[split[0]], split[1])
-            else:
-                del definition[split[0]]
+    if key.isdecimal():
+        key = int(key)
+        field_contains_key = list_contains_key
+    if field_contains_key(definition, key):
+        if rest:
+            definition[key] = hide_field(definition[key], rest)
+            # remove empty dicts and lists from the result
+            if definition[key] == dict() or definition[key] == list():
+                del definition[key]
+        else:
+            del definition[key]
     return definition
 
 
@@ -653,3 +637,35 @@ def parse_quoted_string(quoted_string: str) -> Tuple[str, str]:
         raise ValueError("invalid quoted string: missing closing quote")
 
     return "".join(result), remainder
+
+
+# hide_field_split2 returns the first key in hidden_field and the rest of the hidden_field
+# We expect the first key to either be in brackets, to be terminated by the start of a left
+# bracket, or to be terminated by a dot.
+
+# examples would be:
+# field.another.next -> (field, another.next)
+# field[key].value -> (field, [key].value)
+# [key].value -> (key, value)
+# [one][two] -> (one, [two])
+
+
+def hide_field_split2(hidden_field: str) -> (str, str):
+    lbracket = hidden_field.find("[")
+    rbracket = hidden_field.find("]")
+    dot = hidden_field.find(".")
+
+    if lbracket == 0:
+        # skip past right bracket and any following dot
+        rest = hidden_field[rbracket + 1:]
+        if rest and rest[0] == ".":
+            rest = rest[1:]
+        return (hidden_field[lbracket + 1:rbracket], rest)
+
+    if lbracket != -1 and (dot == -1 or lbracket < dot):
+        return (hidden_field[:lbracket], hidden_field[lbracket:])
+
+    split = hidden_field.split(".", 1)
+    if len(split) == 1:
+        return split[0], ""
+    return split
