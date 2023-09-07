@@ -195,8 +195,8 @@ class K8sService:
                 }
                 existing = self.retrieve(project_resource, project_definition)
                 if exists(existing):
+                    # Project exists, ProjectRequest is not relevant anymore
                     return existing, project_resource, project_definition
-                # Project exists, ProjectRequest is not relevant anymore
                 return existing, resource, definition
 
         return self.retrieve(resource, definition), resource, definition
