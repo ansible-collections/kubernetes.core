@@ -48,7 +48,8 @@ options:
     description:
       - Hide fields matching any of the field definitions in the result
       - An example might be C(hidden_fields=[metadata.managedFields])
-      - Only field definitions that don't reference list items are supported (so V(spec.containers[0]) would not work)
+        or C(hidden_fields=[spec.containers[0].env[3].value])
+        or C(hidden_fields=[metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]])
     type: list
     elements: str
     version_added: 2.5.0

@@ -34,7 +34,6 @@ jobs:
               "ansible-version": "stable-2.9"
             },
             {
-              "ansible-version": "stable-2.12",
               "python-version": "3.7"
             },
             {
@@ -43,15 +42,7 @@ jobs:
             },
             {
               "ansible-version": "stable-2.13",
-              "python-version": "3.7"
-            },
-            {
-              "ansible-version": "stable-2.13",
               "python-version": "3.11"
-            },
-            {
-              "ansible-version": "stable-2.14",
-              "python-version": "3.7"
             },
             {
               "ansible-version": "stable-2.14",
@@ -60,10 +51,6 @@ jobs:
             {
               "ansible-version": "stable-2.14",
               "python-version": "3.11"
-            },
-            {
-              "ansible-version": "stable-2.15",
-              "python-version": "3.7"
             },
             {
               "ansible-version": "stable-2.15",
@@ -75,19 +62,19 @@ jobs:
             },
             {
               "ansible-version": "milestone",
-              "python-version": "3.7"
+              "python-version": "3.8"
             },
             {
               "ansible-version": "milestone",
-              "python-version": "3.8"
-            },
-            {
-              "ansible-version": "devel",
-              "python-version": "3.7"
+              "python-version": "3.9"
             },
             {
               "ansible-version": "devel",
               "python-version": "3.8"
+            },
+            {
+              "ansible-version": "devel",
+              "python-version": "3.9"
             }
           ]
   unit-source:
@@ -139,12 +126,20 @@ jobs:
               "python-version": "3.8"
             },
             {
+              "ansible-version": "milestone",
+              "python-version": "3.9"
+            },
+            {
               "ansible-version": "devel",
               "python-version": "3.7"
             },
             {
               "ansible-version": "devel",
               "python-version": "3.8"
+            },
+            {
+              "ansible-version": "devel",
+              "python-version": "3.9"
             }
           ]
       collection_pre_install: ''
@@ -187,31 +182,12 @@ jobs:
       fail-fast: false
       matrix:
         ansible-version:
-          - stable-2.12
+          - stable-2.15
           - milestone
           - devel
         python-version:
-          - "3.8"
-          - "3.9"
-        exclude:
-          - ansible-version: stable-2.9
-            python-version: 3.9
-          - ansible-version: stable-2.9
-            python-version: 3.10
-          - ansible-version: stable-2.9
-            python-version: 3.11
-          - ansible-version: stable-2.12
-            python-version: 3.11
-          - ansible-version: stable-2.13
-            python-version: 3.11
-          - ansible-version: stable-2.14
-            python-version: 3.8
-          - ansible-version: stable-2.15
-            python-version: 3.8
-          - ansible-version: milestone
-            python-version: 3.8
-          - ansible-version: devel
-            python-version: 3.8
+          - "3.10"
+          - "3.11"
         enable-turbo-mode:
           - true
           - false
