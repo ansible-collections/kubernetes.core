@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm - expand kubeconfig path with user's home directory for consistency with k8s
