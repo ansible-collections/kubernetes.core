@@ -1,0 +1,3 @@
+---
+trivial:
+  - organize the workflows and pinit ansible-lint to 6.21.x.
