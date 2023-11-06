@@ -80,17 +80,17 @@ jobs:
         with:
           path: ${{ env.source }}
           ref: ${{ github.event.pull_request.head.sha }}
-    
-      - name: Set up Python ${{ env.python_version }}
+
+      - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python_version }}
+          python-version: ${{ matrix.python-version }}
 
       # install ansible
-      - name: Install ansible-core (${{ matrix.ansible_version }})
+      - name: Install ansible-core (${{ matrix.ansible-version }})
         run: >-
           python3 -m pip install
-          https://github.com/ansible/ansible/archive/${{ matrix.ansible_version }}.tar.gz
+          https://github.com/ansible/ansible/archive/${{ matrix.ansible-version }}.tar.gz
           --disable-pip-version-check
         shell: bash
 
