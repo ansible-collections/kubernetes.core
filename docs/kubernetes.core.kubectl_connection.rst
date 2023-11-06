@@ -8,6 +8,7 @@ kubernetes.core.kubectl
 **Execute tasks in pods running on Kubernetes.**
 
 
+Version added: 2.2.0
 
 .. contents::
    :local:
