@@ -40,6 +40,7 @@ jobs:
   integration:
     needs:
       - splitter
+    if: ${{ needs.splitter.outputs.test_targets != '' }}
     env:
       source: "./source"
       cloud_common: "./cloudcommon"
@@ -78,8 +79,23 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: ${{ env.source }}
-          fetch-depth: "0"
-        if: steps.read-targets.outputs.ansible_test_targets != ''
+          ref: ${{ github.event.pull_request.head.sha }}
+    
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      # install ansible
+      - name: Install ansible-core (${{ matrix.ansible_version }})
+        run: >-
+          python3 -m pip install
+          https://github.com/ansible/ansible/archive/${{ matrix.ansible_version }}.tar.gz
+          --disable-pip-version-check
+        shell: bash
+
+      - name: Pre install collections dependencies first so the collection install does not
+        run: ansible-galaxy collection install --pre '-r${{ env.source }}/tests/integration/requirements.yml' -p /home/runner/collections/
 
       - name: Build and install collection
         id: install-src
@@ -94,7 +110,6 @@ jobs:
           repository: ansible-collections/cloud.common
           path: ${{ env.cloud_common }}
           ref: main
-        if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: checkout ansible-collections/ansible.posix
         uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
@@ -102,25 +117,21 @@ jobs:
           repository: ansible-collections/ansible.posix
           path: ${{ env.ansible_posix }}
           ref: main
-        if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: install cloud.common collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
           source_path: ${{ env.cloud_common }}
-        if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: install ansible.posix collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
           source_path: ${{ env.ansible_posix }}
-        if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: create kubernetes cluster
         uses: helm/kind-action@v1.4.0
-        if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
@@ -131,4 +142,3 @@ jobs:
           ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
           ansible_test_environment: |
             ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}
-        if: steps.read-targets.outputs.ansible_test_targets != ''
