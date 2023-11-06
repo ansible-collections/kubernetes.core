@@ -94,9 +94,6 @@ jobs:
           --disable-pip-version-check
         shell: bash
 
-      - name: Pre install collections dependencies first so the collection install does not
-        run: ansible-galaxy collection install --pre '-r${{ env.source }}/tests/integration/requirements.yml' -p /home/runner/collections/
-
       - name: Build and install collection
         id: install-src
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
