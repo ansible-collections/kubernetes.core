@@ -1,3 +1,4 @@
+---
 name: Sanity tests
 concurrency:
   group: ${{ github.head_ref }}
