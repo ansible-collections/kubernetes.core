@@ -113,7 +113,7 @@ EXAMPLES = r"""
     state: drain
     name: foo
     delete_options:
-        terminate_grace_period: 900
+      terminate_grace_period: 900
 
 - name: Mark node "foo" as schedulable.
   kubernetes.core.k8s_drain:
@@ -132,7 +132,6 @@ EXAMPLES = r"""
     pod_selectors:
     - 'app!=csi-attacher'
     - 'app!=csi-provisioner'
-
 """
 
 RETURN = r"""

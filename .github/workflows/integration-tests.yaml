@@ -81,6 +81,13 @@ jobs:
           fetch-depth: "0"
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
+      - name: Build and install collection
+        id: install-src
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.source }}
+
       - name: checkout ansible-collections/cloud.common
         uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
         with:
@@ -95,14 +102,6 @@ jobs:
           repository: ansible-collections/ansible.posix
           path: ${{ env.ansible_posix }}
           ref: main
-        if: steps.read-targets.outputs.ansible_test_targets != ''
-
-      - name: install kubernetes.core collection
-        id: install-collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: true
-          source_path: ${{ env.source }}
         if: steps.read-targets.outputs.ansible_test_targets != ''
 
       - name: install cloud.common collection
@@ -126,7 +125,7 @@ jobs:
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
         with:
-          collection_path: ${{ steps.install-collection.outputs.collection_path }}
+          collection_path: ${{ steps.install-src.outputs.collection_path }}
           python_version: ${{ matrix.python-version }}
           ansible_version: ${{ matrix.ansible-version }}
           ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}

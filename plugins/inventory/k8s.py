@@ -98,27 +98,27 @@ DOCUMENTATION = """
     - "PyYAML >= 3.11"
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 # File must be named k8s.yaml or k8s.yml
 
-# Authenticate with token, and return all pods and services for all namespaces
-plugin: kubernetes.core.k8s
-connections:
-  - host: https://192.168.64.4:8443
-    api_key: xxxxxxxxxxxxxxxx
-    validate_certs: false
+- name: Authenticate with token, and return all pods and services for all namespaces
+  plugin: kubernetes.core.k8s
+  connections:
+    - host: https://192.168.64.4:8443
+      api_key: xxxxxxxxxxxxxxxx
+      validate_certs: false
 
-# Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-plugin: kubernetes.core.k8s
-connections:
-  - namespaces:
+- name: Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
+  plugin: kubernetes.core.k8s
+  connections:
+    - namespaces:
     - testing
 
-# Use a custom config file, and a specific context.
-plugin: kubernetes.core.k8s
-connections:
-  - kubeconfig: /path/to/config
-    context: 'awx/192-168-64-4:8443/developer'
+- name: Use a custom config file, and a specific context.
+  plugin: kubernetes.core.k8s
+  connections:
+    - kubeconfig: /path/to/config
+      context: 'awx/192-168-64-4:8443/developer'
 """
 
 import json
