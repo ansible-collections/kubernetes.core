@@ -523,9 +523,6 @@ tests/unit/modules/test_module_helm.py compile-3.5!skip
 tests/unit/action/test_remove_omit.py compile-2.6!skip
 tests/unit/action/test_remove_omit.py compile-2.7!skip
 tests/unit/action/test_remove_omit.py compile-3.5!skip
-tests/integration/targets/k8s_copy/library/k8s_create_file.py compile-2.6!skip
-tests/integration/targets/k8s_copy/library/k8s_create_file.py compile-2.7!skip
-tests/integration/targets/k8s_copy/library/k8s_create_file.py compile-3.5!skip
 tests/integration/targets/k8s_copy/library/kubectl_file_compare.py compile-2.6!skip
 tests/integration/targets/k8s_copy/library/kubectl_file_compare.py compile-2.7!skip
 tests/integration/targets/k8s_copy/library/kubectl_file_compare.py compile-3.5!skip
@@ -577,7 +574,6 @@ plugins/module_utils/k8s/client.py pylint!skip
 plugins/module_utils/k8s/runner.py pylint!skip
 plugins/module_utils/k8s/service.py pylint!skip
 plugins/module_utils/k8s/exceptions.py pylint!skip
-tests/integration/targets/k8s_copy/library/k8s_create_file.py pylint!skip
 tests/integration/targets/k8s_copy/library/kubectl_file_compare.py pylint!skip
 tests/integration/targets/setup_kubeconfig/library/test_inventory_read_credentials.py pylint!skip
 tests/integration/targets/helm/library/helm_test_version.py pylint!skip
