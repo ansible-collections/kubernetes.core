@@ -15,7 +15,7 @@
       cmd: base64 /dev/random | head -c 150M > {{ test_directory }}/large_text_file.txt
 
   - name: Create a large binary file
-    ansible.builtin.cmd:
+    ansible.builtin.command:
       cmd: dd if=/dev/random of={{ test_directory }}/large_bin_file.bin bs=1M count=200
 
   # Copy large text file from/to local filesystem to Pod
