@@ -22,7 +22,7 @@ jobs:
   ansible-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+      - uses: actions/checkout@v4
 
       - name: Run ansible-lint
         uses: ansible/ansible-lint@v6.21.0
