@@ -1,3 +1,5 @@
 ---
 trivial:
   - organize the workflows and pin ansible-lint to 6.21.x.
+breaking_changes:
+  - Remove support for ansible-core < 2.14
