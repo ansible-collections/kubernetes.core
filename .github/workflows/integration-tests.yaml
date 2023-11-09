@@ -50,7 +50,7 @@ jobs:
         ansible-version:
           - milestone
         python-version:
-          - "3.11"
+          - "3.12"
         enable-turbo-mode:
           - true
           - false

@@ -137,7 +137,6 @@ status:
       version_added: "2.4.0"
 """
 
-# testing
 import traceback
 import copy
 
