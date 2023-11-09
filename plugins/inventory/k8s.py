@@ -124,6 +124,7 @@ EXAMPLES = r"""
 import json
 
 from ansible.errors import AnsibleError
+from ansible.plugins.inventory import BaseInventoryPlugin, Cacheable, Constructable
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     HAS_K8S_MODULE_HELPER,
     k8s_import_exception,
@@ -131,7 +132,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.common import (
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
-from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 
 try:
     from kubernetes.dynamic.exceptions import DynamicApiError
@@ -193,7 +193,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self.fetch_objects(connections)
 
     def fetch_objects(self, connections):
-
         if connections:
             if not isinstance(connections, list):
                 raise K8sInventoryException("Expecting connections to be a list.")

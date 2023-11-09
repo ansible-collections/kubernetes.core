@@ -6,7 +6,6 @@ import json
 
 import kubernetes
 import pytest
-
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )

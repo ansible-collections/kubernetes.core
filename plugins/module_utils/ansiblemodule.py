@@ -14,9 +14,9 @@ except TypeError:
 
 if enable_turbo_mode:
     try:
-        from ansible_collections.cloud.common.plugins.module_utils.turbo.module import (
+        from ansible_collections.cloud.common.plugins.module_utils.turbo.module import (  # noqa: F401
             AnsibleTurboModule as AnsibleModule,
-        )  # noqa: F401
+        )
 
         AnsibleModule.collection_name = "kubernetes.core"
     except ImportError:

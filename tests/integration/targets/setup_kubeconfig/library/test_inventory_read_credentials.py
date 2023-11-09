@@ -78,7 +78,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import 
 
 class K8SInventoryTestModule(AnsibleModule):
     def __init__(self):
-
         argument_spec = dict(
             kube_config=dict(required=True, type="path"),
             dest_dir=dict(required=True, type="path"),
@@ -88,7 +87,6 @@ class K8SInventoryTestModule(AnsibleModule):
         self.execute_module()
 
     def execute_module(self):
-
         dest_dir = os.path.abspath(self.params.get("dest_dir"))
         kubeconfig_path = self.params.get("kube_config")
         if not os.path.isdir(dest_dir):

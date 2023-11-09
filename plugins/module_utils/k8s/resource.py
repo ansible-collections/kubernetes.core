@@ -2,7 +2,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import os
-from typing import cast, Dict, Iterable, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union, cast
 
 from ansible.module_utils.six import string_types
 from ansible.module_utils.urls import Request

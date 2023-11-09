@@ -89,10 +89,10 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-import os
 import filecmp
-
+import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+
 from ansible.module_utils.basic import AnsibleModule
 
 
@@ -157,7 +157,6 @@ def compare_directories(dir1, dir2):
 
 
 def execute_module(module):
-
     args = module.params.get("args")
     local_path = module.params.get("local_path")
     namespace = module.params.get("namespace")

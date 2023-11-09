@@ -8,21 +8,21 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import traceback
 import os
-from contextlib import contextmanager
 import platform
+import traceback
+from contextlib import contextmanager
 
 from ansible.config.manager import ensure_type
 from ansible.errors import (
-    AnsibleError,
-    AnsibleFileNotFound,
     AnsibleAction,
     AnsibleActionFail,
+    AnsibleError,
+    AnsibleFileNotFound,
 )
+from ansible.module_utils._text import to_bytes, to_native, to_text
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible.module_utils.six import string_types, iteritems
-from ansible.module_utils._text import to_text, to_bytes, to_native
+from ansible.module_utils.six import iteritems, string_types
 from ansible.plugins.action import ActionBase
 
 
@@ -55,7 +55,6 @@ ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
 
 
 class ActionModule(ActionBase):
-
     TRANSFERS_FILES = True
     DEFAULT_NEWLINE_SEQUENCE = "\n"
 

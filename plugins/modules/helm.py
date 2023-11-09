@@ -393,10 +393,11 @@ command:
   sample: helm upgrade ...
 """
 
+import copy
 import re
 import tempfile
 import traceback
-import copy
+
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -877,7 +878,6 @@ def main():
             changed = True
 
         else:
-
             helm_diff_version = get_plugin_version("diff")
             if helm_diff_version and (
                 not chart_repo_url

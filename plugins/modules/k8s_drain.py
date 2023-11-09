@@ -145,8 +145,9 @@ result:
 import copy
 import time
 import traceback
-
 from datetime import datetime
+
+from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
@@ -163,12 +164,10 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
     CoreException,
 )
 
-from ansible.module_utils._text import to_native
-
 try:
     from kubernetes.client.api import core_v1_api
-    from kubernetes.client.models import V1DeleteOptions, V1ObjectMeta
     from kubernetes.client.exceptions import ApiException
+    from kubernetes.client.models import V1DeleteOptions, V1ObjectMeta
 except ImportError:
     # ImportError are managed by the common module already.
     pass
@@ -429,7 +428,6 @@ class K8sDrainAnsible(object):
         return dict(result=" ".join(result))
 
     def patch_node(self, unschedulable):
-
         body = {"spec": {"unschedulable": unschedulable}}
         try:
             self._api_instance.patch_node(
@@ -441,7 +439,6 @@ class K8sDrainAnsible(object):
             )
 
     def execute_module(self):
-
         state = self._module.params.get("state")
         name = self._module.params.get("name")
         try:

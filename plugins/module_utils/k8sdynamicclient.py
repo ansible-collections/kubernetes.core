@@ -18,12 +18,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-from kubernetes.dynamic import DynamicClient
-
 from ansible_collections.kubernetes.core.plugins.module_utils.apply import k8s_apply
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import (
     ApplyException,
 )
+from kubernetes.dynamic import DynamicClient
 
 
 class K8SDynamicClient(DynamicClient):

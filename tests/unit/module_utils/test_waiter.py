@@ -5,20 +5,19 @@ from unittest.mock import Mock
 
 import pytest
 import yaml
-from kubernetes.dynamic.resource import ResourceInstance
-from kubernetes.dynamic.exceptions import NotFoundError
-
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
+    DummyWaiter,
+    Waiter,
     clock,
     custom_condition,
     deployment_ready,
-    DummyWaiter,
     exists,
     get_waiter,
     pod_ready,
     resource_absent,
-    Waiter,
 )
+from kubernetes.dynamic.exceptions import NotFoundError
+from kubernetes.dynamic.resource import ResourceInstance
 
 
 def resources(filepath):

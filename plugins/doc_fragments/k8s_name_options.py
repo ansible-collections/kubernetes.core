@@ -11,7 +11,6 @@ __metaclass__ = type
 
 
 class ModuleDocFragment(object):
-
     DOCUMENTATION = r"""
 options:
   api_version:

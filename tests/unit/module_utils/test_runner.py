@@ -1,12 +1,11 @@
-import pytest
 from copy import deepcopy
 from unittest.mock import Mock
 
-from kubernetes.dynamic.resource import ResourceInstance
-
+import pytest
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
     perform_action,
 )
+from kubernetes.dynamic.resource import ResourceInstance
 
 definition = {
     "apiVersion": "v1",

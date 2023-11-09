@@ -4,12 +4,12 @@
 from typing import Dict
 
 from ansible.module_utils._text import to_native
-
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    ResourceTimeout,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
     create_definitions,
@@ -18,9 +18,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
     K8sService,
     diff_objects,
     hide_fields,
-)
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
-    ResourceTimeout,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import exists
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (

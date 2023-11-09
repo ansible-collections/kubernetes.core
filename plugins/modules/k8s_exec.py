@@ -131,18 +131,18 @@ except ImportError:
     # ImportError are managed by the common module already.
     pass
 
+from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
-from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     AUTH_ARG_SPEC,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
-    AnsibleK8SModule,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
@@ -150,8 +150,8 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
 
 try:
     from kubernetes.client.apis import core_v1_api
-    from kubernetes.stream import stream
     from kubernetes.client.exceptions import ApiException
+    from kubernetes.stream import stream
 except ImportError:
     # ImportError are managed by the common module already.
     pass

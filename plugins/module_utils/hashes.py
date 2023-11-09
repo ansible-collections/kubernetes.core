@@ -19,8 +19,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import json
 import hashlib
+import json
 
 try:
     import string
@@ -37,7 +37,7 @@ except ImportError:
 
 def sorted_dict(unsorted_dict):
     result = OrderedDict()
-    for (k, v) in sorted(unsorted_dict.items()):
+    for k, v in sorted(unsorted_dict.items()):
         if isinstance(v, dict):
             v = sorted_dict(v)
         result[k] = v

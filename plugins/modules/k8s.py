@@ -423,10 +423,10 @@ from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule impo
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
-    WAIT_ARG_SPEC,
+    DELETE_OPTS_ARG_SPEC,
     NAME_ARG_SPEC,
     RESOURCE_ARG_SPEC,
-    DELETE_OPTS_ARG_SPEC,
+    WAIT_ARG_SPEC,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
