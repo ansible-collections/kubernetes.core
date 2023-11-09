@@ -12,4 +12,4 @@ on:
 
 jobs:
   sanity:
-    uses: GomathiselviS/github_actions/.github/workflows/sanity.yml@fix_typo
+    uses: ansible-network/github_actions/.github/workflows/sanity.yml@main
