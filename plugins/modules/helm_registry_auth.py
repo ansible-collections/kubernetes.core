@@ -64,29 +64,18 @@ options:
 """
 
 EXAMPLES = r"""
-- hosts: localhost
-  tasks:
-  - block:
-    # It's good practice to store login credentials in a secure vault and not
-    # directly in playbooks.
-    - include_vars: helm_registry_passwords.yml
+# Login to helm registry
+- name: Login to remote registry
+  kubernetes.core.helm_registry_auth:
+    username: admin
+    password: "sample_password"
+    host: localhost:5000
 
-    - name: Login to remote registry
-      kubernetes.core.helm_registry_auth:
-        username: admin
-        password: "{{ helm_admin_password }}"
-        host: localhost:5000
-
-    - name: Download Chart from Registry
-      kubernetes.core.helm_pull:
-        chart_ref: mychart
-        repo_url: oci://localhost:5000/helm-charts
-
-    always:
-    - name: Logout to Remote registry
-      kubernetes.core.helm_registry_auth:
-        host: localhost:5000
-        state: absent
+# Logout from helm registry
+- name: Logout to Remote registry
+  kubernetes.core.helm_registry_auth:
+    host: localhost:5000
+    state: absent
 """
 
 RETURN = r"""
