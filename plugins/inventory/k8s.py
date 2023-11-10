@@ -112,7 +112,7 @@ EXAMPLES = r"""
   plugin: kubernetes.core.k8s
   connections:
     - namespaces:
-    - testing
+        - testing
 
 - name: Use a custom config file, and a specific context.
   plugin: kubernetes.core.k8s
