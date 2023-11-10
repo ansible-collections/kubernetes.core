@@ -86,12 +86,12 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
                 helm.main()
         helm.run_dep_update.assert_not_called()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test /tmp/path",
+            "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm upgrade -i --reset-values test /tmp/path"
+            == "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'"
         )
 
     def test_dependency_update_option_false(self):
@@ -116,12 +116,12 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
                 helm.main()
         helm.run_dep_update.assert_not_called()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test /tmp/path",
+            "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm upgrade -i --reset-values test /tmp/path"
+            == "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'"
         )
 
     def test_dependency_update_option_true(self):
@@ -145,14 +145,14 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_has_calls(
             [
                 call(
-                    "/usr/bin/helm upgrade -i --reset-values test /tmp/path",
+                    "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
                     environ_update={"HELM_NAMESPACE": "test"},
                 )
             ]
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm upgrade -i --reset-values test /tmp/path"
+            == "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'"
         )
 
     def test_dependency_update_option_true_without_dependencies_block(self):
@@ -179,14 +179,14 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_has_calls(
             [
                 call(
-                    "/usr/bin/helm upgrade -i --reset-values test /tmp/path",
+                    "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
                     environ_update={"HELM_NAMESPACE": "test"},
                 )
             ]
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm upgrade -i --reset-values test /tmp/path"
+            == "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'"
         )
 
 
@@ -249,12 +249,12 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test chart1",
+            "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test chart1"
+            == "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'"
         )
 
     def test_dependency_update_option_False(self):
@@ -278,12 +278,12 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test chart1",
+            "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test chart1"
+            == "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'"
         )
 
     def test_dependency_update_option_True_and_replace_option_disabled(self):
@@ -336,12 +336,12 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm --repo=http://repo.example/charts install --dependency-update --replace test chart1",
+            "/usr/bin/helm --repo=http://repo.example/charts install --dependency-update --replace test 'chart1'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm --repo=http://repo.example/charts install --dependency-update --replace test chart1"
+            == "/usr/bin/helm --repo=http://repo.example/charts install --dependency-update --replace test 'chart1'"
         )
 
 
@@ -403,12 +403,12 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test http://repo.example/charts/application.tgz",
+            "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm upgrade -i --reset-values test http://repo.example/charts/application.tgz"
+            == "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'"
         )
 
     def test_dependency_update_option_False(self):
@@ -431,12 +431,12 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test http://repo.example/charts/application.tgz",
+            "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm upgrade -i --reset-values test http://repo.example/charts/application.tgz"
+            == "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'"
         )
 
     def test_dependency_update_option_True_and_replace_option_disabled(self):
@@ -487,10 +487,10 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm install --dependency-update --replace test http://repo.example/charts/application.tgz",
+            "/usr/bin/helm install --dependency-update --replace test 'http://repo.example/charts/application.tgz'",
             environ_update={"HELM_NAMESPACE": "test"},
         )
         assert (
             result.exception.args[0]["command"]
-            == "/usr/bin/helm install --dependency-update --replace test http://repo.example/charts/application.tgz"
+            == "/usr/bin/helm install --dependency-update --replace test 'http://repo.example/charts/application.tgz'"
         )
