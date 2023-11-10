@@ -134,7 +134,6 @@ def argument_spec():
 
 
 def main():
-
     module = AnsibleHelmModule(
         argument_spec=argument_spec(),
         required_if=[
