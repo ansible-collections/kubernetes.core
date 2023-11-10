@@ -13,24 +13,23 @@
 # limitations under the License.
 
 
+import hashlib
 import json
 import os
-from collections import defaultdict
-import hashlib
 import tempfile
+from collections import defaultdict
 from functools import partial
 
 import kubernetes.dynamic
 import kubernetes.dynamic.discovery
+from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import (
+    ResourceList,
+)
 from kubernetes import __version__
 from kubernetes.dynamic.exceptions import (
     ResourceNotFoundError,
     ResourceNotUniqueError,
     ServiceUnavailableError,
-)
-
-from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import (
-    ResourceList,
 )
 
 

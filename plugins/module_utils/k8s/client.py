@@ -1,12 +1,11 @@
 # Copyright: (c) 2021, Red Hat | Ansible
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-import os
 import hashlib
+import os
 from typing import Any, Dict, List, Optional
 
 from ansible.module_utils.six import iteritems, string_types
-
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_MAP,
     AUTH_ARG_SPEC,

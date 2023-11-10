@@ -6,12 +6,11 @@ import json
 import sys
 from io import BytesIO
 
-import pytest
-
 import ansible.module_utils.basic
-from ansible.module_utils.six import string_types
+import pytest
 from ansible.module_utils._text import to_bytes
 from ansible.module_utils.common._collections_compat import MutableMapping
+from ansible.module_utils.six import string_types
 
 
 @pytest.fixture

@@ -17,8 +17,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from collections import OrderedDict
 import json
+from collections import OrderedDict
 
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible_collections.kubernetes.core.plugins.module_utils.exceptions import (
@@ -30,7 +30,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
-
 
 try:
     from kubernetes.dynamic.exceptions import NotFoundError

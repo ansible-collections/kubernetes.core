@@ -172,18 +172,18 @@ DOCUMENTATION = r"""
         aliases: [ kubectl_verify_ssl ]
 """
 
+import json
 import os
 import os.path
 import shutil
 import subprocess
 import tempfile
-import json
 
-from ansible.parsing.yaml.loader import AnsibleLoader
 from ansible.errors import AnsibleError, AnsibleFileNotFound
-from ansible.module_utils.six.moves import shlex_quote
 from ansible.module_utils._text import to_bytes
-from ansible.plugins.connection import ConnectionBase, BUFSIZE
+from ansible.module_utils.six.moves import shlex_quote
+from ansible.parsing.yaml.loader import AnsibleLoader
+from ansible.plugins.connection import BUFSIZE, ConnectionBase
 from ansible.utils.display import Display
 
 display = Display()
