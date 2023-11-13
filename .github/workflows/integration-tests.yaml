@@ -17,7 +17,9 @@ jobs:
       source_dir: "./source"
     runs-on: ubuntu-latest
     outputs:
-      test_targets: ${{ steps.display.outputs.test_targets }}
+      test_targets: ${{ steps.splitter.outputs.test_targets }}
+      test_targets_json: ${{ steps.splitter.outputs.test_targets_json }}
+      test_jobs: ${{ steps.splitter.outputs.test_jobs }}
     steps:
       - name: Checkout the collection repository
         uses: actions/checkout@v3
@@ -32,12 +34,15 @@ jobs:
           collections_to_test: ${{ env.source_dir }}
           total_jobs: 8
 
-      - name: display targets
-        id: display
-        run: echo "test_targets=${{ steps.splitter.outputs.test_targets }}" >> $GITHUB_OUTPUT
+      - name: Display splitter output
+        run: |
+          echo "test_targets=${{ steps.splitter.outputs.test_targets }}"
+          echo "test_targets_json=${{ steps.splitter.outputs.test_targets_json }}"
+          echo "test_jobs=${{ steps.splitter.outputs.test_jobs }}"
         shell: bash
-
   integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
     needs:
       - splitter
     if: ${{ needs.splitter.outputs.test_targets != '' }}
@@ -45,9 +50,6 @@ jobs:
       source: "./source"
       cloud_common: "./cloudcommon"
       ansible_posix: "./ansible_posix"
-      test_targets: ${{ needs.splitter.outputs.test_targets }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -58,22 +60,23 @@ jobs:
         enable-turbo-mode:
           - true
           - false
-        job-index: [1, 2, 3, 4, 5, 6, 7, 8]
-    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-turbo-mode=${{ matrix.enable-turbo-mode }}-${{ matrix.job-index }}"
+        workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
+    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}"
     steps:
-      - name: Read ansible-test targets
+      - name: Read target
         id: read-targets
-        run: >-
-          echo "ansible_test_targets=$(echo "${{ env.test_targets }}" | sed s/';'/'\n'/g |
-          grep "kubernetes.core-${{ matrix.job-index }}" | cut -d ':' -f2 | sed s/','/' '/g)" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Display targets
-        run: >-
-          echo "targets to test: $ANSIBLE_TARGETS"
-        shell: bash
+        run: |
+          import json, os
+          with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
+              fh.write(f'ansible_test_targets={json.loads(os.environ.get("ALL_TEST_TARGETS")).get(os.environ.get("WORKFLOW_ID"))}\n')
+        shell: python
         env:
-          ANSIBLE_TARGETS: ${{ steps.read-targets.outputs.ansible_test_targets }}
+          ALL_TEST_TARGETS: ${{ needs.splitter.outputs.test_targets_json }}
+          WORKFLOW_ID: ${{ matrix.workflow-id }}
+
+      - name: Display ansible test targets
+        run: |
+          echo "ansible_test_targets -> ${{ steps.read-targets.outputs.ansible_test_targets }}"
 
       - name: Checkout kubernetes.core repository
         uses: actions/checkout@v3
@@ -81,7 +84,7 @@ jobs:
           path: ${{ env.source }}
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Set up Python ${{ env.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
