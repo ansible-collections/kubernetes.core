@@ -1,9 +1,7 @@
 ---
-- name: Ensure docker is present
-  command: |
-    command -v docker
-  ignore_errors: true
-  register: check_docker
+- name: Ensure we can talk to docker daemon
+  ansible.builtin.shell: 
+    cmd: docker ps
 
 - name: Setup OCI registry
   block:
@@ -60,6 +58,3 @@
     - name: Logout from registry
       command: >-
         {{ helm_binary_path }} registry logout localhost:{{ registry_port }}
-
-  when:
-    - check_docker.rc == 0
