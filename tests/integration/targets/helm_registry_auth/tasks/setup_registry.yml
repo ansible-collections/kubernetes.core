@@ -1,6 +1,6 @@
 ---
 - name: Ensure we can talk to docker daemon
-  ansible.builtin.shell: 
+  ansible.builtin.shell:
     cmd: docker ps
 
 - name: Setup OCI registry
