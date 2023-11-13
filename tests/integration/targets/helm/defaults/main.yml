@@ -25,3 +25,4 @@ test_namespace:
   - "helm-from-repository"
   - "helm-from-url"
   - "helm-reuse-values"
+  - "helm-chart-with-space-into-name"

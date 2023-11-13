@@ -1,0 +1,58 @@
+---
+- name: Create test directory
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: .helm
+  register: test_dir
+
+- name: Test helm using directory with space
+  vars:
+    helm_dir: "{{ test_dir.path }}/Deploy Chart"
+    helm_namespace: "{{ test_namespace[10] }}"
+    chart_release_name: "deploy-chart-with-space-into-name"
+    helm_local_src: "test-chart"
+  block:
+    - name: Copy helm file into destination
+      ansible.builtin.copy:
+        src: "{{ helm_local_src }}"
+        dest: "{{ helm_dir }}"
+
+    - name: Install chart from local source with Space into name
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: "{{ chart_release_name }}"
+        chart_ref: "{{ helm_dir }}/{{ helm_local_src | basename }}"
+        namespace: "{{ helm_namespace }}"
+        create_namespace: true
+      register: install_chart
+
+    - name: Assert that chart is installed
+      assert:
+        that:
+          - install_chart is changed
+          - install_chart.status.status | lower == 'deployed'
+
+    - name: Check helm_info content
+      helm_info:
+        binary_path: "{{ helm_binary }}"
+        name: "{{ chart_release_name }}"
+        namespace: "{{ helm_namespace }}"
+      register: chart_info
+
+    - name: Assert that Chart is installed (using helm_info)
+      assert:
+        that:
+          - chart_info.status.status | lower == 'deployed'
+
+  always:
+    - name: Delete temporary directory
+      ansible.builtin.file:
+        state: absent
+        name: "{{ test_dir.path }}"
+
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent
