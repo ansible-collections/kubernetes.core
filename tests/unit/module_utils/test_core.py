@@ -49,9 +49,9 @@ def test_warn_on_k8s_version(monkeypatch, stdin, capfd):
 
 
 dependencies = [
-    ["18.20.0", "12.0.1", False],
-    ["18.20.0", "18.20.0", True],
-    ["12.0.1", "18.20.0", True],
+    ["28.20.0", "24.2.1", False],
+    ["28.20.0", "28.20.0", True],
+    ["24.2.1", "28.20.0", True],
 ]
 
 
@@ -67,7 +67,7 @@ def test_has_at_least(monkeypatch, stdin, desired, actual, result, capfd):
 
 
 dependencies = [
-    ["kubernetes", "18.20.0", "(kubernetes>=18.20.0)"],
+    ["kubernetes", "28.20.0", "(kubernetes>=28.20.0)"],
     ["foobar", "1.0.0", "(foobar>=1.0.0)"],
     ["foobar", None, "(foobar)"],
 ]
