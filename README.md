@@ -20,13 +20,13 @@ PEP440 is the schema used to describe the versions of Ansible.
 
 ## Python Support
 
-* Collection supports 3.6+
+* Collection supports 3.9+
 
 Note: Python2 is deprecated from [1st January 2020](https://www.python.org/doc/sunset-python-2/). Please switch to Python3.
 
 ## Kubernetes Version Support
 
-This collection supports Kubernetes versions >=1.19.
+This collection supports Kubernetes versions >= 1.24.
 
 ## Included content
 

@@ -10,7 +10,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
 
-MINIMAL_K8S_VERSION = "12.0.0"
+MINIMAL_K8S_VERSION = "24.2.0"
 UNSUPPORTED_K8S_VERSION = "11.0.0"
 
 
@@ -79,7 +79,7 @@ dependencies = [
 def test_requires_fails_with_message(
     monkeypatch, stdin, dependency, version, msg, capfd
 ):
-    monkeypatch.setattr(kubernetes, "__version__", "12.0.0")
+    monkeypatch.setattr(kubernetes, "__version__", "24.2.0")
     module = AnsibleK8SModule(argument_spec={})
     with pytest.raises(SystemExit):
         module.requires(dependency, version)

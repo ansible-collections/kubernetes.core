@@ -83,8 +83,8 @@ options:
     type: bool
 
 requirements:
-  - python >= 3.6
-  - kubernetes >= 12.0.0
+  - python >= 3.9
+  - kubernetes >= 24.2.0
 """
 
 EXAMPLES = r"""
