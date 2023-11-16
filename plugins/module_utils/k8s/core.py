@@ -35,7 +35,7 @@ class AnsibleK8SModule:
 
         if self.settings["check_k8s"]:
             self.requires("kubernetes")
-            self.has_at_least("kubernetes", "12.0.0", warn=True)
+            self.has_at_least("kubernetes", "24.2.0", warn=True)
 
         if self.settings["check_pyyaml"]:
             self.requires("pyyaml")

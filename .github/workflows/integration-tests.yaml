@@ -131,7 +131,7 @@ jobs:
           source_path: ${{ env.ansible_posix }}
 
       - name: create kubernetes cluster
-        uses: helm/kind-action@v1.4.0
+        uses: helm/kind-action@v1.8.0
 
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main

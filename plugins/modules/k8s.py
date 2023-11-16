@@ -195,8 +195,8 @@ options:
     version_added: 2.5.0
 
 requirements:
-  - "python >= 3.6"
-  - "kubernetes >= 12.0.0"
+  - "python >= 3.9"
+  - "kubernetes >= 24.2.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
 """

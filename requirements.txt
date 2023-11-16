@@ -1,3 +1,3 @@
-kubernetes>=12.0.0
+kubernetes>=24.2.0
 requests-oauthlib
 jsonpatch
