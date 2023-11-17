@@ -5,6 +5,45 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v3.0.0
+======
+
+Release Summary
+---------------
+
+This major release drops support for ansible-core versions lower than 2.14, Python versions lower than 3.9 and updates python kubernetes library to 24.2.0 , helm/kind-action to 1.8.0, kubernetes >= 1.24, along with bug fixes and minor changes.
+
+
+Minor Changes
+-------------
+
+- helm - add reuse_values and reset_values support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/394).
+- k8s - add new option delete_all to support deletion of all resources when state is set to absent. (https://github.com/ansible-collections/kubernetes.core/issues/504)
+- k8s, k8s_info - add a hidden_fields option to allow fields to be hidden in the results of k8s and k8s_info
+- k8s_drain - add ability to filter the list of pods to be drained by a pod label selector (https://github.com/ansible-collections/kubernetes.core/issues/474).
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- Remove support for ansible-core < 2.14
+- Update python kubernetes library to 24.2.0 , helm/kind-action to 1.8.0, kubernetes >= 1.24.
+
+Deprecated Features
+-------------------
+
+- k8s - the ``k8s`` inventory plugin has been deprecated and will be removed in release 4.0.0 (https://github.com/ansible-collections/kubernetes.core/issues/31).
+
+Bugfixes
+--------
+
+- helm - Put the chart_ref into quotes when running ``helm show chart``, ``helm upgrade`` and ``helm dependency update`` commands (https://github.com/ansible-collections/kubernetes.core/issues/653).
+- helm - delete temporary file created when deploying chart with option release_values set (https://github.com/ansible-collections/kubernetes.core/issues/530).
+- helm - fix issue occurring when uninstalling chart with statues others than 'deployed' (https://github.com/ansible-collections/kubernetes.core/issues/319).
+- helm - fix post_renderer argument breaking the helm deploy_command (https://github.com/ansible-collections/kubernetes.core/pull/586).
+- helm - use post_renderer when checking 'changed' status for a helm release (https://github.com/ansible-collections/kubernetes.core/pull/588).
+- k8s_scale - clean handling of ResourceTimeout exception (https://github.com/ansible-collections/kubernetes.core/issues/583).
+- k8s_scale - fix issue when scaling StatefulSets with updateStrategy=OnDelete (https://github.com/ansible-collections/kubernetes.core/issues/579).
+
 v2.4.0
 ======
 
@@ -96,7 +135,7 @@ v2.3.1
 Bugfixes
 --------
 
-- Catch exception raised when the process is waiting for resources (https://github.com/ansible-collections/kubernetes.core/issues/407).
+- Catch expectation raised when the process is waiting for resources (https://github.com/ansible-collections/kubernetes.core/issues/407).
 - Remove `omit` placeholder when defining resource using template parameter (https://github.com/ansible-collections/kubernetes.core/issues/431).
 - k8s - fix the issue when trying to delete resources using label_selectors options (https://github.com/ansible-collections/kubernetes.core/issues/433).
 - k8s_cp - fix issue when using parameter local_path with file on managed node. (https://github.com/ansible-collections/kubernetes.core/issues/421).

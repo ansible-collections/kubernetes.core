@@ -1,3 +1,0 @@
----
-breaking_changes:
-  - Update python kubernetes library to 24.2.0 , helm/kind-action to 1.8.0, kubernetes >= 1.24.
