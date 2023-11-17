@@ -1,3 +1,0 @@
----
-minor_changes:
-  - helm - add reuse_values and reset_values support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/394).

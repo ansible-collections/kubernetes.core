@@ -43,6 +43,22 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>api_key</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Token used to authenticate with the API. Can also be specified via <code>K8S_AUTH_API_KEY</code> environment variable.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>binary_path</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -53,6 +69,117 @@ Parameters
                 </td>
                 <td>
                         <div>The path of a helm binary to use.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>ca_cert</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">path</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Path to a CA certificate used to authenticate with the API. The full certificate chain must be provided to avoid certificate validation errors. Can also be specified via <code>K8S_AUTH_SSL_CA_CERT</code> environment variable.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: ssl_ca_cert</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>context</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Helm option to specify which kubeconfig context to use.</div>
+                        <div>If the value is not specified in the task, the value of environment variable <code>K8S_AUTH_CONTEXT</code> will be used instead.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: kube_context</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>force_update</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Whether or not to replace (overwrite) the repo if it already exists.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: force</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>host</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Provide a URL for accessing the API. Can also be specified via <code>K8S_AUTH_HOST</code> environment variable.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>kubeconfig</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">raw</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Helm option to specify kubeconfig path to use.</div>
+                        <div>If the value is not specified in the task, the value of environment variable <code>K8S_AUTH_KUBECONFIG</code> will be used instead.</div>
+                        <div>The configuration can be provided as dictionary.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: kubeconfig_path</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pass_credentials</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Pass credentials to all domains.</div>
                 </td>
             </tr>
             <tr>
@@ -140,6 +267,27 @@ Parameters
                         <div>Chart repository username for repository with basic auth.</div>
                         <div>Required if chart_repo_password is specified.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: username</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>validate_certs</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Whether or not to verify the API server&#x27;s SSL certificates. Can also be specified via <code>K8S_AUTH_VERIFY_SSL</code> environment variable.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: verify_ssl</div>
                 </td>
             </tr>
     </table>

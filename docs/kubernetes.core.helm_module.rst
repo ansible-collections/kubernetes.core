@@ -36,12 +36,12 @@ Parameters
 
     <table  border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="1">Parameter</th>
+            <th colspan="2">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
             <th width="100%">Comments</th>
         </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>api_key</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -57,7 +57,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>atomic</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -76,7 +76,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>binary_path</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -91,7 +91,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>ca_cert</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -108,7 +108,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>chart_ref</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -127,7 +127,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>chart_repo_url</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -142,7 +142,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>chart_version</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -157,7 +157,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>context</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -174,7 +174,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>create_namespace</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -194,13 +194,14 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dependency_update</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">boolean</span>
                     </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
@@ -209,7 +210,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Run standelone <code>helm dependency update CHART</code> before the operation.</div>
+                        <div>Run standalone <code>helm dependency update CHART</code> before the operation.</div>
                         <div>Run inline <code>--dependency-update</code> with <code>helm install</code> command. This feature is not supported yet with the <code>helm upgrade</code> command.</div>
                         <div>So we should consider to use <em>dependency_update</em> options with <em>replace</em> option enabled when specifying <em>chart_repo_url</em>.</div>
                         <div>The <em>dependency_update</em> option require the add of <code>dependencies</code> block in <code>Chart.yaml/requirements.yaml</code> file.</div>
@@ -218,7 +219,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>disable_hook</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -237,7 +238,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>force</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -256,7 +257,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>history_max</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -273,7 +274,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>host</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -289,12 +290,12 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">path</span>
+                        <span style="color: purple">raw</span>
                     </div>
                 </td>
                 <td>
@@ -302,11 +303,28 @@ Parameters
                 <td>
                         <div>Helm option to specify kubeconfig path to use.</div>
                         <div>If the value is not specified in the task, the value of environment variable <code>K8S_AUTH_KUBECONFIG</code> will be used instead.</div>
+                        <div>The configuration can be provided as dictionary. Added in version 2.4.0.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: kubeconfig_path</div>
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>post_renderer</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Path to an executable to be used for post rendering.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>purge</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -325,7 +343,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>release_name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -342,7 +360,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>release_namespace</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -359,7 +377,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>release_state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -379,7 +397,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>release_values</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -396,7 +414,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>replace</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -418,7 +436,108 @@ Parameters
                 </td>
             </tr>
             <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>reset_values</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.5.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>When upgrading package, reset the values to the ones built into the chart.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>reuse_values</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.5.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>When upgrading package, specifies wether to reuse the last release&#x27;s values and merge in any overrides from parameters <em>release_values</em>, <em>values_files</em> or <em>set_values</em>.</div>
+                        <div>If <em>reset_values</em> is set to <code>True</code>, this is ignored.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>set_values</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Values to pass to chart configuration</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
                 <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>value</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Value to pass to chart configuration (e.g phase=prod).</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>value_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>raw</b>&nbsp;&larr;</div></li>
+                                    <li>string</li>
+                                    <li>json</li>
+                                    <li>file</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Use <code>raw</code> set individual value.</div>
+                        <div>Use <code>string</code> to force a string for an individual value.</div>
+                        <div>Use <code>file</code> to set individual values from a file when the value itself is too long for the command line or is dynamically generated.</div>
+                        <div>Use <code>json</code> to set json values (scalars/objects/arrays). This feature requires helm&gt;=3.10.0.</div>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>skip_crds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -438,7 +557,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -456,7 +575,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>update_repo_cache</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -475,7 +594,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>validate_certs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -496,7 +615,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>values_files</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -517,7 +636,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>wait</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -537,7 +656,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>wait_timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -555,6 +674,12 @@ Parameters
     </table>
     <br/>
 
+
+Notes
+-----
+
+.. note::
+   - The default idempotency check can fail to report changes when ``release_state`` is set to ``present`` and ``chart_repo_url`` is defined. Install helm diff >= 3.4.1 for better results.
 
 
 
@@ -612,6 +737,15 @@ Examples
         state: absent
         update_repo_cache: true
 
+    - name: Deploy Grafana chart using set values on target
+      kubernetes.core.helm:
+        name: test
+        chart_ref: stable/grafana
+        release_namespace: monitoring
+        set_values:
+          - value: phase=prod
+            value_type: string
+
     # From git
     - name: Git clone stable repo on HEAD
       ansible.builtin.git:
@@ -656,6 +790,17 @@ Examples
             enabled: True
           logging:
             enabled: True
+
+    # Deploy latest version
+    - name: Deploy latest version of Grafana chart using reuse_values
+      kubernetes.core.helm:
+        name: test
+        chart_ref: stable/grafana
+        release_namespace: monitoring
+        reuse_values: true
+        values:
+          replicas: 2
+          version: 3e8ec0b2dffa40fb97d5342e4af887de95faa8c61a62480dd7f8aa03dffcf533
 
 
 
