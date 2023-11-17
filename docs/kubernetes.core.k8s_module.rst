@@ -29,8 +29,8 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- python >= 3.6
-- kubernetes >= 12.0.0
+- python >= 3.9
+- kubernetes >= 24.2.0
 - PyYAML >= 3.11
 - jsonpatch
 
@@ -211,6 +211,30 @@ Parameters
             <tr>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>delete_all</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.5.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>When this option is set to <em>true</em> and <em>state=absent</em>, module will delete all resources of the specified resource type in the requested namespace.</div>
+                        <div>Ignored when <code>state</code> is not set to <em>absent</em> or when one of (src), <code>name</code>  or <code>resource_definition</code> is provided.</div>
+                        <div>Parameter <code>kind</code> is required to use this option.</div>
+                        <div>This parameter can be used with <code>label_selectors</code> to restrict the resources to be deleted.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: all</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>delete_options</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -339,6 +363,45 @@ Parameters
             <tr>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>generate_name</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Use to specify the basis of an object name and random characters will be added automatically on server to generate a unique name.</div>
+                        <div>This option is ignored when <em>state</em> is not set to <code>present</code> or when <em>apply</em> is set to <code>yes</code>.</div>
+                        <div>If <em>resource definition</em> is provided, the <em>metadata.generateName</em> value from the <em>resource_definition</em> will override this option.</div>
+                        <div>If <em>resource definition</em> is provided, and contains <em>metadata.name</em>, this option is ignored.</div>
+                        <div>mutually exclusive with <code>name</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>hidden_fields</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.5.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Hide fields matching this option in the result</div>
+                        <div>An example might be <code>hidden_fields=[metadata.managedFields]</code></div>
+                        <div>Only field definitions that don&#x27;t reference list items are supported (so V(spec.containers[0]) would not work)</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>host</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -417,6 +480,7 @@ Parameters
                 </td>
                 <td>
                         <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Multiple Kubernetes config file can be provided using separator &#x27;;&#x27; for Windows platform or &#x27;:&#x27; for others platforms.</div>
                         <div>The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version &gt;= 17.17.0. Added in version 2.2.0.</div>
                 </td>
             </tr>
@@ -497,6 +561,25 @@ Parameters
                         <div>Useful when creating, deleting, or discovering an object without providing a full resource definition.</div>
                         <div>Use in conjunction with <em>api_version</em>, <em>kind</em>, and <em>name</em> to identify a specific object.</div>
                         <div>If <em>resource definition</em> is provided, the <em>metadata.namespace</em> value from the <em>resource_definition</em> will override this option.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_proxy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -643,6 +726,63 @@ Parameters
             <tr>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>server_side_apply</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>When this option is set, apply runs in the server instead of the client.</div>
+                        <div>Ignored if <code>apply</code> is not set or is set to False.</div>
+                        <div>This option requires &quot;kubernetes &gt;= 19.15.0&quot;.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>field_manager</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the manager used to track field ownership.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>force_conflicts</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>A conflict is a special status error that occurs when an Server Side Apply operation tries to change a field, which another user also claims to manage.</div>
+                        <div>When set to True, server-side apply will force the changes against conflicts.</div>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>src</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -654,7 +794,8 @@ Parameters
                 <td>
                         <div>Provide a path to a file containing a valid YAML definition of an object or objects to be created or updated. Mutually exclusive with <em>resource_definition</em>. NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the configuration read in from the <em>src</em> file.</div>
                         <div>Reads from the local file system. To read from the Ansible controller&#x27;s file system, including vaulted files, use the file lookup plugin or template lookup plugin, combined with the from_yaml filter, and pass the result to <em>resource_definition</em>. See Examples below.</div>
-                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>k8s</span> module.</div>
+                        <div>The URL to manifest files that can be used to create the resource. Added in version 2.4.0.</div>
+                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>kubernetes.core.k8s</span> module.</div>
                 </td>
             </tr>
             <tr>
@@ -1016,6 +1157,14 @@ Examples
         state: present
         definition: "{{ lookup('file', '/testing/deployment.yml') | from_yaml }}"
 
+    - name: >-
+        (Alternative) Read definition file from the Ansible controller file system.
+        In this case, the definition file contains multiple YAML documents, separated by ---.
+        If the definition file has been encrypted with Ansible Vault it will automatically be decrypted.
+      kubernetes.core.k8s:
+        state: present
+        definition: "{{ lookup('file', '/testing/deployment.yml') | from_yaml_all }}"
+
     - name: Read definition template file from the Ansible controller file system
       kubernetes.core.k8s:
         state: present
@@ -1033,10 +1182,10 @@ Examples
       kubernetes.core.k8s:
         state: present
         template:
-          - path: '/testing/deployment_one.j2'
-          - path: '/testing/deployment_two.j2'
-            variable_start_string: '[['
-            variable_end_string: ']]'
+        - path: '/testing/deployment_one.j2'
+        - path: '/testing/deployment_two.j2'
+          variable_start_string: '[['
+          variable_end_string: ']]'
 
     - name: fail on validation errors
       kubernetes.core.k8s:
@@ -1092,6 +1241,41 @@ Examples
           metadata:
             labels:
               support: patch
+
+    # Create object using generateName
+    - name: create resource using name generated by the server
+      kubernetes.core.k8s:
+        state: present
+        generate_name: pod-
+        definition:
+          apiVersion: v1
+          kind: Pod
+          spec:
+            containers:
+            - name: py
+              image: python:3.7-alpine
+              imagePullPolicy: IfNotPresent
+
+    # Server side apply
+    - name: Create configmap using server side apply
+      kubernetes.core.k8s:
+        namespace: testing
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: my-configmap
+        apply: yes
+        server_side_apply:
+          field_manager: ansible
+
+    # Delete all Deployment from specified namespace
+    - name: Delete all Deployment from specified namespace
+      kubernetes.core.k8s:
+        api_version: apps/v1
+        namespace: testing
+        kind: Deployment
+        delete_all: true
 
 
 

@@ -146,7 +146,7 @@ class K8sService:
         if merge_type == "json":
             self.module.deprecate(
                 msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
-                version="3.0.0",
+                version="4.0.0",
                 collection_name="kubernetes.core",
             )
         try:
