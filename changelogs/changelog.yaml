@@ -766,7 +766,7 @@ releases:
     changes:
       breaking_changes:
       - Remove support for ansible-core < 2.14
-      - Update python kubernetes library to 24.2.0 , helm/kind-action to 1.8.0, kubernetes
+      - Update python kubernetes library to 24.2.0, helm/kind-action to 1.8.0, kubernetes
         >= 1.24.
       bugfixes:
       - helm - Put the chart_ref into quotes when running ``helm show chart``, ``helm
@@ -792,8 +792,10 @@ releases:
         the results of k8s and k8s_info
       - k8s_drain - add ability to filter the list of pods to be drained by a pod
         label selector (https://github.com/ansible-collections/kubernetes.core/issues/474).
-      release_summary: This major release drops support for ansible-core versions lower than 2.14, Python versions lower than 3.9 and updates python kubernetes library to 24.2.0 , helm/kind-action to 1.8.0, kubernetes >= 1.24, along with bug fixes and minor changes.
-         kubernetes library to 24.2.0 , helm/kind-action to 1.8.0, kubernetes >= 1.24, along with bug fixes and minor changes.
+      release_summary: This major release drops support for ansible-core versions
+        lower than 2.14, Python versions lower than 3.9 and updates python kubernetes
+        library to 24.2.0, helm/kind-action to 1.8.0, kubernetes >= 1.24, along with
+        bug fixes and minor changes.
     fragments:
     - 20230206-deprecate-k8s-inventory.yml
     - 20231110-helm-quote-ref.yaml
