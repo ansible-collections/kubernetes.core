@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-python-deployment
+  labels:
+    app: python
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: python
+  template:
+    metadata:
+      labels:
+        app: python
+    spec:
+      containers:
+        - name: {{ .Values.container.name }}
+          image: {{ .Values.container.image }}
+          imagePullPolicy: {{ .Values.container.imagePullPolicy }}
+          args: ['/bin/sh', '-c', 'while true; do echo $(date); sleep 10; done']

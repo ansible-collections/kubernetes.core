@@ -1,0 +1,5 @@
+replicaCount: 1
+container:
+  name: "python3"
+  image: "python:3.7-alpine"
+  imagePullPolicy: "IfNotPresent"

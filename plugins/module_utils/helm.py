@@ -160,11 +160,11 @@ class AnsibleHelmModule(object):
             self.helm_env = self._prepare_helm_environment()
         return self.helm_env
 
-    def run_helm_command(self, command, fails_on_error=True):
-        if not HAS_YAML:
-            self.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
-
-        rc, out, err = self.run_command(command, environ_update=self.env_update)
+    def run_helm_command(self, command, fails_on_error=True, add_env_update=None):
+        env_update = self.env_update
+        if add_env_update:
+            env_update.update(add_env_update)
+        rc, out, err = self.run_command(command, environ_update=env_update)
         if fails_on_error and rc != 0:
             self.fail_json(
                 msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
