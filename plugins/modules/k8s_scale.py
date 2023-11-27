@@ -6,7 +6,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-
 __metaclass__ = type
 
 
@@ -46,8 +45,8 @@ options:
     version_added: 2.0.0
 
 requirements:
-    - "python >= 3.6"
-    - "kubernetes >= 12.0.0"
+    - "python >= 3.9"
+    - "kubernetes >= 24.2.0"
     - "PyYAML >= 3.11"
 """
 
@@ -151,14 +150,13 @@ except ImportError:
     pass
 
 from ansible.module_utils._text import to_native
-
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
-    RESOURCE_ARG_SPEC,
     NAME_ARG_SPEC,
+    RESOURCE_ARG_SPEC,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
@@ -170,14 +168,14 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
     CoreException,
     ResourceTimeout,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
+    create_definitions,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     diff_objects,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     get_waiter,
-)
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
-    create_definitions,
 )
 
 SCALE_ARG_SPEC = {

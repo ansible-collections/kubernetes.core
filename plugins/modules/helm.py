@@ -393,10 +393,11 @@ command:
   sample: helm upgrade ...
 """
 
+import copy
 import re
 import tempfile
 import traceback
-import copy
+
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -471,7 +472,7 @@ def run_dep_update(module, chart_ref):
     """
     Run dependency update
     """
-    dep_update = module.get_helm_binary() + " dependency update " + chart_ref
+    dep_update = module.get_helm_binary() + f" dependency update '{chart_ref}'"
     rc, out, err = module.run_helm_command(dep_update)
 
 
@@ -479,7 +480,7 @@ def fetch_chart_info(module, command, chart_ref):
     """
     Get chart info
     """
-    inspect_command = command + " show chart " + chart_ref
+    inspect_command = command + f" show chart '{chart_ref}'"
 
     rc, out, err = module.run_helm_command(inspect_command)
 
@@ -571,7 +572,7 @@ def deploy(
     if set_value_args:
         deploy_command += " " + set_value_args
 
-    deploy_command += " " + release_name + " " + chart_name
+    deploy_command += " " + release_name + f" '{chart_name}'"
     return deploy_command
 
 
@@ -877,7 +878,6 @@ def main():
             changed = True
 
         else:
-
             helm_diff_version = get_plugin_version("diff")
             if helm_diff_version and (
                 not chart_repo_url

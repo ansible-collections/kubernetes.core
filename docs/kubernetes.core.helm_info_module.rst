@@ -108,6 +108,27 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>get_all_values</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Set to <code>True</code> if you want to get all (computed) values of the release.</div>
+                        <div>When <code>False</code> (default), only user supplied values are returned.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>host</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -127,7 +148,7 @@ Parameters
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">path</span>
+                        <span style="color: purple">raw</span>
                     </div>
                 </td>
                 <td>
@@ -135,6 +156,7 @@ Parameters
                 <td>
                         <div>Helm option to specify kubeconfig path to use.</div>
                         <div>If the value is not specified in the task, the value of environment variable <code>K8S_AUTH_KUBECONFIG</code> will be used instead.</div>
+                        <div>The configuration can be provided as dictionary. Added in version 2.4.0.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: kubeconfig_path</div>
                 </td>
             </tr>
@@ -175,6 +197,32 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>release_state</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
+                </td>
+                <td>
+                        <div>Show releases as per their states.</div>
+                        <div>Default value is <code>deployed</code> and <code>failed</code>.</div>
+                        <div>If set to <code>all</code>, show all releases without any filter applied.</div>
+                        <div>If set to <code>deployed</code>, show deployed releases.</div>
+                        <div>If set to <code>failed</code>, show failed releases.</div>
+                        <div>If set to <code>pending</code>, show pending releases.</div>
+                        <div>If set to <code>superseded</code>, show superseded releases.</div>
+                        <div>If set to <code>uninstalled</code>, show uninstalled releases, if <code>helm uninstall --keep-history</code> was used.</div>
+                        <div>If set to <code>uninstalling</code>, show releases that are currently being uninstalled.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>validate_certs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -204,10 +252,17 @@ Examples
 
 .. code-block:: yaml
 
-    - name: Deploy latest version of Grafana chart inside monitoring namespace
+    - name: Gather information of Grafana chart inside monitoring namespace
       kubernetes.core.helm_info:
         name: test
         release_namespace: monitoring
+
+    - name: Gather information about test-chart with pending state
+      kubernetes.core.helm_info:
+        name: test-chart
+        release_namespace: testenv
+        release_state:
+        - pending
 
 
 
@@ -274,6 +329,42 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>hooks</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">list</span>
+                       / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>always</td>
+                <td>
+                            <div>Hooks of the release</div>
+                    <br/>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder">&nbsp;</td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>manifest</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">list</span>
+                       / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>always</td>
+                <td>
+                            <div>Manifest of the release</div>
+                    <br/>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder">&nbsp;</td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
@@ -299,6 +390,23 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 <td>always</td>
                 <td>
                             <div>Namespace where the release is deployed</div>
+                    <br/>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder">&nbsp;</td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>notes</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>always</td>
+                <td>
+                            <div>Notes of the release</div>
                     <br/>
                 </td>
             </tr>

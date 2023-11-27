@@ -1,14 +1,14 @@
-import os
 import base64
+import os
 import tempfile
-import yaml
-import mock
-from mock import MagicMock
 
+import mock
+import yaml
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     _create_auth_spec,
     _create_configuration,
 )
+from mock import MagicMock
 
 TEST_HOST = "test-host"
 TEST_SSL_HOST = "https://test-host"

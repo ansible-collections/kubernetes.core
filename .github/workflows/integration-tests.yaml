@@ -1,0 +1,144 @@
+name: Integration tests
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+
+jobs:
+  splitter:
+    env:
+      source_dir: "./source"
+    runs-on: ubuntu-latest
+    outputs:
+      test_targets: ${{ steps.splitter.outputs.test_targets }}
+      test_targets_json: ${{ steps.splitter.outputs.test_targets_json }}
+      test_jobs: ${{ steps.splitter.outputs.test_jobs }}
+    steps:
+      - name: Checkout the collection repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.source_dir }}
+          fetch-depth: "0"
+
+      - name: list changes for pull request
+        id: splitter
+        uses: ansible-network/github_actions/.github/actions/ansible_test_splitter@main
+        with:
+          collections_to_test: ${{ env.source_dir }}
+          total_jobs: 8
+
+      - name: Display splitter output
+        run: |
+          echo "test_targets=${{ steps.splitter.outputs.test_targets }}"
+          echo "test_targets_json=${{ steps.splitter.outputs.test_targets_json }}"
+          echo "test_jobs=${{ steps.splitter.outputs.test_jobs }}"
+        shell: bash
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs:
+      - splitter
+    if: ${{ needs.splitter.outputs.test_targets != '' }}
+    env:
+      source: "./source"
+      cloud_common: "./cloudcommon"
+      ansible_posix: "./ansible_posix"
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version:
+          - milestone
+        python-version:
+          - "3.12"
+        enable-turbo-mode:
+          - true
+          - false
+        workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
+    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}"
+    steps:
+      - name: Read target
+        id: read-targets
+        run: |
+          import json, os
+          with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
+              fh.write(f'ansible_test_targets={json.loads(os.environ.get("ALL_TEST_TARGETS")).get(os.environ.get("WORKFLOW_ID"))}\n')
+        shell: python
+        env:
+          ALL_TEST_TARGETS: ${{ needs.splitter.outputs.test_targets_json }}
+          WORKFLOW_ID: ${{ matrix.workflow-id }}
+
+      - name: Display ansible test targets
+        run: |
+          echo "ansible_test_targets -> ${{ steps.read-targets.outputs.ansible_test_targets }}"
+
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.source }}
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # install ansible
+      - name: Install ansible-core (${{ matrix.ansible-version }})
+        run: >-
+          python3 -m pip install
+          https://github.com/ansible/ansible/archive/${{ matrix.ansible-version }}.tar.gz
+          --disable-pip-version-check
+        shell: bash
+
+      - name: Build and install collection
+        id: install-src
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.source }}
+
+      - name: checkout ansible-collections/cloud.common
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/cloud.common
+          path: ${{ env.cloud_common }}
+          ref: main
+
+      - name: checkout ansible-collections/ansible.posix
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/ansible.posix
+          path: ${{ env.ansible_posix }}
+          ref: main
+
+      - name: install cloud.common collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.cloud_common }}
+
+      - name: install ansible.posix collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.ansible_posix }}
+
+      - name: create kubernetes cluster
+        uses: helm/kind-action@v1.8.0
+
+      - name: Run integration tests
+        uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
+        with:
+          collection_path: ${{ steps.install-src.outputs.collection_path }}
+          python_version: ${{ matrix.python-version }}
+          ansible_version: ${{ matrix.ansible-version }}
+          ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
+          ansible_test_environment: |
+            ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}

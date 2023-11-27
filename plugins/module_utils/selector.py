@@ -16,7 +16,6 @@ import re
 
 
 class Selector(object):
-
     equality_based_operators = ("==", "!=", "=")
 
     def __init__(self, data):

@@ -1,14 +1,11 @@
 import traceback
-
 from typing import Optional
 
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.common.text.converters import to_text
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.basic import missing_required_lib
-from ansible.module_utils.common.text.converters import to_text
 
 
 class AnsibleK8SModule:
@@ -38,7 +35,7 @@ class AnsibleK8SModule:
 
         if self.settings["check_k8s"]:
             self.requires("kubernetes")
-            self.has_at_least("kubernetes", "12.0.0", warn=True)
+            self.has_at_least("kubernetes", "24.2.0", warn=True)
 
         if self.settings["check_pyyaml"]:
             self.requires("pyyaml")

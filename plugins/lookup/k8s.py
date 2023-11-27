@@ -114,8 +114,8 @@ DOCUMENTATION = """
         aliases: [ verify_ssl ]
 
     requirements:
-      - "python >= 3.6"
-      - "kubernetes >= 12.0.0"
+      - "python >= 3.9"
+      - "kubernetes >= 24.2.0"
       - "PyYAML >= 3.11"
 """
 
@@ -179,7 +179,6 @@ import os
 from ansible.errors import AnsibleError
 from ansible.module_utils.common._collections_compat import KeysView
 from ansible.module_utils.common.validation import check_type_bool
-
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
@@ -214,7 +213,6 @@ except ImportError as e:
 
 class KubernetesLookup(object):
     def __init__(self):
-
         if not HAS_K8S_MODULE_HELPER:
             raise Exception(
                 "Requires the Kubernetes Python client. Try `pip install kubernetes`. Detail: {0}".format(

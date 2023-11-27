@@ -62,8 +62,8 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_wait_options
 
 requirements:
-  - "python >= 3.6"
-  - "kubernetes >= 12.0.0"
+  - "python >= 3.9"
+  - "kubernetes >= 24.2.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
 """
@@ -127,8 +127,8 @@ error:
 import copy
 import traceback
 
-from ansible.module_utils.basic import missing_required_lib
 from ansible.module_utils._text import to_native
+from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
@@ -151,7 +151,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     get_waiter,
 )
-
 
 try:
     from kubernetes.dynamic.exceptions import DynamicApiError

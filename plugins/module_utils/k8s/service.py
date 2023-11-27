@@ -4,36 +4,30 @@
 import copy
 from typing import Any, Dict, List, Optional, Tuple
 
+from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
     generate_hash,
 )
-
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
-    Waiter,
-    exists,
-    resource_absent,
-    get_waiter,
-)
-
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
-    requires,
-)
-
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import requires
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
 )
-
-from ansible.module_utils.common.dict_transformations import dict_merge
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
+    Waiter,
+    exists,
+    get_waiter,
+    resource_absent,
+)
 
 try:
     from kubernetes.dynamic.exceptions import (
-        NotFoundError,
-        ResourceNotFoundError,
-        ResourceNotUniqueError,
+        BadRequestError,
         ConflictError,
         ForbiddenError,
         MethodNotAllowedError,
-        BadRequestError,
+        NotFoundError,
+        ResourceNotFoundError,
+        ResourceNotUniqueError,
     )
 except ImportError:
     # Handled in module setup
@@ -152,7 +146,7 @@ class K8sService:
         if merge_type == "json":
             self.module.deprecate(
                 msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
-                version="3.0.0",
+                version="4.0.0",
                 collection_name="kubernetes.core",
             )
         try:

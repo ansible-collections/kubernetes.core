@@ -64,12 +64,11 @@ RETURN = """
         key1: val1
 """
 
-from ansible.errors import AnsibleLookupError
-from ansible.plugins.lookup import LookupBase
-from ansible.module_utils.common.process import get_bin_path
-
-
 import subprocess
+
+from ansible.errors import AnsibleLookupError
+from ansible.module_utils.common.process import get_bin_path
+from ansible.plugins.lookup import LookupBase
 
 
 def get_binary_from_path(name, opt_dirs=None):

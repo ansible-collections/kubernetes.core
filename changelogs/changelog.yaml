@@ -762,3 +762,55 @@ releases:
       name: helm_pull
       namespace: ''
     release_date: '2023-01-24'
+  3.0.0:
+    changes:
+      breaking_changes:
+      - Remove support for ansible-core < 2.14
+      - Update python kubernetes library to 24.2.0, helm/kind-action to 1.8.0, kubernetes
+        >= 1.24.
+      bugfixes:
+      - helm - Put the chart_ref into quotes when running ``helm show chart``, ``helm
+        upgrade`` and ``helm dependency update`` commands (https://github.com/ansible-collections/kubernetes.core/issues/653).
+      - helm - delete temporary file created when deploying chart with option ``release_values``
+        set (https://github.com/ansible-collections/kubernetes.core/issues/530).
+      - helm - fix issue occurring when uninstalling chart with statues others than
+        ``deployed`` (https://github.com/ansible-collections/kubernetes.core/issues/319).
+      - helm - fix post_renderer argument breaking the helm deploy_command (https://github.com/ansible-collections/kubernetes.core/pull/586).
+      - helm - use post_renderer when checking ``changed`` status for a helm release
+        (https://github.com/ansible-collections/kubernetes.core/pull/588).
+      - k8s_scale - clean handling of ResourceTimeout exception (https://github.com/ansible-collections/kubernetes.core/issues/583).
+      - k8s_scale - fix issue when scaling StatefulSets with ``updateStrategy=OnDelete``
+        (https://github.com/ansible-collections/kubernetes.core/issues/579).
+      deprecated_features:
+      - k8s - the ``k8s`` inventory plugin has been deprecated and will be removed
+        in release 4.0.0 (https://github.com/ansible-collections/kubernetes.core/issues/31).
+      minor_changes:
+      - helm - add ``reuse_values`` and ``reset_values`` support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/394).
+      - k8s - add new option ``delete_all`` to support deletion of all resources when
+        state is set to ``absent``. (https://github.com/ansible-collections/kubernetes.core/issues/504)
+      - k8s, k8s_info - add a hidden_fields option to allow fields to be hidden in
+        the results of k8s and k8s_info
+      - k8s_drain - add ability to filter the list of pods to be drained by a pod
+        label selector (https://github.com/ansible-collections/kubernetes.core/issues/474).
+      release_summary: This major release drops support for ansible-core versions
+        lower than 2.14, Python versions lower than 3.9 and updates python kubernetes
+        library to 24.2.0, helm/kind-action to 1.8.0, kubernetes >= 1.24, along with
+        bug fixes and minor changes.
+    fragments:
+    - 20230206-deprecate-k8s-inventory.yml
+    - 20231110-helm-quote-ref.yaml
+    - 517-k8s-make-name-optional.yaml
+    - 575-helm-add-support-for-reuse_values-and-reset_values.yml
+    - 579-k8s_scale-fix-issue-with-scaling-statefulsets.yml
+    - 583-k8s_scale-clean-handling-of-ResourceTimeout-exception.yaml
+    - 586-helm-fix-post-renderer-arg.yml
+    - 588-helm-use-post-renderer-for-helmdiff.yml
+    - 589-helm-uninstall-chart-releases-with-statuses-different-than-deployed.yaml
+    - 606-k8s_drain-add-pod_selectors-parameter.yaml
+    - 612-fix-helm-tests.yaml
+    - 629-add-hidden-fields-option.yaml
+    - gha-sanity-fixes.yaml
+    - helm-delete-temporary-file-created-when-using-option-release_values.yaml
+    - remove_ansible_2_13.yaml
+    - update_supported_versions.yaml
+    release_date: '2023-11-17'

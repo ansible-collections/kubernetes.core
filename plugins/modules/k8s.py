@@ -195,8 +195,8 @@ options:
     version_added: 2.5.0
 
 requirements:
-  - "python >= 3.6"
-  - "kubernetes >= 12.0.0"
+  - "python >= 3.9"
+  - "kubernetes >= 24.2.0"
   - "PyYAML >= 3.11"
   - "jsonpatch"
 """
@@ -278,10 +278,10 @@ EXAMPLES = r"""
   kubernetes.core.k8s:
     state: present
     template:
-      - path: '/testing/deployment_one.j2'
-      - path: '/testing/deployment_two.j2'
-        variable_start_string: '[['
-        variable_end_string: ']]'
+    - path: '/testing/deployment_one.j2'
+    - path: '/testing/deployment_two.j2'
+      variable_start_string: '[['
+      variable_end_string: ']]'
 
 - name: fail on validation errors
   kubernetes.core.k8s:
@@ -423,10 +423,10 @@ from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule impo
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
-    WAIT_ARG_SPEC,
+    DELETE_OPTS_ARG_SPEC,
     NAME_ARG_SPEC,
     RESOURCE_ARG_SPEC,
-    DELETE_OPTS_ARG_SPEC,
+    WAIT_ARG_SPEC,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,

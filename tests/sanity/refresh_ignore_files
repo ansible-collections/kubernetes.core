@@ -2,9 +2,7 @@
 
 
 import itertools
-
 from pathlib import Path
-
 
 # Mapping of Ansible versions to supported Python versions
 ANSIBLE_VERSIONS = {

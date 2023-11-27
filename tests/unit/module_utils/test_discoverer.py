@@ -14,19 +14,17 @@
 
 
 import pytest
-
-from kubernetes.client import ApiClient
-from kubernetes.dynamic import Resource
-
-from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import (
-    K8SDynamicClient,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.client.discovery import (
     LazyDiscoverer,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.client.resource import (
     ResourceList,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8sdynamicclient import (
+    K8SDynamicClient,
+)
+from kubernetes.client import ApiClient
+from kubernetes.dynamic import Resource
 
 
 @pytest.fixture(scope="module")

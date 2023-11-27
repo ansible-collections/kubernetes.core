@@ -1,14 +1,12 @@
 from unittest.mock import Mock
 
 import pytest
-from kubernetes.dynamic.resource import ResourceInstance, Resource
-
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
     diff_objects,
 )
-
 from kubernetes.dynamic.exceptions import NotFoundError
+from kubernetes.dynamic.resource import Resource, ResourceInstance
 
 pod_definition = {
     "apiVersion": "v1",

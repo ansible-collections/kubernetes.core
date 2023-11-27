@@ -93,37 +93,38 @@ DOCUMENTATION = """
                     to access.
 
     requirements:
-    - "python >= 3.6"
-    - "kubernetes >= 12.0.0"
+    - "python >= 3.9"
+    - "kubernetes >= 24.2.0"
     - "PyYAML >= 3.11"
 """
 
-EXAMPLES = """
+EXAMPLES = r"""
 # File must be named k8s.yaml or k8s.yml
 
-# Authenticate with token, and return all pods and services for all namespaces
-plugin: kubernetes.core.k8s
-connections:
-  - host: https://192.168.64.4:8443
-    api_key: xxxxxxxxxxxxxxxx
-    validate_certs: false
+- name: Authenticate with token, and return all pods and services for all namespaces
+  plugin: kubernetes.core.k8s
+  connections:
+    - host: https://192.168.64.4:8443
+      api_key: xxxxxxxxxxxxxxxx
+      validate_certs: false
 
-# Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-plugin: kubernetes.core.k8s
-connections:
-  - namespaces:
-    - testing
+- name: Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
+  plugin: kubernetes.core.k8s
+  connections:
+    - namespaces:
+        - testing
 
-# Use a custom config file, and a specific context.
-plugin: kubernetes.core.k8s
-connections:
-  - kubeconfig: /path/to/config
-    context: 'awx/192-168-64-4:8443/developer'
+- name: Use a custom config file, and a specific context.
+  plugin: kubernetes.core.k8s
+  connections:
+    - kubeconfig: /path/to/config
+      context: 'awx/192-168-64-4:8443/developer'
 """
 
 import json
 
 from ansible.errors import AnsibleError
+from ansible.plugins.inventory import BaseInventoryPlugin, Cacheable, Constructable
 from ansible_collections.kubernetes.core.plugins.module_utils.common import (
     HAS_K8S_MODULE_HELPER,
     k8s_import_exception,
@@ -131,7 +132,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.common import (
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
-from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
 
 try:
     from kubernetes.dynamic.exceptions import DynamicApiError
@@ -193,7 +193,6 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             self.fetch_objects(connections)
 
     def fetch_objects(self, connections):
-
         if connections:
             if not isinstance(connections, list):
                 raise K8sInventoryException("Expecting connections to be a list.")

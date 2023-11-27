@@ -1,3 +1,0 @@
----
-bugfixes:
-  - helm - fix post_renderer argument breaking the helm deploy_command (https://github.com/ansible-collections/kubernetes.core/pull/586).

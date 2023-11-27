@@ -7,18 +7,17 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import os.path
-import yaml
+import random
+import string
 import tempfile
+from unittest.mock import MagicMock
+
 import pytest
-
-
+import yaml
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
     write_temp_kubeconfig,
 )
-from unittest.mock import MagicMock
-import random
-import string
 
 
 @pytest.fixture()
@@ -114,7 +113,6 @@ def test_write_temp_kubeconfig_with_kubeconfig():
 
 
 def test_module_get_helm_binary_from_params():
-
     helm_binary_path = MagicMock()
     helm_sys_binary_path = MagicMock()
 
@@ -129,7 +127,6 @@ def test_module_get_helm_binary_from_params():
 
 
 def test_module_get_helm_binary_from_system():
-
     helm_sys_binary_path = MagicMock()
     module = MagicMock()
     module.params = {}
@@ -140,7 +137,6 @@ def test_module_get_helm_binary_from_system():
 
 
 def test_module_get_helm_plugin_list(_ansible_helm_module):
-
     _ansible_helm_module.run_helm_command = MagicMock()
     _ansible_helm_module.run_helm_command.return_value = (0, "output", "error")
 
@@ -156,7 +152,6 @@ def test_module_get_helm_plugin_list(_ansible_helm_module):
 
 
 def test_module_get_helm_plugin_list_failure(_ansible_helm_module):
-
     _ansible_helm_module.run_helm_command = MagicMock()
     _ansible_helm_module.run_helm_command.return_value = (-1, "output", "error")
 
@@ -175,7 +170,6 @@ def test_module_get_helm_plugin_list_failure(_ansible_helm_module):
 @pytest.mark.parametrize("no_values", [True, False])
 @pytest.mark.parametrize("get_all", [True, False])
 def test_module_get_values(_ansible_helm_module, no_values, get_all):
-
     expected = {"test": "units"}
     output = "---\ntest: units\n"
 
@@ -211,7 +205,6 @@ def test_module_get_values(_ansible_helm_module, no_values, get_all):
     ],
 )
 def test_module_get_helm_version(_ansible_helm_module, output, expected):
-
     _ansible_helm_module.run_command = MagicMock()
     _ansible_helm_module.run_command.return_value = (0, output, "error")
 
@@ -224,7 +217,6 @@ def test_module_get_helm_version(_ansible_helm_module, output, expected):
 
 
 def test_module_run_helm_command(_ansible_helm_module):
-
     error = "".join(
         random.choice(string.ascii_letters + string.digits) for x in range(10)
     )
@@ -252,7 +244,6 @@ def test_module_run_helm_command(_ansible_helm_module):
 
 @pytest.mark.parametrize("fails_on_error", [True, False])
 def test_module_run_helm_command_failure(_ansible_helm_module, fails_on_error):
-
     error = "".join(
         random.choice(string.ascii_letters + string.digits) for x in range(10)
     )
@@ -311,7 +302,6 @@ def test_module_run_helm_command_failure(_ansible_helm_module, fails_on_error):
     ],
 )
 def test_module_prepare_helm_environment(params, env_update, kubeconfig):
-
     module = MagicMock()
     module.params = params
 
@@ -355,7 +345,6 @@ def test_module_prepare_helm_environment(params, env_update, kubeconfig):
 def test_module_prepare_helm_environment_with_validate_certs(
     helm_version, is_env_var_set
 ):
-
     module = MagicMock()
     module.params = {"validate_certs": False}
 
@@ -387,7 +376,6 @@ def test_module_prepare_helm_environment_with_validate_certs(
     ],
 )
 def test_module_prepare_helm_environment_with_ca_cert(helm_version, is_env_var_set):
-
     ca_cert = "".join(
         random.choice(string.ascii_letters + string.digits) for i in range(50)
     )
@@ -441,7 +429,6 @@ def test_module_prepare_helm_environment_with_ca_cert(helm_version, is_env_var_s
     ],
 )
 def test_module_get_helm_set_values_args(set_values, expected):
-
     module = MagicMock()
     module.params = {}
     module.fail_json.side_effect = SystemExit(1)

@@ -7,19 +7,18 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
+import copy
+import json
 import os
+import re
 import tempfile
 import traceback
-import re
-import json
-import copy
 
-from ansible.module_utils.basic import missing_required_lib
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.six import string_types
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
-from ansible.module_utils.basic import AnsibleModule
 
 try:
     import yaml
@@ -84,7 +83,6 @@ class AnsibleHelmModule(object):
     """
 
     def __init__(self, **kwargs):
-
         self._module = None
         if "module" in kwargs:
             self._module = kwargs.get("module")
@@ -184,7 +182,6 @@ class AnsibleHelmModule(object):
         )
 
     def get_helm_version(self):
-
         command = self.get_helm_binary() + " version"
         rc, out, err = self.run_command(command)
         m = re.match(r'version.BuildInfo{Version:"v([0-9\.]*)",', out)
@@ -216,7 +213,6 @@ class AnsibleHelmModule(object):
         return yaml.safe_load(out)
 
     def parse_yaml_content(self, content):
-
         if not HAS_YAML:
             self.fail_json(msg=missing_required_lib("yaml"), exception=HAS_YAML)
 
@@ -228,7 +224,6 @@ class AnsibleHelmModule(object):
             )
 
     def get_manifest(self, release_name):
-
         command = [
             self.get_helm_binary(),
             "get",
@@ -241,7 +236,6 @@ class AnsibleHelmModule(object):
         return self.parse_yaml_content(out)
 
     def get_notes(self, release_name):
-
         command = [
             self.get_helm_binary(),
             "get",

@@ -9,7 +9,7 @@ The collection includes a variety of Ansible content to help automate the manage
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against following Ansible versions: **>=2.9.17**.
+This collection has been tested against following Ansible versions: **>=2.14.0**.
 
 For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
 fully qualified collection name (for example, `cisco.ios.ios`).
@@ -20,13 +20,13 @@ PEP440 is the schema used to describe the versions of Ansible.
 
 ## Python Support
 
-* Collection supports 3.6+
+* Collection supports 3.9+
 
 Note: Python2 is deprecated from [1st January 2020](https://www.python.org/doc/sunset-python-2/). Please switch to Python3.
 
 ## Kubernetes Version Support
 
-This collection supports Kubernetes versions >=1.19.
+This collection supports Kubernetes versions >= 1.24.
 
 ## Included content
 
@@ -93,7 +93,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 2.4.0
+    version: 3.0.0
 ```
 
 ### Installing the Kubernetes Python Library

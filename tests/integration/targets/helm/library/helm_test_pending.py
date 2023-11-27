@@ -48,9 +48,10 @@ EXAMPLES = r"""
 RETURN = r"""
 """
 
-import subprocess
 import json
+import subprocess
 import time
+
 from ansible.module_utils.basic import AnsibleModule
 
 

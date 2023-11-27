@@ -1,0 +1,14 @@
+name: Unit tests
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches:
+      - main
+      - stable-*
+
+jobs:
+  unit-source:
+    uses: ansible-network/github_actions/.github/workflows/unit_source.yml@main

@@ -137,8 +137,8 @@ status:
       version_added: "2.4.0"
 """
 
-import traceback
 import copy
+import traceback
 
 try:
     import yaml
