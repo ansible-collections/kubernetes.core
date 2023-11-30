@@ -1,5 +1,5 @@
 ---
-requires_ansible: '>=2.9.17'
+requires_ansible: '>=2.14.0'
 
 action_groups:
   helm:

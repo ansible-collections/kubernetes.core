@@ -281,6 +281,7 @@
       that:
       - dset_result.resources | list | length > 0
 
+  # test: drain using disable_eviction=true
   - name: Uncordon node
     k8s_drain:
       state: uncordon
@@ -346,6 +347,90 @@
       name: '{{ drain_pod_name }}-01'
     register: _result
     failed_when: _result.resources
+
+  # test: drain using pod_selectors
+  - name: Uncordon node
+    k8s_drain:
+      state: uncordon
+      name: '{{ node_to_drain }}'
+
+  - name: create a Pod for test
+    k8s:
+      namespace: '{{ test_namespace }}'
+      wait: true
+      wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      definition:
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: 'ansible-drain-pod'
+          labels:
+            app: ansible-drain
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchFields:
+                  - key: metadata.name
+                    operator: In
+                    values:
+                    - '{{ node_to_drain }}'
+          containers:
+          - name: ansible-container
+            image: busybox
+            command:
+            - '/bin/sh'
+            - '-c'
+            - 'while true; do echo $(date); sleep 10; done'
+
+  - name: Drain node using pod_selectors 'app!=ansible-drain'
+    k8s_drain:
+      state: drain
+      name: '{{ node_to_drain }}'
+      pod_selectors:
+      - app!=ansible-drain
+      delete_options:
+        terminate_grace_period: 0
+        delete_emptydir_data: true
+        force: true
+        ignore_daemonsets: true
+    register: drain_pod_selector
+
+  - name: assert that node has been drained
+    assert:
+      that:
+      - drain_pod_selector is changed
+      - '"node {{ node_to_drain }} marked unschedulable." in drain_pod_selector.result'
+
+  - name: assert that pod created before is still running
+    k8s_info:
+      namespace: '{{ test_namespace }}'
+      kind: Pod
+      label_selectors:
+      - app=ansible-drain
+      field_selectors:
+      - status.phase=Running
+    register: pods
+    failed_when: pods.resources == []
+
+  - name: Drain node using pod_selectors 'app=ansible-drain'
+    k8s_drain:
+      state: drain
+      name: '{{ node_to_drain }}'
+      pod_selectors:
+      - app=ansible-drain
+      delete_options:
+        terminate_grace_period: 0
+        force: true
+    register: drain_pod_selector_equal
+
+  - name: assert that node was not drained
+    assert:
+      that:
+      - drain_pod_selector_equal is changed
+      - '"node {{ node_to_drain }} already marked unschedulable." in drain_pod_selector_equal.result'
+      - '"Deleting Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: {{ test_namespace }}/ansible-drain-pod." in drain_pod_selector_equal.warnings'
 
   - name: Uncordon node
     k8s_drain:

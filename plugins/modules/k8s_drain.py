@@ -41,8 +41,18 @@ options:
       - The name of the node.
     required: true
     type: str
+  pod_selectors:
+    description:
+      - Label selector to filter pods on the node.
+      - This option has effect only when C(state) is set to I(drain).
+    type: list
+    elements: str
+    version_added: 2.5.0
+    aliases:
+    - label_selectors
   delete_options:
     type: dict
+    default: {}
     description:
       - Specify options to delete pods.
       - This option has effect only when C(state) is set to I(drain).
@@ -87,8 +97,8 @@ options:
             type: int
 
 requirements:
-  - python >= 3.6
-  - kubernetes >= 12.0.0
+  - python >= 3.9
+  - kubernetes >= 24.2.0
 """
 
 EXAMPLES = r"""
@@ -103,7 +113,7 @@ EXAMPLES = r"""
     state: drain
     name: foo
     delete_options:
-        terminate_grace_period: 900
+      terminate_grace_period: 900
 
 - name: Mark node "foo" as schedulable.
   kubernetes.core.k8s_drain:
@@ -115,6 +125,13 @@ EXAMPLES = r"""
     state: cordon
     name: foo
 
+- name: Drain node "foo" using label selector to filter the list of pods to be drained.
+  kubernetes.core.k8s_drain:
+    state: drain
+    name: foo
+    pod_selectors:
+    - 'app!=csi-attacher'
+    - 'app!=csi-provisioner'
 """
 
 RETURN = r"""
@@ -128,8 +145,9 @@ result:
 import copy
 import time
 import traceback
-
 from datetime import datetime
+
+from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
@@ -146,12 +164,10 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
     CoreException,
 )
 
-from ansible.module_utils._text import to_native
-
 try:
     from kubernetes.client.api import core_v1_api
-    from kubernetes.client.models import V1DeleteOptions, V1ObjectMeta
     from kubernetes.client.exceptions import ApiException
+    from kubernetes.client.models import V1DeleteOptions, V1ObjectMeta
 except ImportError:
     # ImportError are managed by the common module already.
     pass
@@ -328,6 +344,17 @@ class K8sDrainAnsible(object):
                     )
                 )
 
+    def list_pods(self):
+        params = {
+            "field_selector": "spec.nodeName={name}".format(
+                name=self._module.params.get("name")
+            )
+        }
+        pod_selectors = self._module.params.get("pod_selectors")
+        if pod_selectors:
+            params["label_selector"] = ",".join(pod_selectors)
+        return self._api_instance.list_pod_for_all_namespaces(**params)
+
     def delete_or_evict_pods(self, node_unschedulable):
         # Mark node as unschedulable
         result = []
@@ -350,12 +377,7 @@ class K8sDrainAnsible(object):
                 self.patch_node(unschedulable=False)
 
         try:
-            field_selector = "spec.nodeName={name}".format(
-                name=self._module.params.get("name")
-            )
-            pod_list = self._api_instance.list_pod_for_all_namespaces(
-                field_selector=field_selector
-            )
+            pod_list = self.list_pods()
             # Filter pods
             force = self._drain_options.get("force", False)
             ignore_daemonset = self._drain_options.get("ignore_daemonsets", False)
@@ -406,7 +428,6 @@ class K8sDrainAnsible(object):
         return dict(result=" ".join(result))
 
     def patch_node(self, unschedulable):
-
         body = {"spec": {"unschedulable": unschedulable}}
         try:
             self._api_instance.patch_node(
@@ -418,7 +439,6 @@ class K8sDrainAnsible(object):
             )
 
     def execute_module(self):
-
         state = self._module.params.get("state")
         name = self._module.params.get("name")
         try:
@@ -485,6 +505,11 @@ def argspec():
                     wait_timeout=dict(type="int"),
                     wait_sleep=dict(type="int", default=5),
                 ),
+            ),
+            pod_selectors=dict(
+                type="list",
+                elements="str",
+                aliases=["label_selectors"],
             ),
         )
     )

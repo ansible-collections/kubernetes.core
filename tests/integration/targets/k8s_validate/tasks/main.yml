@@ -52,6 +52,7 @@
         name:
           - kubernetes
           - kubernetes-validate
+          - setuptools
         virtualenv: "{{ virtualenv }}"
         virtualenv_command: "{{ virtualenv_command }}"
         virtualenv_site_packages: false

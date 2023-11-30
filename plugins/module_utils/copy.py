@@ -18,25 +18,26 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import os
-from tempfile import TemporaryFile, NamedTemporaryFile
-from select import select
-from abc import ABCMeta, abstractmethod
 import tarfile
+from abc import ABCMeta, abstractmethod
+from select import select
+from tempfile import NamedTemporaryFile, TemporaryFile
+
+from ansible.module_utils._text import to_native
 
 # from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import AnsibleModule
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
 )
-from ansible.module_utils._text import to_native
 
 try:
     from kubernetes.client.api import core_v1_api
     from kubernetes.stream import stream
     from kubernetes.stream.ws_client import (
-        STDOUT_CHANNEL,
-        STDERR_CHANNEL,
-        ERROR_CHANNEL,
         ABNF,
+        ERROR_CHANNEL,
+        STDERR_CHANNEL,
+        STDOUT_CHANNEL,
     )
 except ImportError:
     pass

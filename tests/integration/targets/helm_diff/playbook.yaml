@@ -1,0 +1,7 @@
+---
+- connection: local
+  gather_facts: true
+  hosts: localhost
+
+  roles:
+  - helm_diff

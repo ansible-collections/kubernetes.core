@@ -4,12 +4,12 @@
 from typing import Dict
 
 from ansible.module_utils._text import to_native
-
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    ResourceTimeout,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
     create_definitions,
@@ -17,9 +17,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource impor
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
     diff_objects,
-)
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
-    ResourceTimeout,
+    hide_fields,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import exists
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
@@ -46,16 +44,51 @@ def validate(client, module, resource):
     return [_prepend_resource_info(resource, msg) for msg in warnings + errors]
 
 
+def get_definitions(svc, params):
+    try:
+        definitions = create_definitions(params)
+    except Exception as e:
+        msg = "Failed to load resource definition: {0}".format(e)
+        raise CoreException(msg) from e
+
+    delete_all = params.get("delete_all")
+    src = params.get("src")
+    resource_definition = params.get("resource_definition")
+    name = params.get("name")
+    state = params.get("state")
+
+    if (
+        delete_all
+        and state == "absent"
+        and name is None
+        and resource_definition is None
+        and src is None
+    ):
+        # Delete all resources in the namespace for the specified resource type
+        if params.get("kind") is None:
+            raise CoreException(
+                "'kind' option is required to specify the resource type."
+            )
+
+        resource = svc.find_resource(
+            params.get("kind"), params.get("api_version"), fail=True
+        )
+        definitions = svc.retrieve_all(
+            resource,
+            params.get("namespace"),
+            params.get("label_selectors"),
+        )
+
+    return definitions
+
+
 def run_module(module) -> None:
     results = []
     changed = False
     client = get_api_client(module)
     svc = K8sService(client, module)
-    try:
-        definitions = create_definitions(module.params)
-    except Exception as e:
-        msg = "Failed to load resource definition: {0}".format(e)
-        raise CoreException(msg) from e
+
+    definitions = get_definitions(svc, module.params)
 
     for definition in definitions:
         result = {"changed": False, "result": {}}
@@ -102,6 +135,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     state = params.get("state", None)
     kind = definition.get("kind")
     api_version = definition.get("apiVersion")
+    hidden_fields = params.get("hidden_fields")
 
     result = {"changed": False, "result": {}}
     instance = {}
@@ -177,7 +211,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             existing = existing.to_dict()
         else:
             existing = {}
-        match, diffs = diff_objects(existing, instance)
+        match, diffs = diff_objects(existing, instance, hidden_fields)
         if match and diffs:
             result.setdefault("warnings", []).append(
                 "No meaningful diff was generated, but the API may not be idempotent "
@@ -187,7 +221,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
         if svc.module._diff:
             result["diff"] = diffs
 
-    result["result"] = instance
+    result["result"] = hide_fields(instance, hidden_fields)
     if not success:
         raise ResourceTimeout(
             '"{0}" "{1}": Timed out waiting on resource'.format(

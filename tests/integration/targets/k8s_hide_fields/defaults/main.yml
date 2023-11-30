@@ -1,0 +1,12 @@
+---
+test_namespace: "hide-fields"
+hide_fields_namespace: "hide-fields"
+hide_fields_base_configmap:
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: hide-fields-cm
+    namespace: hide-fields
+  data:
+    hello: world
+    another: value

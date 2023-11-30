@@ -590,3 +590,4 @@ tests/integration/targets/setup_kubeconfig/library/test_inventory_read_credentia
 tests/integration/targets/helm/library/helm_test_version.py compile-2.6!skip
 tests/integration/targets/helm/library/helm_test_version.py compile-2.7!skip
 tests/integration/targets/helm/library/helm_test_version.py compile-3.5!skip
+tests/integration/targets/k8s_delete/files/deployments.yaml yamllint!skip

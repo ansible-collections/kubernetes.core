@@ -1,0 +1,6 @@
+---
+- connection: local
+  gather_facts: false
+  hosts: localhost
+  roles:
+  - k8s_drain

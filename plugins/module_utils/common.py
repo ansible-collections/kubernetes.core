@@ -20,17 +20,20 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import base64
-import time
-import os
-import traceback
-import sys
 import hashlib
+import os
+import sys
+import time
+import traceback
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 
-from ansible_collections.kubernetes.core.plugins.module_utils.version import (
-    LooseVersion,
-)
+from ansible.module_utils._text import to_bytes, to_native, to_text
+from ansible.module_utils.basic import missing_required_lib
+from ansible.module_utils.common.dict_transformations import dict_merge
+from ansible.module_utils.parsing.convert_bool import boolean
+from ansible.module_utils.six import iteritems, string_types
+from ansible.module_utils.urls import Request
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_MAP,
     AUTH_ARG_SPEC,
@@ -42,27 +45,23 @@ from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
 from ansible_collections.kubernetes.core.plugins.module_utils.selector import (
     LabelSelectorFilter,
 )
-
-from ansible.module_utils.basic import missing_required_lib
-from ansible.module_utils.six import iteritems, string_types
-from ansible.module_utils._text import to_native, to_bytes, to_text
-from ansible.module_utils.common.dict_transformations import dict_merge
-from ansible.module_utils.parsing.convert_bool import boolean
-from ansible.module_utils.urls import Request
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
 
 K8S_IMP_ERR = None
 try:
     import kubernetes
     from kubernetes.dynamic.exceptions import (
+        BadRequestError,
+        ConflictError,
+        DynamicApiError,
+        ForbiddenError,
+        KubernetesValidateMissing,
+        MethodNotAllowedError,
         NotFoundError,
         ResourceNotFoundError,
         ResourceNotUniqueError,
-        DynamicApiError,
-        ConflictError,
-        ForbiddenError,
-        MethodNotAllowedError,
-        BadRequestError,
-        KubernetesValidateMissing,
     )
 
     HAS_K8S_MODULE_HELPER = True
@@ -797,8 +796,8 @@ class K8sAnsibleMixin(object):
             self.resource_definitions = [implicit_definition]
 
     def check_library_version(self):
-        if LooseVersion(self.kubernetes_version) < LooseVersion("12.0.0"):
-            self.fail_json(msg="kubernetes >= 12.0.0 is required")
+        if LooseVersion(self.kubernetes_version) < LooseVersion("24.2.0"):
+            self.fail_json(msg="kubernetes >= 24.2.0 is required")
 
     def flatten_list_kind(self, list_resource, definitions):
         flattened = []
@@ -819,7 +818,7 @@ class K8sAnsibleMixin(object):
         try:
             self.client = get_api_client(self.module)
         # Hopefully the kubernetes client will provide its own exception class one day
-        except (urllib3.exceptions.RequestError) as e:
+        except urllib3.exceptions.RequestError as e:
             self.fail_json(msg="Couldn't connect to Kubernetes: %s" % str(e))
 
         flattened_definitions = []
@@ -837,7 +836,7 @@ class K8sAnsibleMixin(object):
                 resource = self.find_resource(kind, api_version, fail=True)
                 flattened_definitions.append((resource, definition))
 
-        for (resource, definition) in flattened_definitions:
+        for resource, definition in flattened_definitions:
             kind = definition.get("kind", self.kind)
             api_version = definition.get("apiVersion", self.api_version)
             definition = self.set_defaults(resource, definition)
@@ -1436,7 +1435,7 @@ class K8sAnsibleMixin(object):
         if merge_type == "json":
             self.module.deprecate(
                 msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
-                version="3.0.0",
+                version="4.0.0",
                 collection_name="kubernetes.core",
             )
         try:

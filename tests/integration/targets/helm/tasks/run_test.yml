@@ -34,6 +34,9 @@
 - name: Test helm uninstall
   include_tasks: test_helm_uninstall.yml
 
+- name: Test helm install with chart name containing space
+  include_tasks: test_helm_with_space_into_chart_name.yml
+
 # https://github.com/ansible-collections/community.kubernetes/issues/296
 - name: Test Skip CRDS feature in helm chart install
   include_tasks: test_crds.yml

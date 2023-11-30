@@ -208,6 +208,7 @@ Parameters
                     </td>
                 <td>
                         <div>Path to a kubectl config file. Defaults to <em>~/.kube/config</em></div>
+                        <div>The configuration can be provided as dictionary. Added in version 2.4.0.</div>
                 </td>
             </tr>
             <tr>
@@ -354,7 +355,7 @@ Status
 Authors
 ~~~~~~~
 
-- xuxinkun
+- xuxinkun (@xuxinkun)
 
 
 .. hint::

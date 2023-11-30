@@ -29,8 +29,8 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- python >= 3.6
-- kubernetes >= 12.0.0
+- python >= 3.9
+- kubernetes >= 24.2.0
 
 
 Parameters
@@ -132,6 +132,7 @@ Parameters
                     </div>
                 </td>
                 <td>
+                        <b>Default:</b><br/><div style="color: blue">{}</div>
                 </td>
                 <td>
                         <div>Specify options to delete pods.</div>
@@ -147,6 +148,7 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">boolean</span>
                     </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
@@ -155,7 +157,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Continue even if there are pods using emptyDir (local data that will be deleted when the node is drained)</div>
+                        <div>Continue even if there are pods using emptyDir (local data that will be deleted when the node is drained).</div>
                 </td>
             </tr>
             <tr>
@@ -334,6 +336,7 @@ Parameters
                 </td>
                 <td>
                         <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Multiple Kubernetes config file can be provided using separator &#x27;;&#x27; for Windows platform or &#x27;:&#x27; for others platforms.</div>
                         <div>The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version &gt;= 17.17.0. Added in version 2.2.0.</div>
                 </td>
             </tr>
@@ -351,6 +354,25 @@ Parameters
                 </td>
                 <td>
                         <div>The name of the node.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_proxy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -390,6 +412,25 @@ Parameters
                         <div>Default to false.</div>
                         <div>Please note that the current version of the k8s python client library does not support setting this flag to True yet.</div>
                         <div>The fix for this k8s python library is here: https://github.com/kubernetes-client/python-base/pull/169</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pod_selectors</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.5.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Label selector to filter pods on the node.</div>
+                        <div>This option has effect only when <code>state</code> is set to <em>drain</em>.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: label_selectors</div>
                 </td>
             </tr>
             <tr>
@@ -561,7 +602,7 @@ Examples
         state: drain
         name: foo
         delete_options:
-            terminate_grace_period: 900
+          terminate_grace_period: 900
 
     - name: Mark node "foo" as schedulable.
       kubernetes.core.k8s_drain:
@@ -572,6 +613,14 @@ Examples
       kubernetes.core.k8s_drain:
         state: cordon
         name: foo
+
+    - name: Drain node "foo" using label selector to filter the list of pods to be drained.
+      kubernetes.core.k8s_drain:
+        state: drain
+        name: foo
+        pod_selectors:
+        - 'app!=csi-attacher'
+        - 'app!=csi-provisioner'
 
 
 

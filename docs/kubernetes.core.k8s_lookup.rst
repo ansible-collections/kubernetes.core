@@ -26,8 +26,8 @@ Requirements
 ------------
 The below requirements are needed on the local Ansible controller node that executes this lookup.
 
-- python >= 3.6
-- kubernetes >= 12.0.0
+- python >= 3.9
+- kubernetes >= 24.2.0
 - PyYAML >= 3.11
 
 
@@ -438,106 +438,28 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
 
     <table border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="2">Key</th>
+            <th colspan="1">Key</th>
             <th>Returned</th>
             <th width="100%">Description</th>
         </tr>
             <tr>
-                <td colspan="2">
+                <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>_list</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">complex</span>
+                      <span style="color: purple">list</span>
+                       / <span style="color: purple">elements=dictionary</span>
                     </div>
                 </td>
                 <td></td>
                 <td>
                             <div>One ore more object definitions returned from the API.</div>
                     <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[{&#x27;kind&#x27;: &#x27;ConfigMap&#x27;, &#x27;apiVersion&#x27;: &#x27;v1&#x27;, &#x27;metadata&#x27;: {&#x27;creationTimestamp&#x27;: &#x27;2022-03-04T13:59:49Z&#x27;, &#x27;name&#x27;: &#x27;my-config-map&#x27;, &#x27;namespace&#x27;: &#x27;default&#x27;, &#x27;resourceVersion&#x27;: &#x27;418&#x27;, &#x27;uid&#x27;: &#x27;5714b011-d090-4eac-8272-a0ea82ec0abd&#x27;}, &#x27;data&#x27;: {&#x27;key1&#x27;: &#x27;val1&#x27;}}]</div>
                 </td>
             </tr>
-                                <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>api_version</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>The versioned schema of this representation of an object.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>kind</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">string</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Represents the REST resource this object represents.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>metadata</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Standard object metadata. Includes name, namespace, annotations, labels, etc.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>spec</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Specific attributes of the object. Will vary based on the <em>api_version</em> and <em>kind</em>.</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                    <td class="elbow-placeholder">&nbsp;</td>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>status</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">complex</span>
-                    </div>
-                </td>
-                <td>success</td>
-                <td>
-                            <div>Current status details for the object.</div>
-                    <br/>
-                </td>
-            </tr>
-
     </table>
     <br/><br/>
 
@@ -549,8 +471,8 @@ Status
 Authors
 ~~~~~~~
 
-- Chris Houseknecht <@chouseknecht>
-- Fabian von Feilitzsch <@fabianvf>
+- Chris Houseknecht (@chouseknecht)
+- Fabian von Feilitzsch (@fabianvf)
 
 
 .. hint::

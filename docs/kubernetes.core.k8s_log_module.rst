@@ -28,8 +28,8 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- python >= 3.6
-- kubernetes >= 12.0.0
+- python >= 3.9
+- kubernetes >= 24.2.0
 - PyYAML >= 3.11
 
 
@@ -44,6 +44,27 @@ Parameters
             <th>Choices/<font color="blue">Defaults</font></th>
             <th width="100%">Comments</th>
         </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>all_containers</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>If set to <code>true</code>, retrieve all containers&#x27; logs in the pod(s).</div>
+                        <div>mutually exclusive with <code>container</code>.</div>
+                </td>
+            </tr>
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
@@ -141,7 +162,8 @@ Parameters
                 <td>
                         <div>Use to specify the container within a pod to grab the log from.</div>
                         <div>If there is only one container, this will default to that container.</div>
-                        <div>If there is more than one container, this option is required.</div>
+                        <div>If there is more than one container, this option is required or set <em>all_containers</em> to <code>true</code>.</div>
+                        <div>mutually exclusive with <code>all_containers</code>.</div>
                 </td>
             </tr>
             <tr>
@@ -240,6 +262,7 @@ Parameters
                 </td>
                 <td>
                         <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Multiple Kubernetes config file can be provided using separator &#x27;;&#x27; for Windows platform or &#x27;:&#x27; for others platforms.</div>
                         <div>The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version &gt;= 17.17.0. Added in version 2.2.0.</div>
                 </td>
             </tr>
@@ -254,6 +277,7 @@ Parameters
                     </div>
                 </td>
                 <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>List of label selectors to use to filter results</div>
@@ -298,6 +322,25 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_proxy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>password</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -332,6 +375,26 @@ Parameters
                         <div>Default to false.</div>
                         <div>Please note that the current version of the k8s python client library does not support setting this flag to True yet.</div>
                         <div>The fix for this k8s python library is here: https://github.com/kubernetes-client/python-base/pull/169</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>previous</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>If <code>true</code>, print the logs for the previous instance of the container in a pod if it exists.</div>
                 </td>
             </tr>
             <tr>
@@ -438,6 +501,22 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>tail_lines</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.4.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>A number of lines from the end of the logs to retrieve.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>username</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -519,7 +598,15 @@ Examples
         kind: DeploymentConfig
         namespace: testing
         name: example
+        tail_lines: 100
       register: log
+
+    # This will get the logs from all containers in Pod
+    - name: Get the logs from all containers in pod
+      kubernetes.core.k8s_log:
+        namespace: testing
+        name: some-pod
+        all_containers: true
 
 
 

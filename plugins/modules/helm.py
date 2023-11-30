@@ -393,10 +393,11 @@ command:
   sample: helm upgrade ...
 """
 
+import copy
 import re
 import tempfile
 import traceback
-import copy
+
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -432,14 +433,20 @@ def get_release(state, release_name):
     return None
 
 
-def get_release_status(module, release_name):
+def get_release_status(module, release_name, all_status=False):
     """
-    Get Release state from deployed release
+    Get Release state from all release status (deployed, failed, pending-install, etc)
     """
 
-    list_command = (
-        module.get_helm_binary() + " list --output=yaml --filter " + release_name
-    )
+    list_command = [
+        module.get_helm_binary(),
+        "list",
+        "--output=yaml",
+        "--filter",
+        release_name,
+    ]
+    if all_status:
+        list_command.append("--all")
 
     rc, out, err = module.run_helm_command(list_command)
 
@@ -465,7 +472,7 @@ def run_dep_update(module, chart_ref):
     """
     Run dependency update
     """
-    dep_update = module.get_helm_binary() + " dependency update " + chart_ref
+    dep_update = module.get_helm_binary() + f" dependency update '{chart_ref}'"
     rc, out, err = module.run_helm_command(dep_update)
 
 
@@ -473,7 +480,7 @@ def fetch_chart_info(module, command, chart_ref):
     """
     Get chart info
     """
-    inspect_command = command + " show chart " + chart_ref
+    inspect_command = command + f" show chart '{chart_ref}'"
 
     rc, out, err = module.run_helm_command(inspect_command)
 
@@ -554,7 +561,7 @@ def deploy(
         module.add_cleanup_file(path)
 
     if post_renderer:
-        deploy_command = " --post-renderer=" + post_renderer
+        deploy_command += " --post-renderer=" + post_renderer
 
     if skip_crds:
         deploy_command += " --skip-crds"
@@ -565,7 +572,7 @@ def deploy(
     if set_value_args:
         deploy_command += " " + set_value_args
 
-    deploy_command += " " + release_name + " " + chart_name
+    deploy_command += " " + release_name + f" '{chart_name}'"
     return deploy_command
 
 
@@ -631,6 +638,7 @@ def helmdiff_check(
     chart_version=None,
     replace=False,
     chart_repo_url=None,
+    post_renderer=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -645,6 +653,8 @@ def helmdiff_check(
         cmd += " " + "--version=" + chart_version
     if not replace:
         cmd += " " + "--reset-values"
+    if post_renderer:
+        cmd += " --post-renderer=" + post_renderer
 
     if release_values != {}:
         fd, path = tempfile.mkstemp(suffix=".yml")
@@ -773,29 +783,31 @@ def main():
         run_repo_update(module)
 
     # Get real/deployed release status
-    release_status = get_release_status(module, release_name)
+    all_status = release_state == "absent"
+    release_status = get_release_status(module, release_name, all_status=all_status)
 
     helm_cmd = module.get_helm_binary()
     opt_result = {}
     if release_state == "absent" and release_status is not None:
-        if replace:
-            module.fail_json(msg="replace is not applicable when state is absent")
+        # skip release statuses 'uninstalled' and 'uninstalling'
+        if not release_status["status"].startswith("uninstall"):
+            if replace:
+                module.fail_json(msg="replace is not applicable when state is absent")
 
-        if wait:
-            helm_version = module.get_helm_version()
-            if LooseVersion(helm_version) < LooseVersion("3.7.0"):
-                opt_result["warnings"] = []
-                opt_result["warnings"].append(
-                    "helm uninstall support option --wait for helm release >= 3.7.0"
-                )
-                wait = False
+            if wait:
+                helm_version = module.get_helm_version()
+                if LooseVersion(helm_version) < LooseVersion("3.7.0"):
+                    opt_result["warnings"] = []
+                    opt_result["warnings"].append(
+                        "helm uninstall support option --wait for helm release >= 3.7.0"
+                    )
+                    wait = False
 
-        helm_cmd = delete(
-            helm_cmd, release_name, purge, disable_hook, wait, wait_timeout
-        )
-        changed = True
+            helm_cmd = delete(
+                helm_cmd, release_name, purge, disable_hook, wait, wait_timeout
+            )
+            changed = True
     elif release_state == "present":
-
         if chart_version is not None:
             helm_cmd += " --version=" + chart_version
 
@@ -866,7 +878,6 @@ def main():
             changed = True
 
         else:
-
             helm_diff_version = get_plugin_version("diff")
             if helm_diff_version and (
                 not chart_repo_url
@@ -884,6 +895,7 @@ def main():
                     chart_version,
                     replace,
                     chart_repo_url,
+                    post_renderer,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -956,7 +968,7 @@ def main():
         changed=changed,
         stdout=out,
         stderr=err,
-        status=get_release_status(module, release_name),
+        status=get_release_status(module, release_name, all_status=True),
         command=helm_cmd,
         **opt_result,
     )

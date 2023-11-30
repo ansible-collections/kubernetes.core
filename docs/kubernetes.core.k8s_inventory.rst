@@ -13,6 +13,15 @@ kubernetes.core.k8s
    :local:
    :depth: 1
 
+DEPRECATED
+----------
+:Removed in collection release after 
+:Why: As discussed in https://github.com/ansible-collections/kubernetes.core/issues/31, we decided to
+remove the k8s inventory plugin in release 4.0.0.
+
+:Alternative: Use :ref:`kubernetes.core.k8s_info <kubernetes.core.k8s_info_module>` and :ref:`ansible.builtin.add_host <ansible.builtin.add_host_module>` instead.
+
+
 
 Synopsis
 --------
@@ -27,8 +36,8 @@ Requirements
 ------------
 The below requirements are needed on the local Ansible controller node that executes this inventory.
 
-- python >= 3.6
-- kubernetes >= 12.0.0
+- python >= 3.9
+- kubernetes >= 24.2.0
 - PyYAML >= 3.11
 
 
@@ -322,24 +331,24 @@ Examples
 
     # File must be named k8s.yaml or k8s.yml
 
-    # Authenticate with token, and return all pods and services for all namespaces
-    plugin: kubernetes.core.k8s
-    connections:
-      - host: https://192.168.64.4:8443
-        api_key: xxxxxxxxxxxxxxxx
-        validate_certs: false
+    - name: Authenticate with token, and return all pods and services for all namespaces
+      plugin: kubernetes.core.k8s
+      connections:
+        - host: https://192.168.64.4:8443
+          api_key: xxxxxxxxxxxxxxxx
+          validate_certs: false
 
-    # Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-    plugin: kubernetes.core.k8s
-    connections:
-      - namespaces:
-        - testing
+    - name: Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
+      plugin: kubernetes.core.k8s
+      connections:
+        - namespaces:
+            - testing
 
-    # Use a custom config file, and a specific context.
-    plugin: kubernetes.core.k8s
-    connections:
-      - kubeconfig: /path/to/config
-        context: 'awx/192-168-64-4:8443/developer'
+    - name: Use a custom config file, and a specific context.
+      plugin: kubernetes.core.k8s
+      connections:
+        - kubeconfig: /path/to/config
+          context: 'awx/192-168-64-4:8443/developer'
 
 
 
@@ -348,11 +357,15 @@ Status
 ------
 
 
+- This inventory will be removed in version 4.0.0. *[deprecated]*
+- For more information see `DEPRECATED`_.
+
+
 Authors
 ~~~~~~~
 
-- Chris Houseknecht <@chouseknecht>
-- Fabian von Feilitzsch <@fabianvf>
+- Chris Houseknecht (@chouseknecht)
+- Fabian von Feilitzsch (@fabianvf)
 
 
 .. hint::

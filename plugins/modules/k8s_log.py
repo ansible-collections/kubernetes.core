@@ -47,6 +47,7 @@ options:
     - Only one of I(name) or I(label_selectors) may be provided.
     type: list
     elements: str
+    default: []
   container:
     description:
     - Use to specify the container within a pod to grab the log from.
@@ -82,8 +83,8 @@ options:
     version_added: '2.4.0'
 
 requirements:
-  - "python >= 3.6"
-  - "kubernetes >= 12.0.0"
+  - "python >= 3.9"
+  - "kubernetes >= 24.2.0"
   - "PyYAML >= 3.11"
 """
 

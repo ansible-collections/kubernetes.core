@@ -1,3 +1,0 @@
----
-bugfixes:
-  - helm - delete temporary file created when deploying chart with option release_values set (https://github.com/ansible-collections/kubernetes.core/issues/530).

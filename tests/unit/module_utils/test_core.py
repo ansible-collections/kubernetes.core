@@ -6,12 +6,11 @@ import json
 
 import kubernetes
 import pytest
-
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
 
-MINIMAL_K8S_VERSION = "12.0.0"
+MINIMAL_K8S_VERSION = "24.2.0"
 UNSUPPORTED_K8S_VERSION = "11.0.0"
 
 
@@ -50,9 +49,9 @@ def test_warn_on_k8s_version(monkeypatch, stdin, capfd):
 
 
 dependencies = [
-    ["18.20.0", "12.0.1", False],
-    ["18.20.0", "18.20.0", True],
-    ["12.0.1", "18.20.0", True],
+    ["28.20.0", "24.2.1", False],
+    ["28.20.0", "28.20.0", True],
+    ["24.2.1", "28.20.0", True],
 ]
 
 
@@ -68,7 +67,7 @@ def test_has_at_least(monkeypatch, stdin, desired, actual, result, capfd):
 
 
 dependencies = [
-    ["kubernetes", "18.20.0", "(kubernetes>=18.20.0)"],
+    ["kubernetes", "28.20.0", "(kubernetes>=28.20.0)"],
     ["foobar", "1.0.0", "(foobar>=1.0.0)"],
     ["foobar", None, "(foobar)"],
 ]
@@ -80,7 +79,7 @@ dependencies = [
 def test_requires_fails_with_message(
     monkeypatch, stdin, dependency, version, msg, capfd
 ):
-    monkeypatch.setattr(kubernetes, "__version__", "12.0.0")
+    monkeypatch.setattr(kubernetes, "__version__", "24.2.0")
     module = AnsibleK8SModule(argument_spec={})
     with pytest.raises(SystemExit):
         module.requires(dependency, version)

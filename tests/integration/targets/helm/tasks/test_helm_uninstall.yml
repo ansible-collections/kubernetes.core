@@ -7,6 +7,7 @@
 - vars:
     chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
     chart_name: "test-wait-uninstall"
+    chart_name_pending: "test-uninstall-pending-release"
     helm_namespace: "{{ test_namespace[1] }}"
   block:
 
@@ -63,6 +64,36 @@
       namespace: "{{ helm_namespace }}"
       wait: yes
     register: uninstall
+
+  # Test uninstall chart release with 'pending-install' status
+  - name: Create chart release with 'pending-install' status
+    helm_test_pending:
+      binary_path: "{{ helm_binary }}"
+      chart_ref: "{{ chart_source }}"
+      chart_release: "{{ chart_name_pending }}"
+      chart_release_namespace: "{{ helm_namespace }}"
+
+  - name: Uninstall chart release with 'pending-install' status
+    helm:
+      binary_path: "{{ helm_binary }}"
+      release_name: "{{ chart_name_pending }}"
+      namespace: "{{ helm_namespace }}"
+      release_state: absent
+    register: _uninstall
+
+  - name: Get Helm release details
+    helm_info:
+      binary_path: "{{ helm_binary }}"
+      release_namespace: "{{ helm_namespace }}"
+      release_state: pending
+      release_name: "{{ chart_name_pending }}"
+    register: _info
+
+  - name: assert release does not exist anymore
+    assert:
+      that:
+      - _uninstall is changed
+      - _info.status is undefined
 
   always:
   - name: Delete temp directory

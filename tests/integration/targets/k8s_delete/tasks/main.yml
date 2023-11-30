@@ -121,6 +121,77 @@
         that:
           - _result.resources | length == 0
 
+    # test deletion using delete_all=true
+    - name: Create deployments
+      k8s:
+        namespace: "{{ test_namespace }}"
+        src: files/deployments.yaml
+        wait: true
+      register: result
+
+    - name: Trying to delete deployments without name and label_selectors and select_all=false
+      k8s:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        state: absent
+      register: _delete
+
+    - name: Ensure Deployment were not deleted
+      assert:
+        that:
+          - _delete is not changed
+
+    - name: Validate that Deployment still exist
+      k8s_info:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        label_selectors:
+          - context=ansible
+      register: _deployment
+      failed_when: _deployment.resources | length == 0
+
+    - name: Trying to delete using delete_all=true but missing kind option
+      k8s:
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        delete_all: true
+        state: absent
+      register: _delete
+      ignore_errors: true
+
+    - name: assert task failed with proper message
+      assert:
+        that:
+          - _delete is failed
+          - _delete.msg == "'kind' option is required to specify the resource type."
+
+    - name: Trying to delete deployments without name and label_selectors and delete_all=true
+      k8s:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        delete_all: true
+        wait: true
+        state: absent
+      register: _delete
+
+    - name: Ensure Deployment were deleted
+      assert:
+        that:
+          - _delete is changed
+
+    - name: Validate that Deployment do not exist anymore
+      k8s_info:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        label_selectors:
+          - context=ansible
+      register: _deployment
+      failed_when: _deployment.resources | length > 0
+
   always:
     - name: Remove namespace
       k8s:

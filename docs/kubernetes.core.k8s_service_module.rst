@@ -24,8 +24,8 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- python >= 3.6
-- kubernetes >= 12.0.0
+- python >= 3.9
+- kubernetes >= 24.2.0
 
 
 Parameters
@@ -220,6 +220,7 @@ Parameters
                 </td>
                 <td>
                         <div>Path to an existing Kubernetes config file. If not provided, and no other connection options are provided, the Kubernetes client will attempt to load the default configuration file from <em>~/.kube/config</em>. Can also be specified via K8S_AUTH_KUBECONFIG environment variable.</div>
+                        <div>Multiple Kubernetes config file can be provided using separator &#x27;;&#x27; for Windows platform or &#x27;:&#x27; for others platforms.</div>
                         <div>The kubernetes configuration can be provided as dictionary. This feature requires a python kubernetes client version &gt;= 17.17.0. Added in version 2.2.0.</div>
                 </td>
             </tr>
@@ -278,6 +279,25 @@ Parameters
                 </td>
                 <td>
                         <div>Use to specify a Service object namespace.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_proxy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 2.3.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>The comma separated list of hosts/domains/IP/CIDR that shouldn&#x27;t go through proxy. Can also be specified via K8S_AUTH_NO_PROXY environment variable.</div>
+                        <div>Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).</div>
+                        <div>This feature requires kubernetes&gt;=19.15.0. When kubernetes library is less than 19.15.0, it fails even no_proxy set in correct.</div>
+                        <div>example value is &quot;localhost,.local,.example.com,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16&quot;</div>
                 </td>
             </tr>
             <tr>
@@ -468,7 +488,8 @@ Parameters
                 <td>
                         <div>Provide a path to a file containing a valid YAML definition of an object or objects to be created or updated. Mutually exclusive with <em>resource_definition</em>. NOTE: <em>kind</em>, <em>api_version</em>, <em>name</em>, and <em>namespace</em> will be overwritten by corresponding values found in the configuration read in from the <em>src</em> file.</div>
                         <div>Reads from the local file system. To read from the Ansible controller&#x27;s file system, including vaulted files, use the file lookup plugin or template lookup plugin, combined with the from_yaml filter, and pass the result to <em>resource_definition</em>. See Examples below.</div>
-                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>k8s</span> module.</div>
+                        <div>The URL to manifest files that can be used to create the resource. Added in version 2.4.0.</div>
+                        <div>Mutually exclusive with <em>template</em> in case of <span class='module'>kubernetes.core.k8s</span> module.</div>
                 </td>
             </tr>
             <tr>

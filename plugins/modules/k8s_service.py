@@ -83,8 +83,8 @@ options:
     type: bool
 
 requirements:
-  - python >= 3.6
-  - kubernetes >= 12.0.0
+  - python >= 3.9
+  - kubernetes >= 24.2.0
 """
 
 EXAMPLES = r"""
@@ -143,7 +143,6 @@ result:
 """
 
 import copy
-
 from collections import defaultdict
 
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
@@ -154,17 +153,14 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     COMMON_ARG_SPEC,
     RESOURCE_ARG_SPEC,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
-    AnsibleK8SModule,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
+    AnsibleK8SModule,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
-)
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
-    K8sService,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource import (
     create_definitions,
@@ -172,7 +168,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource impor
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.runner import (
     perform_action,
 )
-
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    K8sService,
+)
 
 SERVICE_ARG_SPEC = {
     "apply": {"type": "bool", "default": False},

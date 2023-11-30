@@ -52,6 +52,7 @@ options:
       - If set to C(uninstalling), show releases that are currently being uninstalled.
     type: list
     elements: str
+    default: []
     version_added: "2.3.0"
   get_all_values:
     description:
@@ -136,8 +137,8 @@ status:
       version_added: "2.4.0"
 """
 
-import traceback
 import copy
+import traceback
 
 try:
     import yaml

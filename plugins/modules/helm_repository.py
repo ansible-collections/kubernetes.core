@@ -166,8 +166,8 @@ msg:
   sample: 'Repository already have a repository named bitnami'
 """
 
-import traceback
 import copy
+import traceback
 
 try:
     import yaml

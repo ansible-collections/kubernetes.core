@@ -60,8 +60,8 @@ options:
         default: false
         type: bool
 requirements:
-  - python >= 3.6
-  - kubernetes >= 12.0.0
+  - python >= 3.9
+  - kubernetes >= 24.2.0
 """
 
 EXAMPLES = r"""
@@ -127,7 +127,6 @@ result:
 import copy
 
 from ansible.module_utils._text import to_native
-
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )

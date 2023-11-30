@@ -34,8 +34,8 @@ extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
 
 requirements:
-  - "python >= 3.6"
-  - "kubernetes >= 12.0.0"
+  - "python >= 3.9"
+  - "kubernetes >= 24.2.0"
   - "PyYAML >= 3.11"
 """
 
@@ -154,14 +154,14 @@ except ImportError:
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    AUTH_ARG_SPEC,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
-)
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    AUTH_ARG_SPEC,
 )
 
 
