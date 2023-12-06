@@ -424,7 +424,7 @@
 
     - assert:
         that:
-          - result.resources[0].data.testkey == "{{ cmap_data.stdout | b64encode }}"
+          - result.resources[0].data.testkey == (cmap_data.stdout | b64encode)
 
     # test setting module defaults for kubernetes.core.k8s_info
     - block:

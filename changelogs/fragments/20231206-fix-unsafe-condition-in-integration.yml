@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - avoid unsafe conditions in integration tests ().
