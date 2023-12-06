@@ -1,3 +1,3 @@
 ---
 bugfixes:
-  - avoid unsafe conditions in integration tests ().
+  - avoid unsafe conditions in integration tests (https://github.com/ansible-collections/kubernetes.core/pull/665).
