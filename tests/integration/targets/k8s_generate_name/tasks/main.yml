@@ -69,7 +69,7 @@
   - name: assert pod has been created
     assert:
       that:
-      - "{{ pods.resources | length == 1 }}"
+      - pods.resources | length == 1
 
   - name: create pod using generate_name parameter should succeed
     k8s:
@@ -86,7 +86,7 @@
   - name: assert pod has been created
     assert:
       that:
-      - "{{ pods.resources | length == 2 }}"
+      - pods.resources | length == 2
 
   - name: create pod using metadata.generateName parameter should succeed
     k8s:
@@ -102,7 +102,7 @@
   - name: assert pod has been created
     assert:
       that:
-      - "{{ pods.resources | length == 3 }}"
+      - pods.resources | length == 3
 
   - name: create object using metadata.generateName should support wait option
     k8s:

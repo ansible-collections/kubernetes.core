@@ -65,7 +65,7 @@
     assert:
       that:
       - _result.result.status.phase == 'Running'
-      - _result.result.spec.nodeName == "{{ node_to_taint }}"
+      - _result.result.spec.nodeName == node_to_taint
 
   - name: Taint node (check_mode)
     kubernetes.core.k8s_taint:
@@ -89,8 +89,8 @@
     assert:
       that:
       - _result.changed
-      - "{{ item['effect'] == taint_patch_1[0]['effect'] }}"
-      - "{{ item['key'] == taint_patch_1[0]['key'] }}"
+      - item['effect'] == taint_patch_1[0]['effect']
+      - item['key'] == taint_patch_1[0]['key']
     loop: "{{ _result.result.spec.taints }}"
 
   - name: Taint node (idempotency) - (check_mode)
