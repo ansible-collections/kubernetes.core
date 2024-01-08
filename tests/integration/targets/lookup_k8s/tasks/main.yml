@@ -130,9 +130,9 @@
       assert:
         that:
           - result_configmap.apiVersion == 'v1'
-          - result_configmap.metadata.name == "{{ configmap_name }}"
-          - result_configmap.metadata.namespace == "{{ test_namespace[2] }}"
-          - result_configmap.data.value == "{{ configmap_data }}"
+          - result_configmap.metadata.name == configmap_name
+          - result_configmap.metadata.namespace == test_namespace[2]
+          - result_configmap.data.value == configmap_data
 
     # test lookup plugin using src parameter
     - block:
@@ -159,9 +159,9 @@
           assert:
             that:
               - src_configmap.apiVersion == 'v1'
-              - src_configmap.metadata.name == "{{ configmap_name }}"
-              - src_configmap.metadata.namespace == "{{ test_namespace[2] }}"
-              - src_configmap.data.value == "{{ configmap_data }}"
+              - src_configmap.metadata.name == configmap_name
+              - src_configmap.metadata.namespace == test_namespace[2]
+              - src_configmap.data.value == configmap_data
 
       always:
         - name: Delete temporary file created
@@ -198,9 +198,9 @@
           assert:
             that:
               - configmap_no_ssl.apiVersion == 'v1'
-              - configmap_no_ssl.metadata.name == "{{ configmap_name }}"
-              - configmap_no_ssl.metadata.namespace == "{{ test_namespace[2] }}"
-              - configmap_no_ssl.data.value == "{{ configmap_data }}"
+              - configmap_no_ssl.metadata.name == configmap_name
+              - configmap_no_ssl.metadata.namespace == test_namespace[2]
+              - configmap_no_ssl.data.value == configmap_data
 
         - name: Retrieve configmap using authentication aliases (validate_certs=true)
           set_fact:
@@ -210,9 +210,9 @@
           assert:
             that:
               - configmap_with_ssl.apiVersion == 'v1'
-              - configmap_with_ssl.metadata.name == "{{ configmap_name }}"
-              - configmap_with_ssl.metadata.namespace == "{{ test_namespace[2] }}"
-              - configmap_with_ssl.data.value == "{{ configmap_data }}"
+              - configmap_with_ssl.metadata.name == configmap_name
+              - configmap_with_ssl.metadata.namespace == test_namespace[2]
+              - configmap_with_ssl.data.value == configmap_data
 
       always:
         - name: Delete temporary directory
