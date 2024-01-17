@@ -166,7 +166,7 @@
     - assert:
         that:
           - install is not changed
-    
+
     - name: Upgrade with set_values
       helm:
         binary_path: "{{ helm_binary }}"
