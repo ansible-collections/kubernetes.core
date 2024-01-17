@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - align `helmdiff_check()` function commandline rendering with the `deploy()` function (https://github.com/ansible-collections/kubernetes.core/pull/670).
