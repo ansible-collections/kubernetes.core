@@ -1,3 +1,4 @@
+plugins/module_utils/version.py pylint!skip
 plugins/module_utils/client/discovery.py import-3.6!skip
 plugins/module_utils/client/discovery.py import-3.7!skip
 plugins/module_utils/client/discovery.py import-3.8!skip
