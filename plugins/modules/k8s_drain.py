@@ -46,6 +46,7 @@ options:
     description:
       - Specify options to delete pods.
       - This option has effect only when C(state) is set to I(drain).
+    default: {}
     suboptions:
         terminate_grace_period:
             description:

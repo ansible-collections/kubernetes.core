@@ -47,6 +47,7 @@ options:
     - Only one of I(name) or I(label_selectors) may be provided.
     type: list
     elements: str
+    default: []
   container:
     description:
     - Use to specify the container within a pod to grab the log from.
