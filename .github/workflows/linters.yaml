@@ -10,7 +10,7 @@ on:
       - main
       - stable-*
     tags:
-      - '*'
+      - "*"
 
 jobs:
   linters:

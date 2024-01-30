@@ -104,7 +104,7 @@ EXAMPLES = r"""
     state: drain
     name: foo
     delete_options:
-        terminate_grace_period: 900
+      terminate_grace_period: 900
 
 - name: Mark node "foo" as schedulable.
   kubernetes.core.k8s_drain:
@@ -115,7 +115,6 @@ EXAMPLES = r"""
   kubernetes.core.k8s_drain:
     state: cordon
     name: foo
-
 """
 
 RETURN = r"""

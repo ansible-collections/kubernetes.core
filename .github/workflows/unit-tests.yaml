@@ -1,3 +1,4 @@
+---
 name: Unit tests
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,4 +12,4 @@ on:
 
 jobs:
   unit-source:
-    uses: GomathiselviS/github_actions/.github/workflows/unit_source.yml@add_host_pattern
+    uses: ansible-network/github_actions/.github/workflows/unit_source.yml@main

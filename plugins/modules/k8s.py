@@ -257,10 +257,10 @@ EXAMPLES = r"""
   kubernetes.core.k8s:
     state: present
     template:
-      - path: '/testing/deployment_one.j2'
-      - path: '/testing/deployment_two.j2'
-        variable_start_string: '[['
-        variable_end_string: ']]'
+    - path: '/testing/deployment_one.j2'
+    - path: '/testing/deployment_two.j2'
+      variable_start_string: '[['
+      variable_end_string: ']]'
 
 - name: fail on validation errors
   kubernetes.core.k8s:

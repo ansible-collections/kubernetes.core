@@ -27,7 +27,7 @@ DOCUMENTATION = """
       connections:
           description:
           - Optional list of cluster connection settings. If no connections are provided, the default
-            I(~/.kube/config) and active context will be used, and objects will be returned for all namespaces
+            '~/.kube/config' and active context will be used, and objects will be returned for all namespaces
             the active user is authorized to access.
           suboptions:
               name:
@@ -38,7 +38,7 @@ DOCUMENTATION = """
                   description:
                   - Path to an existing Kubernetes config file. If not provided, and no other connection
                     options are provided, the Kubernetes client will attempt to load the default
-                    configuration file from I(~/.kube/config). Can also be specified via K8S_AUTH_KUBECONFIG
+                    configuration file from '~/.kube/config'. Can also be specified via K8S_AUTH_KUBECONFIG
                     environment variable.
               context:
                   description:
@@ -94,24 +94,24 @@ DOCUMENTATION = """
 EXAMPLES = """
 # File must be named k8s.yaml or k8s.yml
 
-# Authenticate with token, and return all pods and services for all namespaces
-plugin: kubernetes.core.k8s
-connections:
-  - host: https://192.168.64.4:8443
-    api_key: xxxxxxxxxxxxxxxx
-    validate_certs: false
+- name: Authenticate with token, and return all pods and services for all namespaces
+  plugin: kubernetes.core.k8s
+  connections:
+    - host: https://192.168.64.4:8443
+      api_key: xxxxxxxxxxxxxxxx
+      validate_certs: false
 
-# Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
-plugin: kubernetes.core.k8s
-connections:
-  - namespaces:
-    - testing
+- name: Use default config (~/.kube/config) file and active context, and return objects for a specific namespace
+  plugin: kubernetes.core.k8s
+  connections:
+    - namespaces:
+        - testing
 
-# Use a custom config file, and a specific context.
-plugin: kubernetes.core.k8s
-connections:
-  - kubeconfig: /path/to/config
-    context: 'awx/192-168-64-4:8443/developer'
+- name: Use a custom config file, and a specific context.
+  plugin: kubernetes.core.k8s
+  connections:
+    - kubeconfig: /path/to/config
+      context: 'awx/192-168-64-4:8443/developer'
 """
 
 import json

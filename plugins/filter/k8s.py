@@ -26,16 +26,16 @@ author:
 """
 
 EXAMPLES = r"""
-  # Dump generated name for a configmap into a variable
-  - set_fact:
-      generated_name: '{{ definition | kubernetes.core.k8s_config_resource_name }}'
-    vars:
-      definition:
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: myconfigmap
-          namespace: mynamespace
+# Dump generated name for a configmap into a variable
+- set_fact:
+    generated_name: '{{ definition | kubernetes.core.k8s_config_resource_name }}'
+  vars:
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: myconfigmap
+        namespace: mynamespace
 """
 
 RETURN = r"""
