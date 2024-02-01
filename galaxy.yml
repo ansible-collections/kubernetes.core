@@ -9,8 +9,8 @@ authors:
   - mmazur (https://github.com/mmazur)
   - jamescassell (https://github.com/jamescassell)
 description: Kubernetes Collection for Ansible.
-documentation: ''
-homepage: ''
+documentation: ""
+homepage: ""
 issues: https://github.com/ansible-collections/kubernetes.core/issues
 license_file: LICENSE
 namespace: kubernetes
@@ -28,4 +28,4 @@ tags:
 version: 2.4.0
 build_ignore:
   - .DS_Store
-  - '*.tar.gz'
+  - "*.tar.gz"

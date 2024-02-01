@@ -1,0 +1,7 @@
+---
+profile: production
+skip_list:
+  - meta-runtime[unsupported-version]
+exclude_paths:
+  - tests/integration
+  - tests/sanity
