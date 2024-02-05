@@ -763,7 +763,8 @@ releases:
       namespace: ''
     release_date: '2023-01-24'
   2.4.1:
-    release_summary: The kubernetes.core 2.4.1 release includes several trivial bug fixes related to sanity.
+    changes:
+      release_summary: The kubernetes.core 2.4.1 release includes several trivial bug fixes related to sanity.
     fragments:
     - fix_sanity_errors.yml
     release_date: '2024-02-05'
