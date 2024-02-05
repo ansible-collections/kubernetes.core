@@ -104,7 +104,7 @@ v2.3.1
 Bugfixes
 --------
 
-- Catch expectation raised when the process is waiting for resources (https://github.com/ansible-collections/kubernetes.core/issues/407).
+- Catch exception raised when the process is waiting for resources (https://github.com/ansible-collections/kubernetes.core/issues/407).
 - Remove `omit` placeholder when defining resource using template parameter (https://github.com/ansible-collections/kubernetes.core/issues/431).
 - k8s - fix the issue when trying to delete resources using label_selectors options (https://github.com/ansible-collections/kubernetes.core/issues/433).
 - k8s_cp - fix issue when using parameter local_path with file on managed node. (https://github.com/ansible-collections/kubernetes.core/issues/421).
