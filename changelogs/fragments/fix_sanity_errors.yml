@@ -1,4 +1,0 @@
----
-trivial:
-  - Fix sanity validate-modules and yamllint failures.
-  - Add GH workflows.

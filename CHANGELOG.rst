@@ -5,6 +5,14 @@ Kubernetes Collection Release Notes
 .. contents:: Topics
 
 
+v2.4.1
+======
+
+Release Summary
+---------------
+
+The kubernetes.core 2.4.1 release includes several trivial bug fixes related to code sanity.
+
 v2.4.0
 ======
 
