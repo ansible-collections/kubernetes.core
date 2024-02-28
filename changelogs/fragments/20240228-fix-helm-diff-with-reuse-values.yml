@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).

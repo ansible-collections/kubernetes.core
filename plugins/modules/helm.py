@@ -130,6 +130,21 @@ options:
           - json
           - file
     version_added: '2.4.0'
+  reuse_values:
+    description:
+      - When upgrading package, specifies wether to reuse the last release's values and merge in any overrides from parameters I(release_values),
+        I(values_files) or I(set_values).
+      - If I(reset_values) is set to C(True), this is ignored.
+    type: bool
+    required: false
+    version_added: '2.5.0'
+  reset_values:
+    description:
+      - When upgrading package, reset the values to the ones built into the chart.
+    type: bool
+    required: false
+    default: True
+    version_added: '2.5.0'
 
 #Helm options
   disable_hook:
@@ -310,6 +325,17 @@ EXAMPLES = r"""
         enabled: True
       logging:
         enabled: True
+
+# Deploy latest version
+- name: Deploy latest version of Grafana chart using reuse_values
+  kubernetes.core.helm:
+    name: test
+    chart_ref: stable/grafana
+    release_namespace: monitoring
+    reuse_values: true
+    values:
+      replicas: 2
+      version: 3e8ec0b2dffa40fb97d5342e4af887de95faa8c61a62480dd7f8aa03dffcf533
 """
 
 RETURN = r"""
@@ -367,10 +393,11 @@ command:
   sample: helm upgrade ...
 """
 
+import copy
 import re
 import tempfile
 import traceback
-import copy
+
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -406,14 +433,20 @@ def get_release(state, release_name):
     return None
 
 
-def get_release_status(module, release_name):
+def get_release_status(module, release_name, all_status=False):
     """
-    Get Release state from deployed release
+    Get Release state from all release status (deployed, failed, pending-install, etc)
     """
 
-    list_command = (
-        module.get_helm_binary() + " list --output=yaml --filter " + release_name
-    )
+    list_command = [
+        module.get_helm_binary(),
+        "list",
+        "--output=yaml",
+        "--filter",
+        release_name,
+    ]
+    if all_status:
+        list_command.append("--all")
 
     rc, out, err = module.run_helm_command(list_command)
 
@@ -439,7 +472,7 @@ def run_dep_update(module, chart_ref):
     """
     Run dependency update
     """
-    dep_update = module.get_helm_binary() + " dependency update " + chart_ref
+    dep_update = module.get_helm_binary() + f" dependency update '{chart_ref}'"
     rc, out, err = module.run_helm_command(dep_update)
 
 
@@ -447,7 +480,7 @@ def fetch_chart_info(module, command, chart_ref):
     """
     Get chart info
     """
-    inspect_command = command + " show chart " + chart_ref
+    inspect_command = command + f" show chart '{chart_ref}'"
 
     rc, out, err = module.run_helm_command(inspect_command)
 
@@ -455,6 +488,7 @@ def fetch_chart_info(module, command, chart_ref):
 
 
 def deploy(
+    module,
     command,
     release_name,
     release_values,
@@ -473,6 +507,8 @@ def deploy(
     timeout=None,
     dependency_update=None,
     set_value_args=None,
+    reuse_values=None,
+    reset_values=True,
 ):
     """
     Install/upgrade/rollback release chart
@@ -484,9 +520,11 @@ def deploy(
             deploy_command += " --dependency-update"
     else:
         deploy_command = command + " upgrade -i"  # install/upgrade
+        if reset_values:
+            deploy_command += " --reset-values"
 
-        # Always reset values to keep release_values equal to values released
-        deploy_command += " --reset-values"
+    if reuse_values is not None:
+        deploy_command += " --reuse-values=" + str(reuse_values)
 
     if wait:
         deploy_command += " --wait"
@@ -520,9 +558,10 @@ def deploy(
         with open(path, "w") as yaml_file:
             yaml.dump(release_values, yaml_file, default_flow_style=False)
         deploy_command += " -f=" + path
+        module.add_cleanup_file(path)
 
     if post_renderer:
-        deploy_command = " --post-renderer=" + post_renderer
+        deploy_command += " --post-renderer=" + post_renderer
 
     if skip_crds:
         deploy_command += " --skip-crds"
@@ -533,7 +572,7 @@ def deploy(
     if set_value_args:
         deploy_command += " " + set_value_args
 
-    deploy_command += " " + release_name + " " + chart_name
+    deploy_command += " " + release_name + f" '{chart_name}'"
     return deploy_command
 
 
@@ -599,6 +638,10 @@ def helmdiff_check(
     chart_version=None,
     replace=False,
     chart_repo_url=None,
+    post_renderer=False,
+    set_value_args=None,
+    reuse_values=None,
+    reset_values=True,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -612,7 +655,13 @@ def helmdiff_check(
     if chart_version is not None:
         cmd += " " + "--version=" + chart_version
     if not replace:
-        cmd += " " + "--reset-values"
+        cmd += " " + "--reset-values=" + str(reset_values)
+    if post_renderer:
+        cmd += " --post-renderer=" + post_renderer
+
+    if values_files:
+        for value_file in values_files:
+            cmd += " --values=" + value_file
 
     if release_values != {}:
         fd, path = tempfile.mkstemp(suffix=".yml")
@@ -621,9 +670,11 @@ def helmdiff_check(
         cmd += " -f=" + path
         module.add_cleanup_file(path)
 
-    if values_files:
-        for values_file in values_files:
-            cmd += " -f=" + values_file
+    if set_value_args:
+        cmd += " " + set_value_args
+
+    if reuse_values:
+        cmd += " --reuse-values"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -682,6 +733,8 @@ def argument_spec():
             skip_crds=dict(type="bool", default=False),
             history_max=dict(type="int"),
             set_values=dict(type="list", elements="dict"),
+            reuse_values=dict(type="bool"),
+            reset_values=dict(type="bool", default=True),
         )
     )
     return arg_spec
@@ -732,34 +785,38 @@ def main():
     history_max = module.params.get("history_max")
     timeout = module.params.get("timeout")
     set_values = module.params.get("set_values")
+    reuse_values = module.params.get("reuse_values")
+    reset_values = module.params.get("reset_values")
 
     if update_repo_cache:
         run_repo_update(module)
 
     # Get real/deployed release status
-    release_status = get_release_status(module, release_name)
+    all_status = release_state == "absent"
+    release_status = get_release_status(module, release_name, all_status=all_status)
 
     helm_cmd = module.get_helm_binary()
     opt_result = {}
     if release_state == "absent" and release_status is not None:
-        if replace:
-            module.fail_json(msg="replace is not applicable when state is absent")
+        # skip release statuses 'uninstalled' and 'uninstalling'
+        if not release_status["status"].startswith("uninstall"):
+            if replace:
+                module.fail_json(msg="replace is not applicable when state is absent")
 
-        if wait:
-            helm_version = module.get_helm_version()
-            if LooseVersion(helm_version) < LooseVersion("3.7.0"):
-                opt_result["warnings"] = []
-                opt_result["warnings"].append(
-                    "helm uninstall support option --wait for helm release >= 3.7.0"
-                )
-                wait = False
+            if wait:
+                helm_version = module.get_helm_version()
+                if LooseVersion(helm_version) < LooseVersion("3.7.0"):
+                    opt_result["warnings"] = []
+                    opt_result["warnings"].append(
+                        "helm uninstall support option --wait for helm release >= 3.7.0"
+                    )
+                    wait = False
 
-        helm_cmd = delete(
-            helm_cmd, release_name, purge, disable_hook, wait, wait_timeout
-        )
-        changed = True
+            helm_cmd = delete(
+                helm_cmd, release_name, purge, disable_hook, wait, wait_timeout
+            )
+            changed = True
     elif release_state == "present":
-
         if chart_version is not None:
             helm_cmd += " --version=" + chart_version
 
@@ -799,12 +856,13 @@ def main():
                     "Please consider add dependencies block or disable dependency_update to remove this warning."
                 )
 
-        if release_status is None:  # Not installed
-            set_value_args = None
-            if set_values:
-                set_value_args = module.get_helm_set_values_args(set_values)
+        set_value_args = None
+        if set_values:
+            set_value_args = module.get_helm_set_values_args(set_values)
 
+        if release_status is None:  # Not installed
             helm_cmd = deploy(
+                module,
                 helm_cmd,
                 release_name,
                 release_values,
@@ -823,11 +881,12 @@ def main():
                 history_max=history_max,
                 timeout=timeout,
                 set_value_args=set_value_args,
+                reuse_values=reuse_values,
+                reset_values=reset_values,
             )
             changed = True
 
         else:
-
             helm_diff_version = get_plugin_version("diff")
             if helm_diff_version and (
                 not chart_repo_url
@@ -845,6 +904,10 @@ def main():
                     chart_version,
                     replace,
                     chart_repo_url,
+                    post_renderer,
+                    set_value_args,
+                    reuse_values=reuse_values,
+                    reset_values=reset_values,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -858,11 +921,8 @@ def main():
                 )
 
             if force or would_change:
-                set_value_args = None
-                if set_values:
-                    set_value_args = module.get_helm_set_values_args(set_values)
-
                 helm_cmd = deploy(
+                    module,
                     helm_cmd,
                     release_name,
                     release_values,
@@ -881,6 +941,8 @@ def main():
                     timeout=timeout,
                     dependency_update=dependency_update,
                     set_value_args=set_value_args,
+                    reuse_values=reuse_values,
+                    reset_values=reset_values,
                 )
                 changed = True
 
@@ -914,7 +976,7 @@ def main():
         changed=changed,
         stdout=out,
         stderr=err,
-        status=get_release_status(module, release_name),
+        status=get_release_status(module, release_name, all_status=True),
         command=helm_cmd,
         **opt_result,
     )
