@@ -132,6 +132,8 @@ jobs:
 
       - name: create kubernetes cluster
         uses: helm/kind-action@v1.8.0
+        with:
+          node_image: "kindest/node:v1.29.2"
 
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
