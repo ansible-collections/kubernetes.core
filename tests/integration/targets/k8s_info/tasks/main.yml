@@ -3,3 +3,4 @@
   with_items:
     - wait
     - api-server-caching
+    - discovery
