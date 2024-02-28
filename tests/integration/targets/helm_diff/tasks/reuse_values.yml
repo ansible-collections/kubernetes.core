@@ -7,8 +7,7 @@
 
 - name: Test helm diff functionality
   vars:
-    test_chart_path: "{{ helm_dir.path }}/chart"
-    helm_namespace: "helm-reuse-values-001"
+    test_chart_path: "{{ helm_dir.path }}/test-chart-reuse-values"
     test_release_name: "myrelease"
 
   block:
@@ -23,7 +22,7 @@
     - name: Copy test chart
       copy:
         src: "test-chart-reuse-values"
-        dest: "{{ test_chart_path }}"
+        dest: "{{ helm_dir.path }}"
 
     - name: Create helm release
       kubernetes.core.helm:
@@ -35,10 +34,10 @@
         create_namespace: true
         release_values:
           ansible_version: devel
-          python_version: 3.11
+          phase: ci
         wait: true
 
-    - name: Upgrade helm release
+    - name: Upgrade helm release (reset_values=false and reuse_values=true)
       kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "{{ test_chart_path }}"
@@ -54,6 +53,22 @@
       assert:
         that:
           - helm_upgrade is not changed
+
+    - name: Upgrade helm release (reuse_values=true with default value for reset_values)
+      kubernetes.core.helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ test_chart_path }}"
+        reuse_values: true
+        release_name: "{{ test_release_name }}"
+        release_namespace: "{{ helm_namespace }}"
+        values:
+          ansible_version: devel
+      register: helm_upgrade
+
+    - name: Ensure task reported change
+      assert:
+        that:
+          - helm_upgrade is changed
 
   always:
     - name: Remove temporary directory

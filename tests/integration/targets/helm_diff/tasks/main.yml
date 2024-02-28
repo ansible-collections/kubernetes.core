@@ -298,6 +298,7 @@
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
+        wait: true
       ignore_errors: yes
 
 - include_tasks: reuse_values.yml
