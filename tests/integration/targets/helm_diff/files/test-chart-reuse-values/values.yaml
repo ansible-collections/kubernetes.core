@@ -1,2 +1,2 @@
-ansible_version: 2.16
-python_version: 3.9
+ansible_version: milestone
+phase: uat
