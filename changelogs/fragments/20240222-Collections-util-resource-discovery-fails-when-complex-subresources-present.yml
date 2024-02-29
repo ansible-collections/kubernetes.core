@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - Resolve Collections util resource discovery fails when complex subresources present (https://github.com/ansible-collections/kubernetes.core/pull/676).
