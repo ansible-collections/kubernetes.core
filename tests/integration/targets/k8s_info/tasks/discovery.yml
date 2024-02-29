@@ -1,0 +1,32 @@
+---
+# Testing fix for issue https://github.com/ansible-collections/kubernetes.core/pull/676
+- vars:
+    kubevirt_release: "v1.1.1"
+  block:
+    - name: Delete existing namespace
+      kubernetes.core.k8s:
+        kind: namespace
+        namespace: kubevirt
+        state: absent
+
+    - name: Create kubevirt resources
+      kubernetes.core.k8s:
+        state: present
+        apply: true
+        src: "{{ item }}"
+      with_items:
+        - "https://github.com/kubevirt/kubevirt/releases/download/{{ kubevirt_release }}/kubevirt-operator.yaml"
+        - "https://github.com/kubevirt/kubevirt/releases/download/{{ kubevirt_release }}/kubevirt-cr.yaml"
+
+    - name: Read kubevirt Deployment
+      k8s_info:
+        kind: Deployment
+        namespace: kubevirt
+  always:
+    - name: Delete existing namespace
+      kubernetes.core.k8s:
+        kind: namespace
+        namespace: kubevirt
+        state: absent
+        wait: true
+      ignore_errors: true
