@@ -114,7 +114,7 @@ class Discoverer(kubernetes.dynamic.discovery.Discoverer):
             filter(lambda resource: "/" in resource["name"], resources_response)
         )
         for subresource in subresources_raw:
-            resource, name = subresource["name"].split("/")
+            resource, name = subresource["name"].split("/", 1)
             subresources[resource][name] = subresource
 
         for resource in resources_raw:
