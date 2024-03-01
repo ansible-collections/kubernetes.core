@@ -25,7 +25,6 @@ plugins/modules/k8s_scale.py validate-modules:parameter-type-not-in-doc
 plugins/modules/k8s_service.py validate-modules:parameter-type-not-in-doc
 tests/unit/module_utils/fixtures/definitions.yml yamllint!skip
 tests/unit/module_utils/fixtures/deployments.yml yamllint!skip
-tests/integration/targets/k8s_delete/files/deployments.yaml yamllint!skip
 tests/unit/module_utils/fixtures/pods.yml yamllint!skip
 tests/integration/targets/helm/files/appversionless-chart-v2/templates/configmap.yaml yamllint!skip
 tests/integration/targets/helm/files/appversionless-chart/templates/configmap.yaml yamllint!skip
