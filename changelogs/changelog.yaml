@@ -814,3 +814,22 @@ releases:
     - remove_ansible_2_13.yaml
     - update_supported_versions.yaml
     release_date: '2023-11-17'
+  3.0.1:
+    changes:
+      bugfixes:
+      - Resolve Collections util resource discovery fails when complex subresources
+        present (https://github.com/ansible-collections/kubernetes.core/pull/676).
+      - align `helmdiff_check()` function commandline rendering with the `deploy()`
+        function (https://github.com/ansible-collections/kubernetes.core/pull/670).
+      - helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
+      - integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability
+        with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
+      release_summary: This release fixes issue with resources discovery when complex
+        subresources are present, and fixes issues with `reuse-values` parameter for
+        helm module.
+    fragments:
+    - 20240117-fix-helm-diff-cmd-line-rendering.yml
+    - 20240222-Collections-util-resource-discovery-fails-when-complex-subresources-present.yml
+    - 20240228-fix-helm-diff-with-reuse-values.yml
+    - 3.0.1.yml
+    release_date: '2024-03-01'
