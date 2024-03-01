@@ -1,0 +1,93 @@
+---
+- name: Create temporary directory for helm chart
+  tempfile:
+    suffix: .helm
+    state: directory
+  register: helm_dir
+
+- name: Test helm diff functionality
+  vars:
+    test_chart_path: "{{ helm_dir.path }}/test-chart-reuse-values"
+    test_release_name: "myrelease"
+
+  block:
+
+    - name: Install helm diff
+      kubernetes.core.helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: present
+        plugin_path: https://github.com/databus23/helm-diff
+        plugin_version: 3.9.4
+
+    - name: Copy test chart
+      ansible.builtin.copy:
+        src: "test-chart-reuse-values"
+        dest: "{{ helm_dir.path }}"
+
+    - name: Create helm release
+      kubernetes.core.helm:
+        state: present
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ test_chart_path }}"
+        release_name: "{{ test_release_name }}"
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: true
+        release_values:
+          ansible_version: devel
+          phase: ci
+        wait: true
+
+    - name: Upgrade helm release (reset_values=false and reuse_values=true)
+      kubernetes.core.helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ test_chart_path }}"
+        reset_values: false
+        reuse_values: true
+        release_name: "{{ test_release_name }}"
+        release_namespace: "{{ helm_namespace }}"
+        values:
+          ansible_version: devel
+      register: helm_upgrade
+
+    - name: Ensure task did not reported change
+      assert:
+        that:
+          - helm_upgrade is not changed
+
+    - name: Upgrade helm release (reuse_values=true with default value for reset_values)
+      kubernetes.core.helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ test_chart_path }}"
+        reuse_values: true
+        release_name: "{{ test_release_name }}"
+        release_namespace: "{{ helm_namespace }}"
+        values:
+          ansible_version: devel
+      register: helm_upgrade
+
+    - name: Ensure task reported change
+      assert:
+        that:
+          - helm_upgrade is changed
+
+  always:
+    - name: Remove temporary directory
+      file:
+        path: "{{ helm_dir.path }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Uninstall helm diff
+      kubernetes.core.helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: diff
+      ignore_errors: true
+
+    - name: Remove helm namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent
+      ignore_errors: true

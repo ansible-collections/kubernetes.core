@@ -640,6 +640,8 @@ def helmdiff_check(
     chart_repo_url=None,
     post_renderer=False,
     set_value_args=None,
+    reuse_values=None,
+    reset_values=True,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -653,7 +655,7 @@ def helmdiff_check(
     if chart_version is not None:
         cmd += " " + "--version=" + chart_version
     if not replace:
-        cmd += " " + "--reset-values"
+        cmd += " " + "--reset-values=" + str(reset_values)
     if post_renderer:
         cmd += " --post-renderer=" + post_renderer
 
@@ -670,6 +672,9 @@ def helmdiff_check(
 
     if set_value_args:
         cmd += " " + set_value_args
+
+    if reuse_values:
+        cmd += " --reuse-values"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -901,6 +906,8 @@ def main():
                     chart_repo_url,
                     post_renderer,
                     set_value_args,
+                    reuse_values=reuse_values,
+                    reset_values=reset_values,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
