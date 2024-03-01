@@ -13,14 +13,14 @@
   block:
 
     - name: Install helm diff
-      helm_plugin:
+      kubernetes.core.helm_plugin:
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
         plugin_version: 3.9.4
 
     - name: Copy test chart
-      copy:
+      ansible.builtin.copy:
         src: "test-chart-reuse-values"
         dest: "{{ helm_dir.path }}"
 
@@ -78,14 +78,14 @@
       ignore_errors: true
 
     - name: Uninstall helm diff
-      helm_plugin:
+      kubernetes.core.helm_plugin:
         binary_path: "{{ helm_binary }}"
         state: absent
         plugin_name: diff
       ignore_errors: true
 
     - name: Remove helm namespace
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: "{{ helm_namespace }}"
