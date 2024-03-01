@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cmap
+data:
+  ansible_version: {{ .Values.ansible_version }}
+  phase: {{ .Values.phase }}
