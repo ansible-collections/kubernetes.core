@@ -4,6 +4,21 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v3.0.1
+======
+
+Release Summary
+---------------
+
+This release fixes issue with resources discovery when complex subresources are present, and fixes issues with `reuse-values` parameter for helm module.
+
+Bugfixes
+--------
+
+- Resolve Collections util resource discovery fails when complex subresources present (https://github.com/ansible-collections/kubernetes.core/pull/676).
+- align `helmdiff_check()` function commandline rendering with the `deploy()` function (https://github.com/ansible-collections/kubernetes.core/pull/670).
+- helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
+- integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
 
 v3.0.0
 ======
