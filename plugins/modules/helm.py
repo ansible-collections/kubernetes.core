@@ -639,6 +639,9 @@ def helmdiff_check(
     replace=False,
     chart_repo_url=None,
     post_renderer=False,
+    set_value_args=None,
+    reuse_values=None,
+    reset_values=True,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -652,9 +655,13 @@ def helmdiff_check(
     if chart_version is not None:
         cmd += " " + "--version=" + chart_version
     if not replace:
-        cmd += " " + "--reset-values"
+        cmd += " " + "--reset-values=" + str(reset_values)
     if post_renderer:
         cmd += " --post-renderer=" + post_renderer
+
+    if values_files:
+        for value_file in values_files:
+            cmd += " --values=" + value_file
 
     if release_values != {}:
         fd, path = tempfile.mkstemp(suffix=".yml")
@@ -663,9 +670,11 @@ def helmdiff_check(
         cmd += " -f=" + path
         module.add_cleanup_file(path)
 
-    if values_files:
-        for values_file in values_files:
-            cmd += " -f=" + values_file
+    if set_value_args:
+        cmd += " " + set_value_args
+
+    if reuse_values:
+        cmd += " --reuse-values"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -847,11 +856,11 @@ def main():
                     "Please consider add dependencies block or disable dependency_update to remove this warning."
                 )
 
-        if release_status is None:  # Not installed
-            set_value_args = None
-            if set_values:
-                set_value_args = module.get_helm_set_values_args(set_values)
+        set_value_args = None
+        if set_values:
+            set_value_args = module.get_helm_set_values_args(set_values)
 
+        if release_status is None:  # Not installed
             helm_cmd = deploy(
                 module,
                 helm_cmd,
@@ -896,6 +905,9 @@ def main():
                     replace,
                     chart_repo_url,
                     post_renderer,
+                    set_value_args,
+                    reuse_values=reuse_values,
+                    reset_values=reset_values,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -909,10 +921,6 @@ def main():
                 )
 
             if force or would_change:
-                set_value_args = None
-                if set_values:
-                    set_value_args = module.get_helm_set_values_args(set_values)
-
                 helm_cmd = deploy(
                     module,
                     helm_cmd,
