@@ -117,7 +117,7 @@ class AnsibleHelmModule(object):
         kubeconfig = self.params.get("kubeconfig")
         if kubeconfig:
             if isinstance(kubeconfig, string_types):
-                with open(kubeconfig) as fd:
+                with open(os.path.expanduser(kubeconfig)) as fd:
                     kubeconfig_content = yaml.safe_load(fd)
             elif isinstance(kubeconfig, dict):
                 kubeconfig_content = kubeconfig
