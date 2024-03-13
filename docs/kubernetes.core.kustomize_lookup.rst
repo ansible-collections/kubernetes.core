@@ -80,6 +80,24 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_helm</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"False"</div>
+                </td>
+                    <td>
+                    </td>
+                <td>
+                        <div>Enable the helm chart inflation generator</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>opt_dirs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -112,16 +130,20 @@ Examples
 .. code-block:: yaml
 
     - name: Run lookup using kustomize
-      set_fact:
+      ansible.builtin.set_fact:
         resources: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kustomize') }}"
 
     - name: Run lookup using kubectl kustomize
-      set_fact:
+      ansible.builtin.set_fact:
         resources: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl') }}"
 
     - name: Create kubernetes resources for lookup output
-      k8s:
+      kubernetes.core.k8s:
         definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization') }}"
+        
+    - name: Create kubernetes resources for lookup output with `--enable-helm` set
+      kubernetes.core.k8s:
+        definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
 
 
 
