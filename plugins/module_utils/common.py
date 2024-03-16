@@ -1473,28 +1473,6 @@ class K8sAnsibleMixin(object):
             )
             return None, error
 
-    def create_project_request(self, definition):
-        definition["kind"] = "ProjectRequest"
-        result = {"changed": False, "result": {}}
-        resource = self.find_resource(
-            "ProjectRequest", definition["apiVersion"], fail=True
-        )
-        if not self.check_mode:
-            try:
-                k8s_obj = resource.create(definition)
-                result["result"] = k8s_obj.to_dict()
-            except DynamicApiError as exc:
-                self.fail_json(
-                    msg="Failed to create object: {0}".format(exc.body),
-                    error=exc.status,
-                    status=exc.status,
-                    reason=exc.reason,
-                )
-        result["changed"] = True
-        result["method"] = "create"
-        return result
-
-
 def _encode_stringdata(definition):
     if definition["kind"] == "Secret" and "stringData" in definition:
         for k, v in definition["stringData"].items():
