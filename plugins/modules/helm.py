@@ -218,6 +218,14 @@ options:
       - mutually exclusive with with C(replace).
     type: int
     version_added: "2.2.0"
+  insecure_skip_tls_verify:
+    description:
+      - Skip tls certificate checks for the chart download. 
+      - Do not confuse with the C(validate_certs) option.
+    type: bool
+    default: False
+    aliases: [ skip_tls_certs_check ]
+    version_added: "3.0.1"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -476,11 +484,14 @@ def run_dep_update(module, chart_ref):
     rc, out, err = module.run_helm_command(dep_update)
 
 
-def fetch_chart_info(module, command, chart_ref):
+def fetch_chart_info(module, command, chart_ref, insecure_skip_tls_verify=False):
     """
     Get chart info
     """
     inspect_command = command + f" show chart '{chart_ref}'"
+
+    if insecure_skip_tls_verify:
+        inspect_command += " --insecure-skip-tls-verify"
 
     rc, out, err = module.run_helm_command(inspect_command)
 
@@ -509,6 +520,7 @@ def deploy(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    insecure_skip_tls_verify=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -548,6 +560,9 @@ def deploy(
 
     if create_namespace:
         deploy_command += " --create-namespace"
+
+    if insecure_skip_tls_verify:
+        deploy_command += " --insecure-skip-tls-verify"
 
     if values_files:
         for value_file in values_files:
@@ -735,6 +750,7 @@ def argument_spec():
             set_values=dict(type="list", elements="dict"),
             reuse_values=dict(type="bool"),
             reset_values=dict(type="bool", default=True),
+            insecure_skip_tls_verify=dict(type="bool", default=False, aliases=["skip_tls_certs_check"]),
         )
     )
     return arg_spec
@@ -787,6 +803,7 @@ def main():
     set_values = module.params.get("set_values")
     reuse_values = module.params.get("reuse_values")
     reset_values = module.params.get("reset_values")
+    insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -824,7 +841,7 @@ def main():
             helm_cmd += " --repo=" + chart_repo_url
 
         # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
-        chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
+        chart_info = fetch_chart_info(module, helm_cmd, chart_ref, insecure_skip_tls_verify)
 
         if dependency_update:
             if chart_info.get("dependencies"):
@@ -883,6 +900,7 @@ def main():
                 set_value_args=set_value_args,
                 reuse_values=reuse_values,
                 reset_values=reset_values,
+                insecure_skip_tls_verify=insecure_skip_tls_verify,
             )
             changed = True
 
