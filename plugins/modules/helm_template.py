@@ -140,6 +140,14 @@ options:
           - json
           - file
     version_added: '2.4.0'
+  insecure_skip_tls_verify:
+    description:
+      - Skip tls certificate checks for the chart download. 
+      - Do not confuse with the C(validate_certs) option.
+    type: bool
+    default: False
+    aliases: [ skip_tls_certs_check ]
+    version_added: "3.0.1"
 """
 
 EXAMPLES = r"""
@@ -228,6 +236,7 @@ def template(
     values_files=None,
     include_crds=False,
     set_values=None,
+    insecure_skip_tls_verify=False,
 ):
     cmd += " template "
 
@@ -274,6 +283,9 @@ def template(
     if set_values:
         cmd += " " + set_values
 
+    if insecure_skip_tls_verify:
+        cmd += " --insecure-skip-tls-verify"
+
     return cmd
 
 
@@ -295,6 +307,7 @@ def main():
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
             set_values=dict(type="list", elements="dict"),
+            insecure_skip_tls_verify=dict(type="bool", default=False, aliases=["skip_tls_certs_check"]),
         ),
         supports_check_mode=True,
     )
@@ -314,6 +327,7 @@ def main():
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
     set_values = module.params.get("set_values")
+    insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
@@ -343,6 +357,7 @@ def main():
         values_files=values_files,
         include_crds=include_crds,
         set_values=set_values_args,
+        insecure_skip_tls_verify=insecure_skip_tls_verify,
     )
 
     if not check_mode:
