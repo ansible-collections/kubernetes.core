@@ -214,6 +214,26 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>kubectl_local_env_vars</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">""</div>
+                </td>
+                    <td>
+                                <div>var: ansible_kubectl_local_env_vars</div>
+                    </td>
+                <td>
+                        <div>Local enviromantal variable to be passed locally to the kubectl command line.</div>
+                        <div>Please be aware that this passes information directly on the command line and it could expose sensitive data.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubectl_namespace</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
