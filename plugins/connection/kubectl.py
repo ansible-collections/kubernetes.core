@@ -309,18 +309,18 @@ class Connection(ConnectionBase):
         return local_cmd, censored_local_cmd
 
     def _local_env(self):
-      """Return a dict of local environment variables to pass to the kubectl command"""
-      local_env = {}
-      local_local_env_vars_name = "{0}_local_env_vars".format(self.transport)
-      local_env_vars = self.get_option(local_local_env_vars_name)
-      if local_env_vars:
-        if isinstance(local_env_vars, dict):
-          local_env_vars = json.dumps(local_env_vars)
-        local_env = dict(os.environ)
-        local_env.update(json.loads(local_env_vars))
-        return local_env
-      else:
-        return None
+        """Return a dict of local environment variables to pass to the kubectl command"""
+        local_env = {}
+        local_local_env_vars_name = "{0}_local_env_vars".format(self.transport)
+        local_env_vars = self.get_option(local_local_env_vars_name)
+        if local_env_vars:
+            if isinstance(local_env_vars, dict):
+                local_env_vars = json.dumps(local_env_vars)
+            local_env = dict(os.environ)
+            local_env.update(json.loads(local_env_vars))
+            return local_env
+        else:
+            return None
 
     def _connect(self, port=None):
         """Connect to the container. Nothing to do"""
@@ -333,11 +333,11 @@ class Connection(ConnectionBase):
             # Debug output, to be removed
             local_env = self._local_env()
             if local_env:
-              for key, value in local_env.items():
-                  display.vvv(
-                      "ENV: {0}={1}".format(key, value),
-                      host=self._play_context.remote_addr,
-                  )
+                for key, value in local_env.items():
+                    display.vvv(
+                        "ENV: {0}={1}".format(key, value),
+                        host=self._play_context.remote_addr,
+                    )
             self._connected = True
 
     def exec_command(self, cmd, in_data=None, sudoable=False):
