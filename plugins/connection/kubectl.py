@@ -74,7 +74,7 @@ DOCUMENTATION = r"""
           - name: K8S_AUTH_EXTRA_ARGS
       kubectl_local_env_vars:
         description:
-          - Local enviromantal varable to be passed locally to the kubectl command line.
+          - Local enviromantal variable to be passed locally to the kubectl command line.
           - Please be aware that this passes information directly on the command line and it could expose sensitive data.
         default: ''
         vars:
