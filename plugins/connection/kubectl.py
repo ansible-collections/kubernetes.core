@@ -307,7 +307,7 @@ class Connection(ConnectionBase):
         censored_local_cmd += ["--"] + cmd
 
         return local_cmd, censored_local_cmd
-    
+
     def _local_env(self):
         """Return a dict of local environment variables to pass to the kubectl command"""
         local_env = {}
@@ -325,12 +325,15 @@ class Connection(ConnectionBase):
         super(Connection, self)._connect()
         if not self._connected:
             display.vvv(
-              "ESTABLISH {0} CONNECTION".format(self.transport),
-              host=self._play_context.remote_addr,
+                "ESTABLISH {0} CONNECTION".format(self.transport),
+                host=self._play_context.remote_addr,
             )
             local_env = self._local_env()
             for key, value in local_env.items():
-              display.vvv("ENV: {0}={1}".format(key, value), host=self._play_context.remote_addr)
+                display.vvv(
+                    "ENV: {0}={1}".format(key, value),
+                    host=self._play_context.remote_addr,
+                )
             self._connected = True
 
     def exec_command(self, cmd, in_data=None, sudoable=False):
@@ -401,7 +404,11 @@ class Connection(ConnectionBase):
             args = [to_bytes(i, errors="surrogate_or_strict") for i in args]
             try:
                 p = subprocess.Popen(
-                    args, stdin=in_file, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self._local_env()
+                    args,
+                    stdin=in_file,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=self._local_env(),
                 )
             except OSError:
                 raise AnsibleError(
@@ -438,7 +445,11 @@ class Connection(ConnectionBase):
         ) as out_file:
             try:
                 p = subprocess.Popen(
-                    args, stdin=subprocess.PIPE, stdout=out_file, stderr=subprocess.PIPE, env=self._local_env()
+                    args,
+                    stdin=subprocess.PIPE,
+                    stdout=out_file,
+                    stderr=subprocess.PIPE,
+                    env=self._local_env(),
                 )
             except OSError:
                 raise AnsibleError(
