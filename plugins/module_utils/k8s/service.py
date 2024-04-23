@@ -398,27 +398,29 @@ class K8sService:
         resource: Resource,
         definition: Dict,
         existing: ResourceInstance,
-    ) -> Dict:
+    ) -> Tuple[Dict, List[str]]:
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
 
         if self._client_side_dry_run:
-            k8s_obj = _encode_stringdata(definition)
-        else:
-            try:
-                k8s_obj = self.client.replace(
+            return _encode_stringdata(definition), []
+
+        try:
+            return decode_response(
+                self.client.replace(
                     resource,
                     definition,
                     name=name,
                     namespace=namespace,
                     append_hash=append_hash,
-                ).to_dict()
-            except Exception as e:
-                reason = e.body if hasattr(e, "body") else e
-                msg = "Failed to replace object: {0}".format(reason)
-                raise CoreException(msg) from e
-        return k8s_obj
+                    serialize=False,
+                )
+            )
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to replace object: {0}".format(reason)
+            raise CoreException(msg) from e
 
     def update(
         self, resource: Resource, definition: Dict, existing: ResourceInstance

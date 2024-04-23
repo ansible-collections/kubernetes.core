@@ -188,7 +188,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             result["method"] = "create"
             result["changed"] = True
         elif params.get("force", False):
-            instance = svc.replace(resource, definition, existing)
+            instance, warnings = svc.replace(resource, definition, existing)
             result["method"] = "replace"
         else:
             instance = svc.update(resource, definition, existing)
