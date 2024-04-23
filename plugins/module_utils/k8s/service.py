@@ -2,6 +2,8 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import copy
+from json import loads
+from re import compile
 from typing import Any, Dict, List, Optional, Tuple
 
 from ansible.module_utils.common.dict_transformations import dict_merge
@@ -543,3 +545,83 @@ def hide_field(definition: dict, hidden_field: str) -> dict:
         else:
             del definition[split[0]]
     return definition
+
+
+def decode_response(resp) -> Tuple[Dict, List[str]]:
+    """
+    This function decodes unserialized responses from the Kubernetes python
+    client and decodes the RFC2616 14.46 warnings found in the response
+    headers.
+    """
+    obj = ResourceInstance(None, loads(resp.data.decode("utf8"))).to_dict()
+    warnings = []
+    if (
+        resp.headers is not None
+        and "warning" in resp.headers
+        and resp.headers["warning"] is not None
+    ):
+        warnings = resp.headers["warning"].split(", ")
+    return obj, decode_warnings(warnings)
+
+
+def decode_warnings(warnings: str) -> List[str]:
+    """
+    This function decodes RFC2616 14.46 warnings in a simplified way, where
+    only the warn-texts are returned in a list.
+    """
+    p = compile('\\d{3} .+ (".+")')
+
+    decoded = []
+    for warning in warnings:
+        m = p.match(warning)
+        if m:
+            try:
+                parsed, unused = parse_quoted_string(m.group(1))
+                decoded.append(parsed)
+            except ValueError:
+                continue
+
+    return decoded
+
+
+def parse_quoted_string(quoted_string: str) -> Tuple[str, str]:
+    """
+    This function was adapted from:
+    https://github.com/kubernetes/apimachinery/blob/bb8822152cabfb4f34dbc26270f874ce53db50de/pkg/util/net/http.go#L609
+    """
+    if len(quoted_string) == 0:
+        raise ValueError("invalid quoted string: 0-length")
+
+    if quoted_string[0] != '"':
+        raise ValueError("invalid quoted string: missing initial quote")
+
+    quoted_string = quoted_string[1:]
+    remainder = ""
+    escaping = False
+    closed_quote = False
+    result = []
+
+    for i, b in enumerate(quoted_string):
+        if b == '"':
+            if escaping:
+                result.append(b)
+                escaping = False
+            else:
+                closed_quote = True
+                remainder_start = i + 1
+                remainder = quoted_string[remainder_start:].strip()
+                break
+        elif b == "\\":
+            if escaping:
+                result.append(b)
+                escaping = False
+            else:
+                escaping = True
+        else:
+            result.append(b)
+            escaping = False
+
+    if not closed_quote:
+        raise ValueError("invalid quoted string: missing closing quote")
+
+    return "".join(result), remainder
