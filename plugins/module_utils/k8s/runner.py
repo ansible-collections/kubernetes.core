@@ -173,7 +173,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                 return result
 
         if params.get("apply"):
-            instance = svc.apply(resource, definition, existing)
+            instance, warnings = svc.apply(resource, definition, existing)
             result["method"] = "apply"
         elif not existing:
             if state == "patched":

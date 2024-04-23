@@ -366,32 +366,34 @@ class K8sService:
         resource: Resource,
         definition: Dict,
         existing: Optional[ResourceInstance] = None,
-    ) -> Dict:
+    ) -> Tuple[Dict, List[str]]:
         namespace = definition["metadata"].get("namespace")
 
         server_side_apply = self.module.params.get("server_side_apply")
         if server_side_apply:
             requires("kubernetes", "19.15.0", reason="to use server side apply")
+
         if self._client_side_dry_run:
             ignored, patch = apply_object(resource, _encode_stringdata(definition))
             if existing:
-                k8s_obj = dict_merge(existing.to_dict(), patch)
+                return dict_merge(existing.to_dict(), patch), []
             else:
-                k8s_obj = patch
-        else:
-            try:
-                params = {}
-                if server_side_apply:
-                    params["server_side"] = True
-                    params.update(server_side_apply)
-                k8s_obj = self.client.apply(
-                    resource, definition, namespace=namespace, **params
-                ).to_dict()
-            except Exception as e:
-                reason = e.body if hasattr(e, "body") else e
-                msg = "Failed to apply object: {0}".format(reason)
-                raise CoreException(msg) from e
-        return k8s_obj
+                return patch, []
+
+        try:
+            params = {}
+            if server_side_apply:
+                params["server_side"] = True
+                params.update(server_side_apply)
+            return decode_response(
+                self.client.apply(
+                    resource, definition, namespace=namespace, serialize=False, **params
+                )
+            )
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to apply object: {0}".format(reason)
+            raise CoreException(msg) from e
 
     def replace(
         self,
