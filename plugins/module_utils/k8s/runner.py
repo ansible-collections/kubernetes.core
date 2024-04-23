@@ -191,7 +191,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             instance, warnings = svc.replace(resource, definition, existing)
             result["method"] = "replace"
         else:
-            instance = svc.update(resource, definition, existing)
+            instance, warnings = svc.update(resource, definition, existing)
             result["method"] = "update"
 
     if warnings:

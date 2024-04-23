@@ -144,7 +144,7 @@ class K8sService:
         name: str,
         namespace: str,
         merge_type: str = None,
-    ) -> Dict:
+    ) -> Tuple[Dict, List[str]]:
         if merge_type == "json":
             self.module.deprecate(
                 msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
@@ -152,10 +152,10 @@ class K8sService:
                 collection_name="kubernetes.core",
             )
         try:
-            params = dict(name=name, namespace=namespace)
+            params = dict(name=name, namespace=namespace, serialize=False)
             if merge_type:
                 params["content_type"] = "application/{0}-patch+json".format(merge_type)
-            return self.client.patch(resource, definition, **params).to_dict()
+            return decode_response(self.client.patch(resource, definition, **params))
         except Exception as e:
             reason = e.body if hasattr(e, "body") else e
             msg = "Failed to patch object: {0}".format(reason)
@@ -424,34 +424,30 @@ class K8sService:
 
     def update(
         self, resource: Resource, definition: Dict, existing: ResourceInstance
-    ) -> Dict:
+    ) -> Tuple[Dict, List[str]]:
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
 
         if self._client_side_dry_run:
-            k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
-        else:
-            exception = None
-            for merge_type in self.module.params.get("merge_type") or [
-                "strategic-merge",
-                "merge",
-            ]:
-                try:
-                    k8s_obj = self.patch_resource(
-                        resource,
-                        definition,
-                        name,
-                        namespace,
-                        merge_type=merge_type,
-                    )
-                    exception = None
-                except CoreException as e:
-                    exception = e
-                    continue
-                break
-            if exception:
-                raise exception
-        return k8s_obj
+            return dict_merge(existing.to_dict(), _encode_stringdata(definition)), []
+
+        exception = None
+        for merge_type in self.module.params.get("merge_type") or [
+            "strategic-merge",
+            "merge",
+        ]:
+            try:
+                return self.patch_resource(
+                    resource,
+                    definition,
+                    name,
+                    namespace,
+                    merge_type=merge_type,
+                )
+            except CoreException as e:
+                exception = e
+                continue
+        raise exception
 
     def delete(
         self,
