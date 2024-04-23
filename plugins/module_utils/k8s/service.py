@@ -332,33 +332,34 @@ class K8sService:
             result["resources"].append(hide_fields(res, hidden_fields))
         return result
 
-    def create(self, resource: Resource, definition: Dict) -> Dict:
+    def create(self, resource: Resource, definition: Dict) -> Tuple[Dict, List[str]]:
         namespace = definition["metadata"].get("namespace")
         name = definition["metadata"].get("name")
 
         if self._client_side_dry_run:
-            k8s_obj = _encode_stringdata(definition)
-        else:
-            try:
-                k8s_obj = self.client.create(
-                    resource, definition, namespace=namespace
-                ).to_dict()
-            except ConflictError:
-                # Some resources, like ProjectRequests, can't be created multiple times,
-                # because the resources that they create don't match their kind
-                # In this case we'll mark it as unchanged and warn the user
-                self.module.warn(
-                    "{0} was not found, but creating it returned a 409 Conflict error. This can happen \
-                            if the resource you are creating does not directly create a resource of the same kind.".format(
-                        name
-                    )
+            return _encode_stringdata(definition), []
+
+        try:
+            return decode_response(
+                self.client.create(
+                    resource, definition, namespace=namespace, serialize=False
                 )
-                return dict()
-            except Exception as e:
-                reason = e.body if hasattr(e, "body") else e
-                msg = "Failed to create object: {0}".format(reason)
-                raise CoreException(msg) from e
-        return k8s_obj
+            )
+        except ConflictError:
+            # Some resources, like ProjectRequests, can't be created multiple times,
+            # because the resources that they create don't match their kind
+            # In this case we'll mark it as unchanged and warn the user
+            self.module.warn(
+                "{0} was not found, but creating it returned a 409 Conflict error. This can happen \
+                        if the resource you are creating does not directly create a resource of the same kind.".format(
+                    name
+                )
+            )
+            return dict(), []
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to create object: {0}".format(reason)
+            raise CoreException(msg) from e
 
     def apply(
         self,

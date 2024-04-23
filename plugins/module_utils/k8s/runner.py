@@ -139,6 +139,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
 
     result = {"changed": False, "result": {}}
     instance = {}
+    warnings = []
 
     resource = svc.find_resource(kind, api_version, fail=True)
     definition["kind"] = resource.kind
@@ -183,7 +184,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
                     )
                 )
                 return result
-            instance = svc.create(resource, definition)
+            instance, warnings = svc.create(resource, definition)
             result["method"] = "create"
             result["changed"] = True
         elif params.get("force", False):
@@ -192,6 +193,9 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
         else:
             instance = svc.update(resource, definition, existing)
             result["method"] = "update"
+
+    if warnings:
+        result["warnings"] = warnings
 
     # If needed, wait and/or create diff
     success = True
