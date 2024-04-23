@@ -332,12 +332,6 @@ class Connection(ConnectionBase):
             )
             # Debug output, to be removed
             local_env = self._local_env()
-            if local_env:
-                for key, value in local_env.items():
-                    display.vvv(
-                        "ENV: {0}={1}".format(key, value),
-                        host=self._play_context.remote_addr,
-                    )
             self._connected = True
 
     def exec_command(self, cmd, in_data=None, sudoable=False):
