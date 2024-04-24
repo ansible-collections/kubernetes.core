@@ -330,8 +330,6 @@ class Connection(ConnectionBase):
                 "ESTABLISH {0} CONNECTION".format(self.transport),
                 host=self._play_context.remote_addr,
             )
-            # Debug output, to be removed
-            local_env = self._local_env()
             self._connected = True
 
     def exec_command(self, cmd, in_data=None, sudoable=False):
