@@ -76,7 +76,9 @@ DOCUMENTATION = r"""
         description:
           - Local enviromantal variable to be passed locally to the kubectl command line.
           - Please be aware that this passes information directly on the command line and it could expose sensitive data.
-        default: ''
+        default: {}
+        type: dict
+        version_added: "3.1.0"
         vars:
           - name: ansible_kubectl_local_env_vars
       kubectl_kubeconfig:

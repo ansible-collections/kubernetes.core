@@ -217,11 +217,12 @@ Parameters
                     <b>kubectl_local_env_vars</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
-                        <span style="color: purple">-</span>
+                        <span style="color: purple">dictionary</span>
                     </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 3.1.0</div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">""</div>
+                        <b>Default:</b><br/><div style="color: blue">{}</div>
                 </td>
                     <td>
                                 <div>var: ansible_kubectl_local_env_vars</div>
