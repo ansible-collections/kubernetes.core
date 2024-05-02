@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - kubectl - added support of local enviroment variable that will be used for kubectl and may be requried for establishing connections ifself (https://github.com/ansible-collections/kubernetes.core/pull/702)
