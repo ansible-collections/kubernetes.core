@@ -318,11 +318,10 @@ class Connection(ConnectionBase):
         if local_env_vars:
             if isinstance(local_env_vars, dict):
                 local_env_vars = json.dumps(local_env_vars)
-            local_env = dict(os.environ)
+            local_env = os.environ.copy()
             local_env.update(json.loads(local_env_vars))
             return local_env
-        else:
-            return None
+        return None
 
     def _connect(self, port=None):
         """Connect to the container. Nothing to do"""

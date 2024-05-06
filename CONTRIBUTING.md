@@ -62,7 +62,7 @@ You can install ``collection_prep`` using
 
 After installation, you can update documentation
 
-    # collection_prep_add_docs -p /<PATH_OF_COLLECTION>/kubernetes.core
+    # collection_prep_add_docs -p /<PATH_OF_COLLECTION>/kubernetes/core
 
 Review the changes and create a pull request using updated files.
 
