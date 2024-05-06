@@ -78,7 +78,7 @@ DOCUMENTATION = r"""
           - Please be aware that this passes information directly on the command line and it could expose sensitive data.
         default: {}
         type: dict
-        version_added: "3.1.0"
+        version_added: 3.1.0
         vars:
           - name: ansible_kubectl_local_env_vars
       kubectl_kubeconfig:
