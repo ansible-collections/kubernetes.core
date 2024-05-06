@@ -11,7 +11,7 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 module: k8s_cluster_info
 
-version_added: "0.11.1"
+version_added: 0.11.1
 
 short_description: Describe Kubernetes (K8s) cluster, APIs available and their respective versions
 

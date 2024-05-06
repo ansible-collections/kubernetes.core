@@ -14,7 +14,7 @@ module: helm
 
 short_description: Manages Kubernetes packages with the Helm package manager
 
-version_added: "0.11.0"
+version_added: 0.11.0
 
 author:
   - Lucas Boisserie (@LucasBoisserie)
@@ -61,7 +61,7 @@ options:
     default: false
     type: bool
     aliases: [ dep_up ]
-    version_added: "2.4.0"
+    version_added: 2.4.0
   release_name:
     description:
       - Release name to manage.
@@ -99,7 +99,7 @@ options:
     default: []
     type: list
     elements: str
-    version_added: '1.1.0'
+    version_added: 1.1.0
   update_repo_cache:
     description:
       - Run C(helm repo update) before the operation. Can be run as part of the package installation or as a separate step (see Examples).
@@ -129,7 +129,7 @@ options:
           - string
           - json
           - file
-    version_added: '2.4.0'
+    version_added: 2.4.0
   reuse_values:
     description:
       - When upgrading package, specifies wether to reuse the last release's values and merge in any overrides from parameters I(release_values),
@@ -137,14 +137,14 @@ options:
       - If I(reset_values) is set to C(True), this is ignored.
     type: bool
     required: false
-    version_added: '2.5.0'
+    version_added: 2.5.0
   reset_values:
     description:
       - When upgrading package, reset the values to the ones built into the chart.
     type: bool
     required: false
     default: True
-    version_added: '2.5.0'
+    version_added: 2.5.0
 
 #Helm options
   disable_hook:
@@ -181,7 +181,7 @@ options:
       - similar to C(wait_timeout) but does not required C(wait) to be activated.
       - Mutually exclusive with C(wait_timeout).
     type: str
-    version_added: "2.3.0"
+    version_added: 2.3.0
   atomic:
     description:
       - If set, the installation process deletes the installation on failure.
@@ -192,12 +192,12 @@ options:
       - Create the release namespace if not present.
     type: bool
     default: False
-    version_added: "0.11.1"
+    version_added: 0.11.1
   post_renderer:
     description:
       - Path to an executable to be used for post rendering.
     type: str
-    version_added: "2.4.0"
+    version_added: 2.4.0
   replace:
     description:
       - Reuse the given name, only if that name is a deleted release which remains in the history.
@@ -205,19 +205,19 @@ options:
       - mutually exclusive with with C(history_max).
     type: bool
     default: False
-    version_added: "1.11.0"
+    version_added: 1.11.0
   skip_crds:
     description:
       - Skip custom resource definitions when installing or upgrading.
     type: bool
     default: False
-    version_added: "1.2.0"
+    version_added: 1.2.0
   history_max:
     description:
       - Limit the maximum number of revisions saved per release.
       - mutually exclusive with with C(replace).
     type: int
-    version_added: "2.2.0"
+    version_added: 2.2.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """

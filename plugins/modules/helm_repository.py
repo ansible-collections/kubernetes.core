@@ -14,7 +14,7 @@ module: helm_repository
 
 short_description: Manage Helm repositories.
 
-version_added: "0.11.0"
+version_added: 0.11.0
 
 author:
   - Lucas Boisserie (@LucasBoisserie)
@@ -76,12 +76,12 @@ options:
     description:
     - Provide a URL for accessing the API. Can also be specified via C(K8S_AUTH_HOST) environment variable.
     type: str
-    version_added: "2.3.0"
+    version_added: 2.3.0
   api_key:
     description:
     - Token used to authenticate with the API. Can also be specified via C(K8S_AUTH_API_KEY) environment variable.
     type: str
-    version_added: "2.3.0"
+    version_added: 2.3.0
   validate_certs:
     description:
     - Whether or not to verify the API server's SSL certificates. Can also be specified via C(K8S_AUTH_VERIFY_SSL)
@@ -89,21 +89,21 @@ options:
     type: bool
     aliases: [ verify_ssl ]
     default: True
-    version_added: "2.3.0"
+    version_added: 2.3.0
   ca_cert:
     description:
     - Path to a CA certificate used to authenticate with the API. The full certificate chain must be provided to
       avoid certificate validation errors. Can also be specified via C(K8S_AUTH_SSL_CA_CERT) environment variable.
     type: path
     aliases: [ ssl_ca_cert ]
-    version_added: "2.3.0"
+    version_added: 2.3.0
   context:
     description:
       - Helm option to specify which kubeconfig context to use.
       - If the value is not specified in the task, the value of environment variable C(K8S_AUTH_CONTEXT) will be used instead.
     type: str
     aliases: [ kube_context ]
-    version_added: "2.4.0"
+    version_added: 2.4.0
   kubeconfig:
     description:
       - Helm option to specify kubeconfig path to use.
@@ -111,14 +111,14 @@ options:
       - The configuration can be provided as dictionary.
     type: raw
     aliases: [ kubeconfig_path ]
-    version_added: "2.4.0"
+    version_added: 2.4.0
   force_update:
     description:
     - Whether or not to replace (overwrite) the repo if it already exists.
     type: bool
     aliases: [ force ]
     default: False
-    version_added: "2.4.0"
+    version_added: 2.4.0
 """
 
 EXAMPLES = r"""
