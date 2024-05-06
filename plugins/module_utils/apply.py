@@ -149,6 +149,7 @@ def k8s_apply(resource, definition, **kwargs):
             force_conflicts=kwargs.get("force_conflicts"),
             field_manager=kwargs.get("field_manager"),
             dry_run=kwargs.get("dry_run"),
+            serialize=kwargs.get("serialize"),
         )
     if not existing:
         return resource.create(
@@ -158,6 +159,7 @@ def k8s_apply(resource, definition, **kwargs):
         return resource.get(
             name=definition["metadata"]["name"],
             namespace=definition["metadata"].get("namespace"),
+            **kwargs
         )
     return resource.patch(
         body=desired,
