@@ -72,6 +72,15 @@ DOCUMENTATION = r"""
           - name: ansible_kubectl_extra_args
         env:
           - name: K8S_AUTH_EXTRA_ARGS
+      kubectl_local_env_vars:
+        description:
+          - Local enviromantal variable to be passed locally to the kubectl command line.
+          - Please be aware that this passes information directly on the command line and it could expose sensitive data.
+        default: {}
+        type: dict
+        version_added: 3.1.0
+        vars:
+          - name: ansible_kubectl_local_env_vars
       kubectl_kubeconfig:
         description:
           - Path to a kubectl config file. Defaults to I(~/.kube/config)
@@ -301,6 +310,19 @@ class Connection(ConnectionBase):
 
         return local_cmd, censored_local_cmd
 
+    def _local_env(self):
+        """Return a dict of local environment variables to pass to the kubectl command"""
+        local_env = {}
+        local_local_env_vars_name = "{0}_local_env_vars".format(self.transport)
+        local_env_vars = self.get_option(local_local_env_vars_name)
+        if local_env_vars:
+            if isinstance(local_env_vars, dict):
+                local_env_vars = json.dumps(local_env_vars)
+            local_env = os.environ.copy()
+            local_env.update(json.loads(local_env_vars))
+            return local_env
+        return None
+
     def _connect(self, port=None):
         """Connect to the container. Nothing to do"""
         super(Connection, self)._connect()
@@ -329,6 +351,7 @@ class Connection(ConnectionBase):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=self._local_env(),
         )
 
         stdout, stderr = p.communicate(in_data)
@@ -378,7 +401,11 @@ class Connection(ConnectionBase):
             args = [to_bytes(i, errors="surrogate_or_strict") for i in args]
             try:
                 p = subprocess.Popen(
-                    args, stdin=in_file, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                    args,
+                    stdin=in_file,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=self._local_env(),
                 )
             except OSError:
                 raise AnsibleError(
@@ -415,7 +442,11 @@ class Connection(ConnectionBase):
         ) as out_file:
             try:
                 p = subprocess.Popen(
-                    args, stdin=subprocess.PIPE, stdout=out_file, stderr=subprocess.PIPE
+                    args,
+                    stdin=subprocess.PIPE,
+                    stdout=out_file,
+                    stderr=subprocess.PIPE,
+                    env=self._local_env(),
                 )
             except OSError:
                 raise AnsibleError(
