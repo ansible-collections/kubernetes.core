@@ -30,6 +30,9 @@ DOCUMENTATION = """
       opt_dirs:
         description:
         - An optional list of directories to search for the executable in addition to PATH.
+      build_flags:
+        description:
+        - Set additional build flags, like --enable-alpha-plugins
 
     requirements:
       - "python >= 3.6"
@@ -121,6 +124,9 @@ class LookupModule(LookupBase):
                     executable_path
                 )
             )
+
+        if "build_flags" in kwargs:
+            command += [kwargs["build_flags"]]
 
         (out, err) = run_command(command)
         if err:
