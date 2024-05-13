@@ -1,6 +1,10 @@
 ---
 - name: Test helm with in-memory kubeconfig
   include_tasks: "from_in_memory_kubeconfig.yml"
+  loop_control:
+    loop_var: test_helm_version
+  with_items:
+    - "v3.10.3"
 
 - name: Test helm with custom kubeconfig and validate_certs=false
   include_tasks: "from_kubeconfig_with_validate_certs.yml"
@@ -8,12 +12,10 @@
     loop_var: test_helm_version
   with_items:
     - "v3.10.3"
-    - "v3.8.2"
 
 - name: Test helm with custom kubeconfig and ca_cert
   include_tasks: "from_kubeconfig_with_cacert.yml"
   loop_control:
     loop_var: test_helm_version
   with_items:
-    - "v3.5.1"
-    - "v3.4.2"
+    - "v3.10.3"

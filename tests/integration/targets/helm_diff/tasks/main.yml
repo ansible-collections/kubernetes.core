@@ -143,6 +143,8 @@
         chart_ref: "{{ test_chart_ref }}"
         values:
           foo: gaz
+        values_files:
+          - "{{ test_chart_ref }}/values.yml"
       register: install
 
     - assert:
@@ -157,6 +159,46 @@
         chart_ref: "{{ test_chart_ref }}"
         values:
           foo: gaz
+        values_files:
+          - "{{ test_chart_ref }}/values.yml"
+      register: install
+
+    - assert:
+        that:
+          - install is not changed
+
+    - name: Upgrade with set_values
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+        values:
+          foo: gaz
+        values_files:
+          - "{{ test_chart_ref }}/values.yml"
+        set_values:
+          - value: foo=qux
+            value_type: string
+      register: install
+
+    - assert:
+        that:
+          - install is changed
+
+    - name: Upgrade with set_values idempotency check
+      helm:
+        binary_path: "{{ helm_binary }}"
+        name: test-chart
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ test_chart_ref }}"
+        values:
+          foo: gaz
+        values_files:
+          - "{{ test_chart_ref }}/values.yml"
+        set_values:
+          - value: foo=qux
+            value_type: string
       register: install
 
     - assert:
@@ -256,4 +298,7 @@
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
+        wait: true
       ignore_errors: yes
+
+- include_tasks: reuse_values.yml

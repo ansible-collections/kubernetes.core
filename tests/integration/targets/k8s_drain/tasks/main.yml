@@ -182,7 +182,7 @@
   - name: assert that pods are running on cordoned node
     assert:
       that:
-      - "{{ Pod.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_drain) | list | length > 0 }}"
+      - Pod.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_drain) | list | length > 0
 
   - name: Uncordon node
     k8s_drain:
@@ -236,7 +236,7 @@
     assert:
       that:
       - drain_result is changed
-      - '"node {{ node_to_drain }} marked unschedulable." in drain_result.result'
+      - '"node "+node_to_drain+" marked unschedulable." in drain_result.result'
 
   - name: assert that unmanaged pod were deleted
     k8s_info:
@@ -338,7 +338,7 @@
     assert:
       that:
       - disable_evict is changed
-      - '"node {{ node_to_drain }} marked unschedulable." in disable_evict.result'
+      - '"node "+node_to_drain+" marked unschedulable." in disable_evict.result'
 
   - name: assert that unmanaged pod were deleted
     k8s_info:
@@ -401,7 +401,7 @@
     assert:
       that:
       - drain_pod_selector is changed
-      - '"node {{ node_to_drain }} marked unschedulable." in drain_pod_selector.result'
+      - '"node "+node_to_drain+" marked unschedulable." in drain_pod_selector.result'
 
   - name: assert that pod created before is still running
     k8s_info:
@@ -429,8 +429,8 @@
     assert:
       that:
       - drain_pod_selector_equal is changed
-      - '"node {{ node_to_drain }} already marked unschedulable." in drain_pod_selector_equal.result'
-      - '"Deleting Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: {{ test_namespace }}/ansible-drain-pod." in drain_pod_selector_equal.warnings'
+      - '"node "+node_to_drain+" already marked unschedulable." in drain_pod_selector_equal.result'
+      - '"Deleting Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: "+test_namespace+"/ansible-drain-pod." in drain_pod_selector_equal.warnings'
 
   - name: Uncordon node
     k8s_drain:

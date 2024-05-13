@@ -213,8 +213,8 @@
     - name: check that resources creation failed
       assert:
         that:
-          - '{{ resource.results[0].resources | length == 0 }}'
-          - '{{ resource.results[1].resources | length == 0 }}'
+          - resource.results.0.resources | length == 0
+          - resource.results.1.resources | length == 0
 
     - name: create pod without namespace (continue_on_error = true)
       kubernetes.core.k8s:

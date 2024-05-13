@@ -1,9 +1,11 @@
+from json import dumps
 from unittest.mock import Mock
 
 import pytest
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
     diff_objects,
+    parse_quoted_string,
 )
 from kubernetes.dynamic.exceptions import NotFoundError
 from kubernetes.dynamic.resource import Resource, ResourceInstance
@@ -55,6 +57,22 @@ def mock_pod_resource_instance():
 @pytest.fixture(scope="module")
 def mock_pod_updated_resource_instance():
     return ResourceInstance(None, pod_definition_updated)
+
+
+@pytest.fixture(scope="module")
+def mock_pod_response():
+    resp = Mock()
+    resp.data.decode.return_value = dumps(pod_definition)
+    resp.headers = {}
+    return resp
+
+
+@pytest.fixture(scope="module")
+def mock_pod_warnings_response():
+    resp = Mock()
+    resp.data.decode.return_value = dumps(pod_definition)
+    resp.headers = {"warning": '299 - "test warning 1", 299 - "test warning 2"'}
+    return resp
 
 
 def test_diff_objects_no_diff():
@@ -159,16 +177,33 @@ def test_service_delete_existing_resource_check_mode(mock_pod_resource_instance)
     client.delete.assert_not_called()
 
 
-def test_service_create_resource(mock_pod_resource_instance):
-    spec = {"create.side_effect": [mock_pod_resource_instance]}
+def test_service_create_resource(mock_pod_response, mock_pod_resource_instance):
+    spec = {"create.side_effect": [mock_pod_response]}
     client = Mock(**spec)
     module = Mock()
     module.params = {}
     module.check_mode = False
     svc = K8sService(client, module)
-    result = svc.create(Mock(), pod_definition)
+    result, warnings = svc.create(Mock(), pod_definition)
 
     assert result == mock_pod_resource_instance.to_dict()
+    assert not warnings
+
+
+def test_service_create_resource_warnings(
+    mock_pod_warnings_response, mock_pod_resource_instance
+):
+    spec = {"create.side_effect": [mock_pod_warnings_response]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    result, warnings = svc.create(Mock(), pod_definition)
+
+    assert result == mock_pod_resource_instance.to_dict()
+    assert warnings[0] == "test warning 1"
+    assert warnings[1] == "test warning 2"
 
 
 def test_service_create_resource_check_mode():
@@ -176,9 +211,10 @@ def test_service_create_resource_check_mode():
     client.create.return_value = mock_pod_resource_instance
     module = Mock(params={}, check_mode=True)
     svc = K8sService(client, module)
-    result = svc.create(Mock(), pod_definition)
+    result, warnings = svc.create(Mock(), pod_definition)
 
     assert result == pod_definition
+    assert not warnings
     client.create.assert_not_called()
 
 
@@ -224,40 +260,99 @@ def test_create_project_request():
     assert results["result"] == project_definition
 
 
-def test_service_apply_existing_resource(mock_pod_resource_instance):
-    spec = {"apply.side_effect": [mock_pod_resource_instance]}
+def test_service_apply_existing_resource(mock_pod_response, mock_pod_resource_instance):
+    spec = {"apply.side_effect": [mock_pod_response]}
     client = Mock(**spec)
     module = Mock()
     module.params = {"apply": True}
     module.check_mode = False
     svc = K8sService(client, module)
-    result = svc.apply(Mock(), pod_definition_updated, mock_pod_resource_instance)
+    result, warnings = svc.apply(
+        Mock(), pod_definition_updated, mock_pod_resource_instance
+    )
 
     assert result == mock_pod_resource_instance.to_dict()
+    assert not warnings
 
 
-def test_service_replace_existing_resource(mock_pod_resource_instance):
-    spec = {"replace.side_effect": [mock_pod_resource_instance]}
+def test_service_apply_existing_resource_warnings(
+    mock_pod_warnings_response, mock_pod_resource_instance
+):
+    spec = {"apply.side_effect": [mock_pod_warnings_response]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {"apply": True}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    result, warnings = svc.apply(
+        Mock(), pod_definition_updated, mock_pod_resource_instance
+    )
+
+    assert result == mock_pod_resource_instance.to_dict()
+    assert warnings[0] == "test warning 1"
+    assert warnings[1] == "test warning 2"
+
+
+def test_service_replace_existing_resource(
+    mock_pod_response, mock_pod_resource_instance
+):
+    spec = {"replace.side_effect": [mock_pod_response]}
     client = Mock(**spec)
     module = Mock()
     module.params = {}
     module.check_mode = False
     svc = K8sService(client, module)
-    result = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
+    result, warnings = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
 
     assert result == mock_pod_resource_instance.to_dict()
+    assert not warnings
 
 
-def test_service_update_existing_resource(mock_pod_resource_instance):
-    spec = {"replace.side_effect": [mock_pod_resource_instance]}
+def test_service_replace_existing_resource_warnings(
+    mock_pod_warnings_response, mock_pod_resource_instance
+):
+    spec = {"replace.side_effect": [mock_pod_warnings_response]}
     client = Mock(**spec)
     module = Mock()
     module.params = {}
     module.check_mode = False
     svc = K8sService(client, module)
-    result = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
+    result, warnings = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
 
     assert result == mock_pod_resource_instance.to_dict()
+    assert warnings[0] == "test warning 1"
+    assert warnings[1] == "test warning 2"
+
+
+def test_service_update_existing_resource(
+    mock_pod_response, mock_pod_resource_instance
+):
+    spec = {"replace.side_effect": [mock_pod_response]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    result, warnings = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
+
+    assert result == mock_pod_resource_instance.to_dict()
+    assert not warnings
+
+
+def test_service_update_existing_resource_warnings(
+    mock_pod_warnings_response, mock_pod_resource_instance
+):
+    spec = {"replace.side_effect": [mock_pod_warnings_response]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    result, warnings = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
+
+    assert result == mock_pod_resource_instance.to_dict()
+    assert warnings[0] == "test warning 1"
+    assert warnings[1] == "test warning 2"
 
 
 def test_service_find(mock_pod_resource_instance):
@@ -288,3 +383,24 @@ def test_service_find_error():
     assert isinstance(results, dict)
     assert results["api_found"] is True
     assert results["resources"] == []
+
+
+@pytest.mark.parametrize(
+    "quoted_string,expected_val,expected_remainder",
+    [
+        (
+            '"Response is stale" Tue, 15 Nov 1994 12:45:26 GMT',
+            "Response is stale",
+            "Tue, 15 Nov 1994 12:45:26 GMT",
+        ),
+        (
+            '"unknown field \\"spec.template.spec.disk\\""',
+            'unknown field "spec.template.spec.disk"',
+            "",
+        ),
+    ],
+)
+def test_parse_quoted_string(quoted_string, expected_val, expected_remainder):
+    val, remainder = parse_quoted_string(quoted_string)
+    assert val == expected_val
+    assert remainder == expected_remainder
