@@ -30,6 +30,10 @@ DOCUMENTATION = """
       opt_dirs:
         description:
         - An optional list of directories to search for the executable in addition to PATH.
+      enable_helm:
+        description:
+        - Enable the helm chart inflation generator
+        default: "False"
 
     requirements:
       - "python >= 3.6"
@@ -37,16 +41,20 @@ DOCUMENTATION = """
 
 EXAMPLES = """
 - name: Run lookup using kustomize
-  set_fact:
+  ansible.builtin.set_fact:
     resources: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kustomize') }}"
 
 - name: Run lookup using kubectl kustomize
-  set_fact:
+  ansible.builtin.set_fact:
     resources: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl') }}"
 
 - name: Create kubernetes resources for lookup output
-  k8s:
+  kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization') }}"
+
+- name: Create kubernetes resources for lookup output with `--enable-helm` set
+  kubernetes.core.k8s:
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
 """
 
 RETURN = """
@@ -91,7 +99,14 @@ def run_command(command):
 
 class LookupModule(LookupBase):
     def run(
-        self, terms, variables=None, dir=".", binary_path=None, opt_dirs=None, **kwargs
+        self,
+        terms,
+        variables=None,
+        dir=".",
+        binary_path=None,
+        opt_dirs=None,
+        enable_helm=False,
+        **kwargs
     ):
         executable_path = binary_path
         if executable_path is None:
@@ -121,6 +136,9 @@ class LookupModule(LookupBase):
                     executable_path
                 )
             )
+
+        if enable_helm:
+            command += ["--enable-helm"]
 
         (out, err) = run_command(command)
         if err:
