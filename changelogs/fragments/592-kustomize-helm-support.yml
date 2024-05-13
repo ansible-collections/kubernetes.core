@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - kustomize - new parameter added to --enable-helm (https://github.com/ansible-collections/kubernetes.core/issues/568)
