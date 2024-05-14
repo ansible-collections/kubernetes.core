@@ -12,7 +12,7 @@ DOCUMENTATION = r"""
 ---
 module: helm_pull
 short_description: download a chart from a repository and (optionally) unpack it in local directory.
-version_added: "2.4.0"
+version_added: 2.4.0
 author:
   - Aubin Bikouo (@abikouo)
 description:
