@@ -1,0 +1,2 @@
+bugfixes:
+  - k8s_json_patch - rename action symlink to ensure k8s action plugin is used (https://github.com/ansible-collections/kubernetes.core/pull/652).
