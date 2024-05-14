@@ -14,7 +14,7 @@ module: helm_info
 
 short_description: Get information from Helm package deployed inside the cluster
 
-version_added: "0.11.0"
+version_added: 0.11.0
 
 author:
   - Lucas Boisserie (@LucasBoisserie)
@@ -53,7 +53,7 @@ options:
     type: list
     elements: str
     default: []
-    version_added: "2.3.0"
+    version_added: 2.3.0
   get_all_values:
     description:
       - Set to C(True) if you want to get all (computed) values of the release.
@@ -61,7 +61,7 @@ options:
     required: false
     default: false
     type: bool
-    version_added: "2.4.0"
+    version_added: 2.4.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -123,18 +123,18 @@ status:
       elements: dict
       description: Hooks of the release
       returned: always
-      version_added: "2.4.0"
+      version_added: 2.4.0
     notes:
       type: str
       description: Notes of the release
       returned: always
-      version_added: "2.4.0"
+      version_added: 2.4.0
     manifest:
       type: list
       elements: dict
       description: Manifest of the release
       returned: always
-      version_added: "2.4.0"
+      version_added: 2.4.0
 """
 
 import copy

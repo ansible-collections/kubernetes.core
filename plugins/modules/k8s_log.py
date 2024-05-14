@@ -14,7 +14,7 @@ module: k8s_log
 
 short_description: Fetch logs from Kubernetes resources
 
-version_added: "0.10.0"
+version_added: 0.10.0
 
 author:
     - "Fabian von Feilitzsch (@fabianvf)"
@@ -61,26 +61,26 @@ options:
     - A relative time in seconds before the current time from which to show logs.
     required: no
     type: str
-    version_added: '2.2.0'
+    version_added: 2.2.0
   previous:
     description:
     - If C(true), print the logs for the previous instance of the container in a pod if it exists.
     required: no
     type: bool
     default: False
-    version_added: '2.4.0'
+    version_added: 2.4.0
   tail_lines:
     description:
     - A number of lines from the end of the logs to retrieve.
     required: no
     type: int
-    version_added: '2.4.0'
+    version_added: 2.4.0
   all_containers:
     description:
     - If set to C(true), retrieve all containers' logs in the pod(s).
     - mutually exclusive with C(container).
     type: bool
-    version_added: '2.4.0'
+    version_added: 2.4.0
 
 requirements:
   - "python >= 3.9"

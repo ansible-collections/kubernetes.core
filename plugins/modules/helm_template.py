@@ -53,7 +53,7 @@ options:
     default: false
     type: bool
     aliases: [ dep_up ]
-    version_added: "2.4.0"
+    version_added: 2.4.0
   disable_hook:
     description:
       - Prevent hooks from running during install.
@@ -139,7 +139,7 @@ options:
           - string
           - json
           - file
-    version_added: '2.4.0'
+    version_added: 2.4.0
 """
 
 EXAMPLES = r"""

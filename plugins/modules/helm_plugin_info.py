@@ -12,7 +12,7 @@ DOCUMENTATION = r"""
 ---
 module: helm_plugin_info
 short_description: Gather information about Helm plugins
-version_added: "1.0.0"
+version_added: 1.0.0
 author:
   - Abhijeet Kasurde (@Akasurde)
 requirements:
