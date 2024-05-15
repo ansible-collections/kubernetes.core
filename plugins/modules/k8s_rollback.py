@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 module: k8s_rollback
 short_description: Rollback Kubernetes (K8S) Deployments and DaemonSets
-version_added: "1.0.0"
+version_added: 1.0.0
 author:
     - "Julien Huon (@julienhuon)"
 description:

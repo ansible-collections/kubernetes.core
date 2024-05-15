@@ -15,7 +15,7 @@ module: k8s_exec
 
 short_description: Execute command in Pod
 
-version_added: "0.10.0"
+version_added: 0.10.0
 
 author: "Tristan de Cacqueray (@tristanC)"
 
