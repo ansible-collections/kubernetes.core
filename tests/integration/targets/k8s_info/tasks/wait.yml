@@ -192,7 +192,7 @@
     - name: Check that module waited
       assert:
         that:
-          - "{{ lookup('pipe', 'date +%s') }} - {{ start }} > 30"
+          - ( lookup('pipe', 'date +%s')|int - start|int ) > 30
 
     - name: Create simple pod
       k8s:
