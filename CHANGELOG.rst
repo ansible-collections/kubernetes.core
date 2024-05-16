@@ -4,6 +4,41 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v3.1.0
+======
+
+Release Summary
+---------------
+
+This release comes with some bugfixes and documentation updates. It also adds new features to the kubectl connection plugin and the kustomize lookup plugin.
+
+Minor Changes
+-------------
+
+- kubectl - added support of local enviroment variable that will be used for kubectl and may be requried for establishing connections ifself (https://github.com/ansible-collections/kubernetes.core/pull/702)
+- kustomize - new parameter added to --enable-helm (https://github.com/ansible-collections/kubernetes.core/issues/568)
+
+Bugfixes
+--------
+
+- helm - expand kubeconfig path with user's home directory for consistency with k8s
+- k8s_json_patch - rename action symlink to ensure k8s action plugin is used (https://github.com/ansible-collections/kubernetes.core/pull/652).
+
+v3.0.1
+======
+
+Release Summary
+---------------
+
+This release fixes issue with resources discovery when complex subresources are present, and fixes issues with `reuse-values` parameter for helm module.
+
+Bugfixes
+--------
+
+- Resolve Collections util resource discovery fails when complex subresources present (https://github.com/ansible-collections/kubernetes.core/pull/676).
+- align `helmdiff_check()` function commandline rendering with the `deploy()` function (https://github.com/ansible-collections/kubernetes.core/pull/670).
+- helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
+- integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
 
 v3.0.0
 ======
