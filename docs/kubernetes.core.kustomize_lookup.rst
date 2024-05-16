@@ -140,7 +140,7 @@ Examples
     - name: Create kubernetes resources for lookup output
       kubernetes.core.k8s:
         definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization') }}"
-        
+
     - name: Create kubernetes resources for lookup output with `--enable-helm` set
       kubernetes.core.k8s:
         definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"

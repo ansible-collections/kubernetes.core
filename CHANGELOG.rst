@@ -4,6 +4,26 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v3.1.0
+======
+
+Release Summary
+---------------
+
+This release comes with some bugfixes and documentation updates. It also adds new features to the kubectl connection plugin and the kustomize lookup plugin.
+
+Minor Changes
+-------------
+
+- kubectl - added support of local enviroment variable that will be used for kubectl and may be requried for establishing connections ifself (https://github.com/ansible-collections/kubernetes.core/pull/702)
+- kustomize - new parameter added to --enable-helm (https://github.com/ansible-collections/kubernetes.core/issues/568)
+
+Bugfixes
+--------
+
+- helm - expand kubeconfig path with user's home directory for consistency with k8s
+- k8s_json_patch - rename action symlink to ensure k8s action plugin is used (https://github.com/ansible-collections/kubernetes.core/pull/652).
+
 v3.0.1
 ======
 

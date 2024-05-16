@@ -833,3 +833,24 @@ releases:
     - 20240228-fix-helm-diff-with-reuse-values.yml
     - 3.0.1.yml
     release_date: '2024-03-01'
+  3.1.0:
+    changes:
+      bugfixes:
+      - helm - expand kubeconfig path with user's home directory for consistency with
+        k8s
+      - k8s_json_patch - rename action symlink to ensure k8s action plugin is used
+        (https://github.com/ansible-collections/kubernetes.core/pull/652).
+      minor_changes:
+      - kubectl - added support of local enviroment variable that will be used for
+        kubectl and may be requried for establishing connections ifself (https://github.com/ansible-collections/kubernetes.core/pull/702)
+      - kustomize - new parameter added to --enable-helm (https://github.com/ansible-collections/kubernetes.core/issues/568)
+      release_summary: This release comes with some bugfixes and documentation updates.
+        It also adds new features to the kubectl connection plugin and the kustomize
+        lookup plugin.
+    fragments:
+    - 20240426-add-support-of-kubectl-local-env-vars-for-connection-plugin.yml
+    - 3.1.0.yml
+    - 592-kustomize-helm-support.yml
+    - 652-fix-json-patch-action.yml
+    - 654-helm-expand-user.yml
+    release_date: '2024-05-16'
