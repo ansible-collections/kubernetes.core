@@ -144,7 +144,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     resource = svc.find_resource(kind, api_version, fail=True)
     definition["kind"] = resource.kind
     definition["apiVersion"] = resource.group_version
-    existing = svc.retrieve(resource, definition)
+    existing, resource, definition = svc.retrieve_with_rewrite(resource, definition)
 
     if state == "absent":
         if exists(existing) and existing.kind.endswith("List"):

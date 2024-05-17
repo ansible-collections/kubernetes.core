@@ -161,6 +161,42 @@ class K8sService:
             msg = "Failed to patch object: {0}".format(reason)
             raise CoreException(msg) from e
 
+    def retrieve_with_rewrite(self, resource: Dict, definition: Dict) -> Tuple[ResourceInstance, Dict, Dict]:
+        if resource.group_version == "project.openshift.io/v1":
+            if resource.kind == "Project":
+                existing = self.retrieve(resource, definition)
+                if exists(existing):
+                    return existing, resource, definition
+                # Project does not exist, ProjectRequest is the relevant object
+                project_request_resource = self.find_resource("ProjectRequest", resource.group_version, fail=True)
+                # Placement of **definitions ensures existing fields (except for "kind") are not overwritten
+                project_request_definition = {
+                    "description": definition["metadata"].get("annotations", {}).get("openshift.io/description"),
+                    "displayName": definition["metadata"].get("annotations", {}).get("openshift.io/display-name"),
+                    **definition,
+                    "kind": "ProjectRequest",
+                }
+                return existing, project_request_resource, project_request_definition
+            if resource.kind == "ProjectRequest":
+                project_resource = self.find_resource("Project", resource.group_version, fail=True)
+                project_definition = {**definition,
+                    "kind": project_resource.kind,
+                    "metadata": {**definition["metadata"],
+                        "annotations": {
+                            "openshift.io/description": definition.get("description"),
+                            "openshift.io/display-name": definition.get("displayName"),
+                            **definition["metadata"].get("annotations", {}),
+                        }
+                    }
+                }
+                existing = self.retrieve(project_resource, project_definition)
+                if exists(existing):
+                    # Project exists, ProjectRequest is not relevant anymore
+                    return existing, project_resource, project_definition
+                return existing, resource, definition
+
+        return self.retrieve(resource, definition), resource, definition
+
     def retrieve(self, resource: Resource, definition: Dict) -> ResourceInstance:
         state = self.module.params.get("state", None)
         append_hash = self.module.params.get("append_hash", False)
@@ -193,14 +229,13 @@ class K8sService:
         except (NotFoundError, MethodNotAllowedError):
             pass
         except ForbiddenError as e:
-            if (
-                definition["kind"] in ["Project", "ProjectRequest"]
-                and state != "absent"
+            if not (
+                definition["apiVersion"] == "project.openshift.io/v1"
+                and definition["kind"] in ("Project", "ProjectRequest")
             ):
-                return self.create_project_request(definition)
-            reason = e.body if hasattr(e, "body") else e
-            msg = "Failed to retrieve requested object: {0}".format(reason)
-            raise CoreException(msg) from e
+                reason = e.body if hasattr(e, "body") else e
+                msg = "Failed to retrieve requested object: {0}".format(reason)
+                raise CoreException(msg) from e
         except Exception as e:
             reason = e.body if hasattr(e, "body") else e
             msg = "Failed to retrieve requested object: {0}".format(reason)
