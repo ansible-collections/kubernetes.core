@@ -1,0 +1,2 @@
+minor_changes:
+  - inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
