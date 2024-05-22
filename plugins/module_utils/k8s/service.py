@@ -145,12 +145,6 @@ class K8sService:
         namespace: str,
         merge_type: str = None,
     ) -> Tuple[Dict, List[str]]:
-        if merge_type == "json":
-            self.module.deprecate(
-                msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
-                version="4.0.0",
-                collection_name="kubernetes.core",
-            )
         try:
             params = dict(name=name, namespace=namespace, serialize=False)
             if merge_type:
