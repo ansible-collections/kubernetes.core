@@ -1,3 +1,0 @@
----
-minor_changes:
-  - k8s - The module and K8sService were changed so warnings returned by the K8S API are now displayed to the user.

@@ -854,3 +854,45 @@ releases:
     - 652-fix-json-patch-action.yml
     - 654-helm-expand-user.yml
     release_date: '2024-05-16'
+  4.0.0:
+    changes:
+      breaking_changes:
+      - kubernetes.core collection - Support for ansible-core < 2.15.0 has been dropped.
+      bugfixes:
+      - Resolve Collections util resource discovery fails when complex subresources
+        present (https://github.com/ansible-collections/kubernetes.core/pull/676).
+      - align `helmdiff_check()` function commandline rendering with the `deploy()`
+        function (https://github.com/ansible-collections/kubernetes.core/pull/670).
+      - avoid unsafe conditions in integration tests (https://github.com/ansible-collections/kubernetes.core/pull/665).
+      - helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
+      - integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability
+        with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
+      minor_changes:
+      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
+      - k8s - The module and K8sService were changed so warnings returned by the K8S
+        API are now displayed to the user.
+      release_summary: This major release brings several bug fixes. We have also removed
+        support for ``ansible-core<2.15``.
+      removed_features:
+      - k8s - Support for ``merge_type=json`` has been removed in version 4.0.0. Please
+        use ``kubernetes.core.k8s_json_patch`` instead (https://github.com/ansible-collections/kubernetes.core/pull/722).
+      - k8s_exec - the previously deprecated ``result.return_code`` return value has
+        been removed, consider using ``result.rc`` instead.
+      - module_utils/common.py - the previously deprecated ``K8sAnsibleMixin`` class
+        has been removed.
+      - module_utils/common.py - the previously deprecated ``configuration_digest()``
+        function has been removed.
+      - module_utils/common.py - the previously deprecated ``get_api_client()`` function
+        has been removed.
+      - module_utils/common.py - the previously deprecated ``unique_string()`` function
+        has been removed.
+    fragments:
+    - 20231206-fix-unsafe-condition-in-integration.yml
+    - 20240117-fix-helm-diff-cmd-line-rendering.yml
+    - 20240222-Collections-util-resource-discovery-fails-when-complex-subresources-present.yml
+    - 20240228-fix-helm-diff-with-reuse-values.yml
+    - 20240423-k8s-display-warnings-to-users.yml
+    - increase_ansible_core_version.yaml
+    - inventory-update_removal_date.yml
+    - k8s-merge_type-removed.yml
+    release_date: '2024-05-22'

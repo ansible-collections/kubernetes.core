@@ -124,19 +124,19 @@ EXAMPLES = r"""
 import json
 
 from ansible.errors import AnsibleError
-from ansible.plugins.inventory import BaseInventoryPlugin, Cacheable, Constructable
-from ansible_collections.kubernetes.core.plugins.module_utils.common import (
-    HAS_K8S_MODULE_HELPER,
-    k8s_import_exception,
-)
-from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
-    get_api_client,
-)
+from ansible.plugins.inventory import (BaseInventoryPlugin, Cacheable,
+                                       Constructable)
 
 try:
     from kubernetes.dynamic.exceptions import DynamicApiError
-except ImportError:
-    pass
+
+    HAS_K8S_MODULE_HELPER = True
+    k8s_import_exception = None
+except ImportError as e:
+    HAS_K8S_MODULE_HELPER = False
+    k8s_import_exception = e
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import \
+    get_api_client
 
 
 def format_dynamic_api_exc(exc):
