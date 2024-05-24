@@ -4,6 +4,39 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v4.0.0
+======
+
+Release Summary
+---------------
+
+This major release brings several bug fixes. We have also removed support for ``ansible-core<2.15`` and deprecated functions and class from ``module_utils/common.py``.
+
+Minor Changes
+-------------
+
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
+- k8s - The module and K8sService were changed so warnings returned by the K8S API are now displayed to the user.
+
+Removed Features (previously deprecated)
+----------------------------------------
+
+- k8s - Support for ``merge_type=json`` has been removed in version 4.0.0. Please use ``kubernetes.core.k8s_json_patch`` instead (https://github.com/ansible-collections/kubernetes.core/pull/722).
+- k8s_exec - the previously deprecated ``result.return_code`` return value has been removed, consider using ``result.rc`` instead (https://github.com/ansible-collections/kubernetes.core/pull/726).
+- module_utils/common.py - the previously deprecated ``K8sAnsibleMixin`` class has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
+- module_utils/common.py - the previously deprecated ``configuration_digest()`` function has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
+- module_utils/common.py - the previously deprecated ``get_api_client()`` function has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
+- module_utils/common.py - the previously deprecated ``unique_string()`` function has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
+
+Bugfixes
+--------
+
+- Resolve Collections util resource discovery fails when complex subresources present (https://github.com/ansible-collections/kubernetes.core/pull/676).
+- align `helmdiff_check()` function commandline rendering with the `deploy()` function (https://github.com/ansible-collections/kubernetes.core/pull/670).
+- avoid unsafe conditions in integration tests (https://github.com/ansible-collections/kubernetes.core/pull/665).
+- helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
+- integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
+
 v3.1.0
 ======
 
