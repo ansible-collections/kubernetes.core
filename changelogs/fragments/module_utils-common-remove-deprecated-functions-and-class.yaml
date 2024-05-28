@@ -1,6 +1,0 @@
-removed_features:
-  - k8s_exec - the previously deprecated ``result.return_code`` return value has been removed, consider using ``result.rc`` instead (https://github.com/ansible-collections/kubernetes.core/pull/726).
-  - module_utils/common.py - the previously deprecated ``K8sAnsibleMixin`` class has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
-  - module_utils/common.py - the previously deprecated ``configuration_digest()`` function has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
-  - module_utils/common.py - the previously deprecated ``get_api_client()`` function has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
-  - module_utils/common.py - the previously deprecated ``unique_string()`` function has been removed (https://github.com/ansible-collections/kubernetes.core/pull/726).
