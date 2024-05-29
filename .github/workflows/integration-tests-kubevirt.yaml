@@ -100,7 +100,7 @@ jobs:
 
       - name: Deploy kubevirt
         run: >-
-            ${{ env.kubevirt }}/hack/e2e-setup.sh \
+          ${{ env.kubevirt }}/hack/e2e-setup.sh \
             -v \
             --configure-inotify-limits \
             --configure-secondary-network \
