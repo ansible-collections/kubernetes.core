@@ -42,106 +42,84 @@ jobs:
         shell: bash
 
   integration:
+    if: ${{ needs.splitter.outputs.test_targets != '' }}
+    name: "integration-kubevirt-${{ matrix.test-target }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 60
     needs:
       - splitter
-    if: ${{ needs.splitter.outputs.test_targets != '' }}
     env:
-      source: "./source"
-      cloud_common: "./cloudcommon"
-      ansible_posix: "./ansible_posix"
+      kubernetes: "./kubernetes"
+      kubevirt: "./kubevirt"
+      ansible_version: milestone
+      python_version: 3.12
     strategy:
       fail-fast: false
       matrix:
-        ansible-version:
-          - milestone
-        python-version:
-          - "3.12"
-        enable-turbo-mode:
-          - true
-          - false
-        workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
-    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}"
+        test-target: ${{ fromJson(needs.splitter.outputs.test_targets) }}
     steps:
-      - name: Read target
-        id: read-targets
-        run: |
-          import json, os
-          with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
-              fh.write(f'ansible_test_targets={json.loads(os.environ.get("ALL_TEST_TARGETS")).get(os.environ.get("WORKFLOW_ID"))}\n')
-        shell: python
-        env:
-          ALL_TEST_TARGETS: ${{ needs.splitter.outputs.test_targets_json }}
-          WORKFLOW_ID: ${{ matrix.workflow-id }}
-
-      - name: Display ansible test targets
-        run: |
-          echo "ansible_test_targets -> ${{ steps.read-targets.outputs.ansible_test_targets }}"
-
       - name: Checkout kubernetes.core repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          path: ${{ env.source }}
+          path: ${{ env.kubernetes }}
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Checkout kubevirt.core repository
+        uses: actions/checkout@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          repository: kubevirt/kubevirt.core
+          path: ${{ env.kubevirt }}
+          ref: main
 
-      # install ansible
-      - name: Install ansible-core (${{ matrix.ansible-version }})
+      # Install ansible
+      - name: Install ansible-core (${{ env.ansible_version }})
         run: >-
           python3 -m pip install
-          https://github.com/ansible/ansible/archive/${{ matrix.ansible-version }}.tar.gz
+          https://github.com/ansible/ansible/archive/${{ env.ansible_version }}.tar.gz
           --disable-pip-version-check
         shell: bash
 
-      - name: Build and install collection
-        id: install-src
+      - name: Build and install kubevirt.core collection
+        id: install-kubevirt
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
-          source_path: ${{ env.source }}
+          source_path: ${{ env.kubevirt }}
 
-      - name: checkout ansible-collections/cloud.common
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
-        with:
-          repository: ansible-collections/cloud.common
-          path: ${{ env.cloud_common }}
-          ref: main
-
-      - name: checkout ansible-collections/ansible.posix
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
-        with:
-          repository: ansible-collections/ansible.posix
-          path: ${{ env.ansible_posix }}
-          ref: main
-
-      - name: install cloud.common collection
+      - name: Build and install kubernetes.core collection
+        id: install-kubernetes
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
-          source_path: ${{ env.cloud_common }}
+          source_path: ${{ env.kubernetes }}
 
-      - name: install ansible.posix collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+      - name: Install kind / kubectl
+        uses: helm/kind-action@v1.9.0
         with:
-          install_python_dependencies: true
-          source_path: ${{ env.ansible_posix }}
+          version: v0.22.0
+          install_only: true
 
-      - name: create kubernetes cluster
-        uses: helm/kind-action@v1.8.0
-        with:
-          node_image: "kindest/node:v1.29.2"
+      - name: Deploy kubevirt
+        run: >-
+            ${{ env.kubevirt }}/hack/e2e-setup.sh \
+            -v \
+            --configure-inotify-limits \
+            --configure-secondary-network \
+            --deploy-kubevirt \
+            --deploy-kubevirt-cdi \
+            --deploy-kubevirt-common-instancetypes \
+            --deploy-cnao \
+            --create-cluster \
+            --create-nad
+        env:
+          KIND: kind
+          KUBECTL: kubectl
 
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
         with:
-          collection_path: ${{ steps.install-src.outputs.collection_path }}
-          python_version: ${{ matrix.python-version }}
-          ansible_version: ${{ matrix.ansible-version }}
-          ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
-          ansible_test_environment: |
-            ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}
+          collection_path: ${{ steps.install-kubevirt.outputs.collection_path }}
+          python_version: ${{ env.python_version }}
+          ansible_version: ${{ env.ansible_version }}
+          ansible_test_targets: ${{ matrix.test-target }}
+        env:
+          ANSIBLE_COLLECTIONS_PATHS: /home/runner/collections
