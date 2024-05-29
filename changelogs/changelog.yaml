@@ -896,3 +896,11 @@ releases:
     - k8s-merge_type-removed.yml
     - module_utils-common-remove-deprecated-functions-and-class.yaml
     release_date: '2024-05-24'
+  4.0.1:
+    changes:
+      release_summary: This release updates collection documentation and meta/runtime.yml
+        files to reflect ansible-core version support (support for ``ansible-core<2.15.0``
+        has been dropped in release ``4.0.0``).
+    fragments:
+    - 4.0.1.yaml
+    release_date: '2024-05-29'

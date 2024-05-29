@@ -4,6 +4,14 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v4.0.1
+======
+
+Release Summary
+---------------
+
+This release updates collection documentation and meta/runtime.yml files to reflect ansible-core version support (support for ``ansible-core<2.15.0`` has been dropped in release ``4.0.0``).
+
 v4.0.0
 ======
 
