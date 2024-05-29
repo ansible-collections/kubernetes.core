@@ -12,18 +12,25 @@ on:
 jobs:
   splitter:
     env:
-      source_dir: "./source"
+      kubernetes: "./kubernetes"
+      kubevirt: "./kubevirt"
       py_version: 3.9
     runs-on: ubuntu-latest
     outputs:
       test_targets: ${{ steps.splitter.outputs.kubevirt_targets }}
     steps:
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.kubernetes }}
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Checkout the kubevirt.core collection
         uses: actions/checkout@v3
         with:
           repository: kubevirt/kubevirt.core
-          path: ${{ env.source_dir }}
-      
+          path: ${{ env.kubevirt }}
+
       - name: "Set up Python ${{ env.py_version }}"
         uses: actions/setup-python@v4
         with:
@@ -31,7 +38,7 @@ jobs:
 
       - name: List targets from kubevirt.core collection
         id: splitter
-        run: python tools/kubevirt_list_targets.py ${{ env.source_dir }}
+        run: python ${{ env.kubernetes }}/tools/kubevirt_list_targets.py ${{ env.kubevirt }}
         shell: bash
 
   integration:
