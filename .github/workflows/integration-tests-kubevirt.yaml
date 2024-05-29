@@ -13,7 +13,7 @@ jobs:
   splitter:
     env:
       source_dir: "./source"
-      py_version: 3.10
+      py_version: 3.9
     runs-on: ubuntu-latest
     outputs:
       test_targets: ${{ steps.splitter.outputs.kubevirt_targets }}
