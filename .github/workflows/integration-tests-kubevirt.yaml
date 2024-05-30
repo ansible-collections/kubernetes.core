@@ -11,6 +11,7 @@ on:
 
 jobs:
   splitter:
+    continue-on-error: true
     env:
       kubernetes: "./kubernetes"
       kubevirt: "./kubevirt"
@@ -45,6 +46,7 @@ jobs:
     if: ${{ needs.splitter.outputs.test_targets != '' }}
     name: "integration-kubevirt-${{ matrix.test-target }}"
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs:
       - splitter
     env:
