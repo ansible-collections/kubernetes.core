@@ -20,10 +20,10 @@ DOCUMENTATION = """
       - Uses k8s.(yml|yaml) YAML configuration file to set parameter values.
 
     deprecated:
-      removed_in: 5.0.0
+      removed_in: 6.0.0
       why: |
         As discussed in U(https://github.com/ansible-collections/kubernetes.core/issues/31), we decided to
-        remove the k8s inventory plugin in release 5.0.0.
+        remove the k8s inventory plugin in release 6.0.0.
       alternative: "Use M(kubernetes.core.k8s_info) and M(ansible.builtin.add_host) instead."
 
     options:
