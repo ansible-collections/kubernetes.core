@@ -164,8 +164,8 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         super(InventoryModule, self).parse(inventory, loader, path)
 
         self.display.deprecated(
-            "The 'k8s' inventory plugin has been deprecated and will be removed in release 5.0.0",
-            version="5.0.0",
+            "The 'k8s' inventory plugin has been deprecated and will be removed in release 6.0.0",
+            version="6.0.0",
             collection_name="kubernetes.core",
         )
         cache_key = self._get_cache_prefix(path)
