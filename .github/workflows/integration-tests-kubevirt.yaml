@@ -1,0 +1,127 @@
+name: Integration tests Kubevirt
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - main
+      - stable-*
+
+jobs:
+  splitter:
+    continue-on-error: true
+    env:
+      kubernetes: "./kubernetes"
+      kubevirt: "./kubevirt"
+      py_version: 3.9
+    runs-on: ubuntu-latest
+    outputs:
+      test_targets: ${{ steps.splitter.outputs.kubevirt_targets }}
+    steps:
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.kubernetes }}
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Checkout the kubevirt.core collection
+        uses: actions/checkout@v3
+        with:
+          repository: kubevirt/kubevirt.core
+          path: ${{ env.kubevirt }}
+
+      - name: "Set up Python ${{ env.py_version }}"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "${{ env.py_version }}"
+
+      - name: List targets from kubevirt.core collection
+        id: splitter
+        run: python ${{ env.kubernetes }}/tools/kubevirt_list_targets.py ${{ env.kubevirt }}
+        shell: bash
+
+  integration:
+    if: ${{ needs.splitter.outputs.test_targets != '' }}
+    name: "integration-kubevirt-${{ matrix.test-target }}"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs:
+      - splitter
+    env:
+      kubernetes: "./kubernetes"
+      kubevirt: "./kubevirt"
+      ansible_version: milestone
+      python_version: 3.12
+    strategy:
+      fail-fast: false
+      matrix:
+        test-target: ${{ fromJson(needs.splitter.outputs.test_targets) }}
+    steps:
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.kubernetes }}
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Checkout kubevirt.core repository
+        uses: actions/checkout@v4
+        with:
+          repository: kubevirt/kubevirt.core
+          path: ${{ env.kubevirt }}
+          ref: main
+
+      # Install ansible
+      - name: Install ansible-core (${{ env.ansible_version }})
+        run: >-
+          python3 -m pip install
+          https://github.com/ansible/ansible/archive/${{ env.ansible_version }}.tar.gz
+          --disable-pip-version-check
+        shell: bash
+
+      - name: Build and install kubevirt.core collection
+        id: install-kubevirt
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.kubevirt }}
+
+      - name: Build and install kubernetes.core collection
+        id: install-kubernetes
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.kubernetes }}
+
+      - name: Install kind / kubectl
+        uses: helm/kind-action@v1.9.0
+        with:
+          version: v0.22.0
+          install_only: true
+
+      - name: Deploy kubevirt
+        run: >-
+          ${{ env.kubevirt }}/hack/e2e-setup.sh \
+            -v \
+            --configure-inotify-limits \
+            --configure-secondary-network \
+            --deploy-kubevirt \
+            --deploy-kubevirt-cdi \
+            --deploy-kubevirt-common-instancetypes \
+            --deploy-cnao \
+            --create-cluster \
+            --create-nad
+        env:
+          KIND: kind
+          KUBECTL: kubectl
+
+      - name: Run integration tests
+        uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
+        with:
+          collection_path: ${{ steps.install-kubevirt.outputs.collection_path }}
+          python_version: ${{ env.python_version }}
+          ansible_version: ${{ env.ansible_version }}
+          ansible_test_targets: ${{ matrix.test-target }}
+        env:
+          ANSIBLE_COLLECTIONS_PATHS: /home/runner/collections
