@@ -371,7 +371,6 @@ Examples
 .. code-block:: yaml
 
     # Run a command in a pod using local kubectl with kubconfig file ~/.kube/config
-    ---
     - hots: localhost
       gather_facts: no
       connection: kubernetes.core.kubectl
@@ -401,7 +400,6 @@ Examples
     #       ansible_kubectl_pod: my-bar-pod
     #       ansible_kubectl_container: my-bar-container
     #       ansible_kubectl_namespace: my-bar-namespace
-    ---
     - hosts: k8s
       gather_facts: no
       tasks:
@@ -411,7 +409,6 @@ Examples
           command: echo "Hello, World!"
 
     # Complex example with dynamic inventory
-    ---
     - hosts: localhost
       gather_facts: no
       vars:
