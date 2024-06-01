@@ -181,6 +181,86 @@ DOCUMENTATION = r"""
         aliases: [ kubectl_verify_ssl ]
 """
 
+EXAMPLES = r"""
+
+# Run a command in a pod using local kubectl with kubconfig file ~/.kube/config
+---
+- hots: localhost
+  gather_facts: no
+  connection: kubernetes.core.kubectl
+  vars:
+    ansible_kubectl_namespace: my-namespace
+    ansible_kubectl_pod: my-pod
+    ansible_kubectl_container: my-container
+  tasks:
+    # be aware that the command is executed as the user that started the container
+    # and requrie python to be installed in the image
+    - name: Run a command in a pod
+      command: echo "Hello, World!"
+
+# Run a command in a pod using local kebectl with inventory variables
+# Example inventory:
+# k8s:
+#   hosts:
+#     foo.example.com:
+#       ansible_connection: kubernetes.core.kubectl
+#       ansible_kubectl_kubeconfig: /root/.kube/foo.example.com.config
+#       ansible_kubectl_pod: my-foo-pod
+#       ansible_kubectl_container: my-foo-container
+#       ansible_kubectl_namespace: my-foo-namespace
+#     bar.example.com:
+#       ansible_connection: kubernetes.core.kubectl
+#       ansible_kubectl_kubeconfig: /root/.kube/bar.example.com.config
+#       ansible_kubectl_pod: my-bar-pod
+#       ansible_kubectl_container: my-bar-container
+#       ansible_kubectl_namespace: my-bar-namespace
+---
+- hosts: k8s
+  gather_facts: no
+  tasks:
+    # be aware that the command is executed as the user that started the container
+    # and requrie python to be installed in the image
+    - name: Run a command in a pod
+      command: echo "Hello, World!"
+
+# Complex example with dynamic inventory
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    kubeconfig: /root/.kube/config
+    namespace: my-namespace
+    my_app: my-app
+  tasks:
+  - name: Get My App pod info based on label
+    kubernetes.core.k8s_info:
+      kubeconfig: "{{ kubeconfig }}"
+      namespace: "{{ namespace }}"
+      kind: Pod
+      label_selectors: app.kubernetes.io/name = "{{ my_app }}"
+    register: my_app_pod
+
+  # community.general.json_query is required, plesae install it
+  # with `ansible-galaxy collection install community.general`
+  - name: Get My App pod name
+    ansible.builtin.set_fact:
+      my_app_pod_name: "{{ my_app_pod | community.general.json_query('resources[0].metadata.name') }}"
+
+  - name: Add My App pod to inventory
+    ansible.builtin.add_host:
+      name: "{{ my_app_pod_name }}"
+      ansible_connection: kubernetes.core.kubectl
+      ansible_kubectl_kubeconfig: "{{ kubeconfig }}"
+      ansible_kubectl_pod: "{{ my_app_pod_name }}"
+      ansible_kubectl_namespace: "{{ namespace }}"
+
+  - name: Run a command in My App pod
+    # be aware that the command is executed as the user that started the container
+    # and requrie python to be installed in the image
+    command: echo "Hello, World!"
+    delegate_to: "{{ my_app_pod_name }}"
+"""
+
 import json
 import os
 import os.path
