@@ -232,33 +232,33 @@ EXAMPLES = r"""
     namespace: my-namespace
     my_app: my-app
   tasks:
-  - name: Get My App pod info based on label
-    kubernetes.core.k8s_info:
-      kubeconfig: "{{ kubeconfig }}"
-      namespace: "{{ namespace }}"
-      kind: Pod
-      label_selectors: app.kubernetes.io/name = "{{ my_app }}"
-    register: my_app_pod
+    - name: Get My App pod info based on label
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        namespace: "{{ namespace }}"
+        kind: Pod
+        label_selectors: app.kubernetes.io/name = "{{ my_app }}"
+      register: my_app_pod
 
-  # community.general.json_query is required, plesae install it
-  # with `ansible-galaxy collection install community.general`
-  - name: Get My App pod name
-    ansible.builtin.set_fact:
-      my_app_pod_name: "{{ my_app_pod | community.general.json_query('resources[0].metadata.name') }}"
+    # community.general.json_query is required, plesae install it
+    # with `ansible-galaxy collection install community.general`
+    - name: Get My App pod name
+      ansible.builtin.set_fact:
+        my_app_pod_name: "{{ my_app_pod | community.general.json_query('resources[0].metadata.name') }}"
 
-  - name: Add My App pod to inventory
-    ansible.builtin.add_host:
-      name: "{{ my_app_pod_name }}"
-      ansible_connection: kubernetes.core.kubectl
-      ansible_kubectl_kubeconfig: "{{ kubeconfig }}"
-      ansible_kubectl_pod: "{{ my_app_pod_name }}"
-      ansible_kubectl_namespace: "{{ namespace }}"
+    - name: Add My App pod to inventory
+      ansible.builtin.add_host:
+        name: "{{ my_app_pod_name }}"
+        ansible_connection: kubernetes.core.kubectl
+        ansible_kubectl_kubeconfig: "{{ kubeconfig }}"
+        ansible_kubectl_pod: "{{ my_app_pod_name }}"
+        ansible_kubectl_namespace: "{{ namespace }}"
 
-  - name: Run a command in My App pod
-    # be aware that the command is executed as the user that started the container
-    # and requrie python to be installed in the image
-    command: echo "Hello, World!"
-    delegate_to: "{{ my_app_pod_name }}"
+    - name: Run a command in My App pod
+      # be aware that the command is executed as the user that started the container
+      # and requrie python to be installed in the image
+      command: echo "Hello, World!"
+      delegate_to: "{{ my_app_pod_name }}"
 """
 
 import json
