@@ -385,21 +385,21 @@ Examples
           ansible.builtin.command: echo "Hello, World!"
 
     - name: Run a command in a pod using local kebectl with inventory variables
-    # Example inventory:
-    # k8s:
-    #   hosts:
-    #     foo.example.com:
-    #       ansible_connection: kubernetes.core.kubectl
-    #       ansible_kubectl_kubeconfig: /root/.kube/foo.example.com.config
-    #       ansible_kubectl_pod: my-foo-pod
-    #       ansible_kubectl_container: my-foo-container
-    #       ansible_kubectl_namespace: my-foo-namespace
-    #     bar.example.com:
-    #       ansible_connection: kubernetes.core.kubectl
-    #       ansible_kubectl_kubeconfig: /root/.kube/bar.example.com.config
-    #       ansible_kubectl_pod: my-bar-pod
-    #       ansible_kubectl_container: my-bar-container
-    #       ansible_kubectl_namespace: my-bar-namespace
+      # Example inventory:
+      # k8s:
+      #   hosts:
+      #     foo.example.com:
+      #       ansible_connection: kubernetes.core.kubectl
+      #       ansible_kubectl_kubeconfig: /root/.kube/foo.example.com.config
+      #       ansible_kubectl_pod: my-foo-pod
+      #       ansible_kubectl_container: my-foo-container
+      #       ansible_kubectl_namespace: my-foo-namespace
+      #     bar.example.com:
+      #       ansible_connection: kubernetes.core.kubectl
+      #       ansible_kubectl_kubeconfig: /root/.kube/bar.example.com.config
+      #       ansible_kubectl_pod: my-bar-pod
+      #       ansible_kubectl_container: my-bar-container
+      #       ansible_kubectl_namespace: my-bar-namespace
       hosts: k8s
       gather_facts: no
       tasks:
