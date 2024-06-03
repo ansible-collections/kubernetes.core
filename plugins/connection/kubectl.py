@@ -183,8 +183,8 @@ DOCUMENTATION = r"""
 
 EXAMPLES = r"""
 
-# Run a command in a pod using local kubectl with kubconfig file ~/.kube/config
-- hots: localhost
+- name: Run a command in a pod using local kubectl with kubeconfig file ~/.kube/config
+  hots: localhost
   gather_facts: no
   connection: kubernetes.core.kubectl
   vars:
@@ -195,9 +195,9 @@ EXAMPLES = r"""
     # be aware that the command is executed as the user that started the container
     # and requrie python to be installed in the image
     - name: Run a command in a pod
-      command: echo "Hello, World!"
+      ansible.builtin.command: echo "Hello, World!"
 
-# Run a command in a pod using local kebectl with inventory variables
+- name: Run a command in a pod using local kebectl with inventory variables
 # Example inventory:
 # k8s:
 #   hosts:
@@ -213,16 +213,16 @@ EXAMPLES = r"""
 #       ansible_kubectl_pod: my-bar-pod
 #       ansible_kubectl_container: my-bar-container
 #       ansible_kubectl_namespace: my-bar-namespace
-- hosts: k8s
+  hosts: k8s
   gather_facts: no
   tasks:
     # be aware that the command is executed as the user that started the container
     # and requrie python to be installed in the image
     - name: Run a command in a pod
-      command: echo "Hello, World!"
+      ansible.builtin.command: echo "Hello, World!"
 
-# Complex example with dynamic inventory
-- hosts: localhost
+- name: Run a command in a pod using dynamic inventory
+  hosts: localhost
   gather_facts: no
   vars:
     kubeconfig: /root/.kube/config
@@ -254,7 +254,7 @@ EXAMPLES = r"""
     - name: Run a command in My App pod
       # be aware that the command is executed as the user that started the container
       # and requrie python to be installed in the image
-      command: echo "Hello, World!"
+      ansible.builtin.command: echo "Hello, World!"
       delegate_to: "{{ my_app_pod_name }}"
 """
 
