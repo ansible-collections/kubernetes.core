@@ -186,8 +186,8 @@ EXAMPLES = r"""
 - name: Run a command in a pod using local kubectl with kubeconfig file ~/.kube/config
   hots: localhost
   gather_facts: no
-  connection: kubernetes.core.kubectl
   vars:
+    ansible_connection: kubernetes.core.kubectl
     ansible_kubectl_namespace: my-namespace
     ansible_kubectl_pod: my-pod
     ansible_kubectl_container: my-container
@@ -237,11 +237,9 @@ EXAMPLES = r"""
         label_selectors: app.kubernetes.io/name = "{{ my_app }}"
       register: my_app_pod
 
-    # community.general.json_query is required, please install it
-    # with `ansible-galaxy collection install community.general`
     - name: Get My App pod name
       ansible.builtin.set_fact:
-        my_app_pod_name: "{{ my_app_pod | community.general.json_query('resources[0].metadata.name') }}"
+        my_app_pod_name: "{{ my_app_pod.resources[0].metadata.name') }}"
 
     - name: Add My App pod to inventory
       ansible.builtin.add_host:
