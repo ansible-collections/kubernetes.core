@@ -193,11 +193,11 @@ EXAMPLES = r"""
     ansible_kubectl_container: my-container
   tasks:
     # be aware that the command is executed as the user that started the container
-    # and requrie python to be installed in the image
+    # and requires python to be installed in the image
     - name: Run a command in a pod
       ansible.builtin.command: echo "Hello, World!"
 
-- name: Run a command in a pod using local kebectl with inventory variables
+- name: Run a command in a pod using local kubectl with inventory variables
   # Example inventory:
   # k8s:
   #   hosts:
@@ -217,7 +217,7 @@ EXAMPLES = r"""
   gather_facts: no
   tasks:
     # be aware that the command is executed as the user that started the container
-    # and requrie python to be installed in the image
+    # and requires python to be installed in the image
     - name: Run a command in a pod
       ansible.builtin.command: echo "Hello, World!"
 
@@ -237,7 +237,7 @@ EXAMPLES = r"""
         label_selectors: app.kubernetes.io/name = "{{ my_app }}"
       register: my_app_pod
 
-    # community.general.json_query is required, plesae install it
+    # community.general.json_query is required, please install it
     # with `ansible-galaxy collection install community.general`
     - name: Get My App pod name
       ansible.builtin.set_fact:
@@ -253,7 +253,7 @@ EXAMPLES = r"""
 
     - name: Run a command in My App pod
       # be aware that the command is executed as the user that started the container
-      # and requrie python to be installed in the image
+      # and requires python to be installed in the image
       ansible.builtin.command: echo "Hello, World!"
       delegate_to: "{{ my_app_pod_name }}"
 """
