@@ -195,7 +195,7 @@ EXAMPLES = r"""
     # be aware that the command is executed as the user that started the container
     # and requires python to be installed in the image
     - name: Run a command in a pod
-      ansible.builtin.command: /run/some/script.sh
+      ansible.builtin.command: echo "Hello, World!"
 
 - name: Run a command in a pod using local kubectl with inventory variables
   # Example inventory:
@@ -219,7 +219,7 @@ EXAMPLES = r"""
     # be aware that the command is executed as the user that started the container
     # and requires python to be installed in the image
     - name: Run a command in a pod
-      ansible.builtin.command: /run/some/script.sh
+      ansible.builtin.command: echo "Hello, World!"
 
 - name: Run a command in a pod using dynamic inventory
   hosts: localhost
@@ -252,7 +252,7 @@ EXAMPLES = r"""
     - name: Run a command in My App pod
       # be aware that the command is executed as the user that started the container
       # and requires python to be installed in the image
-      ansible.builtin.command: /run/some/script.sh
+      ansible.builtin.command: echo "Hello, World!"
       delegate_to: "{{ my_app_pod_name }}"
 """
 
