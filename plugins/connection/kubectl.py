@@ -239,7 +239,7 @@ EXAMPLES = r"""
 
     - name: Get My App pod name
       ansible.builtin.set_fact:
-        my_app_pod_name: "{{ my_app_pod.resources[0].metadata.name') }}"
+        my_app_pod_name: "{{ my_app_pod.resources[0].metadata.name }}"
 
     - name: Add My App pod to inventory
       ansible.builtin.add_host:
