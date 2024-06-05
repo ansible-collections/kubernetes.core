@@ -382,8 +382,7 @@ Examples
         # be aware that the command is executed as the user that started the container
         # and requires python to be installed in the image
         - name: Run a command in a pod
-          ansible.builtin.command: echo "Hello, World!"
-          changed_when: false
+          ansible.builtin.command: /run/some/script.sh
 
     - name: Run a command in a pod using local kubectl with inventory variables
       # Example inventory:
@@ -407,8 +406,7 @@ Examples
         # be aware that the command is executed as the user that started the container
         # and requires python to be installed in the image
         - name: Run a command in a pod
-          ansible.builtin.command: echo "Hello, World!"
-          changed_when: false
+          ansible.builtin.command: /run/some/script.sh
 
     - name: Run a command in a pod using dynamic inventory
       hosts: localhost
@@ -441,9 +439,8 @@ Examples
         - name: Run a command in My App pod
           # be aware that the command is executed as the user that started the container
           # and requires python to be installed in the image
-          ansible.builtin.command: echo "Hello, World!"
+          ansible.builtin.command: /run/some/script.sh
           delegate_to: "{{ my_app_pod_name }}"
-          changed_when: false
 
 
 
