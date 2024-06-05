@@ -371,7 +371,7 @@ Examples
 .. code-block:: yaml
 
     - name: Run a command in a pod using local kubectl with kubeconfig file ~/.kube/config
-      hots: localhost
+      hosts: localhost
       gather_facts: no
       vars:
         ansible_connection: kubernetes.core.kubectl
