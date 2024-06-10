@@ -4,6 +4,24 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v5.0.0
+======
+
+Release Summary
+---------------
+
+This major release drops support for ``ansible-core<2.15``.
+
+Minor Changes
+-------------
+
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- Remove support for ``ansible-core<2.15`` (https://github.com/ansible-collections/kubernetes.core/pull/737).
+
 v4.0.0
 ======
 

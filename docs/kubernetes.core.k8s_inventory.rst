@@ -17,7 +17,7 @@ DEPRECATED
 ----------
 :Removed in collection release after 
 :Why: As discussed in https://github.com/ansible-collections/kubernetes.core/issues/31, we decided to
-remove the k8s inventory plugin in release 5.0.0.
+remove the k8s inventory plugin in release 6.0.0.
 
 :Alternative: Use :ref:`kubernetes.core.k8s_info <kubernetes.core.k8s_info_module>` and :ref:`ansible.builtin.add_host <ansible.builtin.add_host_module>` instead.
 
@@ -357,7 +357,7 @@ Status
 ------
 
 
-- This inventory will be removed in version 5.0.0. *[deprecated]*
+- This inventory will be removed in version 6.0.0. *[deprecated]*
 - For more information see `DEPRECATED`_.
 
 

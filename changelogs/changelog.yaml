@@ -896,3 +896,16 @@ releases:
     - k8s-merge_type-removed.yml
     - module_utils-common-remove-deprecated-functions-and-class.yaml
     release_date: '2024-05-24'
+  5.0.0:
+    changes:
+      breaking_changes:
+      - Remove support for ``ansible-core<2.15`` (https://github.com/ansible-collections/kubernetes.core/pull/737).
+      minor_changes:
+      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0
+        (https://github.com/ansible-collections/kubernetes.core/pull/734).
+      release_summary: This major release drops support for ``ansible-core<2.15``.
+    fragments:
+    - 20240530-ansible-core-support-update.yaml
+    - 20240530-defer-removal-and-ansible-core-support-update.yaml
+    - 5.0.0.yml
+    release_date: '2024-05-31'
