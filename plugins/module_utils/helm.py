@@ -184,10 +184,10 @@ class AnsibleHelmModule(object):
     def get_helm_version(self):
         command = self.get_helm_binary() + " version"
         rc, out, err = self.run_command(command)
-        m = re.match(r'version.BuildInfo{Version:"v([0-9\.]*)",', out)
+        m = re.match(r'version.BuildInfo{Version:"v([^"]*)",', out)
         if m:
             return m.group(1)
-        m = re.match(r'Client: &version.Version{SemVer:"v([0-9\.]*)", ', out)
+        m = re.match(r'Client: &version.Version{SemVer:"v([^"]*)", ', out)
         if m:
             return m.group(1)
         return None
