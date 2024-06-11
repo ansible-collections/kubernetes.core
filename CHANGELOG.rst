@@ -4,6 +4,19 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v3.2.0
+======
+
+Release Summary
+---------------
+This release comes with documentation updates.
+
+Minor Changes
+-------------
+
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
+- connection/kubectl.py - Added an example of using the kubectl connection plugin to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
+
 v3.1.0
 ======
 
