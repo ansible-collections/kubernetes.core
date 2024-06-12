@@ -1,2 +1,0 @@
-removed_features:
-  - k8s - Support for ``merge_type=json`` has been removed in version 4.0.0. Please use ``kubernetes.core.k8s_json_patch`` instead (https://github.com/ansible-collections/kubernetes.core/pull/722).

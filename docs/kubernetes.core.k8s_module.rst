@@ -121,7 +121,7 @@ Parameters
                 <td>
                         <div><code>apply</code> compares the desired resource definition with the previously supplied resource definition, ignoring properties that are automatically generated</div>
                         <div><code>apply</code> works better with Services than &#x27;force=yes&#x27;</div>
-                        <div>mutually exclusive with <code>merge_type</code></div>
+                        <div>Mutually exclusive with <code>merge_type</code>.</div>
                 </td>
             </tr>
             <tr>
@@ -513,18 +513,17 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>json</li>
                                     <li>merge</li>
                                     <li>strategic-merge</li>
                         </ul>
                 </td>
                 <td>
                         <div>Whether to override the default patch merge approach with a specific type. By default, the strategic merge will typically be used.</div>
-                        <div>For example, Custom Resource Definitions typically aren&#x27;t updatable by the usual strategic merge. You may want to use <code>merge</code> if you see &quot;strategic merge patch format is not supported&quot;</div>
+                        <div>For example, Custom Resource Definitions typically aren&#x27;t updatable by the usual strategic merge. You may want to use <code>merge</code> if you see &quot;strategic merge patch format is not supported&quot;.</div>
                         <div>See <a href='https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment'>https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment</a></div>
                         <div>If more than one <code>merge_type</code> is given, the merge_types will be tried in order. This defaults to <code>[&#x27;strategic-merge&#x27;, &#x27;merge&#x27;]</code>, which is ideal for using the same parameters on resource kinds that combine Custom Resources and built-in resources.</div>
-                        <div>mutually exclusive with <code>apply</code></div>
-                        <div><em>merge_type=json</em> is deprecated and will be removed in version 4.0.0. Please use <span class='module'>kubernetes.core.k8s_json_patch</span> instead.</div>
+                        <div>Mutually exclusive with <code>apply</code>.</div>
+                        <div><em>merge_type=json</em> has been removed in version 4.0.0. Please use <span class='module'>kubernetes.core.k8s_json_patch</span> instead.</div>
                 </td>
             </tr>
             <tr>
