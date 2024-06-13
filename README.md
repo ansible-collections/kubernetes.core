@@ -1,6 +1,6 @@
 # Kubernetes Collection for Ansible
 
-[![CI](https://github.com/ansible-collections/kubernetes.core/workflows/CI/badge.svg?event=push)](https://github.com/ansible-collections/kubernetes.core/actions) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://codecov.io/gh/ansible-collections/kubernetes.core)
+[![Linters](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/linters.yaml?label=linters)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/linters.yaml) [![Integration tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/integration-tests.yaml?label=integration%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/integration-tests.yaml) [![Sanity tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/sanity-tests.yaml?label=sanity%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/sanity-tests.yaml) [![Unit tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/unit-tests.yaml?label=unit%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/unit-tests.yaml) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://app.codecov.io/gh/ansible-collections/kubernetes.core)
 
 This repository hosts the `kubernetes.core` (formerly known as `community.kubernetes`) Ansible Collection.
 
