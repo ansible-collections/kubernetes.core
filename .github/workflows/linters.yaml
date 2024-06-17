@@ -14,11 +14,4 @@ on:
 
 jobs:
   linters:
-    uses: ansible-network/github_actions/.github/workflows/tox-linters.yml@main
-  ansible-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run ansible-lint
-        uses: ansible/ansible-lint@v24.2.3
+    uses: ansible/ansible-content-actions/.github/workflows/ansible_lint.yaml@main

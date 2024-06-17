@@ -10,5 +10,5 @@ on:
       - stable-*
 
 jobs:
-  unit-source:
-    uses: ansible-network/github_actions/.github/workflows/unit_source.yml@main
+  unit-test:
+    uses: ansible/ansible-content-actions/.github/workflows/unit.yaml@main
