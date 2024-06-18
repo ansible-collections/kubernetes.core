@@ -1,2 +1,0 @@
-minor_changes:
-  - README.md - fixed badges in README.md (https://github.com/ansible-collections/kubernetes.core/pull/749)
