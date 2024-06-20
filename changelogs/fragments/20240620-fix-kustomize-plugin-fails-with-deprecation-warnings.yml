@@ -1,0 +1,2 @@
+bugfixes:
+  - kustomize - kustomize plugin fails with deprecation warnings (https://github.com/ansible-collections/kubernetes.core/issues/639).
