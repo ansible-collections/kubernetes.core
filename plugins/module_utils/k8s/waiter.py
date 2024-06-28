@@ -51,7 +51,7 @@ def daemonset_ready(daemonset: ResourceInstance) -> bool:
     return bool(
         daemonset.status
         and daemonset.status.desiredNumberScheduled is not None
-        and daemonset.status.updatedNumberScheduled
+        and (daemonset.status.updatedNumberScheduled or 0)
         == daemonset.status.desiredNumberScheduled
         and daemonset.status.numberReady == daemonset.status.desiredNumberScheduled
         and daemonset.status.observedGeneration == daemonset.metadata.generation
