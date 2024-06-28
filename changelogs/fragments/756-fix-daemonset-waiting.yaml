@@ -1,0 +1,2 @@
+bugfixes:
+  - waiter - Fix waiting for daemonset when desired number of pods is 0. (https://github.com/ansible-collections/kubernetes.core/pull/756).
