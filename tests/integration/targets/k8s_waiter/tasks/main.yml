@@ -127,6 +127,48 @@
           - ds.result.status.currentNumberScheduled == ds.result.status.desiredNumberScheduled
           - updated_ds_pods.resources[0].spec.containers[0].image.endswith(":3")
 
+    - name: Create daemonset with nodeSelector and not existing label
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: wait-daemonset-not-existing-label
+            namespace: "{{ wait_namespace }}"
+          spec:
+            selector:
+              matchLabels:
+                app: "{{ k8s_pod_name }}"
+            template: "{{ k8s_pod_template }}"
+        wait: yes
+        wait_sleep: 5
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+      vars:
+        k8s_pod_name: wait-daemonset-not-existing-label
+        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_command:
+          - sleep
+          - "600"
+        k8s_pod_node_selector:
+          nonExisitingLabel: test-not-exiting-label
+      register: ds_not_existing_label
+
+    - name: Get updated pods
+      k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: "{{ wait_namespace }}"
+        label_selectors:
+          - app=wait-daemonset-not-existing-label
+      register: updated_ds_pods_not_existing_label
+
+    - name: Check that daemonset wait worked (when desired number is 0)
+      assert:
+        that:
+          - ds_not_existing_label.result.status.currentNumberScheduled == ds_not_existing_label.result.status.desiredNumberScheduled
+          - ds_not_existing_label.result.status.desiredNumberScheduled == 0
+          - updated_ds_pods_not_existing_label.resources | length == 0
+
     - name: Add a statefulset
       k8s:
         definition:
