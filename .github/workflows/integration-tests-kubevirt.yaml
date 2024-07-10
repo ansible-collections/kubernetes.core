@@ -72,14 +72,6 @@ jobs:
           path: ${{ env.kubevirt }}
           ref: main
 
-      # Install ansible
-      - name: Install ansible-core (${{ env.ansible_version }})
-        run: >-
-          python3 -m pip install
-          https://github.com/ansible/ansible/archive/${{ env.ansible_version }}.tar.gz
-          --disable-pip-version-check
-        shell: bash
-
       - name: Build and install kubevirt.core collection
         id: install-kubevirt
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
