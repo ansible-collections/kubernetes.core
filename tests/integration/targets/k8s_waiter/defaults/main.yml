@@ -5,6 +5,7 @@ k8s_pod_metadata:
 
 k8s_pod_spec:
   serviceAccount: "{{ k8s_pod_service_account }}"
+  nodeSelector: "{{ k8s_pod_node_selector }}"
   containers:
     - image: "{{ k8s_pod_image }}"
       imagePullPolicy: Always
@@ -32,6 +33,8 @@ k8s_pod_command: []
 k8s_pod_ports: []
 
 k8s_pod_env: []
+
+k8s_pod_node_selector: {}
 
 k8s_pod_template:
   metadata: "{{ k8s_pod_metadata }}"
