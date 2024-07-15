@@ -145,10 +145,14 @@ class LookupModule(LookupBase):
         if ret != 0:
             if err:
                 raise AnsibleLookupError(
-                    "kustomize command failed. exit code: {0}, error: {1}".format(ret, err.decode("utf-8"))
+                    "kustomize command failed. exit code: {0}, error: {1}".format(
+                        ret, err.decode("utf-8")
+                    )
                 )
             else:
                 raise AnsibleLookupError(
-                    "kustomize command failed with unknown error. exit code: {0}".format(ret)
+                    "kustomize command failed with unknown error. exit code: {0}".format(
+                        ret
+                    )
                 )
         return [out.decode("utf-8")]
