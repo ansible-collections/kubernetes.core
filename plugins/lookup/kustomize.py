@@ -94,7 +94,8 @@ def get_binary_from_path(name, opt_dirs=None):
 
 def run_command(command):
     cmd = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return cmd.communicate()
+    stdout, stderr = cmd.communicate()
+    return cmd.returncode, stdout, stderr
 
 
 class LookupModule(LookupBase):
@@ -140,9 +141,18 @@ class LookupModule(LookupBase):
         if enable_helm:
             command += ["--enable-helm"]
 
-        (out, err) = run_command(command)
-        if err:
-            raise AnsibleLookupError(
-                "kustomize command failed with: {0}".format(err.decode("utf-8"))
-            )
+        (ret, out, err) = run_command(command)
+        if ret != 0:
+            if err:
+                raise AnsibleLookupError(
+                    "kustomize command failed. exit code: {0}, error: {1}".format(
+                        ret, err.decode("utf-8")
+                    )
+                )
+            else:
+                raise AnsibleLookupError(
+                    "kustomize command failed with unknown error. exit code: {0}".format(
+                        ret
+                    )
+                )
         return [out.decode("utf-8")]
