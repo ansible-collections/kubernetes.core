@@ -6,8 +6,6 @@ This repository hosts the `kubernetes.core` (formerly known as `community.kubern
 
 The collection includes a variety of Ansible content to help automate the management of applications in Kubernetes and OpenShift clusters, as well as the provisioning and maintenance of clusters themselves.
 
-[![Linters](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/linters.yaml?label=linters)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/linters.yaml) [![Integration tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/integration-tests.yaml?label=integration%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/integration-tests.yaml) [![Sanity tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/sanity-tests.yaml?label=sanity%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/sanity-tests.yaml) [![Unit tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/unit-tests.yaml?label=unit%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/unit-tests.yaml) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://app.codecov.io/gh/ansible-collections/kubernetes.core)
-
 ## Requirements
 
 <!--start requires_ansible-->
