@@ -48,7 +48,7 @@ Where modules have multiple parameters we recommend running through the 4-step m
 
 For general information on running the integration tests see the
 [Integration Tests page of the Module Development Guide](https://docs.ansible.com/ansible/devel/dev_guide/testing_integration.html#testing-integration),
-especially the section on configuration for cloud tests. For questions about writing tests the Ansible Kubernetes community can be found on Libera.Chat IRC as detailed below.
+especially the section on configuration for cloud tests.
 
 ### Updating documentation
 
@@ -70,11 +70,3 @@ Review the changes and create a pull request using updated files.
 The `kubernetes.core` collection follows the Ansible project's
 [Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html).
 Please read and familiarize yourself with this document.
-
-### IRC
-Our IRC channels may require you to register your nickname. If you receive an error when you connect, see
-[Libera.Chat's Nickname Registration guide](https://libera.chat/guides/registration) for instructions.
-
-The `#ansible-kubernetes` channel on [libera.chat](https://libera.chat/) IRC is the main and official place to discuss use and development of the `kubernetes.core` collection.
-
-For more information about Ansible's Kubernetes integration, browse the resources in the [Kubernetes Working Group](https://github.com/ansible/community/wiki/Kubernetes) Community wiki page.
