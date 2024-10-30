@@ -107,7 +107,9 @@ def get_binary_from_path(name, opt_dirs=None):
 
 
 def run_command(command, environ=None):
-    cmd = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environ)
+    cmd = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environ
+    )
     stdout, stderr = cmd.communicate()
     return cmd.returncode, stdout, stderr
 
