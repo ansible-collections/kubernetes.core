@@ -155,7 +155,7 @@ class LookupModule(LookupBase):
         if enable_helm:
             command += ["--enable-helm"]
 
-        envrion = os.environ.copy()
+        environ = os.environ.copy()
 
         if enviroment:
             if isinstance(enviroment, str):
@@ -165,10 +165,10 @@ class LookupModule(LookupBase):
                     )
                 for env in enviroment.split(" "):
                     key, value = env.split("=")
-                    envrion[key] = value
+                    environ[key] = value
             if isinstance(enviroment, dict):
                 for key, value in enviroment.items():
-                    envrion[key] = value
+                    environ[key] = value
 
         (ret, out, err) = run_command(command, environ=environ)
         if ret != 0:
