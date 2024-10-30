@@ -155,7 +155,7 @@ class LookupModule(LookupBase):
 
         if enable_helm:
             command += ["--enable-helm"]
-        
+
         if use_local_env:
             environ = dict(os.environ)
 
