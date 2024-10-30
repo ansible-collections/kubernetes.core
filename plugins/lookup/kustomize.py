@@ -120,7 +120,7 @@ class LookupModule(LookupBase):
         binary_path=None,
         opt_dirs=None,
         enable_helm=False,
-        enviroment={},
+        enviroment=None,
         **kwargs
     ):
         executable_path = binary_path
@@ -159,7 +159,7 @@ class LookupModule(LookupBase):
 
         if enviroment:
             if isinstance(enviroment, str):
-                if not all([env.count("=") == 1 for env in enviroment.split(" ")]):
+                if not all(env.count("=") == 1 for env in enviroment.split(" ")):
                     raise AnsibleLookupError(
                         "Enviroment should be dict or string in the format key=value"
                     )
