@@ -98,6 +98,25 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enviroment</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 3.3.0</div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">{}</div>
+                </td>
+                    <td>
+                    </td>
+                <td>
+                        <div>The environment variables to pass to the kustomize or kubectl command.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>opt_dirs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -110,29 +129,6 @@ Parameters
                     </td>
                 <td>
                         <div>An optional list of directories to search for the executable in addition to PATH.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>use_local_env</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">boolean</span>
-                    </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 3.3.0</div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
-                                    <li>yes</li>
-                        </ul>
-                        <b>Default:</b><br/><div style="color: blue">"False"</div>
-                </td>
-                    <td>
-                    </td>
-                <td>
-                        <div>Use the local environment varaible for the command execution</div>
                 </td>
             </tr>
     </table>
@@ -168,12 +164,9 @@ Examples
       kubernetes.core.k8s:
         definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
 
-    - name: Create kubernetes resources for lookup output considering the local environment variables
-      environment:
-        CI: true
-        HTTP_PROXY: http://proxy.example.com:8080
+    - name: Create kubernetes resources for lookup output with environment variables
       kubernetes.core.k8s:
-        definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', use_local_env=True) }}"
+        definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', enviroment='HTTP_PROXY=http://proxy.example.com:3128') }}"
 
 
 

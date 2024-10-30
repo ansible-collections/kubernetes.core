@@ -34,11 +34,11 @@ DOCUMENTATION = """
         description:
         - Enable the helm chart inflation generator
         default: "False"
-      use_local_env:
+      enviroment:
         description:
-        - Use the local environment varaible for the command execution
-        default: "False"
-        type: bool
+        - The environment variables to pass to the kustomize or kubectl command.
+        type: dict
+        default: {}
         version_added: 3.3.0
 
     requirements:
@@ -62,12 +62,9 @@ EXAMPLES = """
   kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
 
-- name: Create kubernetes resources for lookup output considering the local environment variables
-  environment:
-    CI: true
-    HTTP_PROXY: http://proxy.example.com:8080
+- name: Create kubernetes resources for lookup output with environment variables
   kubernetes.core.k8s:
-    definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', use_local_env=True) }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', enviroment='HTTP_PROXY=http://proxy.example.com:3128') }}"
 """
 
 RETURN = """
@@ -158,10 +155,20 @@ class LookupModule(LookupBase):
         if enable_helm:
             command += ["--enable-helm"]
 
-        if use_local_env:
-            environ = dict(os.environ)
-        else:
-            environ = None
+        evrion = os.environ.copy()
+
+        if enviroment:
+            if isinstance(enviroment, str):
+                if not all([env.count("=") == 1 for env in enviroment.split(" ")]):
+                    raise AnsibleLookupError(
+                        "Enviroment should be dict or string in the format key=value"
+                    )
+                for env in enviroment.split(" "):
+                    key, value = env.split("=")
+                    evrion[key] = value
+            if isinstance(enviroment, dict):
+                for key, value in enviroment.items():
+                    evrion[key] = value
 
         (ret, out, err) = run_command(command, environ=environ)
         if ret != 0:
