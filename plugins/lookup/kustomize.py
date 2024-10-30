@@ -120,7 +120,7 @@ class LookupModule(LookupBase):
         binary_path=None,
         opt_dirs=None,
         enable_helm=False,
-        use_local_env=False,
+        enviroment={},
         **kwargs
     ):
         executable_path = binary_path
@@ -155,7 +155,7 @@ class LookupModule(LookupBase):
         if enable_helm:
             command += ["--enable-helm"]
 
-        evrion = os.environ.copy()
+        envrion = os.environ.copy()
 
         if enviroment:
             if isinstance(enviroment, str):
@@ -165,10 +165,10 @@ class LookupModule(LookupBase):
                     )
                 for env in enviroment.split(" "):
                     key, value = env.split("=")
-                    evrion[key] = value
+                    envrion[key] = value
             if isinstance(enviroment, dict):
                 for key, value in enviroment.items():
-                    evrion[key] = value
+                    envrion[key] = value
 
         (ret, out, err) = run_command(command, environ=environ)
         if ret != 0:
