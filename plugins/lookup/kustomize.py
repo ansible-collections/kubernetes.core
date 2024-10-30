@@ -158,8 +158,10 @@ class LookupModule(LookupBase):
 
         if use_local_env:
             environ = dict(os.environ)
+        else:
+            environ = None
 
-        (ret, out, err) = run_command(command)
+        (ret, out, err) = run_command(command, environ=environ)
         if ret != 0:
             if err:
                 raise AnsibleLookupError(
