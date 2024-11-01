@@ -34,6 +34,12 @@ DOCUMENTATION = """
         description:
         - Enable the helm chart inflation generator
         default: "False"
+      enviroment:
+        description:
+        - The environment variables to pass to the kustomize or kubectl command.
+        type: dict
+        default: {}
+        version_added: 3.3.0
 
     requirements:
       - "python >= 3.6"
@@ -55,6 +61,10 @@ EXAMPLES = """
 - name: Create kubernetes resources for lookup output with `--enable-helm` set
   kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
+
+- name: Create kubernetes resources for lookup output with environment variables
+  kubernetes.core.k8s:
+    definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', enviroment='HTTP_PROXY=http://proxy.example.com:3128') }}"
 """
 
 RETURN = """
@@ -72,6 +82,7 @@ RETURN = """
         key1: val1
 """
 
+import os
 import subprocess
 
 from ansible.errors import AnsibleLookupError
@@ -92,8 +103,10 @@ def get_binary_from_path(name, opt_dirs=None):
         return None
 
 
-def run_command(command):
-    cmd = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def run_command(command, environ=None):
+    cmd = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environ
+    )
     stdout, stderr = cmd.communicate()
     return cmd.returncode, stdout, stderr
 
@@ -107,6 +120,7 @@ class LookupModule(LookupBase):
         binary_path=None,
         opt_dirs=None,
         enable_helm=False,
+        enviroment=None,
         **kwargs
     ):
         executable_path = binary_path
@@ -141,7 +155,22 @@ class LookupModule(LookupBase):
         if enable_helm:
             command += ["--enable-helm"]
 
-        (ret, out, err) = run_command(command)
+        environ = os.environ.copy()
+
+        if enviroment:
+            if isinstance(enviroment, str):
+                if not all(env.count("=") == 1 for env in enviroment.split(" ")):
+                    raise AnsibleLookupError(
+                        "Enviroment should be dict or string in the format key=value"
+                    )
+                for env in enviroment.split(" "):
+                    key, value = env.split("=")
+                    environ[key] = value
+            if isinstance(enviroment, dict):
+                for key, value in enviroment.items():
+                    environ[key] = value
+
+        (ret, out, err) = run_command(command, environ=environ)
         if ret != 0:
             if err:
                 raise AnsibleLookupError(

@@ -77,7 +77,6 @@ def write_temp_kubeconfig(server, validate_certs=True, ca_cert=None, kubeconfig=
 
 
 class AnsibleHelmModule(object):
-
     """
     An Ansible module class for Kubernetes.core helm modules
     """
