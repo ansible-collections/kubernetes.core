@@ -12,4 +12,4 @@ on:
 
 jobs:
   sanity:
-    uses: ansible-network/github_actions/.github/workflows/sanity.yml@main
+    uses: yurnov/ansible_github_actions/.github/workflows/sanity.yml@update_ansible_n_python_version_to_current_state
