@@ -29,7 +29,7 @@ jobs:
 
       - name: list changes for pull request
         id: splitter
-        uses: ansible-network/github_actions/.github/actions/ansible_test_splitter@main
+        uses: yurnov/ansible_github_actions/.github/actions/ansible_test_splitter@update_ansible_n_python_version_to_current_state
         with:
           collections_to_test: ${{ env.source_dir }}
           total_jobs: 8
@@ -99,33 +99,33 @@ jobs:
 
       - name: Build and install collection
         id: install-src
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        uses: yurnov/ansible_github_actions/.github/actions/build_install_collection@update_ansible_n_python_version_to_current_state
         with:
           install_python_dependencies: true
           source_path: ${{ env.source }}
 
       - name: checkout ansible-collections/cloud.common
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        uses: yurnov/ansible_github_actions/.github/actions/checkout_dependency@update_ansible_n_python_version_to_current_state
         with:
           repository: ansible-collections/cloud.common
           path: ${{ env.cloud_common }}
           ref: main
 
       - name: checkout ansible-collections/ansible.posix
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        uses: yurnov/ansible_github_actions/.github/actions/checkout_dependency@update_ansible_n_python_version_to_current_state
         with:
           repository: ansible-collections/ansible.posix
           path: ${{ env.ansible_posix }}
           ref: main
 
       - name: install cloud.common collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        uses: yurnov/ansible_github_actions/.github/actions/build_install_collection@update_ansible_n_python_version_to_current_state
         with:
           install_python_dependencies: true
           source_path: ${{ env.cloud_common }}
 
       - name: install ansible.posix collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        uses: yurnov/ansible_github_actions/.github/actions/build_install_collection@update_ansible_n_python_version_to_current_state
         with:
           install_python_dependencies: true
           source_path: ${{ env.ansible_posix }}
@@ -136,7 +136,7 @@ jobs:
           node_image: "kindest/node:v1.29.2"
 
       - name: Run integration tests
-        uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
+        uses: yurnov/ansible_github_actions/.github/actions/ansible_test_integration@update_ansible_n_python_version_to_current_state
         with:
           collection_path: ${{ steps.install-src.outputs.collection_path }}
           python_version: ${{ matrix.python-version }}
