@@ -1,0 +1,3 @@
+---
+trivial:
+  - Fix GitHub actions issue related to switch milestone and devel branches of ansible to 2.19 (https://github.com/ansible-collections/kubernetes.core/pull/789)
