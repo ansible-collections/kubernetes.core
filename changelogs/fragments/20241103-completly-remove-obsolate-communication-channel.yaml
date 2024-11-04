@@ -1,0 +1,3 @@
+---
+trivial:
+  - README.md - Remove obsolate communication channels (https://github.com/ansible-collections/kubernetes.core/pull/790).
