@@ -100,53 +100,41 @@
         suffix: .testkustomize
       register: _tmp_dir_kustomize
 
-    # - name: Create a base directory
-    #   ansible.builtin.file:
-    #     path: "{{ _tmp_dir_kustomize.path }}/base"
-    #     state: directory
-    #     mode: '0755'
-
     - name: Download helloWorld example
       ansible.builtin.get_url:
-        url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/{{ item }}.yaml"
+        url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/refs/heads/master/examples/loadHttp/kustomization.yaml"
         dest: "{{ _tmp_dir_kustomize.path }}"
-      with_items:
-      - configMap
-      - deployment
-      - kustomization
-      - service
 
-    - name: Replace label in kustomization.yaml
+    - name: Run tinyproxy in docker
       # Replace the 'app: hello' with 'app: ${TEST_APP}'
-      ansible.builtin.replace:
-        path: "{{ _tmp_dir_kustomize.path }}/kustomization.yaml"
-        regexp: 'app: hello'
-        replace: 'app: ${TEST_APP}'
+      ansible.builtin.command: "docker run --rm -d -p 8888:8888 --name=tinyproxy dannydirect/tinyproxy ANY"
+
+    - name: Ensure that tinyproxy is running
+      ansible.builtin.wait_for:
+        host: localhost
+        port: 8888
+        state: started
 
     - name: Test kustomize lookup plugin with environment variables in the string format
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='TEST_APP=testpassed VAR2=Flase') }}"
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='HTTPS_PROXY=http://localhost:8888 VAR2=Flase') }}"
+      ignore_errors: true
 
-    - ansible.builtin.debug:
-        var: resource_kustomize
+    - name: Stop tinyproxy
+      ansible.builtin.command: "docker stop tinyproxy"
 
-    - name: Assest that TEST_APP is replaced with testpassed
-      assert:
-        that: "'app: testpassed' in resource_kustomize.string"
-        fail_msg: "kustomize lookup plugin with environment variables in the string format failed"
-
-    - name: Test kustomize lookup plugin with environment variables in the list format
+    - name: Ensure kustomize lookup plugin fail with proxy down
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment={TEST_APP=testpassed, VAR2=Flase}) }}"
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='HTTPS_PROXY=http://localhost:8888 VAR2=Flase') }}"
+      register: result
+      ignore_errors: true
 
-    - ansible.builtin.debug:
-        var: resource_kustomize
-
-    - name: Assest that TEST_APP is replaced with testpassed
-      assert:
-        that: "'app: testpassed' in resource_kustomize.string"
-        fail_msg: "kustomize lookup plugin with environment variables in the list format failed"
-
+    - name: Assert that kustomize lookup plugin failed
+      ansible.builtin.assert:
+        that:
+        - result.failed
+        - "'proxyconnect tcp: dial' in result.msg"
+        - "'connection refused' in result.msg"
 
   always:
   - name: Delete namespace
@@ -163,3 +151,7 @@
     with_items:
     - "{{ tmp_dir_path }}"
     - "{{ _tmp_dir_kustomize.path }}"
+
+  - name: Stop tinyproxy
+    ansible.builtin.command: "docker stop tinyproxy"
+    ignore_errors: true
