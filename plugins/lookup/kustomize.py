@@ -156,17 +156,17 @@ class LookupModule(LookupBase):
             command += ["--enable-helm"]
 
         environ = None
-        if enviroment:
+        if environment:
             environ = os.environ.copy()
-            if isinstance(enviroment, str):
-                if not all(env.count("=") == 1 for env in enviroment.split(" ")):
+            if isinstance(environment, str):
+                if not all(env.count("=") == 1 for env in environment.split(" ")):
                     raise AnsibleLookupError(
-                        "Enviroment should be dict or string in the format key=value"
+                        "environment should be dict or string in the format key=value"
                     )
-                for env in enviroment.split(" "):
+                for env in environment.split(" "):
                     key, value = env.split("=")
                     environ[key] = value
-            if isinstance(enviroment, dict):
+            if isinstance(environment, dict):
                 environ.update(environment)
 
         (ret, out, err) = run_command(command, environ=environ)
