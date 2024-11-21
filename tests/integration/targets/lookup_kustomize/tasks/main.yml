@@ -132,9 +132,8 @@
 
     - name: Assest that TEST_APP is replaced with testpassed
       assert:
-        that:
-        - "'app: testpassed' in resource_kustomize.string"
-      fail_msg: "kustomize lookup plugin with environment variables in the string format failed"
+        that: "'app: testpassed' in resource_kustomize.string"
+        fail_msg: "kustomize lookup plugin with environment variables in the string format failed"
 
     - name: Test kustomize lookup plugin with environment variables in the list format
       set_fact:
@@ -145,9 +144,8 @@
 
     - name: Assest that TEST_APP is replaced with testpassed
       assert:
-        that:
-        - "'app: testpassed' in resource_kustomize.string"
-      fail_msg: "kustomize lookup plugin with environment variables in the list format failed"
+        that: "'app: testpassed' in resource_kustomize.string"
+        fail_msg: "kustomize lookup plugin with environment variables in the list format failed"
 
 
   always:
