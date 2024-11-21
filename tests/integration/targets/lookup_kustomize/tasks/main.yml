@@ -100,16 +100,16 @@
         suffix: .testkustomize
       register: _tmp_dir_kustomize
 
-    - name: Create a base directory
-      ansible.builtin.file:
-        path: "{{ _tmp_dir_kustomize.path }}/base"
-        state: directory
-        mode: '0755'
+    # - name: Create a base directory
+    #   ansible.builtin.file:
+    #     path: "{{ _tmp_dir_kustomize.path }}/base"
+    #     state: directory
+    #     mode: '0755'
 
     - name: Download helloWorld example
       ansible.builtin.get_url:
         url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/{{ item }}.yaml"
-        dest: "{{ _tmp_dir_kustomize.path }}/base/"
+        dest: "{{ _tmp_dir_kustomize.path }}"
       with_items:
       - configMap
       - deployment
@@ -119,13 +119,13 @@
     - name: Replace label in kustomization.yaml
       # Replace the 'app: hello' with 'app: ${TEST_APP}'
       ansible.builtin.replace:
-        path: "{{ _tmp_dir_kustomize.path }}/base/kustomization.yaml"
+        path: "{{ _tmp_dir_kustomize.path }}kustomization.yaml"
         regexp: 'app: hello'
         replace: 'app: ${TEST_APP}'
 
     - name: Test kustomize lookup plugin with environment variables in the string format
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path/base, environment='TEST_APP=testpassed VAR2=Flase') }}"
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='TEST_APP=testpassed VAR2=Flase') }}"
 
     - ansible.builtin.debug:
         var: resource_kustomize
@@ -137,7 +137,7 @@
 
     - name: Test kustomize lookup plugin with environment variables in the list format
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path/base, environment={TEST_APP=testpassed, VAR2=Flase}) }}"
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment={TEST_APP=testpassed, VAR2=Flase}) }}"
 
     - ansible.builtin.debug:
         var: resource_kustomize
