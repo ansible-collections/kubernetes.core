@@ -125,7 +125,7 @@
 
     - name: Test kustomize lookup plugin with environment variables in the string format
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment="TEST_APP=testpassed VAR2=Flase") }}"      
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='TEST_APP=testpassed VAR2=Flase') }}"      
 
     - ansible.builtin.debug:
         var: resource_kustomize
@@ -138,7 +138,7 @@
 
     - name: Test kustomize lookup plugin with environment variables in the list format
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment="{TEST_APP=testpassed, VAR2=Flase}") }}"      
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment={TEST_APP=testpassed, VAR2=Flase}) }}"      
 
     - ansible.builtin.debug:
         var: resource_kustomize
