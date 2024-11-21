@@ -119,7 +119,7 @@
     - name: Replace label in kustomization.yaml
       # Replace the 'app: hello' with 'app: ${TEST_APP}'
       ansible.builtin.replace:
-        path: "{{ _tmp_dir_kustomize.path }}kustomization.yaml"
+        path: "{{ _tmp_dir_kustomize.path }}/kustomization.yaml"
         regexp: 'app: hello'
         replace: 'app: ${TEST_APP}'
 
