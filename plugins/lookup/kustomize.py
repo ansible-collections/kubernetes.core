@@ -120,7 +120,7 @@ class LookupModule(LookupBase):
         binary_path=None,
         opt_dirs=None,
         enable_helm=False,
-        enviroment=None,
+        environment=None,
         **kwargs
     ):
         executable_path = binary_path
