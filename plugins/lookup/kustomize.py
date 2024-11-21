@@ -34,7 +34,7 @@ DOCUMENTATION = """
         description:
         - Enable the helm chart inflation generator
         default: "False"
-      enviroment:
+      environment:
         description:
         - The environment variables to pass to the kustomize or kubectl command.
         type: dict
@@ -64,7 +64,7 @@ EXAMPLES = """
 
 - name: Create kubernetes resources for lookup output with environment variables
   kubernetes.core.k8s:
-    definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', enviroment='HTTP_PROXY=http://proxy.example.com:3128') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment='HTTP_PROXY=http://proxy.example.com:3128') }}"
 """
 
 RETURN = """
@@ -155,9 +155,9 @@ class LookupModule(LookupBase):
         if enable_helm:
             command += ["--enable-helm"]
 
-        environ = os.environ.copy()
-
+        environ = None
         if enviroment:
+            environ = os.environ.copy()
             if isinstance(enviroment, str):
                 if not all(env.count("=") == 1 for env in enviroment.split(" ")):
                     raise AnsibleLookupError(
@@ -167,8 +167,7 @@ class LookupModule(LookupBase):
                     key, value = env.split("=")
                     environ[key] = value
             if isinstance(enviroment, dict):
-                for key, value in enviroment.items():
-                    environ[key] = value
+                environ.update(environment)
 
         (ret, out, err) = run_command(command, environ=environ)
         if ret != 0:

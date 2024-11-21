@@ -98,7 +98,7 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>enviroment</b>
+                    <b>environment</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">dictionary</span>
@@ -166,7 +166,7 @@ Examples
 
     - name: Create kubernetes resources for lookup output with environment variables
       kubernetes.core.k8s:
-        definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', enviroment='HTTP_PROXY=http://proxy.example.com:3128') }}"
+        definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment='HTTP_PROXY=http://proxy.example.com:3128') }}"
 
 
 
