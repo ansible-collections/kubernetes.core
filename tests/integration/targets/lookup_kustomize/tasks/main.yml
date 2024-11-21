@@ -99,13 +99,13 @@
         state: directory
         suffix: .testkustomize
       register: _tmp_dir_kustomize
-    
+
     - name: Create a base directory
       ansible.builtin.file:
         path: "{{ _tmp_dir_kustomize.path }}/base"
         state: directory
         mode: '0755'
-    
+
     - name: Download helloWorld example
       ansible.builtin.get_url:
         url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/{{ item }}.yaml"
@@ -115,7 +115,7 @@
         - deployment
         - kustomization
         - service
-    
+
     - name: Replace label in kustomization.yaml
       # Replace the 'app: hello' with 'app: ${TEST_APP}'
       ansible.builtin.replace:
@@ -125,7 +125,7 @@
 
     - name: Test kustomize lookup plugin with environment variables in the string format
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='TEST_APP=testpassed VAR2=Flase') }}"      
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='TEST_APP=testpassed VAR2=Flase') }}"
 
     - ansible.builtin.debug:
         var: resource_kustomize
@@ -138,7 +138,7 @@
 
     - name: Test kustomize lookup plugin with environment variables in the list format
       set_fact:
-        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment={TEST_APP=testpassed, VAR2=Flase}) }}"      
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment={TEST_APP=testpassed, VAR2=Flase}) }}"
 
     - ansible.builtin.debug:
         var: resource_kustomize
@@ -162,6 +162,6 @@
     file:
       state: absent
       path: "{{ item }}"
-    with_items: 
+    with_items:
       - "{{ tmp_dir_path }}"
       - "{{ _tmp_dir_kustomize.path }}"
