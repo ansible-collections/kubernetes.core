@@ -267,6 +267,10 @@ If you encounter issues or have questions, you can submit a support request thro
 
 See the [raw generated changelog](https://github.com/ansible-collections/kubernetes.core/blob/main/CHANGELOG.rst).
 
+## More Information
+
+For more information about Ansible's Kubernetes integration, join the `#ansible-kubernetes` channel on [libera.chat](https://libera.chat/) IRC, and browse the resources in the [Kubernetes Working Group](https://github.com/ansible/community/wiki/Kubernetes) Community wiki page.
+
 ## Code of Conduct
 
 We follow the [Ansible Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html) in all our interactions within this project.
