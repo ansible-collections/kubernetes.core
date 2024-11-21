@@ -111,10 +111,10 @@
         url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/examples/helloWorld/{{ item }}.yaml"
         dest: "{{ _tmp_dir_kustomize.path }}/base/"
       with_items:
-        - configMap
-        - deployment
-        - kustomization
-        - service
+      - configMap
+      - deployment
+      - kustomization
+      - service
 
     - name: Replace label in kustomization.yaml
       # Replace the 'app: hello' with 'app: ${TEST_APP}'
@@ -163,5 +163,5 @@
       state: absent
       path: "{{ item }}"
     with_items:
-      - "{{ tmp_dir_path }}"
-      - "{{ _tmp_dir_kustomize.path }}"
+    - "{{ tmp_dir_path }}"
+    - "{{ _tmp_dir_kustomize.path }}"
