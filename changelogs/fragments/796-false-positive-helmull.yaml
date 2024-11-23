@@ -1,0 +1,2 @@
+bugfixes:
+  - helm_pull - Apply no_log=True to pass_credentials to silence false positive warning.. (https://github.com/ansible-collections/kubernetes.core/pull/796).
