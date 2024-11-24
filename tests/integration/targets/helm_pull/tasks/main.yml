@@ -180,6 +180,7 @@
               - '"--username ansible" in _result.command'
               - '"--password ***" in _result.command'
               - '"--keyring pubring.gpg" in _result.command'
+              - '"Module did not set no_log for pass_credentials" not in _result.warnings'
 
         - name: Download chart using chart_ref
           helm_pull:
