@@ -163,7 +163,9 @@ class AnsibleHelmModule(object):
         if not HAS_YAML:
             self.fail_json(msg=missing_required_lib("PyYAML"), exception=YAML_IMP_ERR)
 
-        rc, out, err = self.run_command(command, environ_update=self.env_update, data=data)
+        rc, out, err = self.run_command(
+            command, environ_update=self.env_update, data=data
+        )
         if fails_on_error and rc != 0:
             self.fail_json(
                 msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
