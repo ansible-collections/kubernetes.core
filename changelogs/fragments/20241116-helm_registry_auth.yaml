@@ -1,3 +1,3 @@
 ---
 minor_changes:
-  - new module helm_registry_auth to support helm registry login and logout operations.
+  - new module helm_registry_auth to support helm registry login and logout operations (https://github.com/ansible-collections/kubernetes.core/pull/800).
