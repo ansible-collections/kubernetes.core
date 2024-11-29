@@ -51,7 +51,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
             with self.assertRaises(AnsibleExitJson) as result:
                 helm_template.main()
         mock_run_command.assert_called_once_with(
-            "/usr/bin/helm template /tmp/path", environ_update={}
+            "/usr/bin/helm template /tmp/path", environ_update={}, data=None
         )
         assert result.exception.args[0]["command"] == "/usr/bin/helm template /tmp/path"
 
@@ -74,6 +74,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm template test --repo=https://charts.com/test",
             environ_update={},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -95,6 +96,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm template https://charts/example.tgz --dependency-update",
             environ_update={},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
