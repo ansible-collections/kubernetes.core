@@ -149,6 +149,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
                 call(
                     "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
                     environ_update={"HELM_NAMESPACE": "test"},
+                    data=None,
                 )
             ]
         )
@@ -183,6 +184,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
                 call(
                     "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
                     environ_update={"HELM_NAMESPACE": "test"},
+                    data=None,
                 )
             ]
         )
