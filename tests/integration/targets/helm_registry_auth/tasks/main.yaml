@@ -49,11 +49,11 @@
       register: _login_correct
       failed_when: _login_correct.rc != 0
 
-    # - name: Clean up credentials to run test on clean environment
-    #   ansible.builtin.shell: >-
-    #     helm registry logout localhost:{{ registry_port }}
-    #   register: _logout
-    #   failed_when: _logout.rc != 0
+    - name: Clean up credentials to run test on clean environment
+      ansible.builtin.shell: >-
+        helm registry logout localhost:{{ registry_port }}
+      register: _logout
+      failed_when: _logout.rc != 0
 
     - name: Create directory for helm chart
       ansible.builtin.tempfile:
@@ -68,18 +68,12 @@
         return_content: no
         status_code: 200
 
-    # - name: Test module helm_registry_auth with correct credentials
-    #   helm_registry_auth:
-    #     username: "{{ username }}"
-    #     password: "{{ password }}"
-    #     registry: localhost:{{ registry_port }}
-    #     state: present
-    #   register: _helm_registry_auth_correct
-    #   failed_when: _helm_registry_auth_correct.failed
-    - name: Test the registry with correct credentials (to be removed)
-      ansible.builtin.shell: >-
-        echo {{ password | quote }} | helm registry login localhost:{{ registry_port }}
-        -u {{ username }} --password-stdin
+    - name: Test module helm_registry_auth with correct credentials
+      helm_registry_auth:
+        username: "{{ username }}"
+        password: "{{ password }}"
+        registry: localhost:{{ registry_port }}
+        state: present
       register: _helm_registry_auth_correct
 
     - name: Assert that the registry is logged in
@@ -87,9 +81,9 @@
       assert:
         that:
           - "'Login Succeeded' in _helm_registry_auth_correct.stderr"
-          # - "'{{ password }}' not in _helm_registry_auth_correct.command"
-          # - "'{{ password }}' not in _helm_registry_auth_correct.stdout"
-          # - "'{{ password }}' not in _helm_registry_auth_correct.stderr"
+          - "'{{ password }}' not in _helm_registry_auth_correct.command"
+          - "'{{ password }}' not in _helm_registry_auth_correct.stdout"
+          - "'{{ password }}' not in _helm_registry_auth_correct.stderr"
 
     - name: Ensure that push to the registry is working
       ansible.builtin.shell: >-
@@ -103,14 +97,10 @@
         that: "'Pushed: localhost:{{ registry_port }}/test/k8s-monitoring' in _save_chart.stderr"
 
 
-    # - name: Test logout
-    #   helm_registry_auth:
-    #     registry: localhost:{{ registry_port }}
-    #     state: absent
-    #   register: _helm_registry_auth_logout
-    #   failed_when: _helm_registry_auth_logout.failed
-    - name: Test logout (to be removed)
-      ansible.builtin.shell: helm registry logout localhost:{{ registry_port }}
+    - name: Test logout
+      helm_registry_auth:
+        registry: localhost:{{ registry_port }}
+        state: absent
       register: _helm_registry_auth_logout
 
     - name: Assert logout
@@ -138,18 +128,12 @@
           - "_save_chart.rc != 0"
           - "'localhost' not in _config_json.content | b64decode"
 
-    # - name: Test module helm_registry_auth with wrong credentials
-    #   helm_registry_auth:
-    #     username: "{{ username }}"
-    #     password: "{{ wrong_password }}"
-    #     registry: localhost:{{ registry_port }}
-    #     state: present
-    #   register: _helm_registry_auth_wrong
-    #   failed_when: _helm_registry_auth_wrong.rc == 0
-    - name: Test module helm_registry_auth with wrong credentials (to be removed)
-      ansible.builtin.shell: >-
-        echo {{ wrong_password | quote }} | helm registry login localhost:{{ registry_port }}
-        -u {{ username }} --password-stdin
+    - name: Test module helm_registry_auth with wrong credentials
+      helm_registry_auth:
+        username: "{{ username }}"
+        password: "{{ wrong_password }}"
+        registry: localhost:{{ registry_port }}
+        state: present
       register: _helm_registry_auth_wrong
       failed_when: _helm_registry_auth_wrong.rc == 0
 
@@ -163,9 +147,9 @@
         that:
           - "'401 Unauthorized' in _helm_registry_auth_wrong.stderr"
           - "_helm_registry_auth_wrong.rc != 0"
-          # - "'{{ wrong_password }}' not in _helm_registry_auth_correct.command"
-          # - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stdout"
-          # - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stderr"
+          - "'{{ wrong_password }}' not in _helm_registry_auth_correct.command"
+          - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stdout"
+          - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stderr"
           - "'localhost' not in _config_json.content | b64decode"
 
   # Clean up
