@@ -105,7 +105,9 @@ stout_lines:
   returned: always
 stderr:
   type: str
-  description: Full `helm` command stderr, in case you want to display it or examine the event log. Please be note that helm binnary may print messages to stderr even if the command is successful.
+  description: >-
+    Full `helm` command stderr, in case you want to display it or examine the event log.
+    Please be note that helm binnary may print messages to stderr even if the command is successful.
   returned: always
   sample: 'Login Succeeded\n'
 stderr_lines:
@@ -128,17 +130,12 @@ changed:
   returned: always
 """
 
-import copy
-import traceback
-
-from ansible.module_utils.basic import missing_required_lib
-from ansible.module_utils.common.process import get_bin_path
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
 )
 
 
-def argument_spec():
+def arg_spec():
     arg_spec.update(
         dict(
             host=dict(type="str", aliases=["registry_url"], required=True),
@@ -196,7 +193,7 @@ def main():
     global module
 
     module = AnsibleHelmModule(
-        argument_spec=argument_spec(),
+        argument_spec=arg_spec(),
         required_together=[["username", "password"]],
         mutually_exclusive=None,
         supports_check_mode=True,

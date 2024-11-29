@@ -235,6 +235,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>always</td>
                 <td>
+                            <div>Indicate if the state of the registry was changed</div>
                     <br/>
                 </td>
             </tr>
