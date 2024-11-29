@@ -123,6 +123,7 @@ failed:
   returned: always
   sample: false
 changed:
+  description: Indicate if the state of the registry was changed
   type: bool
   returned: always
 """
@@ -135,14 +136,9 @@ from ansible.module_utils.common.process import get_bin_path
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
-    HELM_AUTH_ARG_SPEC,
-    HELM_AUTH_MUTUALLY_EXCLUSIVE,
-)
 
 
 def argument_spec():
-    arg_spec = copy.deepcopy(HELM_AUTH_ARG_SPEC)
     arg_spec.update(
         dict(
             host=dict(type="str", aliases=["registry_url"], required=True),
@@ -202,7 +198,7 @@ def main():
     module = AnsibleHelmModule(
         argument_spec=argument_spec(),
         required_together=[["username", "password"]],
-        mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
+        mutually_exclusive=None,
         supports_check_mode=True,
     )
 
