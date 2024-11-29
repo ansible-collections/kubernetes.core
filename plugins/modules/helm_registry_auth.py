@@ -137,6 +137,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
 
 def arg_spec():
     return dict(
+        binary_path=dict(type="path", required=False),
         host=dict(type="str", aliases=["registry_url"], required=True),
         state=dict(default="present", choices=["present", "absent"], required=False),
         insecure=dict(type="bool", default=False, required=False),
