@@ -136,23 +136,18 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
 
 
 def arg_spec():
-    arg_spec.update(
-        dict(
-            host=dict(type="str", aliases=["registry_url"], required=True),
-            state=dict(
-                default="present", choices=["present", "absent"], required=False
-            ),
-            insecure=dict(type="bool", default=False, required=False),
-            username=dict(type="str", aliases=["repo_username"], required=False),
-            password=dict(
-                type="str", aliases=["repo_password"], no_log=True, required=False
-            ),
-            key_file=dict(type="path", required=False),
-            cert_file=dict(type="path", required=False),
-            ca_file=dict(type="path", required=False),
-        )
+    return dict(
+        host=dict(type="str", aliases=["registry_url"], required=True),
+        state=dict(default="present", choices=["present", "absent"], required=False),
+        insecure=dict(type="bool", default=False, required=False),
+        username=dict(type="str", aliases=["repo_username"], required=False),
+        password=dict(
+            type="str", aliases=["repo_password"], no_log=True, required=False
+        ),
+        key_file=dict(type="path", required=False),
+        cert_file=dict(type="path", required=False),
+        ca_file=dict(type="path", required=False),
     )
-    return arg_spec
 
 
 def login(
