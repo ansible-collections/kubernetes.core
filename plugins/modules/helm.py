@@ -145,6 +145,15 @@ options:
     required: false
     default: True
     version_added: 2.5.0
+  reset_then_reuse_values:
+    description:
+      - When upgrading package, reset the values to the ones built into the chart, apply the last release's values and merge in any overrides from
+        parameters I(release_values), I(values_files) or I(set_values).
+      - If I(reset_values) or I(reuse_values) is set to C(True), this is ignored.
+    type: bool
+    required: false
+    default: False
+    version_added: 5.1.0
 
 #Helm options
   disable_hook:
@@ -509,6 +518,7 @@ def deploy(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    reset_then_reuse_values=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -525,6 +535,9 @@ def deploy(
 
     if reuse_values is not None:
         deploy_command += " --reuse-values=" + str(reuse_values)
+
+    if reset_then_reuse_values:
+        deploy_command += " --reset-then-reuse-values"
 
     if wait:
         deploy_command += " --wait"
@@ -642,6 +655,7 @@ def helmdiff_check(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    reset_then_reuse_values=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -675,6 +689,9 @@ def helmdiff_check(
 
     if reuse_values:
         cmd += " --reuse-values"
+
+    if reset_then_reuse_values:
+        cmd += " --reset-then-reuse-values"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -735,6 +752,7 @@ def argument_spec():
             set_values=dict(type="list", elements="dict"),
             reuse_values=dict(type="bool"),
             reset_values=dict(type="bool", default=True),
+            reset_then_reuse_values=dict(type="bool", default=False),
         )
     )
     return arg_spec
@@ -787,6 +805,7 @@ def main():
     set_values = module.params.get("set_values")
     reuse_values = module.params.get("reuse_values")
     reset_values = module.params.get("reset_values")
+    reset_then_reuse_values = module.params.get("reset_then_reuse_values")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -883,6 +902,7 @@ def main():
                 set_value_args=set_value_args,
                 reuse_values=reuse_values,
                 reset_values=reset_values,
+                reset_then_reuse_values=reset_then_reuse_values,
             )
             changed = True
 
@@ -908,6 +928,7 @@ def main():
                     set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    reset_then_reuse_values=reset_then_reuse_values,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -943,6 +964,7 @@ def main():
                     set_value_args=set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    reset_then_reuse_values=reset_then_reuse_values,
                 )
                 changed = True
 
