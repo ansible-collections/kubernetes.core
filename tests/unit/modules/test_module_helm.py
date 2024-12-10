@@ -88,6 +88,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -118,6 +119,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -147,6 +149,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
                 call(
                     "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
                     environ_update={"HELM_NAMESPACE": "test"},
+                    data=None,
                 )
             ]
         )
@@ -181,6 +184,7 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
                 call(
                     "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
                     environ_update={"HELM_NAMESPACE": "test"},
+                    data=None,
                 )
             ]
         )
@@ -251,6 +255,7 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -280,6 +285,7 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -338,6 +344,7 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm --repo=http://repo.example/charts install --dependency-update --replace test 'chart1'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -405,6 +412,7 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -433,6 +441,7 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]
@@ -489,6 +498,7 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
         mock_run_command.assert_called_once_with(
             "/usr/bin/helm install --dependency-update --replace test 'http://repo.example/charts/application.tgz'",
             environ_update={"HELM_NAMESPACE": "test"},
+            data=None,
         )
         assert (
             result.exception.args[0]["command"]

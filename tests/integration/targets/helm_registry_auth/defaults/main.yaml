@@ -1,0 +1,9 @@
+---
+# Username and password for the registry
+# ../files/registry.password contains username and hashed password
+username: testuser
+password: testpassword
+wrong_password: 'WrongPassword'
+registry_name: oci_registry
+registry_port: 5000
+test_chart: https://github.com/grafana/helm-charts/releases/download/k8s-monitoring-1.6.8/k8s-monitoring-1.6.8.tgz
