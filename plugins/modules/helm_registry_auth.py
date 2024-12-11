@@ -101,7 +101,7 @@ stdout:
   returned: always
 stout_lines:
   type: list
-  description: Full `helm` command stdout, in case you want to display it or examine the event log
+  description: Full C(helm) command stdout, in case you want to display it or examine the event log
   returned: always
 stderr:
   type: str
