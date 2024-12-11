@@ -121,7 +121,7 @@ command:
   sample: '/usr/local/bin/helm registry login oci-registry.domain.example --username=admin --password-stdin --insecure'
 failed:
   type: bool
-  description: Indicate if the `helm` command failed
+  description: Indicate if the C(helm) command failed
   returned: always
   sample: false
 changed:
