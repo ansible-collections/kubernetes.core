@@ -124,10 +124,6 @@ failed:
   description: Indicate if the C(helm) command failed
   returned: always
   sample: false
-changed:
-  description: Indicate if the state of the registry was changed
-  type: bool
-  returned: always
 """
 
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
