@@ -106,7 +106,7 @@ stout_lines:
 stderr:
   type: str
   description: >-
-    Full `helm` command stderr, in case you want to display it or examine the event log.
+    Full C(helm) command stderr, in case you want to display it or examine the event log.
     Please be note that helm binnary may print messages to stderr even if the command is successful.
   returned: always
   sample: 'Login Succeeded\n'
