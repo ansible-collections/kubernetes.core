@@ -25,7 +25,7 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- helm (https://github.com/helm/helm/releases)
+- helm (https://github.com/helm/helm/releases) => 3.8.0
 
 
 Parameters
@@ -168,8 +168,8 @@ Parameters
                 </td>
                 <td>
                         <div>Desired state of the registry.</div>
-                        <div>If set to <code>present</code> attempt to log in to the remote registry server using the URL specified in <em>host</em>.</div>
-                        <div>If set to <code>absent</code> attempt to log out from the remote registry server using the URL specified in <em>host</em>.</div>
+                        <div>If set to V(present) attempt to log in to the remote registry server using the URL specified in O(host).</div>
+                        <div>If set to V(absent) attempt to log out from the remote registry server using the URL specified in O(host).</div>
                 </td>
             </tr>
             <tr>
@@ -227,21 +227,6 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
-                    <b>changed</b>
-                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
-                    <div style="font-size: small">
-                      <span style="color: purple">boolean</span>
-                    </div>
-                </td>
-                <td>always</td>
-                <td>
-                            <div>Indicate if the state of the registry was changed</div>
-                    <br/>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="1">
-                    <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>command</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
@@ -250,7 +235,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>always</td>
                 <td>
-                            <div>Full `helm` command executed</div>
+                            <div>Full <code>helm</code> command executed</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">/usr/local/bin/helm registry login oci-registry.domain.example --username=admin --password-stdin --insecure</div>
@@ -267,7 +252,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>always</td>
                 <td>
-                            <div>Indicate if the `helm` command failed</div>
+                            <div>Indicate if the <code>helm</code> command failed</div>
                     <br/>
                 </td>
             </tr>
@@ -282,7 +267,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>always</td>
                 <td>
-                            <div>Full `helm` command stderr, in case you want to display it or examine the event log. Please be note that helm binnary may print messages to stderr even if the command is successful.</div>
+                            <div>Full <code>helm</code> command stderr, in case you want to display it or examine the event log. Please be note that helm binnary may print messages to stderr even if the command is successful.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">Login Succeeded\n</div>
@@ -299,7 +284,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>always</td>
                 <td>
-                            <div>Full `helm` command stderr, in case you want to display it or examine the event log</div>
+                            <div>Full <code>helm</code> command stderr, in case you want to display it or examine the event log</div>
                     <br/>
                 </td>
             </tr>
@@ -314,7 +299,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>always</td>
                 <td>
-                            <div>Full `helm` command stdout, in case you want to display it or examine the event log</div>
+                            <div>Full <code>helm</code> command stdout, in case you want to display it or examine the event log</div>
                     <br/>
                 </td>
             </tr>
@@ -329,7 +314,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td>always</td>
                 <td>
-                            <div>Full `helm` command stdout, in case you want to display it or examine the event log</div>
+                            <div>Full <code>helm</code> command stdout, in case you want to display it or examine the event log</div>
                     <br/>
                 </td>
             </tr>
