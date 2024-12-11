@@ -20,7 +20,7 @@ author:
   - Yuriy Novostavskiy (@yurnov)
 
 requirements:
-  - "helm (https://github.com/helm/helm/releases)"
+  - "helm (https://github.com/helm/helm/releases) => 3.8.0"
 
 description:
   -  Helm registry authentication module allows you to login C(helm registry login) and logout C(helm registry logout) from a Helm registry.
