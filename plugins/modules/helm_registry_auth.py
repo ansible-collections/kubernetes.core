@@ -112,7 +112,7 @@ stderr:
   sample: 'Login Succeeded\n'
 stderr_lines:
   type: list
-  description: Full `helm` command stderr, in case you want to display it or examine the event log
+  description: Full C(helm) command stderr, in case you want to display it or examine the event log
   returned: always
 command:
   type: str
