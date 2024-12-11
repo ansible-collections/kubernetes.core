@@ -215,9 +215,6 @@ def main():
 
     if module.check_mode:
         module.exit_json(changed=changed, command=helm_cmd)
-    # This one is reduntant, but it's here for clarity
-    elif not changed:
-        module.exit_json(changed=False)
 
     rc, out, err = module.run_helm_command(helm_cmd, data=password)
 
