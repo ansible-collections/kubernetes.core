@@ -97,7 +97,7 @@ EXAMPLES = r"""
 RETURN = r"""
 stdout:
   type: str
-  description: Full `helm` command stdout, in case you want to display it or examine the event log
+  description: Full C(helm) command stdout, in case you want to display it or examine the event log
   returned: always
 stout_lines:
   type: list
