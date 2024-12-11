@@ -29,7 +29,7 @@ options:
   state:
     description:
       - Desired state of the registry.
-      - If set to C(present) attempt to log in to the remote registry server using the URL specified in I(host).
+      - If set to V(present) attempt to log in to the remote registry server using the URL specified in O(host).
       - If set to C(absent) attempt to log out from the remote registry server using the URL specified in I(host).
     required: false
     default: present
