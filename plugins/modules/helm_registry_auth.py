@@ -187,7 +187,6 @@ def main():
     module = AnsibleHelmModule(
         argument_spec=arg_spec(),
         required_together=[["username", "password"]],
-        mutually_exclusive=None,
         supports_check_mode=True,
     )
 
