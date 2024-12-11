@@ -299,7 +299,9 @@ class K8sDrainAnsible(object):
                 response = self._api_instance.read_namespaced_pod(
                     namespace=pod[0], name=pod[1]
                 )
-                if not response:
+                if not response or response.spec.node_name != self._module.params.get(
+                    "name"
+                ):
                     pod = None
                 time.sleep(wait_sleep)
             except ApiException as exc:
