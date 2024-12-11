@@ -223,10 +223,10 @@ def main():
         else:
             module.fail_json(
                 msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
-                rc, out, err
-               ),
-               command=helm_cmd,
-           )
+                    rc, out, err
+                ),
+                command=helm_cmd,
+            )
 
     module.exit_json(changed=changed, stdout=out, stderr=err, command=helm_cmd)
 
