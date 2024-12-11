@@ -151,9 +151,6 @@ class AnsibleHelmModule(object):
             env_update["KUBECONFIG"] = kubeconfig_path
             self.add_cleanup_file(kubeconfig_path)
 
-        if LooseVersion(self.get_helm_version()) < LooseVersion("3.0.0"):
-            env_update["HELM_EXPERIMENTAL_OCI"] = "1"
-
         return env_update
 
     @property
