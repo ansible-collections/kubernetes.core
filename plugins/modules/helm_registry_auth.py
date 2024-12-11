@@ -218,12 +218,15 @@ def main():
     rc, out, err = module.run_helm_command(helm_cmd, data=password)
 
     if rc != 0:
-        module.fail_json(
-            msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
+        if state == "absent" and "Error: not logged in" in err:
+            changed = False
+        else:
+            module.fail_json(
+                msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
                 rc, out, err
-            ),
-            command=helm_cmd,
-        )
+               ),
+               command=helm_cmd,
+           )
 
     module.exit_json(changed=changed, stdout=out, stderr=err, command=helm_cmd)
 
