@@ -116,7 +116,7 @@ stderr_lines:
   returned: always
 command:
   type: str
-  description: Full `helm` command executed
+  description: Full C(helm) command executed
   returned: always
   sample: '/usr/local/bin/helm registry login oci-registry.domain.example --username=admin --password-stdin --insecure'
 failed:
