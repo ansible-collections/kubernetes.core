@@ -218,7 +218,7 @@ def main():
         changed = True
 
     if module.check_mode:
-        module.exit_json(changed=changed)
+        module.exit_json(changed=changed, command=helm_cmd)
     # This one is reduntant, but it's here for clarity
     elif not changed:
         module.exit_json(changed=False)
