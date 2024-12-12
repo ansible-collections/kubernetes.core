@@ -227,6 +227,7 @@ def main():
                 msg="Failure when executing Helm command. Exited {0}.\nstdout: {1}\nstderr: {2}".format(
                     rc, out, err
                 ),
+                stderr=err,
                 command=helm_cmd,
             )
 
