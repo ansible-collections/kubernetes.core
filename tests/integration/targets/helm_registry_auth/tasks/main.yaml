@@ -107,8 +107,8 @@
       # Helm binary prints the message to stderr
       assert:
         that: "'Removing login credentials' in _helm_registry_auth_logout.stderr"
-   
-   - name: Test logout idempotency
+
+    - name: Test logout idempotency
       helm_registry_auth:
         registry: localhost:{{ registry_port }}
         state: absent
