@@ -158,7 +158,7 @@ command:
   type: str
   description: Full `helm` command built by this module, in case you want to re-run the command outside the module or debug a problem.
   returned: always
-  sample: '/usr/local/bin/helm repo add bitnami oci://registry-1.docker.io/bitnamicharts/redis'
+  sample: '/usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami'
 msg:
   type: str
   description: Error message returned by `helm` command

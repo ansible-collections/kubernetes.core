@@ -124,14 +124,14 @@ EXAMPLES = r"""
 - name: Download Chart using chart_name and repo_url
   kubernetes.core.helm_pull:
     chart_ref: redis
-    repo_url: oci://registry-1.docker.io/bitnamicharts/redis
+    repo_url: https://charts.bitnami.com/bitnami
     untar_chart: yes
     destination: /path/to/chart
 
 - name: Download Chart (skip tls certificate check)
   kubernetes.core.helm_pull:
     chart_ref: redis
-    repo_url: oci://registry-1.docker.io/bitnamicharts/redis
+    repo_url: https://charts.bitnami.com/bitnami
     untar_chart: yes
     destination: /path/to/chart
     skip_tls_certs_check: yes
@@ -139,7 +139,7 @@ EXAMPLES = r"""
 - name: Download Chart using chart registry credentials
   kubernetes.core.helm_pull:
     chart_ref: redis
-    repo_url: oci://registry-1.docker.io/bitnamicharts/redis
+    repo_url: https://charts.bitnami.com/bitnami
     untar_chart: yes
     destination: /path/to/chart
     username: myuser

@@ -2,7 +2,7 @@
   helm:
     binary_path: "{{ helm_binary }}"
     chart_ref: mariadb
-    chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
+    chart_repo_url: https://charts.bitnami.com/bitnami
     release_name: test-mariadb
     release_namespace: "{{ helm_namespace }}"
     create_namespace: true
@@ -37,7 +37,7 @@
   helm:
     binary_path: "{{ helm_binary }}"
     chart_ref: apache
-    chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
+    chart_repo_url: https://charts.bitnami.com/bitnami
     release_name: test-apache
     release_namespace: "{{ helm_namespace }}"
     create_namespace: true
@@ -80,7 +80,7 @@
     helm:
       binary_path: "{{ helm_binary }}"
       chart_ref: minio
-      chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
+      chart_repo_url: https://charts.bitnami.com/bitnami
       release_name: test-minio
       release_namespace: "{{ helm_namespace }}"
       create_namespace: true
