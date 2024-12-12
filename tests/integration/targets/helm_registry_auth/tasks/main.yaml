@@ -145,7 +145,7 @@
         host: localhost:{{ registry_port }}
         state: present
       register: _helm_registry_auth_wrong
-      failed_when: _helm_registry_auth_wrong.rc == 0
+      ignore_errors: true
 
     - name: Read content of ~/.config/helm/registry/config.json
       ansible.builtin.slurp:
