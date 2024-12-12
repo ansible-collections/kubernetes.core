@@ -1,7 +1,8 @@
 - name: Install helm using set_values parameters
   helm:
     binary_path: "{{ helm_binary }}"
-    chart_ref: oci://registry-1.docker.io/bitnamicharts/mariadb
+    chart_ref: mariadb
+    chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
     release_name: test-mariadb
     release_namespace: "{{ helm_namespace }}"
     create_namespace: true
@@ -35,7 +36,8 @@
 - name: Install helm using set_values parameters
   helm:
     binary_path: "{{ helm_binary }}"
-    chart_ref: oci://registry-1.docker.io/bitnamicharts/apache
+    chart_ref: apache
+    chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
     release_name: test-apache
     release_namespace: "{{ helm_namespace }}"
     create_namespace: true
@@ -77,7 +79,8 @@
   - name: Install helm using set_values parameters
     helm:
       binary_path: "{{ helm_binary }}"
-      chart_ref: oci://registry-1.docker.io/bitnamicharts/minio
+      chart_ref: minio
+      chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
       release_name: test-minio
       release_namespace: "{{ helm_namespace }}"
       create_namespace: true

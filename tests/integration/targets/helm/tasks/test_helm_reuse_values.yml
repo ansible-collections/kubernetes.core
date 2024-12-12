@@ -17,7 +17,8 @@
     - name: Initial chart installation
       helm:
         binary_path: "{{ helm_binary }}"
-        chart_ref: oci://registry-1.docker.io/bitnamicharts/redis
+        chart_ref: redis
+        chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
         release_name: test-redis
         release_namespace: "{{ helm_namespace }}"
         create_namespace: true
@@ -41,7 +42,8 @@
     - name: Upgrade chart using reuse_values=true
       helm:
         binary_path: "{{ helm_binary }}"
-        chart_ref: oci://registry-1.docker.io/bitnamicharts/redis
+        chart_ref: redis
+        chart_repo_url: oci://registry-1.docker.io/bitnamicharts/redis
         release_name: test-redis
         release_namespace: "{{ helm_namespace }}"
         reuse_values: true
