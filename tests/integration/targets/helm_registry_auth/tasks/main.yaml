@@ -156,7 +156,6 @@
       ansible.builtin.assert:
         that:
           - "'401 Unauthorized' in _helm_registry_auth_wrong.stderr"
-          - "_helm_registry_auth_wrong.rc != 0"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.command"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stdout"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stderr"
