@@ -72,7 +72,7 @@
       helm_registry_auth:
         username: "{{ username }}"
         password: "{{ password }}"
-        registry: localhost:{{ registry_port }}
+        host: localhost:{{ registry_port }}
         state: present
       register: _helm_registry_auth_correct
 
@@ -99,7 +99,7 @@
 
     - name: Test logout
       helm_registry_auth:
-        registry: localhost:{{ registry_port }}
+        host: localhost:{{ registry_port }}
         state: absent
       register: _helm_registry_auth_logout
 
@@ -110,7 +110,7 @@
 
     - name: Test logout idempotency
       helm_registry_auth:
-        registry: localhost:{{ registry_port }}
+        host: localhost:{{ registry_port }}
         state: absent
       register: _helm_registry_auth_logout_idempotency
 
@@ -142,7 +142,7 @@
       helm_registry_auth:
         username: "{{ username }}"
         password: "{{ wrong_password }}"
-        registry: localhost:{{ registry_port }}
+        host: localhost:{{ registry_port }}
         state: present
       register: _helm_registry_auth_wrong
       failed_when: _helm_registry_auth_wrong.rc == 0
