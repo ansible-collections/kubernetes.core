@@ -215,7 +215,7 @@ def main():
     if module.check_mode:
         module.exit_json(changed=changed, command=helm_cmd)
 
-    rc, out, err = module.run_helm_command(helm_cmd, data=password)
+    rc, out, err = module.run_helm_command(helm_cmd, data=password, fails_on_error=False)
 
     if rc != 0:
         if state == "absent" and "Error: not logged in" in err:
