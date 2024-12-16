@@ -219,7 +219,7 @@
     - name: Install Redis chart
       helm:
         binary_path: "{{ helm_binary }}"
-        chart_repo_url: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+        chart_repo_url: https://charts.bitnami.com/bitnami
         chart_ref: redis
         namespace: "{{ helm_namespace }}"
         name: redis-chart
@@ -229,7 +229,7 @@
     - name: Upgrade Redis chart
       helm:
         binary_path: "{{ helm_binary }}"
-        chart_repo_url: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+        chart_repo_url: https://charts.bitnami.com/bitnami
         chart_ref: redis
         namespace: "{{ helm_namespace }}"
         name: redis-chart
@@ -263,7 +263,7 @@
     - name: Upgrade Redis chart once again
       helm:
         binary_path: "{{ helm_binary }}"
-        chart_repo_url: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+        chart_repo_url: https://charts.bitnami.com/bitnami
         chart_ref: redis
         namespace: "{{ helm_namespace }}"
         name: redis-chart

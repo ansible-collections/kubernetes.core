@@ -339,7 +339,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                             <div>Full `helm` command built by this module, in case you want to re-run the command outside the module or debug a problem.</div>
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
-                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">/usr/local/bin/helm repo add bitnami https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami</div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">/usr/local/bin/helm repo add bitnami https://charts.bitnami.com/bitnami</div>
                 </td>
             </tr>
             <tr>
