@@ -66,7 +66,7 @@
         kubeconfig: "{{ test_kubeconfig | default(omit) }}"
         validate_certs: "{{ test_validate_certs | default(omit) }}"
         ca_cert: "{{ test_ca_cert | default(omit) }}"
-        repo_url: https://charts.bitnami.com/bitnami
+        repo_url: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
       register: repository
 
     - name: Assert that repository was added
