@@ -916,7 +916,6 @@ def main():
                     "The default idempotency check can fail to report changes in certain cases. "
                     "Install helm diff >= 3.4.1 for better results."
                 )
-                # module.exit_json(release_status=release_status, values=release_values)
                 would_change = default_check(
                     release_status, chart_info, release_values, values_files
                 )
