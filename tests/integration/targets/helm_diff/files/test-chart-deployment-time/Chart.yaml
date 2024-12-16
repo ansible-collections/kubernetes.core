@@ -1,0 +1,6 @@
+apiVersion: v2
+name: test-chart-deployment-time
+description: A chart with a config map containing the deployment time in data
+type: application
+version: 0.1.0
+appVersion: "default"
