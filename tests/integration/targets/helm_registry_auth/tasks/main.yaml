@@ -1,0 +1,178 @@
+---
+- name: Run module test
+  # using a shell and command module to run the test as test can be non-idempotent
+  # and it allow to not install any additional dependencies
+  block:
+    - name: Ensure that helm is installed
+      ansible.builtin.shell: helm version --client --short | grep v3
+      register: _helm_version
+      failed_when: _helm_version.rc != 0
+
+    - name: Ensure that Docker demon is running
+      ansible.builtin.command: "docker info"
+      register: _docker_info
+      failed_when: _docker_info.rc != 0
+
+    - name: Create a tmpfile htpasswd directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .httppasswd
+      register: _tmpfile
+
+    - name: Copy htpasswd to the tmpfile directory
+      ansible.builtin.copy:
+        src: registry.password
+        dest: "{{ _tmpfile.path }}/registry.password"
+
+    - name: Setup the registry
+      ansible.builtin.command: >-
+        docker run -d --rm
+        -p {{ registry_port }}:5000
+        --name "{{ registry_name }}"
+        -v "{{ _tmpfile.path }}:/auth"
+        -e "REGISTRY_AUTH=htpasswd"
+        -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm"
+        -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/registry.password
+        registry:2
+      register: _setup_registry
+      failed_when: _setup_registry.rc != 0
+
+    - name: Ensure that the registry is running and rechable
+      ansible.builtin.wait_for:
+        host: localhost
+        port: "{{ registry_port }}"
+
+    - name: Test the registry with correct credentials to ensure that the registry is running
+      ansible.builtin.shell: >-
+        echo {{ password | quote }} | helm registry login localhost:{{ registry_port }}
+        -u {{ username }} --password-stdin
+      register: _login_correct
+      failed_when: _login_correct.rc != 0
+
+    - name: Clean up credentials to run test on clean environment
+      ansible.builtin.shell: >-
+        helm registry logout localhost:{{ registry_port }}
+      register: _logout
+      failed_when: _logout.rc != 0
+
+    - name: Create directory for helm chart
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: ".helm"
+      register: _destination
+
+    - name: Pull test helm chart
+      ansible.builtin.uri:
+        url: "{{ test_chart }}"
+        dest: "{{ _destination.path }}/k8s-monitoring-1.6.8.tgz"
+        return_content: no
+        status_code: 200
+
+    - name: Test module helm_registry_auth with correct credentials
+      helm_registry_auth:
+        username: "{{ username }}"
+        password: "{{ password }}"
+        host: localhost:{{ registry_port }}
+        state: present
+      register: _helm_registry_auth_correct
+
+    - name: Assert that the registry is logged in
+      # Helm binary prints the message to stderr, refence: https://github.com/helm/helm/issues/13464
+      assert:
+        that:
+          - "'Login Succeeded' in _helm_registry_auth_correct.stderr"
+          - "'{{ password }}' not in _helm_registry_auth_correct.command"
+          - "'{{ password }}' not in _helm_registry_auth_correct.stdout"
+          - "'{{ password }}' not in _helm_registry_auth_correct.stderr"
+
+    - name: Ensure that push to the registry is working
+      ansible.builtin.shell: >-
+        helm push "{{ _destination.path }}/k8s-monitoring-1.6.8.tgz"  oci://localhost:{{ registry_port }}/test/
+      register: _save_chart
+      failed_when: _save_chart.rc != 0
+
+    - name: Assert that the chart is saved
+      # Helm binary prints the message to stderr, refence: https://github.com/helm/helm/issues/13464
+      assert:
+        that: "'Pushed: localhost:{{ registry_port }}/test/k8s-monitoring' in _save_chart.stderr"
+
+
+    - name: Test logout
+      helm_registry_auth:
+        host: localhost:{{ registry_port }}
+        state: absent
+      register: _helm_registry_auth_logout
+
+    - name: Assert logout
+      # Helm binary prints the message to stderr
+      assert:
+        that: "'Removing login credentials' in _helm_registry_auth_logout.stderr"
+
+    - name: Test logout idempotency
+      helm_registry_auth:
+        host: localhost:{{ registry_port }}
+        state: absent
+      register: _helm_registry_auth_logout_idempotency
+
+    - name: Assert logout operation did not report change
+      ansible.builtin.assert:
+        that: _helm_registry_auth_logout_idempotency is not changed
+
+    - name: Ensure that not able to push to the registry
+      ansible.builtin.shell: >-
+        helm push "{{ _destination.path }}/k8s-monitoring-1.6.8.tgz"  oci://localhost:{{ registry_port }}/test/
+      register: _save_chart
+      failed_when: _save_chart.rc == 0
+
+    - name: Read content of ~/.config/helm/registry/config.json
+      ansible.builtin.slurp:
+        src: ~/.config/helm/registry/config.json
+      register: _config_json
+
+    - name: Assert that auth data is remove and the chart is not saved
+      # Helm binary prints the message to stderr
+      ansible.builtin.assert:
+        that:
+          - "'push access denied' in _save_chart.stderr"
+          - "'authorization failed' in _save_chart.stderr"
+          - "_save_chart.rc != 0"
+          - "'localhost:{{ registry_port }}' not in _config_json.content | b64decode"
+
+    - name: Test module helm_registry_auth with wrong credentials
+      helm_registry_auth:
+        username: "{{ username }}"
+        password: "{{ wrong_password }}"
+        host: localhost:{{ registry_port }}
+        state: present
+      register: _helm_registry_auth_wrong
+      ignore_errors: true
+
+    - name: Read content of ~/.config/helm/registry/config.json
+      ansible.builtin.slurp:
+        src: ~/.config/helm/registry/config.json
+      register: _config_json
+
+    - name: Assert that the registry is not logged in and auth data is not saved
+      ansible.builtin.assert:
+        that:
+          - "'401 Unauthorized' in _helm_registry_auth_wrong.stderr"
+          - "'{{ wrong_password }}' not in _helm_registry_auth_correct.command"
+          - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stdout"
+          - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stderr"
+          - "'localhost:{{ registry_port }}' not in _config_json.content | b64decode"
+
+  # Clean up
+  always:
+    - name: Stop and remove the registry
+      ansible.builtin.command: docker stop {{ registry_name }}
+      ignore_errors: true
+
+    - name: Remove the tmpfile
+      ansible.builtin.file:
+        state: absent
+        path: "{{ item }}"
+        force: true
+      loop:
+        - "{{ _tmpfile.path }}"
+        - "{{ _destination.path }}"
+      ignore_errors: true
