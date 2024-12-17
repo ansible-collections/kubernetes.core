@@ -148,8 +148,9 @@ options:
   reset_then_reuse_values:
     description:
       - When upgrading package, reset the values to the ones built into the chart, apply the last release's values and merge in any overrides from
-        parameters I(release_values), I(values_files) or I(set_values).
-      - If I(reset_values) or I(reuse_values) is set to C(True), this is ignored.
+        parameters O(release_values), O(values_files) or O(set_values).
+      - If O(reset_values) or O(reuse_values) is set to V(True), this is ignored.
+      - This feature requires helm diff >= 3.9.12.
     type: bool
     required: false
     default: False
@@ -537,7 +538,11 @@ def deploy(
         deploy_command += " --reuse-values=" + str(reuse_values)
 
     if reset_then_reuse_values:
-        deploy_command += " --reset-then-reuse-values"
+        helm_diff_version = get_plugin_version("diff")
+        if LooseVersion(helm_diff_version) < LooseVersion("3.9.12"):
+            module.warn("helm diff support option --reset-then-reuse-values starting release >= 3.9.12")
+        else:
+            deploy_command += " --reset-then-reuse-values"
 
     if wait:
         deploy_command += " --wait"
