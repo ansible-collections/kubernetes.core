@@ -242,7 +242,7 @@ def test_module_run_helm_command(_ansible_helm_module):
     assert (rc, out, err) == (0, output, error)
 
     _ansible_helm_module.run_command.assert_called_once_with(
-        command, environ_update=env_update
+        command, environ_update=env_update, data=None
     )
 
 
