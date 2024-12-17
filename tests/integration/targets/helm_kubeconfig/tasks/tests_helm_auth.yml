@@ -18,7 +18,12 @@
 - set_fact:
     saved_kubeconfig_path: "{{ _dir.path }}/config"
 
-- block:
+- vars:
+    helm_repo_name: autoscaler
+    helm_repo_url: "https://kubernetes.github.io/autoscaler"
+    helm_release_name: "autoscaler"
+    helm_chart_name: "cluster-autoscaler"
+  block:
     - name: Copy default kubeconfig
       copy:
         remote_src: true
@@ -59,14 +64,14 @@
           - plugin_info.plugin_list != []
 
     # helm_repository, helm, helm_info
-    - name: Add test_bitnami chart repository
+    - name: 'Add "{{ helm_repo_name }}" chart repository'
       helm_repository:
         binary_path: "{{ helm_binary }}"
-        name: test_bitnami
+        name: "{{ helm_repo_name }}"
         kubeconfig: "{{ test_kubeconfig | default(omit) }}"
         validate_certs: "{{ test_validate_certs | default(omit) }}"
         ca_cert: "{{ test_ca_cert | default(omit) }}"
-        repo_url: https://charts.bitnami.com/bitnami
+        repo_url: "{{ helm_repo_url }}"
       register: repository
 
     - name: Assert that repository was added
@@ -77,8 +82,8 @@
     - name: Install chart from repository added before
       helm:
         binary_path: "{{ helm_binary }}"
-        name: rabbitmq
-        chart_ref: test_bitnami/rabbitmq
+        name: "{{ helm_release_name }}"
+        chart_ref: "{{ helm_repo_name }}/{{ helm_chart_name }}"
         namespace: "{{ helm_namespace }}"
         update_repo_cache: true
         kubeconfig: "{{ test_kubeconfig | default(omit) }}"
@@ -98,7 +103,7 @@
         kubeconfig: "{{ test_kubeconfig | default(omit) }}"
         validate_certs: "{{ test_validate_certs | default(omit) }}"
         ca_cert: "{{ test_ca_cert | default(omit) }}"
-        name: "rabbitmq"
+        name: "{{ helm_release_name }}"
         namespace: "{{ helm_namespace }}"
       register: chart_info
 
@@ -112,7 +117,7 @@
     - name: Remove chart
       helm:
         binary_path: "{{ helm_binary }}"
-        name: rabbitmq
+        name: "{{ helm_release_name }}"
         namespace: "{{ helm_namespace }}"
         kubeconfig: "{{ test_kubeconfig | default(omit) }}"
         validate_certs: "{{ test_validate_certs | default(omit) }}"
@@ -131,7 +136,7 @@
         kubeconfig: "{{ test_kubeconfig | default(omit) }}"
         validate_certs: "{{ test_validate_certs | default(omit) }}"
         ca_cert: "{{ test_ca_cert | default(omit) }}"
-        name: "rabbitmq"
+        name: "{{ helm_release_name }}"
         namespace: "{{ helm_namespace }}"
       register: chart_info
 
@@ -143,7 +148,7 @@
     - name: Remove chart repository
       helm_repository:
         binary_path: "{{ helm_binary }}"
-        name: test_bitnami
+        name: "{{ helm_repo_name }}"
         kubeconfig: "{{ test_kubeconfig | default(omit) }}"
         validate_certs: "{{ test_validate_certs | default(omit) }}"
         ca_cert: "{{ test_ca_cert | default(omit) }}"
@@ -192,6 +197,6 @@
     - name: Delete helm repository
       helm_repository:
         binary_path: "{{ helm_binary }}"
-        name: test_bitnami
+        name: "{{ helm_repo_name }}"
         state: absent
       ignore_errors: true
