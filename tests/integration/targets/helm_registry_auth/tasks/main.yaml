@@ -136,7 +136,7 @@
           - "'push access denied' in _save_chart.stderr"
           - "'authorization failed' in _save_chart.stderr"
           - "_save_chart.rc != 0"
-          - "'localhost' not in _config_json.content | b64decode"
+          - "'localhost:{{ registry_port }}' not in _config_json.content | b64decode"
 
     - name: Test module helm_registry_auth with wrong credentials
       helm_registry_auth:
@@ -159,7 +159,7 @@
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.command"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stdout"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stderr"
-          - "'localhost' not in _config_json.content | b64decode"
+          - "'localhost:{{ registry_port }}' not in _config_json.content | b64decode"
 
   # Clean up
   always:
