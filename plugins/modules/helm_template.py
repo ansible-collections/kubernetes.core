@@ -72,6 +72,13 @@ options:
       - If the directory already exists, it will be overwritten.
     required: false
     type: path
+  insecure_registry:
+    description:
+      - Skip TLS certificate checks for the chart download
+    required: false
+    type: bool
+    default: false
+    version_added: 5.1.0
   release_name:
     description:
       - Release name to use in rendered templates.
@@ -221,6 +228,7 @@ def template(
     dependency_update=None,
     disable_hook=None,
     output_dir=None,
+    insecure_registry=None,
     show_only=None,
     release_name=None,
     release_namespace=None,
@@ -250,6 +258,9 @@ def template(
 
     if output_dir:
         cmd += " --output-dir=" + output_dir
+
+    if insecure_registry:
+        cmd += " --insecure-skip-tls-verify"
 
     if show_only:
         for template in show_only:
@@ -289,6 +300,7 @@ def main():
             include_crds=dict(type="bool", default=False),
             release_name=dict(type="str", aliases=["name"]),
             output_dir=dict(type="path"),
+            insecure_registry=dict(type="bool", default=False),
             release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
             show_only=dict(type="list", default=[], elements="str"),
@@ -308,6 +320,7 @@ def main():
     include_crds = module.params.get("include_crds")
     release_name = module.params.get("release_name")
     output_dir = module.params.get("output_dir")
+    insecure_registry = module.params.get("insecure_registry")
     show_only = module.params.get("show_only")
     release_namespace = module.params.get("release_namespace")
     release_values = module.params.get("release_values")
@@ -337,6 +350,7 @@ def main():
         disable_hook=disable_hook,
         release_name=release_name,
         output_dir=output_dir,
+        insecure_registry=insecure_registry,
         release_namespace=release_namespace,
         release_values=release_values,
         show_only=show_only,
