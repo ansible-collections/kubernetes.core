@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ default "ansible-configmap" .Values.myConfigmapName }}
+data:
+  myValue: {{ default "test" .Values.myValue }}
+  deploymentTime: {{ now }}
