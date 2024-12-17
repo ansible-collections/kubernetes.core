@@ -1,0 +1,38 @@
+---
+- name: Ensure we can log into the helm registry
+  command: >-
+    {{ helm_binary_path }} registry login
+    -u {{ chart_repo_username }}
+    -p {{ chart_repo_password }}
+    {{ chart_repo_url }}
+
+- name: Package chart and push to helm registry
+  block:
+    - name: Create temporary directory to store chart
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .chart
+      register: _tmpfile
+
+    - name: Package helm chart
+      command: '{{ helm_binary_path }} package {{ chart_local_path }} --destination {{ _tmpfile.path }}'
+
+    - name: Locate helm chart package
+      ansible.builtin.find:
+        paths: "{{ _tmpfile.path }}"
+        patterns: '*.tgz'
+      register: _files
+
+    - name: Helm push chart to the registry
+      command: '{{ helm_binary_path }} push {{ _files.files.0.path }} oci://{{ chart_repo_url }}/{{ chart_repo_path }}'
+
+  always:
+    - name: Logout from registry
+      command: '{{ helm_binary_path }} registry logout {{ chart_repo_url }}'
+      ignore_errors: true
+
+    - name: Delete temporary directory
+      ansible.builtin.file:
+        state: absent
+        path: '{{ _tmpfile.path }}'
+      ignore_errors: true
