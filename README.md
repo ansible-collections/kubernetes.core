@@ -21,7 +21,7 @@ For more information about communication, see the [Ansible communication guide](
 ## Requirements
 
 <!--start requires_ansible-->
-### Ansible version compatibility
+## Ansible version compatibility
 
 This collection has been tested against following Ansible versions: **>=2.15.0**.
 
@@ -47,28 +47,28 @@ This collection supports Kubernetes versions >= 1.24.
 Click on the name of a plugin or module to view that content's documentation:
 
 <!--start collection content-->
-#### Connection plugins
+### Connection plugins
 Name | Description
 --- | ---
 [kubernetes.core.kubectl](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
 
-#### K8s filter plugins
+### K8s filter plugins
 Name | Description
 --- | ---
 kubernetes.core.k8s_config_resource_name|Generate resource name for the given resource of type ConfigMap, Secret
 
-#### Inventory plugins
+### Inventory plugins
 Name | Description
 --- | ---
 [kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_inventory.rst)|Kubernetes (K8s) inventory source
 
-#### Lookup plugins
+### Lookup plugins
 Name | Description
 --- | ---
 [kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_lookup.rst)|Query the K8s API
 [kubernetes.core.kustomize](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kustomize_lookup.rst)|Build a set of kubernetes resources using a 'kustomization.yaml' file.
 
-#### Modules
+### Modules
 Name | Description
 --- | ---
 [kubernetes.core.helm](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_module.rst)|Manages Kubernetes packages with the Helm package manager
@@ -76,6 +76,7 @@ Name | Description
 [kubernetes.core.helm_plugin](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_module.rst)|Manage Helm plugins
 [kubernetes.core.helm_plugin_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_info_module.rst)|Gather information about Helm plugins
 [kubernetes.core.helm_pull](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_pull_module.rst)|download a chart from a repository and (optionally) unpack it in local directory.
+[kubernetes.core.helm_registry_auth](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_registry_auth_module.rst)|Helm registry authentication module
 [kubernetes.core.helm_repository](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_repository_module.rst)|Manage Helm repositories.
 [kubernetes.core.helm_template](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_template_module.rst)|Render chart templates
 [kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_module.rst)|Manage Kubernetes (K8s) objects
