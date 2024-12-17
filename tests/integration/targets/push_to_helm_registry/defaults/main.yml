@@ -1,0 +1,5 @@
+---
+helm_binary_path: "helm"
+chart_repo_url: 'localhost:6035'
+chart_repo_username: testuser
+chart_repo_password: 'pass123!'

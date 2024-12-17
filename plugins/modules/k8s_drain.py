@@ -106,7 +106,8 @@ EXAMPLES = r"""
   kubernetes.core.k8s_drain:
     state: drain
     name: foo
-    force: yes
+    delete_options:
+      force: yes
 
 - name: Drain node "foo", but abort if there are pods not managed by a ReplicationController, Job, or DaemonSet, and use a grace period of 15 minutes.
   kubernetes.core.k8s_drain:
@@ -143,6 +144,7 @@ result:
 """
 
 import copy
+import json
 import time
 import traceback
 from datetime import datetime
@@ -185,6 +187,17 @@ except ImportError:
         k8s_import_exception = e
         K8S_IMP_ERR = traceback.format_exc()
         HAS_EVICTION_API = False
+
+
+def format_dynamic_api_exc(exc):
+    if exc.body:
+        if exc.headers and exc.headers.get("Content-Type") == "application/json":
+            message = json.loads(exc.body).get("message")
+            if message:
+                return message
+        return exc.body
+    else:
+        return "%s Reason: %s" % (exc.status, exc.reason)
 
 
 def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
@@ -338,7 +351,7 @@ class K8sDrainAnsible(object):
                 if exc.reason != "Not Found":
                     self._module.fail_json(
                         msg="Failed to delete pod {0}/{1} due to: {2}".format(
-                            namespace, name, exc.reason
+                            namespace, name, to_native(format_dynamic_api_exc(exc))
                         )
                     )
             except Exception as exc:

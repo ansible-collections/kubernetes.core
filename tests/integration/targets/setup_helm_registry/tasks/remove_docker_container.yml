@@ -1,0 +1,15 @@
+---
+- name: Inspect docker container
+  command: docker container inspect {{ registry_name }} -f '{{ '{{' }} .State.Running {{ '}}' }}'
+  register: _inspect
+  ignore_errors: true
+
+- name: Remove container
+  when: _inspect.rc == 0
+  block:
+    - name: Stop running container
+      command: docker container stop {{ registry_name }}
+      when: _inspect.stdout == "true"
+
+    - name: Remove container
+      command: docker container rm {{ registry_name }}
