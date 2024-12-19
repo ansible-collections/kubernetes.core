@@ -4,4 +4,4 @@
   loop_control:
     loop_var: helm_version
   with_items:
-    - "v3.7.0"
+    - "v3.8.0"

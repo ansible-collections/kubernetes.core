@@ -1,0 +1,9 @@
+---
+- name: Remove Docker container
+  ansible.builtin.include_tasks: remove_docker_container.yml
+
+- name: Delete temporary directory
+  file:
+    state: absent
+    path: '{{ _tmpfile.path }}'
+  ignore_errors: true
