@@ -1,0 +1,32 @@
+---
+- name: Ensure we can talk to docker daemon
+  ansible.builtin.shell:
+    cmd: docker ps
+
+- name: Create temporary directory to store file in
+  tempfile:
+    state: directory
+    suffix: .helm_registry
+  register: _tmpfile
+  # notify:
+  #   - Teardown registry
+
+- name: Create authentication file
+  copy:
+    content: "{{ registry_credentials }}"
+    dest: "{{ _tmpfile.path }}/htpasswd"
+
+- name: Remove existing registry
+  ansible.builtin.include_tasks: remove_docker_container.yml
+
+- name: Create registry container
+  command: >-
+    docker run -d
+    -p {{ registry_port }}:5000
+    --restart=always
+    --name "{{ registry_name }}"
+    -v "{{ _tmpfile.path }}:/auth"
+    -e "REGISTRY_AUTH=htpasswd"
+    -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm"
+    -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
+    registry:2
