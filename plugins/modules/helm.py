@@ -540,7 +540,9 @@ def deploy(
     if reset_then_reuse_values:
         helm_version = module.get_helm_version()
         if LooseVersion(helm_version) < LooseVersion("3.14.0"):
-            module.warn("helm support option --reset-then-reuse-values starting release >= 3.14.0")
+            module.warn(
+                "helm support option --reset-then-reuse-values starting release >= 3.14.0"
+            )
         else:
             deploy_command += " --reset-then-reuse-values"
 
@@ -699,9 +701,13 @@ def helmdiff_check(
         helm_diff_version = get_plugin_version("diff")
         helm_version = module.get_helm_version()
         if LooseVersion(helm_diff_version) < LooseVersion("3.9.12"):
-            module.warn("helm diff support option --reset-then-reuse-values starting release >= 3.9.12")
+            module.warn(
+                "helm diff support option --reset-then-reuse-values starting release >= 3.9.12"
+            )
         elif LooseVersion(helm_version) < LooseVersion("3.14.0"):
-            module.warn("helm support option --reset-then-reuse-values starting release >= 3.14.0")
+            module.warn(
+                "helm support option --reset-then-reuse-values starting release >= 3.14.0"
+            )
         else:
             cmd += " --reset-then-reuse-values"
 
