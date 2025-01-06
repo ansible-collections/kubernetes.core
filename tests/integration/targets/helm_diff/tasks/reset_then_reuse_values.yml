@@ -23,6 +23,14 @@
         src: "test-chart-reuse-values"
         dest: "{{ helm_dir.path }}"
 
+    - name: Delete existing namespace
+      kubernetes.core.k8s:
+        state: absent
+        wait: true
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+      ignore_errors: true
+
     - name: Create helm release
       kubernetes.core.helm:
         state: present
