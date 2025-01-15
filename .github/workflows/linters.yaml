@@ -22,3 +22,5 @@ jobs:
 
       - name: run-ansible-lint
         uses: ansible/ansible-lint@v24.7.0
+        with:
+          args: '--profile production --exclude tests/integration --exclude tests/sanity'
