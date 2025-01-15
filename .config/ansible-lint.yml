@@ -1,0 +1,10 @@
+---
+profile: production
+
+exclude_paths:
+  - tests/integration/
+  - tests/sanity/
+  - tests/unit/
+  - changelog/
+  - docs/
+  - meta/

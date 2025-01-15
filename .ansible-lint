@@ -1,6 +1,0 @@
----
-profile: production
-
-exclude_paths:
-  - tests/integration
-  - tests/sanity
