@@ -8,8 +8,7 @@ on:
       - unlabeled
       - synchronize
     branches:
-      - main
-      - stable-*
+      - fake-branch
 
 jobs:
   splitter:
