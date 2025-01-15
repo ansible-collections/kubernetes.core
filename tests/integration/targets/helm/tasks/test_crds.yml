@@ -5,17 +5,17 @@
     helm_namespace: "{{ test_namespace[0] }}"
   block:
     - name: Create namespace
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "{{ helm_namespace }}"
 
     - name: Copy test chart
-      copy:
+      ansible.builtin.copy:
         src: "{{ test_chart }}"
         dest: "/tmp/helm_test_crds/"
 
     - name: Install chart while skipping CRDs
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/helm_test_crds/{{ test_chart }}"
         namespace: "{{ helm_namespace }}"
@@ -23,13 +23,14 @@
         skip_crds: true
       register: install
 
-    - assert:
+    - name: Assert that installation succeed
+      ansible.builtin.assert:
         that:
           - install is changed
           - install.status.name == "test-crds"
 
     - name: Fail to create custom resource
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: ansible.com/v1
           kind: Foo
@@ -38,30 +39,31 @@
             name: test-foo
           foobar: footest
       ignore_errors: true
-      register: result
+      failed_when: result is successful
 
-    - assert:
+    - name: Assert that module failed
+      ansible.builtin.assert:
         that:
           - result is failed
           - "result.msg.startswith('Failed to find exact match for ansible.com/v1.Foo')"
 
     # Helm won't install CRDs into an existing release, so we need to delete this, first
     - name: Uninstall chart
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         namespace: "{{ helm_namespace }}"
         name: test-crds
         state: absent
 
     - name: Install chart with CRDs
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "/tmp/helm_test_crds/{{ test_chart }}"
         namespace: "{{ helm_namespace }}"
         name: test-crds
 
     - name: Create custom resource
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: ansible.com/v1
           kind: Foo
@@ -71,29 +73,30 @@
           foobar: footest
       register: result
 
-    - assert:
+    - name: Assert that module succeed
+      ansible.builtin.assert:
         that:
           - result is changed
           - result.result.foobar == "footest"
 
   always:
     - name: Remove chart
-      file:
+      ansible.builtin.file:
         path: "/tmp/helm_test_crds"
         state: absent
-      ignore_errors: true
+      failed_when: false
 
     - name: Remove namespace
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
-      ignore_errors: true
+      failed_when: false
 
     # CRDs aren't deleted with a namespace, so we need to manually delete it
     - name: Remove CRD
-      k8s:
+      kubernetes.core.k8s:
         kind: CustomResourceDefinition
         name: foos.ansible.com
         state: absent
-      ignore_errors: true
+      failed_when: false

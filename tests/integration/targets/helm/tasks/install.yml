@@ -1,14 +1,14 @@
 ---
 - name: Init Helm folders
-  file:
+  ansible.builtin.file:
     path: /tmp/helm/
     state: directory
 
 - name: Unarchive Helm binary
-  unarchive:
+  ansible.builtin.unarchive:
     src: 'https://get.helm.sh/{{ helm_archive_name | default(helm_default_archive_name) }}'
     dest: /tmp/helm/
-    remote_src: yes
+    remote_src: true
   retries: 10
   delay: 5
   register: result

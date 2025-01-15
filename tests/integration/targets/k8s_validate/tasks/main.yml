@@ -221,7 +221,7 @@
           ansible.builtin.assert:
             that:
               - '"This is required to use in-memory config." in _result.msg'
-      
+
   always:
     - name: Remove temp directory
       ansible.builtin.file:

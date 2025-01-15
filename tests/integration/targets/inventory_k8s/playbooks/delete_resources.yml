@@ -10,10 +10,10 @@
 
   tasks:
     - name: Delete temporary files
-      file:
+      ansible.builtin.file:
         state: absent
         path: "{{ user_credentials_dir ~ '/' ~ item }}"
-      ignore_errors: true
+      failed_when: false
       with_items:
         - test_inventory_aliases_with_ssl_k8s.yml
         - test_inventory_aliases_no_ssl_k8s.yml
@@ -23,7 +23,7 @@
         - host_data.txt
 
     - name: Remove inventory namespace
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: inventory

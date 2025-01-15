@@ -1,49 +1,49 @@
 ---
 - name: "Ensure test_helm_repo doesn't exist"
-  helm_repository:
+  kubernetes.core.helm_repository:
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     state: absent
 
 - name: Add test_helm_repo chart repository
-  helm_repository:
+  kubernetes.core.helm_repository:
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     repo_url: "{{ chart_test_repo }}"
   register: repository
 
 - name: Assert that test_helm_repo repository is added
-  assert:
+  ansible.builtin.assert:
     that:
       - repository is changed
 
 - name: Check idempotency
-  helm_repository:
+  kubernetes.core.helm_repository:
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     repo_url: "{{ chart_test_repo }}"
   register: repository
 
 - name: Assert idempotency
-  assert:
+  ansible.builtin.assert:
     that:
       - repository is not changed
 
 - name: Failed to add repository with the same name
-  helm_repository:
+  kubernetes.core.helm_repository:
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     repo_url: "https://other-charts.url"
   register: repository_errors
-  ignore_errors: yes
+  failed_when: repository_errors is successful
 
 - name: Assert that adding repository with the same name failed
-  assert:
+  ansible.builtin.assert:
     that:
       - repository_errors is failed
 
 - name: Succesfully add repository with the same name when forcing
-  helm_repository:
+  kubernetes.core.helm_repository:
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     repo_url: "{{ chart_test_repo }}"
@@ -51,30 +51,30 @@
   register: repository
 
 - name: Assert that test_helm_repo repository is changed
-  assert:
+  ansible.builtin.assert:
     that:
       - repository is changed
 
 - name: Remove test_helm_repo chart repository
-  helm_repository:
+  kubernetes.core.helm_repository:
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     state: absent
   register: repository
 
 - name: Assert that test_helm_repo repository is removed
-  assert:
+  ansible.builtin.assert:
     that:
       - repository is changed
 
 - name: Check idempotency after remove
-  helm_repository:
+  kubernetes.core.helm_repository:
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     state: absent
   register: repository
 
 - name: Assert idempotency
-  assert:
+  ansible.builtin.assert:
     that:
       - repository is not changed

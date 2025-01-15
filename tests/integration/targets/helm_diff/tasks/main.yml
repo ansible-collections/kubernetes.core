@@ -6,19 +6,19 @@
   block:
 
     - name: Install helm diff
-      helm_plugin:
+      kubernetes.core.helm_plugin:
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
         plugin_version: 3.4.0
 
     - name: Copy test chart
-      copy:
+      ansible.builtin.copy:
         src: "test-chart/"
         dest: "{{ test_chart_ref }}"
 
     - name: Install local chart
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -26,12 +26,13 @@
         create_namespace: true
       register: install
 
-    - assert:
+    - name: Assert that module reported change
+      ansible.builtin.assert:
         that:
           - install is changed
 
     - name: Modify local chart
-      blockinfile:
+      ansible.builtin.blockinfile:
         create: yes
         path: "{{ test_chart_ref }}/templates/anothermap.yaml"
         block: !unsafe |
@@ -43,7 +44,7 @@
             foo: {{ .Values.foo | default "bar" }}
 
     - name: Test helm diff in check mode
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -55,51 +56,53 @@
     - name: Check if helm diff check is correct
       vars:
         foo_bar_value: "+   foo: bar"
-      assert:
+      ansible.builtin.assert:
         that:
           - foo_bar_value in diff_result.diff.prepared
 
     - name: Upgrade local chart with modifications
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
         chart_ref: "{{ test_chart_ref }}"
       register: install
 
-    - assert:
+    - name: Assert that module reported change
+      ansible.builtin.assert:
         that:
           - install is changed
 
     - name: No diff in check mode when no change
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
         chart_ref: "{{ test_chart_ref }}"
-      check_mode: yes
+      check_mode: true
       diff: true
       register: diff_result
 
     - name: Check if no diff in check mode when no change
-      assert:
+      ansible.builtin.assert:
         that:
           - '"diff" not in diff_result'
 
     - name: Upgrade modified local chart idempotency check
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
         chart_ref: "{{ test_chart_ref }}"
       register: install
 
-    - assert:
+    - name: Assert that module did not reported change
+      ansible.builtin.assert:
         that:
           - install is not changed
 
     - name: Modify values
-      blockinfile:
+      ansible.builtin.blockinfile:
         create: true
         path: "{{ test_chart_ref }}/values.yml"
         block: |
@@ -107,7 +110,7 @@
           foo: baz
 
     - name: Upgrade with values file
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -116,12 +119,13 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - name: Assert that module did reported change
+      ansible.builtin.assert:
         that:
           - install is changed
 
     - name: Upgrade with values file idempotency check
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -130,12 +134,13 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - name: Assert that module did not reported change
+      ansible.builtin.assert:
         that:
           - install is not changed
 
     - name: Upgrade with values
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -146,12 +151,13 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - name: Assert that module reported change
+      ansible.builtin.assert:
         that:
           - install is changed
 
     - name: Upgrade with values idempotency check
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -162,12 +168,13 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - name: Assert that module did not reported change
+      ansible.builtin.assert:
         that:
           - install is not changed
 
     - name: Upgrade with set_values
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -181,12 +188,13 @@
             value_type: string
       register: install
 
-    - assert:
+    - name: Assert that module reported change
+      ansible.builtin.assert:
         that:
           - install is changed
 
     - name: Upgrade with set_values idempotency check
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: test-chart
         namespace: "{{ helm_namespace }}"
@@ -200,20 +208,21 @@
             value_type: string
       register: install
 
-    - assert:
+    - name: Assert that module did not reported change
+      ansible.builtin.assert:
         that:
           - install is not changed
 
     # Test helm diff with chart_repo_url
     - name: Uninstall helm diff
-      helm_plugin:
+      kubernetes.core.helm_plugin:
         binary_path: "{{ helm_binary }}"
         state: absent
         plugin_name: diff
       ignore_errors: true
 
     - name: Define chart variables
-      set_fact:
+      ansible.builtin.set_fact:
         test_chart_values:
           myValue: 'Some ConfigMap data value'
           myConfigmapName: 'ansible-config-from-url'
@@ -249,7 +258,7 @@
       ansible.builtin.command: "{{ helm_binary }} registry login -u testuser -p 'pass123!' localhost:6035"
 
     - name: Install chart from remote URL
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "{{ test_chart_ref_url }}"
         chart_version: 0.1.0
@@ -258,7 +267,7 @@
         release_values: "{{ test_chart_values }}"
 
     - name: Upgrade chart
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "{{ test_chart_ref_url }}"
         chart_version: 0.1.0
@@ -269,7 +278,7 @@
       register: _upgrade
 
     - name: Assert that module raised a warning
-      assert:
+      ansible.builtin.assert:
         that:
           - not _upgrade.changed
           - _upgrade.warnings is defined
@@ -277,14 +286,14 @@
           - _upgrade.warnings[0] == "The default idempotency check can fail to report changes in certain cases. Install helm diff >= 3.4.1 for better results."
 
     - name: Install helm diff (version=3.4.1)
-      helm_plugin:
+      kubernetes.core.helm_plugin:
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
         plugin_version: 3.4.1
 
     - name: Upgrade chart once again
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: "{{ test_chart_ref_url }}"
         chart_version: 0.1.0
@@ -295,24 +304,24 @@
       register: _upgrade_2
 
     - name: Assert that module raised a warning
-      assert:
+      ansible.builtin.assert:
         that:
           - _upgrade_2.changed
           - _upgrade_2.warnings is not defined
 
   always:
     - name: Remove chart directory
-      file:
+      ansible.builtin.file:
         path: "{{ test_chart_ref }}"
         state: absent
-      ignore_errors: true
+      failed_when: false
 
     - name: Uninstall helm diff
-      helm_plugin:
+      kubernetes.core.helm_plugin:
         binary_path: "{{ helm_binary }}"
         state: absent
         plugin_name: diff
-      ignore_errors: true
+      failed_when: false
 
     - name: Remove helm namespace
       k8s:
@@ -321,6 +330,7 @@
         name: "{{ helm_namespace }}"
         state: absent
         wait: true
-      ignore_errors: true
+      failed_when: false
 
-- include_tasks: reuse_values.yml
+- name: Include file 'reuse_values.yml'
+  ansible.builtin.include_tasks: reuse_values.yml

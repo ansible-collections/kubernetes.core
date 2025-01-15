@@ -1,61 +1,64 @@
 ---
-- name: Define helm versions to test
-  set_fact:
+- name: Run tests
+  vars:
     helm_versions:
       - 3.8.0
       - 3.1.0
       - 3.0.0
       - 2.3.0
-
-- block:
+  block:
     - name: Create temp directory for helm tests
-      tempfile:
+      ansible.builtin.tempfile:
         state: directory
       register: tmpdir
 
     - name: Set temp directory fact
-      set_fact:
+      ansible.builtin.set_fact:
         temp_dir: "{{ tmpdir.path }}"
 
-    - set_fact:
+    - name: Set destination variable
+      ansible.builtin.set_fact:
         destination: "{{ temp_dir }}"
 
     - name: Create Helm directories
-      file:
+      ansible.builtin.file:
         state: directory
         path: "{{ temp_dir }}/{{ item }}"
       with_items: "{{ helm_versions }}"
 
     - name: Unarchive Helm binary
-      unarchive:
+      ansible.builtin.unarchive:
         src: "https://get.helm.sh/helm-v{{ item }}-linux-amd64.tar.gz"
         dest: "{{ temp_dir }}/{{ item }}"
-        remote_src: yes
+        remote_src: true
       with_items: "{{ helm_versions }}"
 
     # Testing helm pull with helm version == 2.3.0
-    - block:
+    - name: 'Testing helm pull with helm version == 2.3.0'
+      vars:
+        helm_path: "{{ temp_dir }}/2.3.0/linux-amd64/helm"
+      block:
         - name: Assert that helm pull failed with helm <= 3.0.0
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
           ignore_errors: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "This module requires helm >= 3.0.0, current version is 2.3.0"
 
-      vars:
-        helm_path: "{{ temp_dir }}/2.3.0/linux-amd64/helm"
-
     # Testing helm pull with helm version == 3.0.0
-    - block:
+    - name: 'Testing helm pull with helm version == 3.0.0'
+      vars:
+        helm_path: "{{ temp_dir }}/3.0.0/linux-amd64/helm"
+      block:
         - name: Download chart using chart_ssl_cert_file
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -65,13 +68,13 @@
           register: _result
 
         - name: assert that module failed with proper message
-          assert:
+          ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter chart_ssl_cert_file requires helm >= 3.1.0, current version is 3.0.0"
 
         - name: Download chart using chart_ssl_key_file
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -80,14 +83,14 @@
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter chart_ssl_key_file requires helm >= 3.1.0, current version is 3.0.0"
 
         - name: Download chart using chart_ca_cert
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -96,19 +99,19 @@
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter chart_ca_cert requires helm >= 3.1.0, current version is 3.0.0"
 
-      vars:
-        helm_path: "{{ temp_dir }}/3.0.0/linux-amd64/helm"
-
     # Testing helm pull with helm version == 3.1.0
-    - block:
+    - name: 'Testing helm pull with helm version == 3.1.0'
+      vars:
+        helm_path: "{{ temp_dir }}/3.1.0/linux-amd64/helm"
+      block:
         - name: Download chart using chart_ssl_cert_file, chart_ca_cert, chart_ssl_key_file
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -118,8 +121,8 @@
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.assert:
             that:
               - _result is changed
               - '"--ca-file ca_cert_file" in _result.command'
@@ -127,7 +130,7 @@
               - '"--key-file ssl_key_file" in _result.command'
 
         - name: Download chart using skip_tls_certs_check
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -136,21 +139,21 @@
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter skip_tls_certs_check requires helm >= 3.3.0, current version is 3.1.0"
 
-      vars:
-        helm_path: "{{ temp_dir }}/3.1.0/linux-amd64/helm"
-
     # Testing helm pull with helm version == 3.8.0
-    - block:
+    - name: 'Testing helm pull with helm version == 3.8.0'
+      vars:
+        helm_path: "{{ temp_dir }}/3.8.0/linux-amd64/helm"
+      block:
         # Test options chart_version, verify, pass-credentials, provenance, untar_chart
         # skip_tls_certs_check, repo_url, repo_username, repo_password
         - name: Testing chart version
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: redis
             destination: "{{ destination }}"
@@ -167,7 +170,8 @@
           check_mode: true
           register: _result
 
-        - assert:
+        - name: Validate module execution result
+          ansible.builtin.assert:
             that:
               - _result is changed
               - '"--version 0.2.1" in _result.command'
@@ -182,7 +186,7 @@
               - '"--keyring pubring.gpg" in _result.command'
 
         - name: Download chart using chart_ref
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
             destination: "{{ destination }}"
@@ -194,14 +198,14 @@
           register: _chart
 
         - name: Validate that chart was downloaded
-          assert:
+          ansible.builtin.assert:
             that:
               - _result is changed
               - _chart.stat.exists
               - _chart.stat.isreg
 
         - name: Download chart using untar_chart
-          helm_pull:
+          kubernetes.core.helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
             destination: "{{ destination }}"
@@ -209,23 +213,19 @@
           register: _result
 
         - name: Check chart on local filesystem
-          stat:
+          ansible.builtin.stat:
             path: "{{ destination }}/redis"
           register: _chart
 
         - name: Validate that chart was downloaded
-          assert:
+          ansible.builtin.assert:
             that:
               - _result is changed
               - _chart.stat.exists
               - _chart.stat.isdir
 
-      vars:
-        helm_path: "{{ temp_dir }}/3.8.0/linux-amd64/helm"
-
-
   always:
     - name: Delete temp directory
-      file:
+      ansible.builtin.file:
         state: absent
         path: "{{ temp_dir }}"

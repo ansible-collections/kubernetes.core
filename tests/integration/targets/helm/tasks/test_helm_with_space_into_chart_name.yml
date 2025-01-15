@@ -18,7 +18,7 @@
         dest: "{{ helm_dir }}"
 
     - name: Install chart from local source with Space into name
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
         chart_ref: "{{ helm_dir }}/{{ helm_local_src | basename }}"
@@ -27,20 +27,20 @@
       register: install_chart
 
     - name: Assert that chart is installed
-      assert:
+      ansible.builtin.assert:
         that:
           - install_chart is changed
           - install_chart.status.status | lower == 'deployed'
 
     - name: Check helm_info content
-      helm_info:
+      kubernetes.core.helm_info:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
         namespace: "{{ helm_namespace }}"
       register: chart_info
 
     - name: Assert that Chart is installed (using helm_info)
-      assert:
+      ansible.builtin.assert:
         that:
           - chart_info.status.status | lower == 'deployed'
 
@@ -51,7 +51,7 @@
         name: "{{ test_dir.path }}"
 
     - name: Remove helm namespace
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: "{{ helm_namespace }}"

@@ -12,7 +12,7 @@
 
   tasks:
     - name: Create inventory files
-      copy:
+      ansible.builtin.copy:
         content: "{{ item.content }}"
         dest: "{{ item.path }}"
       vars:

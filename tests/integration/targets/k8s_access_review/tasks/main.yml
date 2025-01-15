@@ -1,7 +1,5 @@
 ---
 - name: Create a SelfSubjectAccessReview resource
-  register: can_i_create_namespaces
-  ignore_errors: yes
   k8s:
     state: present
     definition:
@@ -12,9 +10,10 @@
           group: v1
           resource: Namespace
           verb: create
+  register: can_i_create_namespaces
 
 - name: Assert that the SelfSubjectAccessReview request succeded
-  assert:
+  ansible.builtin.assert:
     that:
       - can_i_create_namespaces is successful
       - can_i_create_namespaces.result.status is defined

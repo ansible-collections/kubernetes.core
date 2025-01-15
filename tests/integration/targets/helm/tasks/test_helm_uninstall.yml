@@ -4,7 +4,9 @@
     version: "3.7.0"
   register: test_version
 
-- vars:
+- name: Run test
+  when: test_version.result
+  vars:
     chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
     chart_name: "test-wait-uninstall"
     chart_name_pending: "test-uninstall-pending-release"
@@ -12,7 +14,7 @@
   block:
 
   - name: Install chart
-    helm:
+    kubernetes.core.helm:
       binary_path: "{{ helm_binary }}"
       name: "{{ chart_name }}"
       chart_ref: "{{ chart_source }}"
@@ -20,36 +22,37 @@
       create_namespace: true
 
   - name: Delete chart with wait
-    helm:
+    kubernetes.core.helm:
       state: absent
       binary_path: "{{ helm_binary }}"
       name: "{{ chart_name }}"
       namespace: "{{ helm_namespace }}"
-      wait: yes
+      wait: true
     register: uninstall
 
   - name: assert warning has been raised
-    assert:
+    ansible.builtin.assert:
       that:
       - uninstall.warnings
 
   - name: Create temp directory
-    tempfile:
+    ansible.builtin.tempfile:
       state: directory
       suffix: .test
     register: _result
 
-  - set_fact:
+  - name: Set helm_tmp_dir variable
+    ansible.builtin.set_fact:
       helm_tmp_dir: "{{ _result.path }}"
 
   - name: Unarchive Helm binary
-    unarchive:
+    ansible.builtin.unarchive:
       src: 'https://get.helm.sh/helm-v3.7.0-linux-amd64.tar.gz'
       dest: "{{ helm_tmp_dir }}"
-      remote_src: yes
+      remote_src: true
 
   - name: Install chart
-    helm:
+    kubernetes.core.helm:
       binary_path: "{{ helm_tmp_dir }}/linux-amd64/helm"
       name: "{{ chart_name }}"
       chart_ref: "{{ chart_source }}"
@@ -57,12 +60,12 @@
       create_namespace: true
 
   - name: uninstall chart again using recent version
-    helm:
+    kubernetes.core.helm:
       state: absent
       binary_path: "{{ helm_tmp_dir }}/linux-amd64/helm"
       name: "{{ chart_name }}"
       namespace: "{{ helm_namespace }}"
-      wait: yes
+      wait: true
     register: uninstall
 
   # Test uninstall chart release with 'pending-install' status
@@ -74,7 +77,7 @@
       chart_release_namespace: "{{ helm_namespace }}"
 
   - name: Uninstall chart release with 'pending-install' status
-    helm:
+    kubernetes.core.helm:
       binary_path: "{{ helm_binary }}"
       release_name: "{{ chart_name_pending }}"
       namespace: "{{ helm_namespace }}"
@@ -82,30 +85,27 @@
     register: _uninstall
 
   - name: Get Helm release details
-    helm_info:
+    kubernetes.core.helm_info:
       binary_path: "{{ helm_binary }}"
       release_namespace: "{{ helm_namespace }}"
       release_state: pending
       release_name: "{{ chart_name_pending }}"
     register: _info
 
-  - name: assert release does not exist anymore
-    assert:
+  - name: Assert release does not exist anymore
+    ansible.builtin.assert:
       that:
       - _uninstall is changed
       - _info.status is undefined
 
   always:
   - name: Delete temp directory
-    file:
+    ansible.builtin.file:
       path: "{{ helm_tmp_dir }}"
       state: absent
-    ignore_errors: true
 
   - name: Remove namespace
-    k8s:
+    kubernetes.core.k8s:
       kind: Namespace
       name: "{{ helm_namespace }}"
       state: absent
-    ignore_errors: true
-  when: test_version.result

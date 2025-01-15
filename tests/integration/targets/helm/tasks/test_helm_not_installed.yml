@@ -1,15 +1,15 @@
 ---
 - name: Failed test when helm is not installed
-  helm:
+  kubernetes.core.helm:
     binary_path: "{{ helm_binary}}_fake"
     name: test
     chart_ref: "{{ chart_test }}"
     namespace: "helm-test"
-  ignore_errors: yes
+  failed_when: helm_missing_binary is successful
   register: helm_missing_binary
 
 - name: Assert that helm is not installed
-  assert:
+  ansible.builtin.assert:
     that:
       - helm_missing_binary is failed
       - "'No such file or directory' in helm_missing_binary.msg"

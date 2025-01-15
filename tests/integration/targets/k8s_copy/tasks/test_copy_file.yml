@@ -1,8 +1,9 @@
 ---
-- block:
+- name: Run tests
+  block:
   # Text file
-  - name: copy text file into remote pod
-    k8s_cp:
+  - name: Copy text file into remote pod
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp
@@ -17,7 +18,7 @@
       content: "{{ lookup('file', 'simple_file.txt')}}"
 
   - name: Copy simple text file from Pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_file.txt
@@ -34,15 +35,15 @@
   # Binary file
 
   - name: Create temp binary file
-    tempfile:
+    ansible.builtin.tempfile:
       state: file
     register: binfile
 
   - name: Generate random binary content
-    command: dd if=/dev/urandom of={{ binfile.path }} bs=1M count=1
+    ansible.builtin.command: dd if=/dev/urandom of={{ binfile.path }} bs=1M count=1
 
   - name: Copy executable into Pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/hello.exe
@@ -57,20 +58,21 @@
     register: remote_hash
 
   - name: Get local hash
-    command: sha256sum -b {{ binfile.path }}
+    ansible.builtin.command: sha256sum -b {{ binfile.path }}
     register: local_hash
 
-  - assert:
+  - name: Validate command result
+    ansible.builtin.assert:
       that:
       - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
 
   - name: Generate tempfile
-    tempfile:
+    ansible.builtin.tempfile:
       state: file
     register: binfile
 
   - name: Copy executable from Pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/hello.exe
@@ -85,16 +87,17 @@
     register: remote_hash
 
   - name: Get local hash
-    command: sha256sum -b {{ binfile.path }}
+    ansible.builtin.command: sha256sum -b {{ binfile.path }}
     register: local_hash
 
-  - assert:
+  - name: Validate command result
+    ansible.builtin.assert:
       that:
       - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
 
   # zip files
   - name: copy zip file into remote pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp
@@ -109,7 +112,7 @@
       local_path: '{{ role_path }}/files/simple_zip_file.txt.gz'
 
   - name: copy zip file from pod into local filesystem
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/simple_zip_file.txt.gz
@@ -125,7 +128,7 @@
 
   # tar files
   - name: copy archive into remote pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp
@@ -139,15 +142,15 @@
       remote_path: /tmp/archive.tar
       local_path: '{{ role_path }}/files/archive.tar'
 
-  - name: copy archive from remote pod into local filesystem
-    k8s_cp:
+  - name: Copy archive from remote pod into local filesystem
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/archive.tar
       local_path: /tmp/local_archive.tar
       state: from_pod
 
-  - name: compare archive
+  - name: Compare archive
     kubectl_file_compare:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
@@ -155,12 +158,12 @@
       local_path: /tmp/local_archive.tar
 
   # Copy into Pod using content option
-  - name: set content to be copied into Pod
-    set_fact:
+  - name: Set content to be copied into Pod
+    ansible.builtin.set_fact:
       pod_content: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits,punctuation length=128') }}"
 
-  - name: copy archive into remote pod
-    k8s_cp:
+  - name: Copy archive into remote pod
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /this_content.txt
@@ -176,11 +179,11 @@
 
   always:
   - name: Delete file created on Pod
-    k8s_exec:
+    kubernetes.core.k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       command: 'rm {{ item }}'
-    ignore_errors: true
+    failed_when: false
     with_items:
     - /tmp/simple_file.txt
     - /tmp/hello.exe
@@ -189,7 +192,7 @@
     - /this_content.txt
 
   - name: Delete file created locally
-    file:
+    ansible.builtin.file:
       path: '{{ item }}'
       state: absent
     with_items:

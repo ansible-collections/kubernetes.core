@@ -1,6 +1,6 @@
 ---
 - name: Install Chart from URL
-  include_tasks: "../tests_chart.yml"
+  ansible.builtin.include_tasks: "../tests_chart.yml"
   vars:
     source: url
     chart_source: "https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-{{ chart_test_version }}/{{ chart_test }}-{{ chart_test_version }}.tgz"

@@ -1,7 +1,7 @@
 ---
 - block:
   - name: copy directory into remote Pod (create new directory)
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /dest_data
@@ -16,7 +16,7 @@
       local_path: '{{ role_path }}/files/data'
 
   - name: copy directory into remote Pod (existing directory)
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp
@@ -31,7 +31,7 @@
       local_path: '{{ role_path }}/files/data'
 
   - name: copy directory from Pod into local filesystem (new directory to create)
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/data
@@ -46,7 +46,7 @@
       local_path: /tmp/test
 
   - name: copy directory from Pod into local filesystem (existing directory)
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /tmp/data
@@ -62,7 +62,7 @@
 
   # Test copy from Pod where the executable 'find' is missing
   - name: Ensure 'find' is missing from Pod
-    k8s_exec:
+    kubernetes.core.k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_without_executable_find.name }}'
       command: 'find'
@@ -70,13 +70,13 @@
     register: _result
 
   - name: Validate that 'find' executable is missing from Pod
-    assert:
+    ansible.builtin.assert:
       that:
       - _result is failed
       fail_msg: "Pod contains 'find' executable, therefore we cannot run the next tasks."
 
   - name: Copy files into container
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: "{{ copy_namespace }}"
       pod: '{{ pod_without_executable_find.name }}'
       remote_path: '{{ item.path }}'
@@ -93,13 +93,13 @@
       content: this hidden file is located at the root of the sub directory
 
   - name: Delete existing directory
-    file:
+    ansible.builtin.file:
       path: /tmp/openjdk-files
       state: absent
     ignore_errors: true
 
   - name: copy directory from Pod into local filesystem (new directory to create)
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_without_executable_find.name }}'
       remote_path: /ansible
@@ -115,7 +115,7 @@
 
   always:
   - name: Remove directories created into remote Pod
-    k8s_exec:
+    kubernetes.core.k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       command: 'rm -rf {{ item }}'
@@ -125,7 +125,7 @@
     - /tmp/data
 
   - name: Remove local directories
-    file:
+    ansible.builtin.file:
       path: '{{ item }}'
       state: absent
     ignore_errors: true

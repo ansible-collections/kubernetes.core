@@ -1,19 +1,20 @@
 - name: create temporary directory for tests
-  tempfile:
+  ansible.builtin.tempfile:
     suffix: .k8s
     state: directory
   register: _path
 
-- block:
-    - include_tasks: tasks/check_mode.yml
-      with_items: '{{ test_config }}'
-
+- name: Run tests
   vars:
     tmpdir: '{{ _path.path }}'
+  block:
+    - name: Include 'tasks/check_mode.yml'
+      ansible.builtin.include_tasks: tasks/check_mode.yml
+      with_items: '{{ test_config }}'
 
   always:
     - name: Delete temporaray directory
-      file:
+      ansible.builtin.file:
         state: absent
         path: '{{ tmpdir }}'
       ignore_errors: true

@@ -1,6 +1,6 @@
 ---
 - name: Run tests
-  include_tasks: run_test.yml
+  ansible.builtin.include_tasks: run_test.yml
   loop_control:
     loop_var: helm_version
   with_items:

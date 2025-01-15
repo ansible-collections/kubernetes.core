@@ -1,6 +1,6 @@
 ---
 - name: Create temporary directory for helm chart
-  tempfile:
+  ansible.builtin.tempfile:
     suffix: .helm
     state: directory
   register: helm_dir
@@ -50,7 +50,7 @@
       register: helm_upgrade
 
     - name: Ensure task did not reported change
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is not changed
 
@@ -66,23 +66,23 @@
       register: helm_upgrade
 
     - name: Ensure task reported change
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is changed
 
   always:
     - name: Remove temporary directory
-      file:
+      ansible.builtin.file:
         path: "{{ helm_dir.path }}"
         state: absent
-      ignore_errors: true
+      failed_when: false
 
     - name: Uninstall helm diff
       kubernetes.core.helm_plugin:
         binary_path: "{{ helm_binary }}"
         state: absent
         plugin_name: diff
-      ignore_errors: true
+      failed_when: false
 
     - name: Remove helm namespace
       kubernetes.core.k8s:
@@ -90,4 +90,4 @@
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
-      ignore_errors: true
+      failed_when: false

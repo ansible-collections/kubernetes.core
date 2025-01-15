@@ -1,11 +1,12 @@
 ---
-- set_fact:
+- name: Set copy_namespace variable
+  ansible.builtin.set_fact:
     copy_namespace: "{{ test_namespace }}"
 
 - block:
     # Ensure namespace and create pod to perform tests on
     - name: Ensure namespace exists
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Namespace
@@ -13,24 +14,27 @@
             name: "{{ copy_namespace }}"
 
     - name: Create Pods
-      k8s:
+      kubernetes.core.k8s:
         namespace: '{{ copy_namespace }}'
         wait: yes
         template: pods_definition.j2
 
-    - include_tasks: test_copy_errors.yml
-    - include_tasks: test_check_mode.yml
-    - include_tasks: test_copy_file.yml
-    - include_tasks: test_multi_container_pod.yml
-    - include_tasks: test_copy_directory.yml
-    - include_tasks: test_copy_large_file.yml
-    - include_tasks: test_copy_item_with_space_in_its_name.yml
+    - name: Run tests from tasks file
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_items:
+        - test_copy_errors.yml
+        - test_check_mode.yml
+        - test_copy_file.yml
+        - test_multi_container_pod.yml
+        - test_copy_directory.yml
+        - test_copy_large_file.yml
+        - test_copy_item_with_space_in_its_name.yml
 
   always:
 
     - name: Remove namespace
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "{{ copy_namespace }}"
         state: absent
-      ignore_errors: true
+      failed_when: false

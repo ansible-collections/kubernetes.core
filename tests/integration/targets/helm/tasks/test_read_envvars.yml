@@ -1,5 +1,5 @@
 - name: Pass a bogus server through the K8S_AUTH_HOST environment variable and ensure helm fails as expected
-  helm:
+  kubernetes.core.helm:
     binary_path: "{{ helm_binary }}"
     state: absent
     name: does-not-exist

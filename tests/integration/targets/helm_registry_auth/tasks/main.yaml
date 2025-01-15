@@ -69,7 +69,7 @@
         status_code: 200
 
     - name: Test module helm_registry_auth with correct credentials
-      helm_registry_auth:
+      kubernetes.core.helm_registry_auth:
         username: "{{ username }}"
         password: "{{ password }}"
         host: localhost:{{ registry_port }}
@@ -93,23 +93,23 @@
 
     - name: Assert that the chart is saved
       # Helm binary prints the message to stderr, refence: https://github.com/helm/helm/issues/13464
-      assert:
+      ansible.builtin.assert:
         that: "'Pushed: localhost:{{ registry_port }}/test/k8s-monitoring' in _save_chart.stderr"
 
 
     - name: Test logout
-      helm_registry_auth:
+      kubernetes.core.helm_registry_auth:
         host: localhost:{{ registry_port }}
         state: absent
       register: _helm_registry_auth_logout
 
     - name: Assert logout
       # Helm binary prints the message to stderr
-      assert:
+      ansible.builtin.assert:
         that: "'Removing login credentials' in _helm_registry_auth_logout.stderr"
 
     - name: Test logout idempotency
-      helm_registry_auth:
+      kubernetes.core.helm_registry_auth:
         host: localhost:{{ registry_port }}
         state: absent
       register: _helm_registry_auth_logout_idempotency
@@ -139,7 +139,7 @@
           - "'localhost:{{ registry_port }}' not in _config_json.content | b64decode"
 
     - name: Test module helm_registry_auth with wrong credentials
-      helm_registry_auth:
+      kubernetes.core.helm_registry_auth:
         username: "{{ username }}"
         password: "{{ wrong_password }}"
         host: localhost:{{ registry_port }}
@@ -165,7 +165,7 @@
   always:
     - name: Stop and remove the registry
       ansible.builtin.command: docker stop {{ registry_name }}
-      ignore_errors: true
+      failed_when: false
 
     - name: Remove the tmpfile
       ansible.builtin.file:
@@ -175,4 +175,4 @@
       loop:
         - "{{ _tmpfile.path }}"
         - "{{ _destination.path }}"
-      ignore_errors: true
+      failed_when: false

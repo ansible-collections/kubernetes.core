@@ -1,12 +1,14 @@
 ---
-- name: create temporary directory for testing
-  tempfile:
+- name: Create temporary directory for testing
+  ansible.builtin.tempfile:
     state: directory
     suffix: .space
   register: _tmpdir
 
-- block:
-    - set_fact:
+- name: Run tests
+  block:
+    - name: Set some_file_content variable
+      ansible.builtin.set_fact:
         some_file_content: 'this content will be stored into a file in the remote pod which has space in its name'
 
     - name: create file with space in the name on remote pod
@@ -17,7 +19,8 @@
         content: '{{ some_file_content }}'
         state: to_pod
 
-    - set_fact:
+    - name: Set local_file_path variable
+      ansible.builtin.set_fact:
         local_file_path: '{{ _tmpdir.path }}/file_from_pod.txt'
 
     - name: copy file (with space in its name) from pod to local filesystem
@@ -29,11 +32,12 @@
         state: from_pod
 
     - name: Ensure file was successfully copied
-      assert:
+      ansible.builtin.assert:
         that:
           - lookup('file', local_file_path) == some_file_content
 
-    - set_fact:
+    - name: Set dir_config variable
+      ansible.builtin.set_fact:
         dir_config:
           - 'test\ dir\ 01/file1.txt'
           - 'test\ dir\ 01/file with space in its name.txt'
@@ -42,17 +46,18 @@
           - 'test\ dir\ 03/file3.txt'
           - 'test\ dir\ 03/a third file with space in its name'
 
-    - set_fact:
+    - name: Set escape_char variable
+      ansible.builtin.set_fact:
         escape_char: \
 
-    - name: create directories on Pod
+    - name: Create directories on Pod
       kubernetes.core.k8s_exec:
         namespace: "{{ copy_namespace }}"
         pod: "{{ pod_without_executable_find.name }}"
         command: "mkdir -p /ansible_testing/{{ item | dirname }}"
       with_items: '{{ dir_config }}'
 
-    - name: create files on remote pod
+    - name: Create files on remote pod
       kubernetes.core.k8s_cp:
         namespace: '{{ copy_namespace }}'
         pod: '{{ pod_without_executable_find.name }}'
@@ -61,12 +66,13 @@
         state: to_pod
       with_items: '{{ dir_config }}'
 
-    - set_fact:
+    - name: Set copy variables
+      ansible.builtin.set_fact:
         local_copy: '{{ _tmpdir.path }}/local_partial_copy'
         full_copy: '{{ _tmpdir.path }}/local_full_copy'
 
-    - name: create local directories
-      file:
+    - name: Create local directories
+      ansible.builtin.file:
         state: directory
         path: '{{ item }}'
       with_items:
@@ -113,8 +119,8 @@
 
   always:
     - name: Delete temporary directory
-      file:
+      ansible.builtin.file:
         state: absent
         path: '{{ _tmpdir.path }}'
-      ignore_errors: true
+      failed_when: false
       when: _tmpdir is defined

@@ -1,5 +1,5 @@
 - name: Install helm using set_values parameters
-  helm:
+  kubernetes.core.helm:
     binary_path: "{{ helm_binary }}"
     chart_ref: oci://registry-1.docker.io/bitnamicharts/mariadb
     release_name: test-mariadb
@@ -11,14 +11,14 @@
     - value: versioned=false
 
 - name: Get value set as string
-  helm_info:
+  kubernetes.core.helm_info:
     binary_path: "{{ helm_binary }}"
     release_name: test-mariadb
     release_namespace: "{{ helm_namespace }}"
   register: user_values
 
 - name: Assert that release was created with user-defined variables
-  assert:
+  ansible.builtin.assert:
     that:
     - '"phase" in user_values.status["values"]'
     - '"versioned" in user_values.status["values"]'
@@ -27,13 +27,13 @@
 
 # install chart using set_values and release_values
 - name: Install helm binary (> 3.10.0) requires to use set-json
-  include_role:
+  ansible.builtin.include_role:
     name: install_helm
   vars:
     helm_version: "v3.10.3"
 
 - name: Install helm using set_values parameters
-  helm:
+  kubernetes.core.helm:
     binary_path: "{{ helm_binary }}"
     chart_ref: oci://registry-1.docker.io/bitnamicharts/apache
     release_name: test-apache
@@ -46,14 +46,14 @@
       replicaCount: 3
 
 - name: Get release info
-  helm_info:
+  kubernetes.core.helm_info:
     binary_path: "{{ helm_binary }}"
     release_name: test-apache
     release_namespace: "{{ helm_namespace }}"
   register: values
 
 - name: Assert that release was created with user-defined variables
-  assert:
+  ansible.builtin.assert:
     that:
     - values.status["values"].replicaCount == 3
     - values.status["values"].master.image.registry == "docker.io"
@@ -62,20 +62,20 @@
 
 # install chart using set_values and values_files
 - name: create temporary file to save values in
-  tempfile:
+  ansible.builtin.tempfile:
     suffix: .yml
   register: ymlfile
 
 - block:
   - name: copy content into values file
-    copy:
+    ansible.builtin.copy:
       content: |
         ---
         mode: distributed
       dest: "{{ ymlfile.path }}"
 
   - name: Install helm using set_values parameters
-    helm:
+    kubernetes.core.helm:
       binary_path: "{{ helm_binary }}"
       chart_ref: oci://registry-1.docker.io/bitnamicharts/minio
       release_name: test-minio
@@ -87,20 +87,20 @@
       - "{{ ymlfile.path }}"
 
   - name: Get release info
-    helm_info:
+    kubernetes.core.helm_info:
       binary_path: "{{ helm_binary }}"
       release_name: test-minio
       release_namespace: "{{ helm_namespace }}"
     register: values
 
   - name: Assert that release was created with user-defined variables
-    assert:
+    ansible.builtin.assert:
       that:
       - values.status["values"].mode == "distributed"
       - values.status["values"].disableWebUI is true
 
   always:
   - name: Delete temporary file
-    file:
+    ansible.builtin.file:
       state: absent
       path: "{{ ymlfile.path }}"

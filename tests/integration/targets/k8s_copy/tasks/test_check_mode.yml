@@ -1,26 +1,35 @@
 ---
 - name: Create temporary directory for testing
-  tempfile:
+  ansible.builtin.tempfile:
     state: directory
     suffix: ansible-k8s-copy
   register: tmpdir
 
-- block:
+- name: Run tests
+  vars:
+    local_dir_path: "{{ tmpdir.path }}"
+    pod_dir_path: "/tmp/test_check_mode"
+    test_files:
+    - content: "collection = kubernetes.core"
+      dest: collection.txt
+    - content: "modules = k8s_cp and k8s_exec"
+      dest: modules.txt
+  block:
   # setup
   - name: Create local files for testing
-    copy:
+    ansible.builtin.copy:
       content: "{{ item.content }}"
       dest: "{{ local_dir_path }}/{{ item.dest }}"
     with_items: "{{ test_files }}"
 
   - name: Create directory into Pod
-    k8s_exec:
+    kubernetes.core.k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       command: "mkdir {{ pod_dir_path }}"
 
   - name: Create files into Pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: "{{ pod_dir_path }}/{{ item.dest }}"
@@ -30,7 +39,7 @@
 
   # Test copy into Pod using check_mode=true
   - name: Copy text file into remote pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: "{{ pod_dir_path }}/ansible.txt"
@@ -40,12 +49,12 @@
     register: copy_file
 
   - name: Ensure task is changed
-    assert:
+    ansible.builtin.assert:
       that:
       - copy_file is changed
 
   - name: Ensure file does not exists into Pod
-    k8s_exec:
+    kubernetes.core.k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       command: "test -e {{ pod_dir_path }}/ansible.txt"
@@ -53,7 +62,7 @@
     failed_when: test_file.return_code == 0
 
   - name: Copy directory into Pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: "{{ pod_dir_path }}/mydir"
@@ -63,12 +72,12 @@
     register: copy_dir
 
   - name: Ensure task is changed
-    assert:
+    ansible.builtin.assert:
       that:
       - copy_dir is changed
 
   - name: Ensure file does not exists into Pod
-    k8s_exec:
+    kubernetes.core.k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       command: "test -e {{ pod_dir_path }}/mydir"
@@ -77,7 +86,7 @@
 
   # Test copy from pod using check_mode=true
   - name: Copy file from Pod into local file system
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: "{{ pod_dir_path }}/{{ test_files[0].dest }}"
@@ -87,18 +96,18 @@
     register: copy_file
 
   - name: Ensure task is changed
-    assert:
+    ansible.builtin.assert:
       that:
       - copy_file is changed
 
   - name: Ensure file does not exists into local file system
-    stat:
+    ansible.builtin.stat:
       path: "{{ local_dir_path }}/ansible.txt"
     register: testfile
     failed_when: testfile.stat.exists
 
   - name: Copy directory from Pod into local file system
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: "{{ pod_dir_path }}"
@@ -108,24 +117,15 @@
     register: _dir
 
   - name: Ensure task is changed
-    assert:
+    ansible.builtin.assert:
       that:
       - _dir is changed
 
   - name: Ensure directory does not exist into local file system
-    stat:
+    ansible.builtin.stat:
       path: "{{ local_dir_path }}/mydir"
     register: testdir
     failed_when: testdir.stat.exists
-
-  vars:
-    local_dir_path: "{{ tmpdir.path }}"
-    pod_dir_path: "/tmp/test_check_mode"
-    test_files:
-    - content: "collection = kubernetes.core"
-      dest: collection.txt
-    - content: "modules = k8s_cp and k8s_exec"
-      dest: modules.txt
 
   always:
   - name: Delete temporary directory
@@ -135,7 +135,7 @@
     ignore_errors: true
 
   - name: Delete temporary directory created into Pod
-    k8s_exec:
+    kubernetes.core.k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       command: 'rm -r {{ pod_dir_path }}'

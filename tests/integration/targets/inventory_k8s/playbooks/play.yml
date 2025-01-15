@@ -11,21 +11,21 @@
 
   tasks:
     - name: Delete existing namespace
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: inventory
-        wait: yes
+        wait: true
         state: absent
 
     - name: Ensure namespace exists
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: inventory
 
     - name: Add a deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -38,7 +38,7 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: 400
       vars:
         k8s_pod_name: inventory
@@ -55,7 +55,7 @@
 
 - name: Verify inventory and connection plugins
   hosts: namespace_inventory_pods
-  gather_facts: no
+  gather_facts: false
 
   vars:
     file_content: |
@@ -66,25 +66,28 @@
       meta: end_host
       when: pod_phase != "Running"
 
-    - debug: var=hostvars
-    - setup:
+    - name: Display hostvars
+      ansible.builtin.debug: var=hostvars
+    - name: Setup
+      ansible.builtin.setup:
 
-    - debug: var=ansible_facts
+    - name: Display ansible_facts
+      ansible.builtin.debug: var=ansible_facts
 
     - name: Assert the TEST environment variable was retrieved
-      assert:
+      ansible.builtin.assert:
         that: ansible_facts.env.TEST == 'test'
 
     - name: Copy a file into the host
-      copy:
+      ansible.builtin.copy:
         content: '{{ file_content }}'
         dest: /tmp/test_file
 
     - name: Retrieve the file from the host
-      slurp:
+      ansible.builtin.slurp:
         src: /tmp/test_file
       register: slurped_file
 
     - name: Assert the file content matches expectations
-      assert:
+      ansible.builtin.assert:
         that: (slurped_file.content|b64decode) == file_content

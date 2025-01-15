@@ -15,7 +15,7 @@
         count: 3
   block:
     - name: Initial chart installation
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: oci://registry-1.docker.io/bitnamicharts/redis
         release_name: test-redis
@@ -25,21 +25,21 @@
       register: install
 
     - name: Get value set as string
-      helm_info:
+      kubernetes.core.helm_info:
         binary_path: "{{ helm_binary }}"
         release_name: test-redis
         release_namespace: "{{ helm_namespace }}"
       register: release_value
 
     - name: Validate that chart values are as expected
-      assert:
+      ansible.builtin.assert:
         that:
           - install is changed
           - '"--reuse-values=True" not in install.command'
           - release_value["status"]["values"] == chart_release_values
 
     - name: Upgrade chart using reuse_values=true
-      helm:
+      kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
         chart_ref: oci://registry-1.docker.io/bitnamicharts/redis
         release_name: test-redis
@@ -50,14 +50,14 @@
       register: upgrade
 
     - name: Get value set as string
-      helm_info:
+      kubernetes.core.helm_info:
         binary_path: "{{ helm_binary }}"
         release_name: test-redis
         release_namespace: "{{ helm_namespace }}"
       register: release_value
 
     - name: Validate that chart values are as expected
-      assert:
+      ansible.builtin.assert:
         that:
           - upgrade is changed
           - '"--reuse-values=True" in upgrade.command'
@@ -66,7 +66,7 @@
 
   always:
     - name: Remove helm namespace
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
         name: "{{ helm_namespace }}"

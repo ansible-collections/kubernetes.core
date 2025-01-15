@@ -1,11 +1,12 @@
 ---
-- name: test copy of large binary and text files
+- name: Test copy of large binary and text files
   block:
-  - set_fact:
+  - name: Set test_directory variable
+    ansible.builtin.set_fact:
       test_directory: "/tmp/test_k8scp_large_files"
     no_log: true
 
-  - name: create temporary directory for local files
+  - name: Create temporary directory for local files
     ansible.builtin.file:
       path: "{{ test_directory }}"
       state: directory
@@ -20,7 +21,7 @@
 
   # Copy large text file from/to local filesystem to Pod
   - name: copy large file into remote Pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_text_file.txt
@@ -34,8 +35,8 @@
       remote_path: /large_text_file.txt
       local_path: "{{ test_directory }}/large_text_file.txt"
 
-  - name: copy large file from Pod into local filesystem
-    k8s_cp:
+  - name: Copy large file from Pod into local filesystem
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_text_file.txt
@@ -51,7 +52,7 @@
 
   # Copy large binary file from/to local filesystem to Pod
   - name: copy large file into remote Pod
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_bin_file.bin
@@ -66,7 +67,7 @@
       local_path: "{{ test_directory }}/large_bin_file.bin"
 
   - name: copy executable from pod into local filesystem
-    k8s_cp:
+    kubernetes.core.k8s_cp:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       remote_path: /large_bin_file.bin
@@ -85,14 +86,14 @@
     ansible.builtin.file:
       path: "{{ test_directory }}"
       state: absent
-    ignore_errors: true
+    failed_when: false
 
   - name: Delete file created on Pod
     k8s_exec:
       namespace: '{{ copy_namespace }}'
       pod: '{{ pod_with_one_container.name }}'
       command: 'rm {{ item }}'
-    ignore_errors: true
+    failed_when: false
     with_items:
     - /large_text_file.txt
     - /large_bin_file.bin

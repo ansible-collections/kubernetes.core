@@ -1,7 +1,8 @@
 ---
-- block:
+- name: Run tests
+  block:
     - name: Ensure namespace exists
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Namespace
@@ -9,7 +10,7 @@
             name: "{{ test_namespace }}"
 
     - name: Add a configmap
-      k8s:
+      kubernetes.core.k8s:
         name: "apply-configmap"
         namespace: "{{ test_namespace }}"
         definition:
@@ -19,17 +20,17 @@
             one: "1"
             two: "2"
             three: "3"
-        apply: yes
+        apply: true
       register: k8s_configmap
 
     - name: Check configmap was created
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_configmap is changed
           - k8s_configmap.result.metadata.annotations|default(False)
 
     - name: Add same configmap again
-      k8s:
+      kubernetes.core.k8s:
         definition:
           kind: ConfigMap
           apiVersion: v1
@@ -40,16 +41,16 @@
             one: "1"
             two: "2"
             three: "3"
-        apply: yes
+        apply: true
       register: k8s_configmap_2
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_configmap_2 is not changed
 
     - name: Add same configmap again with check mode on
-      k8s:
+      kubernetes.core.k8s:
         definition:
           kind: ConfigMap
           apiVersion: v1
@@ -60,17 +61,17 @@
             one: "1"
             two: "2"
             three: "3"
-        apply: yes
-      check_mode: yes
+        apply: true
+      check_mode: true
       register: k8s_configmap_check
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_configmap_check is not changed
 
     - name: Add same configmap again but using name and namespace args
-      k8s:
+      kubernetes.core.k8s:
         name: "apply-configmap"
         namespace: "{{ test_namespace }}"
         definition:
@@ -80,16 +81,16 @@
             one: "1"
             two: "2"
             three: "3"
-        apply: yes
+        apply: true
       register: k8s_configmap_2a
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_configmap_2a is not changed
 
     - name: Update configmap
-      k8s:
+      kubernetes.core.k8s:
         definition:
           kind: ConfigMap
           apiVersion: v1
@@ -100,18 +101,18 @@
             one: "1"
             three: "3"
             four: "4"
-        apply: yes
+        apply: true
       register: k8s_configmap_3
 
     - name: Ensure that configmap has been correctly updated
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_configmap_3 is changed
           - "'four' in k8s_configmap_3.result.data"
           - "'two' not in k8s_configmap_3.result.data"
 
     - name: Add a service
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -125,11 +126,11 @@
               - name: http
                 port: 8080
                 targetPort: 8080
-        apply: yes
+        apply: true
       register: k8s_service
 
     - name: Add exactly same service
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -143,16 +144,16 @@
               - name: http
                 port: 8080
                 targetPort: 8080
-        apply: yes
+        apply: true
       register: k8s_service_2
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_service_2 is not changed
 
     - name: Add exactly same service in check mode
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -166,17 +167,17 @@
               - name: http
                 port: 8080
                 targetPort: 8080
-        apply: yes
+        apply: true
       register: k8s_service_3
-      check_mode: yes
+      check_mode: true
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_service_3 is not changed
 
     - name: Change service ports
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -190,18 +191,18 @@
               - name: http
                 port: 8081
                 targetPort: 8081
-        apply: yes
+        apply: true
       register: k8s_service_4
 
     - name: Check ports are correct
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_service_4 is changed
           - k8s_service_4.result.spec.ports | length == 1
           - k8s_service_4.result.spec.ports[0].port == 8081
 
     - name: Insert new service port
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -218,11 +219,11 @@
               - name: http
                 port: 8081
                 targetPort: 8081
-        apply: yes
+        apply: true
       register: k8s_service_4
 
     - name: Check ports are correct
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_service_4 is changed
           - k8s_service_4.result.spec.ports | length == 2
@@ -230,7 +231,7 @@
           - k8s_service_4.result.spec.ports[1].port == 8081
 
     - name: Remove new service port (check mode)
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -244,19 +245,19 @@
               - name: http
                 port: 8081
                 targetPort: 8081
-        apply: yes
-      check_mode: yes
+        apply: true
+      check_mode: true
       register: k8s_service_check
 
     - name: Check ports are correct
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_service_check is changed
           - k8s_service_check.result.spec.ports | length == 1
           - k8s_service_check.result.spec.ports[0].port == 8081
 
     - name: Remove new service port
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -270,18 +271,18 @@
               - name: http
                 port: 8081
                 targetPort: 8081
-        apply: yes
+        apply: true
       register: k8s_service_5
 
     - name: Check ports are correct
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_service_5 is changed
           - k8s_service_5.result.spec.ports | length == 1
           - k8s_service_5.result.spec.ports[0].port == 8081
 
     - name: Add a serviceaccount
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: ServiceAccount
@@ -290,7 +291,7 @@
             namespace: "{{ test_namespace }}"
 
     - name: Add a deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -303,9 +304,9 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
-        apply: yes
+        apply: true
       vars:
         k8s_pod_name: apply-deploy
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-green
@@ -323,7 +324,7 @@
             memory: 100Mi
 
     - name: Update the earlier deployment in check mode
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -336,10 +337,10 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
-        apply: yes
-      check_mode: yes
+        apply: true
+      check_mode: true
       vars:
         k8s_pod_name: apply-deploy
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple
@@ -357,13 +358,13 @@
       register: update_deploy_check_mode
 
     - name: Ensure check mode change took
-      assert:
+      ansible.builtin.assert:
         that:
           - update_deploy_check_mode is changed
           - "update_deploy_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple'"
 
     - name: Update the earlier deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -376,9 +377,9 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
-        apply: yes
+        apply: true
       vars:
         k8s_pod_name: apply-deploy
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple
@@ -396,13 +397,13 @@
       register: update_deploy_for_real
 
     - name: Ensure change took
-      assert:
+      ansible.builtin.assert:
         that:
           - update_deploy_for_real is changed
           - "update_deploy_for_real.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple'"
 
     - name: Remove the serviceaccount
-      k8s:
+      kubernetes.core.k8s:
         state: absent
         definition:
           apiVersion: v1
@@ -412,7 +413,7 @@
             namespace: "{{ test_namespace }}"
 
     - name: Apply deployment after service account removed
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -425,9 +426,9 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
-        apply: yes
+        apply: true
       vars:
         k8s_pod_name: apply-deploy
         k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-green
@@ -443,15 +444,15 @@
             cpu: 50m
             memory: 50Mi
       register: deploy_after_serviceaccount_removal
-      ignore_errors: yes
+      failed_when: deploy_after_serviceaccount_removal is failed
 
     - name: Ensure that updating deployment after service account removal failed
-      assert:
+      ansible.builtin.assert:
         that:
           - deploy_after_serviceaccount_removal is failed
 
     - name: Add a secret
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Secret
@@ -464,13 +465,13 @@
       register: k8s_secret
 
     - name: Check secret was created
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_secret is changed
           - k8s_secret.result.data.foo
 
     - name: Add same secret
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Secret
@@ -483,12 +484,12 @@
       register: k8s_secret
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_secret is not changed
 
     - name: Add same secret with check mode on
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Secret
@@ -498,16 +499,16 @@
           type: Opaque
           stringData:
             foo: bar
-      check_mode: yes
+      check_mode: true
       register: k8s_secret
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_secret is not changed
 
     - name: Add same secret with check mode on using data
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Secret
@@ -517,16 +518,16 @@
           type: Opaque
           data:
             foo: YmFy
-      check_mode: yes
+      check_mode: true
       register: k8s_secret
 
     - name: Check nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_secret is not changed
 
     - name: Create network policy (egress array with empty dict)
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         apply: true
         definition:
@@ -553,7 +554,7 @@
               - {}
 
     - name: Apply network policy
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         definition:
           kind: NetworkPolicy
@@ -581,13 +582,13 @@
       register: k8s_networkpolicy
 
     - name: Check that nothing changed
-      assert:
+      ansible.builtin.assert:
         that:
           - k8s_networkpolicy is not changed
 
     # Server Side Apply
     - name: Create Configmap using server side apply - field_manager not specified
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         definition:
           apiVersion: v1
@@ -596,20 +597,20 @@
             name: server-side-cm
           data:
             key: value-0
-        apply: yes
+        apply: true
         server_side_apply:
           force_conflicts: false
       register: result
       ignore_errors: true
 
     - name: Check that configmap creation failed
-      assert:
+      ansible.builtin.assert:
         that:
           - result is failed
           - '"field_manager" in result.msg'
 
     - name: Create Configmap using server side apply
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         definition:
           apiVersion: v1
@@ -618,20 +619,20 @@
             name: server-side-cm
           data:
             key: value-0
-        apply: yes
+        apply: true
         server_side_apply:
           field_manager: "manager-00"
       register: result
 
     - name: Check configmap was created with expected manager
-      assert:
+      ansible.builtin.assert:
         that:
           - result is changed
           - result.result.metadata.managedFields | length == 1
           - result.result.metadata.managedFields[0].manager == 'manager-00'
 
     - name: Apply ConfigMap using same parameters
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         definition:
           apiVersion: v1
@@ -640,18 +641,18 @@
             name: server-side-cm
           data:
             key: value-0
-        apply: yes
+        apply: true
         server_side_apply:
           field_manager: "manager-00"
       register: result
 
     - name: Assert that nothing change using check_mode
-      assert:
+      ansible.builtin.assert:
         that:
           - result is not changed
 
     - name: Apply ConfigMap adding new manager
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         definition:
           apiVersion: v1
@@ -660,19 +661,19 @@
             name: server-side-cm
           data:
             key: value-0
-        apply: yes
+        apply: true
         server_side_apply:
           field_manager: "manager-01"
       register: result
 
     - name: Assert that number of manager has increased
-      assert:
+      ansible.builtin.assert:
         that:
           - result is changed
           - result.result.metadata.managedFields | length == 2
 
     - name: Apply changes to Configmap using new field_manager
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         definition:
           apiVersion: v1
@@ -681,20 +682,20 @@
             name: server-side-cm
           data:
             key: value-1
-        apply: yes
+        apply: true
         server_side_apply:
           field_manager: "manager-02"
       register: result
       ignore_errors: true
 
     - name: assert that operation failed with conflicts
-      assert:
+      ansible.builtin.assert:
         that:
           - result is failed
           - result.reason == 'Conflict'
 
     - name: Apply changes to Configmap using new field_manager and force_conflicts
-      k8s:
+      kubernetes.core.k8s:
         namespace: "{{ test_namespace }}"
         definition:
           apiVersion: v1
@@ -703,14 +704,14 @@
             name: server-side-cm
           data:
             key: value-1
-        apply: yes
+        apply: true
         server_side_apply:
           field_manager: "manager-02"
           force_conflicts: true
       register: result
 
-    - name: assert that operation failed with conflicts
-      assert:
+    - name: Assert that operation failed with conflicts
+      ansible.builtin.assert:
         that:
           - result is changed
           - result.result.metadata.managedFields | length == 1
@@ -719,14 +720,14 @@
 
     # check_mode with server side apply
     - name: Ensure namespace does not exist
-      k8s:
+      kubernetes.core.k8s:
         state: absent
         kind: Namespace
         name: testing
         wait: true
 
     - name: Create namespace using server_side_apply=true and check_mode=true
-      k8s:
+      kubernetes.core.k8s:
         apply: true
         server_side_apply:
           field_manager: ansible
@@ -739,28 +740,30 @@
       register: _create
 
     - name: Ensure namespace was not created
-      k8s_info:
+      kubernetes.core.k8s_info:
         kind: Namespace
         name: testing
       register: _info
 
     - name: Validate that check_mode reported change even if namespace was not created
-      assert:
+      ansible.builtin.assert:
         that:
           - _create is changed
           - not _info.resources
 
     # server side apply over kubernetes client releases
     - name: Create temporary directory
-      tempfile:
+      ansible.builtin.tempfile:
         state: directory
         suffix: .server
       register: path
 
-    - set_fact:
+    - name: Set virtualenv_src variable
+      ansible.builtin.set_fact:
         virtualenv_src: "{{ path.path }}"
 
-    - include_tasks: tasks/server_side_apply.yml
+    - name: Include server_side_apply.yml
+      ansible.builtin.include_tasks: tasks/server_side_apply.yml
       with_items:
         - '24.2.0'
         - '25.2.0a1'
@@ -770,14 +773,14 @@
 
   always:
     - name: Remove namespace
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "{{ test_namespace }}"
         state: absent
 
     - name: Delete temporary directory
-      file:
+      ansible.builtin.file:
         path: "{{ virtualenv_src }}"
         state: absent
-      ignore_errors: true
+      failed_when: false
       when: virtualenv_src is defined
