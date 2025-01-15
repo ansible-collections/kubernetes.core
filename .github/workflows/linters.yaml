@@ -19,6 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      # Install ansible-compat >=24.10.0 <25.0.0, see https://github.com/ansible/ansible-lint/issues/4477
+      - name: Install ansible-compat ansible-compat>=24.10.0,<25.0.0
+        run: pip install 'ansible-compat>=24.10.0,<25.0.0'
       - name: run-ansible-lint
         uses: ansible/ansible-lint@v24.12.2
