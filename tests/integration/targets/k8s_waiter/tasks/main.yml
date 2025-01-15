@@ -1,11 +1,13 @@
 ---
-- block:
-    - set_fact:
+- name: Run k8s_waiter tests
+  block:
+    - name: Set test variables
+      ansible.builtin.set_fact:
         wait_namespace: "{{ test_namespace }}"
         k8s_wait_timeout: 400
 
     - name: Add a simple pod
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Pod
@@ -23,7 +25,7 @@
           - "10000"
 
     - name: Add a daemonset
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: DaemonSet
@@ -47,12 +49,12 @@
       register: ds
 
     - name: Check that daemonset wait worked
-      assert:
+      ansible.builtin.assert:
         that:
           - ds.result.status.currentNumberScheduled == ds.result.status.desiredNumberScheduled
 
     - name: Update a daemonset in check_mode
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: DaemonSet
@@ -66,7 +68,7 @@
             updateStrategy:
               type: RollingUpdate
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_sleep: 3
         wait_timeout: 180
       vars:
@@ -76,16 +78,16 @@
           - sleep
           - "600"
       register: update_ds_check_mode
-      check_mode: yes
+      check_mode: true
 
     - name: Check that check_mode result contains the changes
-      assert:
+      ansible.builtin.assert:
         that:
           - update_ds_check_mode is changed
           - "update_ds_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:2'"
 
     - name: Update a daemonset
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: DaemonSet
@@ -99,7 +101,7 @@
             updateStrategy:
               type: RollingUpdate
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_sleep: 3
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
@@ -111,7 +113,7 @@
       register: ds
 
     - name: Get updated pods
-      k8s_info:
+      kubernetes.core.k8s_info:
         api_version: v1
         kind: Pod
         namespace: "{{ wait_namespace }}"
@@ -122,13 +124,13 @@
       register: updated_ds_pods
 
     - name: Check that daemonset wait worked
-      assert:
+      ansible.builtin.assert:
         that:
           - ds.result.status.currentNumberScheduled == ds.result.status.desiredNumberScheduled
           - updated_ds_pods.resources[0].spec.containers[0].image.endswith(":3")
 
     - name: Create daemonset with nodeSelector and not existing label
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: DaemonSet
@@ -140,7 +142,7 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_sleep: 5
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
@@ -154,7 +156,7 @@
       register: ds_not_existing_label
 
     - name: Get updated pods
-      k8s_info:
+      kubernetes.core.k8s_info:
         api_version: v1
         kind: Pod
         namespace: "{{ wait_namespace }}"
@@ -163,14 +165,14 @@
       register: updated_ds_pods_not_existing_label
 
     - name: Check that daemonset wait worked (when desired number is 0)
-      assert:
+      ansible.builtin.assert:
         that:
           - ds_not_existing_label.result.status.currentNumberScheduled == ds_not_existing_label.result.status.desiredNumberScheduled
           - ds_not_existing_label.result.status.desiredNumberScheduled == 0
           - updated_ds_pods_not_existing_label.resources | length == 0
 
     - name: Add a statefulset
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: StatefulSet
@@ -182,7 +184,7 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_sleep: 5
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
@@ -194,12 +196,12 @@
       register: sts
 
     - name: Check that statefulset wait worked
-      assert:
+      ansible.builtin.assert:
         that:
           - sts.result.spec.replicas == sts.result.status.readyReplicas
 
     - name: Update a statefulset in check_mode
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: StatefulSet
@@ -213,7 +215,7 @@
             updateStrategy:
               type: RollingUpdate
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_sleep: 3
         wait_timeout: 180
       vars:
@@ -223,16 +225,16 @@
           - sleep
           - "600"
       register: update_sts_check_mode
-      check_mode: yes
+      check_mode: true
 
     - name: Check that check_mode result contains the changes
-      assert:
+      ansible.builtin.assert:
         that:
           - update_sts_check_mode is changed
           - "update_sts_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:2'"
 
     - name: Update a statefulset
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: StatefulSet
@@ -246,7 +248,7 @@
             updateStrategy:
               type: RollingUpdate
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_sleep: 3
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
@@ -258,7 +260,7 @@
       register: sts
 
     - name: Get updated pods
-      k8s_info:
+      kubernetes.core.k8s_info:
         api_version: v1
         kind: Pod
         namespace: "{{ wait_namespace }}"
@@ -269,13 +271,13 @@
       register: updated_sts_pods
 
     - name: Check that statefulset wait worked
-      assert:
+      ansible.builtin.assert:
         that:
           - sts.result.spec.replicas == sts.result.status.readyReplicas
           - updated_sts_pods.resources[0].spec.containers[0].image.endswith(":3")
 
     - name: Add a crashing pod
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Pod
@@ -283,7 +285,7 @@
             name: "{{ k8s_pod_name }}"
             namespace: "{{ wait_namespace }}"
           spec: "{{ k8s_pod_spec }}"
-        wait: yes
+        wait: true
         wait_sleep: 1
         wait_timeout: 30
       vars:
@@ -292,7 +294,7 @@
         k8s_pod_command:
           - /bin/false
       register: crash_pod
-      ignore_errors: yes
+      failed_when: crash_pod is successful
 
     - name: Check that task failed
       assert:
@@ -300,7 +302,7 @@
           - crash_pod is failed
 
     - name: Use a non-existent image
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Pod
@@ -308,22 +310,22 @@
             name: "{{ k8s_pod_name }}"
             namespace: "{{ wait_namespace }}"
           spec: "{{ k8s_pod_spec }}"
-        wait: yes
+        wait: true
         wait_sleep: 1
         wait_timeout: 30
       vars:
         k8s_pod_name: wait-no-image-pod
         k8s_pod_image: i_made_this_up:and_this_too
       register: no_image_pod
-      ignore_errors: yes
+      failed_when: no_image_pod is successful
 
     - name: Check that task failed
-      assert:
+      ansible.builtin.assert:
         that:
           - no_image_pod is failed
 
     - name: Add a deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -336,7 +338,7 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-deploy
@@ -345,16 +347,15 @@
           - containerPort: 8080
             name: http
             protocol: TCP
-
       register: deploy
 
     - name: Check that deployment wait worked
-      assert:
+      ansible.builtin.assert:
         that:
           - deploy.result.status.availableReplicas == deploy.result.status.replicas
 
     - name: Update a deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -367,7 +368,7 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-deploy
@@ -381,11 +382,11 @@
     # It looks like the Deployment is updated to have the desired state *before* the pods are terminated
     # Wait a couple of seconds to allow the old pods to at least get to Terminating state
     - name: Avoid race condition
-      pause:
+      ansible.builtin.pause:
         seconds: 2
 
     - name: Get updated pods
-      k8s_info:
+      kubernetes.core.k8s_info:
         api_version: v1
         kind: Pod
         namespace: "{{ wait_namespace }}"
@@ -399,12 +400,12 @@
       delay: 5
 
     - name: Check that deployment wait worked
-      assert:
+      ansible.builtin.assert:
         that:
           - deploy.result.status.availableReplicas == deploy.result.status.replicas
 
     - name: Pause a deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -413,8 +414,8 @@
             namespace: "{{ wait_namespace }}"
           spec:
             paused: True
-        apply: no
-        wait: yes
+        apply: false
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         wait_condition:
           type: Progressing
@@ -423,7 +424,7 @@
       register: pause_deploy
 
     - name: Check that paused deployment wait worked
-      assert:
+      ansible.builtin.assert:
         that:
           - condition.reason == "DeploymentPaused"
           - condition.status == "Unknown"
@@ -431,7 +432,7 @@
         condition: '{{ pause_deploy.result.status.conditions[1] }}'
 
     - name: Add a service based on the deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Service
@@ -445,19 +446,19 @@
               - port: 8080
                 targetPort: 8080
                 protocol: TCP
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-deploy
       register: service
 
     - name: Assert that waiting for service works
-      assert:
+      ansible.builtin.assert:
         that:
           - service is successful
 
     - name: Add a crashing deployment
-      k8s:
+      kubernetes.core.k8s:
         definition:
           apiVersion: apps/v1
           kind: Deployment
@@ -470,7 +471,7 @@
               matchLabels:
                 app: "{{ k8s_pod_name }}"
             template: "{{ k8s_pod_template }}"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-crash-deploy
@@ -478,35 +479,34 @@
         k8s_pod_command:
           - /bin/false
       register: wait_crash_deploy
-      ignore_errors: yes
+      failed_when: wait_crash_deploy is successful
 
     - name: Check that task failed
-      assert:
+      ansible.builtin.assert:
         that:
           - wait_crash_deploy is failed
 
     - name: Remove Pod with very short timeout
-      k8s:
+      kubernetes.core.k8s:
         api_version: v1
         kind: Pod
         name: wait-pod
         namespace: "{{ wait_namespace }}"
         state: absent
-        wait: yes
+        wait: true
         wait_sleep: 2
         wait_timeout: 5
-      ignore_errors: yes
+      failed_when: short_wait_remove_pod is successful
       register: short_wait_remove_pod
 
     - name: Check that task failed
-      assert:
+      ansible.builtin.assert:
         that:
           - short_wait_remove_pod is failed
 
   always:
     - name: Remove namespace
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "{{ wait_namespace }}"
         state: absent
-      ignore_errors: yes

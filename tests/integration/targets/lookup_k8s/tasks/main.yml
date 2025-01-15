@@ -1,6 +1,8 @@
 ---
-- block:
-    - set_fact:
+- name: Run lookup_k8s tests
+  block:
+    - name: Set common variables
+      ansible.builtin.set_fact:
         pre_test1: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
         pre_test2: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
         pre_test3: "{{ query('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
@@ -19,7 +21,8 @@
             labels:
               namespace_label: "app_development"
 
-    - set_fact:
+    - name: Set test variables
+      ansible.builtin.set_fact:
         test1: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development', wantlist=True) }}"
         test2: "{{ query('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
         test3: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0], wantlist=True) }}"
@@ -28,12 +31,13 @@
         test6: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0]) }}"
         test7: "{{ lookup('kubernetes.core.k8s', kind='Ingress', api_version='networking.k8s.io/vINVALID', errors='ignore') }}"
 
-    - set_fact:
+    - name: Set test8 variable
+      ansible.builtin.set_fact:
         test8: "{{ lookup('kubernetes.core.k8s', kind='Ingress', api_version='networking.k8s.io/vINVALID') }}"
       ignore_errors: true
 
     - name: Assert that every test is passed
-      assert:
+      ansible.builtin.assert:
         that:
           # Before creating object
           - pre_test1 is sequence and pre_test1 is not string
@@ -70,7 +74,8 @@
             labels:
               namespace_label: "app_development"
 
-    - set_fact:
+    - name: Set test variables
+      ansible.builtin.set_fact:
         test1: "{{ lookup('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development', wantlist=True) }}"
         test2: "{{ query('kubernetes.core.k8s', kind='Namespace', label_selector='namespace_label=app_development') }}"
         test3: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[0], wantlist=True) }}"
@@ -82,7 +87,7 @@
         test9: "{{ lookup('kubernetes.core.k8s', kind='Namespace', resource_name=test_namespace[1]) }}"
 
     - name: Assert that every test is passed after creating second object
-      assert:
+      ansible.builtin.assert:
         that:
           # After creating second object
           - test1 is sequence and test1 is not string
@@ -104,11 +109,13 @@
           - test9 is mapping
 
     # test using resource_definition
-    - k8s:
+    - name: Test using resource_definition
+      kubernetes.core.k8s:
         name: "{{ test_namespace[2] }}"
         kind: Namespace
 
-    - set_fact:
+    - name: Set configmap_def variable
+      ansible.builtin.set_fact:
         configmap_def:
           apiVersion: v1
           kind: ConfigMap
@@ -119,15 +126,15 @@
             value: "{{ configmap_data }}"
 
     - name: Create simple configmap
-      k8s:
+      kubernetes.core.k8s:
         definition: "{{ configmap_def }}"
 
     - name: Retrieve configmap using resource_definition parameter
-      set_fact:
+      ansible.builtin.set_fact:
         result_configmap: "{{ lookup('kubernetes.core.k8s', resource_definition=configmap_def) }}"
 
     - name: Validate configmap result
-      assert:
+      ansible.builtin.assert:
         that:
           - result_configmap.apiVersion == 'v1'
           - result_configmap.metadata.name == configmap_name
@@ -135,14 +142,15 @@
           - result_configmap.data.value == configmap_data
 
     # test lookup plugin using src parameter
-    - block:
+    - name: Test lookup plugin using src parameter
+      block:
         - name: Create temporary file to store content
-          tempfile:
+          ansible.builtin.tempfile:
             suffix: ".yaml"
           register: tmpfile
 
         - name: Copy content into file
-          copy:
+          ansible.builtin.copy:
             content: |
               kind: ConfigMap
               apiVersion: v1
@@ -152,11 +160,11 @@
             dest: "{{ tmpfile.path }}"
 
         - name: Retrieve configmap using src parameter
-          set_fact:
+          ansible.builtin.set_fact:
             src_configmap: "{{ lookup('kubernetes.core.k8s', src=tmpfile.path) }}"
 
         - name: Validate configmap result
-          assert:
+          ansible.builtin.assert:
             that:
               - src_configmap.apiVersion == 'v1'
               - src_configmap.metadata.name == configmap_name
@@ -165,37 +173,38 @@
 
       always:
         - name: Delete temporary file created
-          file:
+          ansible.builtin.file:
             state: absent
             path: "{{ tmpfile.path }}"
-          ignore_errors: true
 
     # test using aliases for user authentication
     - block:
         - name: Create temporary directory to save user credentials
-          tempfile:
+          ansible.builtin.tempfile:
             state: directory
             suffix: ".config"
           register: tmpdir
 
-        - include_role:
+        - name: Include role 'setup_kubeconfig'
+          ansible.builtin.include_role:
             name: setup_kubeconfig
           vars:
             user_credentials_dir: "{{ tmpdir.path }}"
             kubeconfig_operation: "save"
 
-        - set_fact:
+        - name: Set cluster variables
+          ansible.builtin.set_fact:
             cluster_host: "{{ lookup('file', tmpdir.path + '/host_data.txt') }}"
             user_cert_file: "{{ tmpdir.path }}/cert_file_data.txt"
             user_key_file: "{{ tmpdir.path }}/key_file_data.txt"
             ssl_ca_cert: "{{ tmpdir.path }}/ssl_ca_cert_data.txt"
 
         - name: Retrieve configmap using authentication aliases (validate_certs=false)
-          set_fact:
+          ansible.builtin.set_fact:
             configmap_no_ssl: "{{ lookup('kubernetes.core.k8s', host=cluster_host, cert_file=user_cert_file, key_file=user_key_file, verify_ssl=false, resource_definition=configmap_def) }}"
 
         - name: Validate configmap result
-          assert:
+          ansible.builtin.assert:
             that:
               - configmap_no_ssl.apiVersion == 'v1'
               - configmap_no_ssl.metadata.name == configmap_name
@@ -203,11 +212,11 @@
               - configmap_no_ssl.data.value == configmap_data
 
         - name: Retrieve configmap using authentication aliases (validate_certs=true)
-          set_fact:
+          ansible.builtin.set_fact:
             configmap_with_ssl: "{{ lookup('kubernetes.core.k8s', host=cluster_host, cert_file=user_cert_file, key_file=user_key_file, ssl_ca_cert=ssl_ca_cert, verify_ssl=true, resource_definition=configmap_def) }}"
 
         - name: Validate configmap result
-          assert:
+          ansible.builtin.assert:
             that:
               - configmap_with_ssl.apiVersion == 'v1'
               - configmap_with_ssl.metadata.name == configmap_name
@@ -216,12 +225,12 @@
 
       always:
         - name: Delete temporary directory
-          file:
+          ansible.builtin.file:
             state: absent
             path: "{{ tmpdir.path }}"
-          ignore_errors: true
 
-        - include_role:
+        - name: Include role 'setup_kubeconfig'
+          ansible.builtin.include_role:
             name: setup_kubeconfig
           ignore_errors: true
           vars:
@@ -229,7 +238,7 @@
 
   always:
     - name: Ensure that namespace is removed
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "app-development-{{ item }}"
         state: absent
@@ -237,4 +246,3 @@
         - one
         - two
         - three
-      ignore_errors: true

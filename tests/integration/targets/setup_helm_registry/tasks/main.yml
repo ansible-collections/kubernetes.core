@@ -4,7 +4,7 @@
     cmd: docker ps
 
 - name: Create temporary directory to store file in
-  tempfile:
+  ansible.builtin.tempfile:
     state: directory
     suffix: .helm_registry
   register: _tmpfile
@@ -12,7 +12,7 @@
   #   - Teardown registry
 
 - name: Create authentication file
-  copy:
+  ansible.builtin.copy:
     content: "{{ registry_credentials }}"
     dest: "{{ _tmpfile.path }}/htpasswd"
 
@@ -20,7 +20,7 @@
   ansible.builtin.include_tasks: remove_docker_container.yml
 
 - name: Create registry container
-  command: >-
+  ansible.builtin.command: >-
     docker run -d
     -p {{ registry_port }}:5000
     --restart=always

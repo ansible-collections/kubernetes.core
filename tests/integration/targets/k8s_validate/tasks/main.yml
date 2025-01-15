@@ -1,21 +1,25 @@
 - block:
     - name: Create temp directory
-      tempfile:
+      ansible.builtin.tempfile:
         state: directory
         suffix: .test
       register: remote_tmp_dir
 
-    - set_fact:
+    - name: Set remote_tmp_dir variable
+      ansible.builtin.set_fact:
         remote_tmp_dir: "{{ remote_tmp_dir.path }}"
 
-    - set_fact:
+    - name: Set virtualenv variables
+      ansible.builtin.set_fact:
         virtualenv: "{{ remote_tmp_dir }}/virtualenv"
         virtualenv_command: "virtualenv --python {{ ansible_python_interpreter }}"
 
-    - set_fact:
+    - name: Set virtualenv interpreter variable
+      ansible.builtin.set_fact:
         virtualenv_interpreter: "{{ virtualenv }}/bin/python"
 
-    - pip:
+    - name: Install python libraries
+      ansible.builtin.pip:
         name:
           - kubernetes
         virtualenv: "{{ virtualenv }}"
@@ -23,7 +27,7 @@
         virtualenv_site_packages: false
 
     - name: Validate should fail gracefully without kubernetes-validate
-      k8s:
+      kubernetes.core.k8s:
         definition: &cmap
           apiVersion: v1
           kind: ConfigMap
@@ -34,21 +38,24 @@
             mykey: myval
         validate:
           fail_on_error: true
-      ignore_errors: true
+      failed_when: false
       register: k8s_no_validate
       vars:
         ansible_python_interpreter: "{{ virtualenv_interpreter }}"
 
-    - assert:
+    - name: Validate that module failed
+      ansible.builtin.assert:
         that:
           - k8s_no_validate is failed
           - "'Failed to import the required Python library (kubernetes-validate)' in k8s_no_validate.msg"
 
-    - file:
+    - name: Delete virtualenv path
+      ansible.builtin.file:
         path: "{{ virtualenv }}"
         state: absent
 
-    - pip:
+    - name: Install python libraries
+      ansible.builtin.pip:
         name:
           - kubernetes
           - kubernetes-validate
@@ -57,15 +64,16 @@
         virtualenv_command: "{{ virtualenv_command }}"
         virtualenv_site_packages: false
 
-    - block:
+    - name: Test with new virtualenv
+      block:
         - name: Simple ConfigMap should validate
-          k8s:
+          kubernetes.core.k8s:
             definition: *cmap
             validate:
               fail_on_error: true
 
         - name: ConfigMap with extra properties should validate without strict
-          k8s:
+          kubernetes.core.k8s:
             definition:
               <<: *cmap
               extra: stuff
@@ -74,23 +82,24 @@
               strict: false
 
         - name: ConfigMap with extra properties should not validate with strict
-          k8s:
+          kubernetes.core.k8s:
             definition:
               <<: *cmap
               extra: stuff
             validate:
               fail_on_error: true
               strict: true
-          ignore_errors: true
+          failed_when: false
           register: result
 
-        - assert:
+        - name: Ensure module failed
+          ansible.builtin.assert:
             that:
               - result is failed
               - "\"('extra' was unexpected)\" is in result.msg"
 
         - name: Property with invalid type should fail with strict
-          k8s:
+          kubernetes.core.k8s:
             definition:
               apiVersion: apps/v1
               kind: Deployment
@@ -115,17 +124,18 @@
             validate:
               fail_on_error: true
               strict: false
-          ignore_errors: true
+          failed_when: false
           register: result
 
-        - assert:
+        - name: Ensure module failed
+          ansible.builtin.assert:
             that:
               - result is failed
               - result.status is not defined
               - "\"'lots' is not of type 'integer'\" in result.msg"
 
         - name: Create CRD
-          k8s:
+          kubernetes.core.k8s:
             definition: &crd
               apiVersion: apiextensions.k8s.io/v1
               kind: CustomResourceDefinition
@@ -149,11 +159,12 @@
                   singular: foobar
                   kind: Foobar
 
-        - pause:
+        - name: Pause for 5 seconds
+          ansible.builtin.pause:
             seconds: 5
 
         - name: Adding CRD should succeed with warning
-          k8s:
+          kubernetes.core.k8s:
             definition:
               apiVersion: example.com/v1
               kind: Foobar
@@ -166,68 +177,72 @@
               strict: true
           register: result
 
-        - assert:
+        - name: Validate module success
+          ansible.builtin.assert:
             that:
               - result is successful
               - "'warnings' in result"
       vars:
         ansible_python_interpreter: "{{ virtualenv_interpreter }}"
 
-    - name: stat default kube config
-      stat:
+    - name: Stat default kube config
+      ansible.builtin.stat:
         path: "~/.kube/config"
       register: _stat
 
-    - name: validate that in-memory kubeconfig authentication failed for kubernetes < 17.17.0
+    - name: Validate that in-memory kubeconfig authentication failed for kubernetes < 17.17.0
+      when:
+        - _stat.stat.exists
+        - _stat.stat.readable
+        - _stat.stat.isreg
       block:
-        - set_fact:
+        - name: Set virtualenv vars
+          ansible.builtin.set_fact:
             virtualenv_kubeconfig: "{{ remote_tmp_dir }}/kubeconfig"
 
-        - pip:
+        - name: Install python libraries
+          ansible.builtin.pip:
             name:
               - "kubernetes<17.17.0"
             virtualenv: "{{ virtualenv_kubeconfig }}"
             virtualenv_command: "{{ virtualenv_command }}"
             virtualenv_site_packages: false
 
-        - name: list namespace using in-memory kubeconfig
-          k8s_info:
+        - name: List namespace using in-memory kubeconfig
+          kubernetes.core.k8s_info:
             kind: Namespace
             kubeconfig: "{{ lookup('file', '~/.kube/config') | from_yaml }}"
           register: _result
-          ignore_errors: true
+          failed_when: false
           vars:
             ansible_python_interpreter: "{{ virtualenv_kubeconfig }}/bin/python"
 
-        - name: assert that task failed with proper message
-          assert:
+        - name: Assert that task failed with proper message
+          ansible.builtin.assert:
             that:
               - '"This is required to use in-memory config." in _result.msg'
-      when:
-        - _stat.stat.exists
-        - _stat.stat.readable
-        - _stat.stat.isreg
+      
   always:
     - name: Remove temp directory
-      file:
+      ansible.builtin.file:
         path: "{{ remote_tmp_dir }}"
         state: absent
-      ignore_errors: true
+      failed_when: false
 
     - name: Remove namespace
-      k8s:
+      kubernetes.core.k8s:
         kind: Namespace
         name: "{{ validate_namespace }}"
         state: absent
-      ignore_errors: true
+      failed_when: false
 
     - name: Remove CRD
-      k8s:
+      kubernetes.core.k8s:
         definition: *crd
         state: absent
-      ignore_errors: true
+      failed_when: false
 
   vars:
     validate_namespace: "{{ test_namespace }}"
   environment:
-    ENABLE_TURBO_MODE: false
+    ENABLE_TURBO_MODE: "false"
