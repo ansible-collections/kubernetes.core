@@ -47,7 +47,7 @@ options:
       - This option has effect only when C(state) is set to I(drain).
     type: list
     elements: str
-    version_added: 2.5.0
+    version_added: 3.0.0
     aliases:
     - label_selectors
   delete_options:
