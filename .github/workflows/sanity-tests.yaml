@@ -7,8 +7,9 @@ concurrency:
 on:
   pull_request:
     branches:
-      - main
-      - stable-*
+      # - main
+      # - stable-*
+      - fake-branch
 
 jobs:
   sanity:

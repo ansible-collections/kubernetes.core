@@ -13,8 +13,9 @@ on:
       - unlabeled
       - synchronize
     branches:
-      - main
-      - stable-*
+      # - main
+      # - stable-*
+      - fake-branch
 
 jobs:
   changelog:
