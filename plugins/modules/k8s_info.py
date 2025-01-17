@@ -51,7 +51,7 @@ options:
       - Only field definitions that don't reference list items are supported (so V(spec.containers[0]) would not work)
     type: list
     elements: str
-    version_added: 3.0.0
+    version_added: 2.5.0
 
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
