@@ -137,7 +137,7 @@ options:
       - If I(reset_values) is set to C(True), this is ignored.
     type: bool
     required: false
-    version_added: 3.0.0
+    version_added: 2.5.0
   reset_values:
     description:
       - When upgrading package, reset the values to the ones built into the chart.
