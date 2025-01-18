@@ -26,3 +26,4 @@ test_namespace:
   - "helm-from-url"
   - "helm-reuse-values"
   - "helm-chart-with-space-into-name"
+  - "helm-reset-then-reuse-values"
