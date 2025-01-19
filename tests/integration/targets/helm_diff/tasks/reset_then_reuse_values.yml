@@ -132,8 +132,8 @@
     - name: Ensure warning for Helm version
       assert:
         that:
-          - helm_upgrade.warnings is defined
-          - "'helm support option --reset-then-reuse-values starting release >= 3.14.0' in helm_upgrade.warnings"
+          - helm_upgrade is failed
+          - '"reset_then_reuse_values requires helm >= 3.14.0, current version is" in helm_upgrade.msg'
 
     - name: Install helm diff
       helm_plugin:
@@ -162,8 +162,8 @@
     - name: Ensure warning for Helm Diff version
       assert:
         that:
-          - helm_upgrade.warnings is defined
-          - "'helm diff support option --reset-then-reuse-values starting release >= 3.9.12' in helm_upgrade.warnings"
+          - helm_upgrade is failed
+          - '"reset_then_reuse_values requires helm diff >= 3.9.12, current version is" in helm_upgrade.msg'
 
   always:
     - name: Remove temporary directory
