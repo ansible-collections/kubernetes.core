@@ -702,18 +702,18 @@ def helmdiff_check(
     if reset_then_reuse_values:
         helm_diff_version = get_plugin_version("diff")
         helm_version = module.get_helm_version()
+        fail_msg = ""
         if LooseVersion(helm_diff_version) < LooseVersion("3.9.12"):
-            module.fail_json(
-                msg="reset_then_reuse_values requires helm diff >= 3.9.12, current version is {0}".format(
-                    helm_diff_version
-                )
+            fail_msg = "reset_then_reuse_values requires helm diff >= 3.9.12, current version is {0}\n".format(
+                helm_diff_version
             )
-        elif LooseVersion(helm_version) < LooseVersion("3.14.0"):
-            module.fail_json(
-                msg="reset_then_reuse_values requires helm >= 3.14.0, current version is {0}".format(
-                    helm_version
-                )
+        if LooseVersion(helm_version) < LooseVersion("3.14.0"):
+            fail_msg += "reset_then_reuse_values requires helm >= 3.14.0, current version is {0}\n".format(
+                helm_version
             )
+
+        if fail_msg:
+            module.fail_json(msg=fail_msg)
         else:
             cmd += " --reset-then-reuse-values"
 
