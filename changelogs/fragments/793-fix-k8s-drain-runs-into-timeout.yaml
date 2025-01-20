@@ -1,2 +1,0 @@
-bugfixes:
-  - k8s_drain - Fix k8s_drain runs into a timeout when evicting a pod which is part of a stateful set  (https://github.com/ansible-collections/kubernetes.core/issues/792).
