@@ -1,2 +1,0 @@
-bugfixes:
-  - helm - Helm version checks did not support RC versions. They now accept any version tags. (https://github.com/ansible-collections/kubernetes.core/pull/745).
