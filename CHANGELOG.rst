@@ -4,18 +4,40 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v3.3.0
+======
+
+Minor Changes
+-------------
+
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
+- k8s_drain - Improve error message for pod disruption budget when draining a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
+
+Bugfixes
+--------
+
+- helm - Helm version checks did not support RC versions. They now accept any version tags. (https://github.com/ansible-collections/kubernetes.core/pull/745).
+- helm_pull - Apply no_log=True to pass_credentials to silence false positive warning.. (https://github.com/ansible-collections/kubernetes.core/pull/796).
+- k8s_drain - Fix k8s_drain does not wait for single pod (https://github.com/ansible-collections/kubernetes.core/issues/769).
+- k8s_drain - Fix k8s_drain runs into a timeout when evicting a pod which is part of a stateful set  (https://github.com/ansible-collections/kubernetes.core/issues/792).
+- kubeconfig option should not appear in module invocation log (https://github.com/ansible-collections/kubernetes.core/issues/782).
+- kustomize - kustomize plugin fails with deprecation warnings (https://github.com/ansible-collections/kubernetes.core/issues/639).
+- waiter - Fix waiting for daemonset when desired number of pods is 0. (https://github.com/ansible-collections/kubernetes.core/pull/756).
+
 v3.2.0
 ======
 
 Release Summary
 ---------------
+
 This release comes with documentation updates.
 
 Minor Changes
 -------------
 
-- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
 - connection/kubectl.py - Added an example of using the kubectl connection plugin to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
 
 v3.1.0
 ======
