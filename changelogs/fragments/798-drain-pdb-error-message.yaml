@@ -1,2 +1,0 @@
-minor_changes:
-  - k8s_drain - Improve error message for pod disruption budget when draining a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
