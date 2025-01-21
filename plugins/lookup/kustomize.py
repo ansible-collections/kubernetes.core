@@ -39,7 +39,7 @@ DOCUMENTATION = """
         - The environment variables to pass to the kustomize or kubectl command.
         type: dict
         default: {}
-        version_added: 5.2.0
+        version_added: 6.0.0
 
     requirements:
       - "python >= 3.6"
