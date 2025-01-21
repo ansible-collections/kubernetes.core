@@ -103,7 +103,7 @@ Parameters
                     <div style="font-size: small">
                         <span style="color: purple">dictionary</span>
                     </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 3.3.0</div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 5.2.0</div>
                 </td>
                 <td>
                         <b>Default:</b><br/><div style="color: blue">{}</div>
