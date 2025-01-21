@@ -17,7 +17,7 @@ Requirements
 
 To use the modules, you'll need the following:
 
-- Ansible 2.9.17 or latest installed
+- Ansible 2.16.0 or latest installed
 - `Kubernetes Python client <https://pypi.org/project/kubernetes/>`_  installed on the host that will execute the modules.
 
 
