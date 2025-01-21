@@ -154,7 +154,7 @@ options:
     type: bool
     required: false
     default: False
-    version_added: 5.1.0
+    version_added: 5.2.0
 
 #Helm options
   disable_hook:
