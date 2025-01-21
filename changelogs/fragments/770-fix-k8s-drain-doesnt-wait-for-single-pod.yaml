@@ -1,2 +1,0 @@
-bugfixes:
-  - k8s_drain - Fix k8s_drain does not wait for single pod (https://github.com/ansible-collections/kubernetes.core/issues/769).
