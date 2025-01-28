@@ -91,9 +91,17 @@
       assert:
         that:
           - >-
-            'annotations' not in hf6.resources[0].metadata or
-            q'kubectl.kubernetes.io/last-applied-configuration'
-            not in hf6.resources[0].metadata.annotations
+            'annotations' not in hf6.result.metadata or
+            'kubectl.kubernetes.io/last-applied-configuration'
+            not in hf6.result.metadata.annotations
+          - >-
+            'annotations' not in hf6.diff.before.metadata or
+            'kubectl.kubernetes.io/last-applied-configuration'
+            not in hf6.diff.before.metadata.annotations
+          - >-
+            'annotations' not in hf6.diff.after.metadata or
+            'kubectl.kubernetes.io/last-applied-configuration'
+            not in hf6.diff.after.metadata.annotations
 
     - name: Hidden field should not show up in deletion
       k8s:
