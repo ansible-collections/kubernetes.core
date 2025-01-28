@@ -501,23 +501,21 @@ def diff_objects(
     result["before"] = diff[0]
     result["after"] = diff[1]
 
-    if list(result["after"].keys()) != ["metadata"] or list(
+    if list(result["after"].keys()) == ["metadata"] and list(
         result["before"].keys()
-    ) != ["metadata"]:
-        return False, result
+    ) == ["metadata"]:
+        # If only metadata.generation and metadata.resourceVersion changed, ignore it
+        ignored_keys = set(["generation", "resourceVersion"])
 
-    # If only metadata.generation and metadata.resourceVersion changed, ignore it
-    ignored_keys = set(["generation", "resourceVersion"])
-
-    if not set(result["after"]["metadata"].keys()).issubset(ignored_keys):
-        return False, result
-    if not set(result["before"]["metadata"].keys()).issubset(ignored_keys):
-        return False, result
+        if set(result["after"]["metadata"].keys()).issubset(ignored_keys) and set(
+            result["before"]["metadata"].keys()
+        ).issubset(ignored_keys):
+            return True, result
 
     result["before"] = hide_fields(result["before"], hidden_fields)
     result["after"] = hide_fields(result["after"], hidden_fields)
 
-    return True, result
+    return False, result
 
 
 def hide_fields(definition: dict, hidden_fields: Optional[list]) -> dict:
@@ -529,16 +527,33 @@ def hide_fields(definition: dict, hidden_fields: Optional[list]) -> dict:
     return result
 
 
-# hide_field is not hugely sophisticated and designed to cope
-# with e.g. status or metadata.managedFields rather than e.g.
-# spec.template.spec.containers[0].env[3].value
+# hide_field should be able to cope with simple or more complicated
+# field definitions
+# e.g. status or metadata.managedFields or
+# spec.template.spec.containers[0].env[3].value or
+# metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]
 def hide_field(definition: dict, hidden_field: str) -> dict:
-    split = hidden_field.split(".", 1)
-    if split[0] in definition:
-        if len(split) == 2:
-            definition[split[0]] = hide_field(definition[split[0]], split[1])
+    def dict_contains_key(field: dict, key: str) -> bool:
+        return key in field
+
+    def list_contains_key(field: list, key: str) -> bool:
+        return key < len(field)
+
+    field_contains_key = dict_contains_key
+
+    (key, rest) = hide_field_split2(hidden_field)
+
+    if key.isdecimal():
+        key = int(key)
+        field_contains_key = list_contains_key
+    if field_contains_key(definition, key):
+        if rest:
+            definition[key] = hide_field(definition[key], rest)
+            # remove empty dicts and lists from the result
+            if definition[key] == dict() or definition[key] == list():
+                del definition[key]
         else:
-            del definition[split[0]]
+            del definition[key]
     return definition
 
 
@@ -620,3 +635,35 @@ def parse_quoted_string(quoted_string: str) -> Tuple[str, str]:
         raise ValueError("invalid quoted string: missing closing quote")
 
     return "".join(result), remainder
+
+
+# hide_field_split2 returns the first key in hidden_field and the rest of the hidden_field
+# We expect the first key to either be in brackets, to be terminated by the start of a left
+# bracket, or to be terminated by a dot.
+
+# examples would be:
+# field.another.next -> (field, another.next)
+# field[key].value -> (field, [key].value)
+# [key].value -> (key, value)
+# [one][two] -> (one, [two])
+
+
+def hide_field_split2(hidden_field: str) -> (str, str):
+    lbracket = hidden_field.find("[")
+    rbracket = hidden_field.find("]")
+    dot = hidden_field.find(".")
+
+    if lbracket == 0:
+        # skip past right bracket and any following dot
+        rest = hidden_field[rbracket + 1 :]
+        if rest and rest[0] == ".":
+            rest = rest[1:]
+        return (hidden_field[lbracket + 1 : rbracket], rest)
+
+    if lbracket != -1 and (dot == -1 or lbracket < dot):
+        return (hidden_field[:lbracket], hidden_field[lbracket:])
+
+    split = hidden_field.split(".", 1)
+    if len(split) == 1:
+        return split[0], ""
+    return split
