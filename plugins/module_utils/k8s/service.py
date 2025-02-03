@@ -655,10 +655,10 @@ def hide_field_split2(hidden_field: str) -> (str, str):
 
     if lbracket == 0:
         # skip past right bracket and any following dot
-        rest = hidden_field[rbracket + 1:]
+        rest = hidden_field[rbracket + 1 :]  # noqa: E203
         if rest and rest[0] == ".":
             rest = rest[1:]
-        return (hidden_field[lbracket + 1: rbracket], rest)
+        return (hidden_field[lbracket + 1 : rbracket], rest)  # noqa: E203
 
     if lbracket != -1 and (dot == -1 or lbracket < dot):
         return (hidden_field[:lbracket], hidden_field[lbracket:])
