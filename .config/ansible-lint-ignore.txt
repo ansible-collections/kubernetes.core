@@ -1,3 +1,4 @@
 # no-changed-when is not requried for examples
 plugins/connection/kubectl.py no-changed-when
-plugins/connection/kubectl.py var-naming
+# false positive result
+plugins/connection/kubectl.py var-naming[no-reserved]
