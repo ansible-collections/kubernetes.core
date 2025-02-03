@@ -5,6 +5,7 @@ rules:
   braces:
     max-spaces-inside: 1
     level: error
+
   brackets:
     max-spaces-inside: 1
     level: error
@@ -17,4 +18,5 @@ rules:
 ignore: |
   .cache
   .tox
+  .ansible
   tests/output
