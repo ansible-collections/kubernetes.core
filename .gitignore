@@ -13,6 +13,7 @@ changelogs/.plugin-cache.yaml
 tests/output
 tests/integration/cloud-config-*
 .cache
+.ansible
 
 # Helm charts
 tests/integration/*-chart-*.tgz
