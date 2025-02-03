@@ -595,7 +595,8 @@ Examples
       kubernetes.core.k8s_drain:
         state: drain
         name: foo
-        force: yes
+        delete_options:
+          force: yes
 
     - name: Drain node "foo", but abort if there are pods not managed by a ReplicationController, Job, or DaemonSet, and use a grace period of 15 minutes.
       kubernetes.core.k8s_drain:
