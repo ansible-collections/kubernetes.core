@@ -1,2 +1,0 @@
-# no-changed-when is not requried for examples
-plugins/connection/kubectl.py no-changed-when
