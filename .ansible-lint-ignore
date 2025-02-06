@@ -3,3 +3,5 @@
 plugins/connection/kubectl.py no-changed-when
 # false positive result
 plugins/connection/kubectl.py var-naming[no-reserved]
+# stable-3 branch support ansible-core>=2.14.0
+meta/runtime.yml meta-runtime[unsupported-version]
