@@ -45,7 +45,7 @@
     - name: make script as executable
       file:
         path: "{{ tmp_dir_path }}/install_kustomize.sh"
-        mode: 0755
+        mode: '0755'
 
     - name: Install kustomize
       command: "{{ tmp_dir_path }}/install_kustomize.sh"
