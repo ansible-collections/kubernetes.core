@@ -1,0 +1,5 @@
+# https://docs.ansible.com/ansible-lint/docs/rules/
+# no-changed-when is not requried for examples
+plugins/connection/kubectl.py no-changed-when
+# false positive result
+plugins/connection/kubectl.py var-naming[no-reserved]
