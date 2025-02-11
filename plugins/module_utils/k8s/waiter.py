@@ -153,7 +153,7 @@ RESOURCE_PREDICATES = {
     "Deployment": deployment_ready,
     "Pod": pod_ready,
     "StatefulSet": statefulset_ready,
-    "ClusterOperator": cluster_operator_ready, 
+    "ClusterOperator": cluster_operator_ready,
 }
 
 

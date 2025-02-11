@@ -122,6 +122,7 @@ def test_get_waiter_returns_correct_waiter():
         == custom_condition
     )
 
+
 @pytest.mark.parametrize("clusteroperator,expected", zip(CLUSTER_OPERATOR, [True, False, False, False]))
 def test_cluster_operator(clusteroperator, expected):
     assert cluster_operator_ready(clusteroperator) is expected
