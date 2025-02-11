@@ -15,6 +15,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
     get_waiter,
     pod_ready,
     resource_absent,
+    cluster_operator_ready,
 )
 from kubernetes.dynamic.exceptions import NotFoundError
 from kubernetes.dynamic.resource import ResourceInstance
@@ -119,3 +120,79 @@ def test_get_waiter_returns_correct_waiter():
         ).predicate.func
         == custom_condition
     )
+
+@pytest.mark.parametrize(
+    "resource, expected_result",
+    [
+        # Test case: Healthy ClusterOperator (Available=True, Degraded=False, Progressing=False)
+        (
+            {
+                "status": {
+                    "conditions": [
+                        {"type": "Available", "status": "True"},
+                        {"type": "Degraded", "status": "False"},
+                        {"type": "Progressing", "status": "False"},
+                    ]
+                }
+            },
+            True,
+        ),
+        # Test case: Unhealthy ClusterOperator (Degraded=True)
+        (
+            {
+                "status": {
+                    "conditions": [
+                        {"type": "Available", "status": "True"},
+                        {"type": "Degraded", "status": "True"},
+                        {"type": "Progressing", "status": "False"},
+                    ]
+                }
+            },
+            False,
+        ),
+        # Test case: Unhealthy ClusterOperator (Progressing=True)
+        (
+            {
+                "status": {
+                    "conditions": [
+                        {"type": "Available", "status": "True"},
+                        {"type": "Degraded", "status": "False"},
+                        {"type": "Progressing", "status": "True"},
+                    ]
+                }
+            },
+            False,
+        ),
+        # Test case: Unhealthy ClusterOperator (Available=False)
+        (
+            {
+                "status": {
+                    "conditions": [
+                        {"type": "Available", "status": "False"},
+                        {"type": "Degraded", "status": "False"},
+                        {"type": "Progressing", "status": "False"},
+                    ]
+                }
+            },
+            False,
+        ),
+        # Test case: Missing conditions
+        (
+            {
+                "status": {}
+            },
+            False,
+        ),
+        # Test case: Empty resource
+        (
+            {},
+            False,
+        ),
+    ],
+)
+def test_cluster_operator_ready(resource, expected_result):
+    """
+    Test the cluster_operator_ready function with various inputs.
+    """
+    result = cluster_operator_ready(resource)
+    assert result == expected_result

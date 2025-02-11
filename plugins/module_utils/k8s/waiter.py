@@ -117,11 +117,43 @@ def exists(resource: Optional[ResourceInstance]) -> bool:
     return bool(resource) and not empty_list(resource)
 
 
+def cluster_operator_ready(resource: ResourceInstance) -> bool:
+    """
+    Predicate to check if a single ClusterOperator is healthy.
+    Returns True if:
+      - "Available" is True
+      - "Degraded" is False
+      - "Progressing" is False
+    """
+    if not resource:
+        return False
+
+    # Extract conditions from the resource's status
+    status = resource.get("status", {})
+    conditions = status.get("conditions", [])
+
+    degraded = False
+    progressing = False
+    available = False
+
+    for condition in conditions:
+        if condition.get("type") == "Degraded":
+            degraded = condition.get("status") == "True"
+        elif condition.get("type") == "Progressing":
+            progressing = condition.get("status") == "True"
+        elif condition.get("type") == "Available":
+            available = condition.get("status") == "True"
+
+    # Return True only if all checks pass
+    return available and not degraded and not progressing
+
+
 RESOURCE_PREDICATES = {
     "DaemonSet": daemonset_ready,
     "Deployment": deployment_ready,
     "Pod": pod_ready,
     "StatefulSet": statefulset_ready,
+    "ClusterOperator": cluster_operator_ready, 
 }
 
 
