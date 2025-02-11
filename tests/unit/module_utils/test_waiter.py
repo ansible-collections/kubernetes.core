@@ -30,6 +30,7 @@ def resources(filepath):
 RESOURCES = resources("fixtures/definitions.yml")
 PODS = resources("fixtures/pods.yml")
 DEPLOYMENTS = resources("fixtures/deployments.yml")
+CLUSTER_OPERATOR = resources("fixtures/clusteroperator.yml")
 
 
 def test_clock_times_out():
@@ -121,78 +122,6 @@ def test_get_waiter_returns_correct_waiter():
         == custom_condition
     )
 
-@pytest.mark.parametrize(
-    "resource, expected_result",
-    [
-        # Test case: Healthy ClusterOperator (Available=True, Degraded=False, Progressing=False)
-        (
-            {
-                "status": {
-                    "conditions": [
-                        {"type": "Available", "status": "True"},
-                        {"type": "Degraded", "status": "False"},
-                        {"type": "Progressing", "status": "False"},
-                    ]
-                }
-            },
-            True,
-        ),
-        # Test case: Unhealthy ClusterOperator (Degraded=True)
-        (
-            {
-                "status": {
-                    "conditions": [
-                        {"type": "Available", "status": "True"},
-                        {"type": "Degraded", "status": "True"},
-                        {"type": "Progressing", "status": "False"},
-                    ]
-                }
-            },
-            False,
-        ),
-        # Test case: Unhealthy ClusterOperator (Progressing=True)
-        (
-            {
-                "status": {
-                    "conditions": [
-                        {"type": "Available", "status": "True"},
-                        {"type": "Degraded", "status": "False"},
-                        {"type": "Progressing", "status": "True"},
-                    ]
-                }
-            },
-            False,
-        ),
-        # Test case: Unhealthy ClusterOperator (Available=False)
-        (
-            {
-                "status": {
-                    "conditions": [
-                        {"type": "Available", "status": "False"},
-                        {"type": "Degraded", "status": "False"},
-                        {"type": "Progressing", "status": "False"},
-                    ]
-                }
-            },
-            False,
-        ),
-        # Test case: Missing conditions
-        (
-            {
-                "status": {}
-            },
-            False,
-        ),
-        # Test case: Empty resource
-        (
-            {},
-            False,
-        ),
-    ],
-)
-def test_cluster_operator_ready(resource, expected_result):
-    """
-    Test the cluster_operator_ready function with various inputs.
-    """
-    result = cluster_operator_ready(resource)
-    assert result == expected_result
+@pytest.mark.parametrize("clusteroperator,expected", zip(CLUSTER_OPERATOR, [True, False, False, False]))
+def test_cluster_operator(clusteroperator, expected):
+    assert cluster_operator_ready(clusteroperator) is expected
