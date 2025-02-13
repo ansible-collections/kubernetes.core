@@ -1,4 +1,6 @@
+import pytest
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    build_hidden_field_tree,
     hide_fields,
 )
 
@@ -167,3 +169,85 @@ def test_hiding_nested_dicts_using_brackets():
         print(output)
         print(expected)
     assert hide_fields(output, hidden_fields) == expected
+
+
+def test_using_jinja_syntax():
+    output = dict(
+        kind="ConfigMap", metadata=dict(name="foo"), data=["0", "1", "2", "3"]
+    )
+    hidden_fields = ["data.2"]
+    expected = dict(kind="ConfigMap", metadata=dict(name="foo"), data=["0", "1", "3"])
+    assert hide_fields(output, hidden_fields) == expected
+
+
+def test_remove_multiple_items_from_list():
+    output = dict(
+        kind="ConfigMap", metadata=dict(name="foo"), data=["0", "1", "2", "3"]
+    )
+    hidden_fields = ["data[0]", "data[2]"]
+    expected = dict(kind="ConfigMap", metadata=dict(name="foo"), data=["1", "3"])
+    assert hide_fields(output, hidden_fields) == expected
+
+
+def test_hide_dict_and_nested_dict():
+    output = {
+        "kind": "Pod",
+        "metadata": {
+            "labels": {
+                "control-plane": "controller-manager",
+                "pod-template-hash": "687b856498",
+            },
+            "annotations": {
+                "kubectl.kubernetes.io/default-container": "awx-manager",
+                "creationTimestamp": "2025-01-16T12:40:43Z",
+            },
+        },
+    }
+    hidden_fields = ["metadata.labels.pod-template-hash", "metadata.labels"]
+    expected = {
+        "kind": "Pod",
+        "metadata": {
+            "annotations": {
+                "kubectl.kubernetes.io/default-container": "awx-manager",
+                "creationTimestamp": "2025-01-16T12:40:43Z",
+            }
+        },
+    }
+    assert hide_fields(output, hidden_fields) == expected
+
+
+@pytest.mark.parametrize(
+    "hidden_fields,expected",
+    [
+        (
+            [
+                "data[0]",
+                "data[1]",
+                "metadata.annotation",
+                "metadata.annotation[0].name",
+            ],
+            {"data": {"0": None, "1": None}, "metadata": {"annotation": None}},
+        ),
+        (
+            [
+                "data[0]",
+                "data[1]",
+                "metadata.annotation[0].name",
+                "metadata.annotation",
+            ],
+            {"data": {"0": None, "1": None}, "metadata": {"annotation": None}},
+        ),
+        (
+            [
+                "data[0]",
+                "data[1]",
+                "data",
+                "metadata.annotation[0].name",
+                "metadata.annotation",
+            ],
+            {"data": None, "metadata": {"annotation": None}},
+        ),
+    ],
+)
+def test_build_hidden_field_tree(hidden_fields, expected):
+    assert build_hidden_field_tree(hidden_fields) == expected
