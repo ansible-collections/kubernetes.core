@@ -129,8 +129,7 @@ def cluster_operator_ready(resource: ResourceInstance) -> bool:
         return False
 
     # Extract conditions from the resource's status
-    status = resource.get("status", {})
-    conditions = status.get("conditions", [])
+    conditions = resource.get("status", {}).get("conditions", [])
 
     degraded = False
     progressing = False
