@@ -1,6 +1,8 @@
 import pytest
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
-    build_hidden_field_tree, hide_fields)
+    build_hidden_field_tree,
+    hide_fields,
+)
 
 
 def test_hiding_missing_field_does_nothing():
