@@ -15,6 +15,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
     get_waiter,
     pod_ready,
     resource_absent,
+    cluster_operator_ready,
 )
 from kubernetes.dynamic.exceptions import NotFoundError
 from kubernetes.dynamic.resource import ResourceInstance
@@ -29,6 +30,7 @@ def resources(filepath):
 RESOURCES = resources("fixtures/definitions.yml")
 PODS = resources("fixtures/pods.yml")
 DEPLOYMENTS = resources("fixtures/deployments.yml")
+CLUSTER_OPERATOR = resources("fixtures/clusteroperator.yml")
 
 
 def test_clock_times_out():
@@ -119,3 +121,8 @@ def test_get_waiter_returns_correct_waiter():
         ).predicate.func
         == custom_condition
     )
+
+
+@pytest.mark.parametrize("clusteroperator,expected", zip(CLUSTER_OPERATOR, [True, False, False, False]))
+def test_cluster_operator(clusteroperator, expected):
+    assert cluster_operator_ready(clusteroperator) is expected
