@@ -170,3 +170,31 @@ def test_template_with_disablehook():
     args, unknown = parser.parse_known_args(mytemplate.split())
 
     assert args.no_hooks is True
+
+
+def test_template_with_api_versions():
+    my_chart_ref = "testref"
+    helm_cmd = "helm"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("cmd")
+    parser.add_argument("template")
+    # to "simulate" helm template options, include two optional parameters NAME and CHART.
+    # if parsed string contains only one parameter, the value will be passed
+    # to CHART and NAME will be set to default value "release-name" as in helm template
+    parser.add_argument("NAME", nargs="?", default="release-name")
+    parser.add_argument("CHART", nargs="+")
+    parser.add_argument("--api-versions", action="append")
+
+    service_monitor_api_version = "monitoring.coreos.com/v1/ServiceMonitor"
+    openshift_project_api_version = "project.openshift.io/v1/Project"
+    api_versions = [service_monitor_api_version, openshift_project_api_version]
+
+    mytemplate = template(
+        cmd=helm_cmd, chart_ref=my_chart_ref, api_versions=api_versions
+    )
+
+    args, unknown = parser.parse_known_args(mytemplate.split())
+    assert len(args.api_versions) == 2
+    assert args.api_versions[0] == service_monitor_api_version
+    assert args.api_versions[1] == openshift_project_api_version
