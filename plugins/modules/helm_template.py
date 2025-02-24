@@ -22,6 +22,13 @@ description:
   - Render chart templates to an output directory or as text of concatenated yaml documents.
 
 options:
+  api_versions:
+    description:
+      - Additional Kubernetes API versions used for Capabilities.APIVersions
+    required: false
+    type: list
+    elements: str
+    default: []
   binary_path:
     description:
       - The path of a helm binary to use.
@@ -236,6 +243,7 @@ def template(
     values_files=None,
     include_crds=False,
     set_values=None,
+    api_versions=None,
 ):
     cmd += " template "
 
@@ -285,6 +293,10 @@ def template(
     if set_values:
         cmd += " " + set_values
 
+    if api_versions:
+        for api_version in api_versions:
+            cmd += " --api-versions " + api_version
+
     return cmd
 
 
@@ -307,6 +319,7 @@ def main():
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
             set_values=dict(type="list", elements="dict"),
+            api_versions=dict(type="list", default=[], elements="str")
         ),
         supports_check_mode=True,
     )
@@ -327,6 +340,7 @@ def main():
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
     set_values = module.params.get("set_values")
+    api_versions = module.params.get("api_versions")
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
@@ -357,6 +371,7 @@ def main():
         values_files=values_files,
         include_crds=include_crds,
         set_values=set_values_args,
+        api_versions=api_versions,
     )
 
     if not check_mode:
