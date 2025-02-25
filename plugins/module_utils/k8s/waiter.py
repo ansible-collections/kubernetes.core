@@ -132,7 +132,11 @@ def cluster_operator_ready(resource: ResourceInstance) -> bool:
     conditions = resource.get("status", {}).get("conditions", [])
 
     status = {x.get("type", ""): x.get("status") for x in conditions}
-    return (status.get("Degraded") == "False") and (status.get("Progressing") == "False") and (status.get("Available") == "True")
+    return (
+        (status.get("Degraded") == "False")
+        and (status.get("Progressing") == "False")
+        and (status.get("Available") == "True")
+    )
 
 
 RESOURCE_PREDICATES = {
