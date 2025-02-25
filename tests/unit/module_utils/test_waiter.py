@@ -9,13 +9,13 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import 
     DummyWaiter,
     Waiter,
     clock,
+    cluster_operator_ready,
     custom_condition,
     deployment_ready,
     exists,
     get_waiter,
     pod_ready,
     resource_absent,
-    cluster_operator_ready,
 )
 from kubernetes.dynamic.exceptions import NotFoundError
 from kubernetes.dynamic.resource import ResourceInstance
