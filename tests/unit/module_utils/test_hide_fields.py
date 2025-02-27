@@ -164,6 +164,4 @@ def test_hiding_nested_dicts_using_brackets():
         ),
     )
     if hide_fields(output, hidden_fields) != expected:
-        print(output)
-        print(expected)
     assert hide_fields(output, hidden_fields) == expected
