@@ -1,4 +1,20 @@
+# Copyright [2025] [Red Hat, Inc.]
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import pytest
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
+    build_hidden_field_tree,
     hide_fields,
 )
 
@@ -164,4 +180,88 @@ def test_hiding_nested_dicts_using_brackets():
         ),
     )
     if hide_fields(output, hidden_fields) != expected:
+        print(output)
+        print(expected)
     assert hide_fields(output, hidden_fields) == expected
+
+
+def test_using_jinja_syntax():
+    output = dict(
+        kind="ConfigMap", metadata=dict(name="foo"), data=["0", "1", "2", "3"]
+    )
+    hidden_fields = ["data.2"]
+    expected = dict(kind="ConfigMap", metadata=dict(name="foo"), data=["0", "1", "3"])
+    assert hide_fields(output, hidden_fields) == expected
+
+
+def test_remove_multiple_items_from_list():
+    output = dict(
+        kind="ConfigMap", metadata=dict(name="foo"), data=["0", "1", "2", "3"]
+    )
+    hidden_fields = ["data[0]", "data[2]"]
+    expected = dict(kind="ConfigMap", metadata=dict(name="foo"), data=["1", "3"])
+    assert hide_fields(output, hidden_fields) == expected
+
+
+def test_hide_dict_and_nested_dict():
+    output = {
+        "kind": "Pod",
+        "metadata": {
+            "labels": {
+                "control-plane": "controller-manager",
+                "pod-template-hash": "687b856498",
+            },
+            "annotations": {
+                "kubectl.kubernetes.io/default-container": "awx-manager",
+                "creationTimestamp": "2025-01-16T12:40:43Z",
+            },
+        },
+    }
+    hidden_fields = ["metadata.labels.pod-template-hash", "metadata.labels"]
+    expected = {
+        "kind": "Pod",
+        "metadata": {
+            "annotations": {
+                "kubectl.kubernetes.io/default-container": "awx-manager",
+                "creationTimestamp": "2025-01-16T12:40:43Z",
+            }
+        },
+    }
+    assert hide_fields(output, hidden_fields) == expected
+
+
+@pytest.mark.parametrize(
+    "hidden_fields,expected",
+    [
+        (
+            [
+                "data[0]",
+                "data[1]",
+                "metadata.annotation",
+                "metadata.annotation[0].name",
+            ],
+            {"data": {"0": None, "1": None}, "metadata": {"annotation": None}},
+        ),
+        (
+            [
+                "data[0]",
+                "data[1]",
+                "metadata.annotation[0].name",
+                "metadata.annotation",
+            ],
+            {"data": {"0": None, "1": None}, "metadata": {"annotation": None}},
+        ),
+        (
+            [
+                "data[0]",
+                "data[1]",
+                "data",
+                "metadata.annotation[0].name",
+                "metadata.annotation",
+            ],
+            {"data": None, "metadata": {"annotation": None}},
+        ),
+    ],
+)
+def test_build_hidden_field_tree(hidden_fields, expected):
+    assert build_hidden_field_tree(hidden_fields) == expected
