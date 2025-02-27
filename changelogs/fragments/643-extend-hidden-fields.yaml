@@ -1,3 +1,3 @@
 ---
 minor_changes:
-- k8s, k8s_info Extend hidden_fields to allow the expression of more complex field types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/643)
+- k8s, k8s_info Extend hidden_fields to allow the expression of more complex field types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
