@@ -1,0 +1,99 @@
+---
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  name: authentication
+spec: {}
+status:
+  conditions:
+  - message: All is well
+    reason: AsExpected
+    status: 'False'
+    type: Degraded
+  - message: 'AuthenticatorCertKeyProgressing: All is well'
+    reason: AsExpected
+    status: 'False'
+    type: Progressing
+  - message: All is well
+    reason: AsExpected
+    status: 'True'
+    type: Available
+  - message: All is well
+    reason: AsExpected
+    status: 'True'
+    type: Upgradeable
+  - reason: NoData
+    status: Unknown
+    type: EvaluationConditionsDetected
+---
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  name: dns
+spec: {}
+status:
+  conditions:
+  - message: DNS "default" is available.
+    reason: AsExpected
+    status: 'True'
+    type: Available
+  - message: 'DNS "default" reports Progressing=True: "Have 2 available node-resolver
+      pods, want 3."'
+    reason: DNSReportsProgressingIsTrue
+    status: 'True'
+    type: Progressing
+  - reason: DNSNotDegraded
+    status: 'False'
+    type: Degraded
+  - message: 'DNS default is upgradeable: DNS Operator can be upgraded'
+    reason: DNSUpgradeable
+    status: 'True'
+    type: Upgradeable
+---
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  name: dns
+spec: {}
+status:
+  conditions:
+  - message: DNS "default" is available.
+    reason: AsExpected
+    status: 'True'
+    type: Available
+  - message: 'DNS "default" reports Progressing=True: "Have 2 available node-resolver
+      pods, want 3."'
+    reason: DNSReportsProgressingIsTrue
+    status: 'False'
+    type: Progressing
+  - reason: DNSNotDegraded
+    status: 'True'
+    type: Degraded
+  - message: 'DNS default is upgradeable: DNS Operator can be upgraded'
+    reason: DNSUpgradeable
+    status: 'False'
+    type: Upgradeable
+---
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  name: dns
+spec: {}
+status:
+  conditions:
+  - message: DNS "default" is available.
+    reason: AsExpected
+    status: 'False'
+    type: Available
+  - message: 'DNS "default" reports Progressing=True: "Have 2 available node-resolver
+      pods, want 3."'
+    reason: DNSReportsProgressingIsTrue
+    status: 'True'
+    type: Progressing
+  - reason: DNSNotDegraded
+    status: 'True'
+    type: Degraded
+  - message: 'DNS default is upgradeable: DNS Operator can be upgraded'
+    reason: DNSUpgradeable
+    status: 'False'
+    type: Upgradeable
