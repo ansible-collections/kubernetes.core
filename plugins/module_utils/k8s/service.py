@@ -537,7 +537,7 @@ def hide_field(definition: dict, hidden_field: str) -> dict:
         return key in field
 
     def list_contains_key(field: list, key: str) -> bool:
-        return key < len(field)
+        return int(key) < len(field)
 
     field_contains_key = dict_contains_key
 
