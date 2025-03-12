@@ -148,7 +148,7 @@ jobs:
       - name: install community.general collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
-          install_python_dependencies: true
+          install_python_dependencies: false
           source_path: ${{ env.community_general }}
 
       - name: create kubernetes cluster
