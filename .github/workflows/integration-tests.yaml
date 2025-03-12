@@ -97,12 +97,12 @@ jobs:
           https://github.com/ansible/ansible/archive/${{ matrix.ansible-version }}.tar.gz
           --disable-pip-version-check
         shell: bash
-        if: ${{ matrix.python-version == 'milestone'}}
+        if: ${{ matrix.ansible-version == 'milestone'}}
 
       - name: Install ansible-core (${{ matrix.ansible-version }})
         run: python3 -m pip install --upgrade "fallible[compat]"
         shell: bash
-        if: ${{ matrix.python-version == 'fallible'}}
+        if: ${{ matrix.ansible-version == 'fallible'}}
 
       - name: Build and install collection
         id: install-src
@@ -149,7 +149,7 @@ jobs:
           ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
           ansible_test_environment: |
             ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}
-        if: ${{ matrix.python-version == 'fallible'}}
+        if: ${{ matrix.ansible-version == 'fallible'}}
 
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
@@ -160,4 +160,4 @@ jobs:
           ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
           ansible_test_environment: |
             ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}
-        if: ${{ matrix.python-version == 'milestone'}}
+        if: ${{ matrix.ansible-version == 'milestone'}}
