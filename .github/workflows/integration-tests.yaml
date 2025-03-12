@@ -50,6 +50,7 @@ jobs:
       source: "./source"
       cloud_common: "./cloudcommon"
       ansible_posix: "./ansible_posix"
+      community_general: "./community_general"
     strategy:
       fail-fast: false
       matrix:
@@ -62,7 +63,7 @@ jobs:
           - true
           - false
         workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
-    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}"
+    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}-turbo=${{ matrix.enable-turbo-mode }}"
     steps:
       - name: Read target
         id: read-targets
@@ -123,6 +124,13 @@ jobs:
         with:
           repository: ansible-collections/ansible.posix
           path: ${{ env.ansible_posix }}
+          ref: main
+
+      - name: checkout ansible-collections/community.general
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/community.general
+          path: ${{ env.community_general }}
           ref: main
 
       - name: install cloud.common collection
