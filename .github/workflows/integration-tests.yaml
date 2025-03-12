@@ -177,7 +177,7 @@ jobs:
         run: echo "ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}" >> $GITHUB_ENV
         shell: bash
 
-      - name: Run integration tests
+      - name: Run integration tests (fallible)
         run: >-
           ansible-test integration
           --diff
@@ -186,7 +186,7 @@ jobs:
           --skip-tags False
           --retry-on-error
           --continue-on-error
-          --python ${{ inputs.python_version }}
+          --python ${{ matrix.python-version }}
           -v
           ${{ steps.read-targets.outputs.ansible_test_targets }}
         shell: bash
