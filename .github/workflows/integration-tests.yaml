@@ -190,7 +190,7 @@ jobs:
           -v
           ${{ steps.read-targets.outputs.ansible_test_targets }}
         shell: bash
-        working-directory: ${{ inputs.collection_path }}
+        working-directory: ${{ steps.install-src.outputs.collection_path }}
         if: ${{ matrix.ansible-version == 'fallible'}}
 
       - name: Run integration tests
