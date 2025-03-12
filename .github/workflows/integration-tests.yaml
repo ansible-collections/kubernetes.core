@@ -141,14 +141,56 @@ jobs:
         uses: helm/kind-action@v1.8.0
         with:
           node_image: "kindest/node:v1.29.2"
+      
+      - name: Install wheel now for faster builds (fallible)
+        run: python3 -m pip install wheel --upgrade
+        shell: bash
+        if: ${{ matrix.ansible-version == 'fallible'}}
 
-      - name: Run integration tests using ansible-core 2.19
-        uses: ./.github/actions/ansible_test_integration_fallible
-        with:
-          collection_path: ${{ steps.install-src.outputs.collection_path }}
-          ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
-          ansible_test_environment: |
-            ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}
+      - name: Disable selinux with selinux_please_lie_to_me (fallible)
+        run: |
+          python3 -m pip uninstall -y selinux
+          python3 -m pip install selinux_please_lie_to_me
+        shell: bash
+        if: ${{ matrix.ansible-version == 'fallible'}}
+
+      - name: Create requirements files argument
+        id: requirements
+        run: |
+          set -eux
+          REQ_ARG=""
+          for item in $(echo ${FILES_LIST} | tr ' ' '\n'); do
+            REQ_ARG="-r ${item} ${REQ_ARG}"
+          done
+          echo "argument=${REQ_ARG}" >> $GITHUB_OUTPUT
+        shell: bash
+        env:
+          FILES_LIST: ${{ inputs.ansible_test_requirement_files }}
+
+      - name: Install collection python requirements
+        run: python3 -m pip install ${{ steps.requirements.outputs.argument }} ${{ steps.constraints.outputs.argument }}
+        shell: bash
+        working-directory: ${{ inputs.collection_path }}
+        if: ${{ (steps.requirements.outputs.argument != '') || (steps.constraints.outputs.argument != '') }}
+
+      - name: Set environment variables
+        run: echo "ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Run integration tests
+        run: >-
+          ansible-test integration
+          --diff
+          --no-temp-workdir
+          --color
+          --skip-tags False
+          --retry-on-error
+          --continue-on-error
+          --python ${{ inputs.python_version }}
+          -v
+          ${{ steps.read-targets.outputs.ansible_test_targets }}
+        shell: bash
+        working-directory: ${{ inputs.collection_path }}
         if: ${{ matrix.ansible-version == 'fallible'}}
 
       - name: Run integration tests
