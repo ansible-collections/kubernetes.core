@@ -120,6 +120,21 @@ EXAMPLES = r"""
     namespace: default
     wait_sleep: 10
     wait_timeout: 360
+
+- name: Wait for OpenShift bootstrap to complete
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: ConfigMap
+    name: bootstrap
+    namespace: kube-system
+  register: ocp_bootstrap_status
+  until: >
+    ocp_bootstrap_status.resources is defined and
+    (ocp_bootstrap_status.resources | length > 0) and
+    (ocp_bootstrap_status.resources[0].data.status is defined) and
+    (ocp_bootstrap_status.resources[0].data.status == 'complete')
+  retries: 60
+  delay: 15
 """
 
 RETURN = r"""
