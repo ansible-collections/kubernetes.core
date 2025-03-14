@@ -175,6 +175,10 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
         if params.get("apply"):
             instance, warnings = svc.apply(resource, definition, existing)
             result["method"] = "apply"
+        elif existing and params.get("create_only", False):
+            instance = existing.to_dict()
+            result["changed"] = False
+            result["method"] = "create"
         elif not existing:
             if state == "patched":
                 result.setdefault("warnings", []).append(
