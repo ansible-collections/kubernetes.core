@@ -50,6 +50,7 @@ jobs:
       source: "./source"
       cloud_common: "./cloudcommon"
       ansible_posix: "./ansible_posix"
+      community_general: "./community_general"
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +62,7 @@ jobs:
           - true
           - false
         workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
-    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}"
+    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}-enable_turbo=${{ matrix.enable-turbo-mode }}"
     steps:
       - name: Read target
         id: read-targets
@@ -118,6 +119,13 @@ jobs:
           path: ${{ env.ansible_posix }}
           ref: main
 
+      - name: checkout ansible-collections/community.general
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/community.general
+          path: ${{ env.community_general }}
+          ref: main
+
       - name: install cloud.common collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
@@ -129,6 +137,12 @@ jobs:
         with:
           install_python_dependencies: true
           source_path: ${{ env.ansible_posix }}
+
+      - name: install community.general collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: false
+          source_path: ${{ env.community_general }}
 
       - name: create kubernetes cluster
         uses: helm/kind-action@v1.8.0
