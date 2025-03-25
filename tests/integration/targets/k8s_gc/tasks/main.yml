@@ -87,7 +87,7 @@
         label_selectors:
           - "job=gc"
       register: wait_job
-      until: wait_job.resources
+      until: wait_job.resources | length > 0
       retries: 5
       delay: 10
 
