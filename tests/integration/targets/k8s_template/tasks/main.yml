@@ -118,8 +118,7 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_two: pod-4
-        k8s_pod_namespace: "{{ template_namespace }}"
-        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+        k8s_pod_namespace: "template-test"
       register: r
 
     - name: Assert that pod creation succeeded using template
