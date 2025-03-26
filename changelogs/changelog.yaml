@@ -859,15 +859,15 @@ releases:
       minor_changes:
       - connection/kubectl.py - Added an example of using the kubectl connection plugin
         to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
+      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
       - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0
         (https://github.com/ansible-collections/kubernetes.core/pull/734).
-      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
       release_summary: This release comes with documentation updates.
     fragments:
     - 20240530-defer-removal-and-ansible-core-support-update.yaml
     - 20240601-doc-example-of-using-kubectl.yaml
-    - inventory-update_removal_date.yml
     - 3.2.0.yml
+    - inventory-update_removal_date.yml
     release_date: '2024-06-14'
   3.3.0:
     changes:
@@ -899,3 +899,9 @@ releases:
     - 798-drain-pdb-error-message.yaml
     - readme_template_update.yml
     release_date: '2025-01-22'
+  3.3.1:
+    changes:
+      release_summary: This release fixes the CI issues with the ``linters`` workflow.
+    fragments:
+    - release_summary.yml
+    release_date: '2025-03-26'
