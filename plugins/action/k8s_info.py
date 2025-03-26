@@ -8,9 +8,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
 import os
 import platform
+import random
+import string
 import traceback
 from contextlib import contextmanager
 
@@ -31,17 +32,22 @@ try:
     from ansible.template import trust_as_template
 except ImportError:
     trust_as_template = None
-from typing import Any, Dict, List, Union
 
 
 class RemoveOmit(object):
-    def __init__(self, buffer, omit_value):
+    _omit_value = "__omit_place_holder__" + "".join(
+        [random.choice(string.ascii_lowercase + string.digits) for i in range(41)]
+    )
+
+    def __init__(self, buffer, omit_value=None):
         try:
             import yaml
         except ImportError:
             raise AnsibleError("Failed to import the required Python library (PyYAML).")
         self.data = yaml.safe_load_all(buffer)
         self.omit = omit_value
+        if self.omit is None:
+            self.omit = RemoveOmit._omit_value
 
     def remove_omit(self, data):
         if isinstance(data, dict):
@@ -55,113 +61,45 @@ class RemoveOmit(object):
             return [self.remove_omit(v) for v in data if v != self.omit]
         return data
 
+    @staticmethod
+    def _resolve_template_str(data, templar, overrides):
+        data = trust_as_template(data)
+        try:
+            result = templar.template(
+                data,
+                preserve_trailing_newlines=True,
+                escape_backslashes=True,
+                overrides=overrides,
+            )
+        except AnsibleValueOmittedError:
+            result = RemoveOmit._omit_value
+        return result
+
+    @staticmethod
+    def transform_template(data, templar, overrides):
+        start = 0
+        while True:
+            start = data.find("{{", start)
+            if start > 0:
+                end = data.find("}}", start)
+                if end > 0:
+                    end_mark = end + 2
+                    resolved_data = RemoveOmit._resolve_template_str(
+                        data[start:end_mark], templar, overrides
+                    )
+                    copy_data = data[0:start] + resolved_data
+                    start = len(copy_data)
+                    copy_data += data[end_mark:]
+                    data = copy_data
+                    continue
+            break
+        return data
+
     def output(self):
         return [self.remove_omit(d) for d in self.data]
 
 
 ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
-
-
-def _load_template_data(template_data: str) -> List[Dict[str, Any]]:
-    try:
-        data = json.loads(template_data)
-        if isinstance(data, dict):
-            data = [data]
-        return data
-    except ValueError:
-        try:
-            import yaml
-        except ImportError:
-            raise AnsibleError("Failed to import the required Python library (PyYAML).")
-        return yaml.safe_load_all(template_data)
-
-
-class _K8SOmit:
-    def __repr__(self) -> str:
-        return "[kubernetes.core.Omit_value]"
-
-
-def _resolve_template_str(
-    template_data: str,
-    templar: Any,
-    overrides: Dict[str, Any],
-    preserve_trailing_newlines: bool = True,
-    escape_backslashes: bool = True,
-) -> Union[str, _K8SOmit]:
-    template_data = trust_as_template(template_data)
-    try:
-        result = templar.template(
-            template_data,
-            preserve_trailing_newlines=preserve_trailing_newlines,
-            escape_backslashes=escape_backslashes,
-            overrides=overrides,
-        )
-    except AnsibleValueOmittedError:
-        result = _K8SOmit()
-    return result
-
-
-def _resolve_template_data(
-    template_data: Any,
-    templar: Any,
-    overrides: Dict[str, Any],
-    preserve_trailing_newlines: bool = True,
-    escape_backslashes: bool = True,
-) -> Any:
-    if isinstance(template_data, str):
-        return _resolve_template_str(
-            template_data,
-            templar,
-            overrides,
-            preserve_trailing_newlines,
-            escape_backslashes,
-        )
-    elif isinstance(template_data, list):
-        result = []
-        for value in template_data:
-            if not isinstance(
-                (
-                    t_value := _resolve_template_data(
-                        value,
-                        templar,
-                        overrides,
-                        preserve_trailing_newlines,
-                        escape_backslashes,
-                    )
-                ),
-                _K8SOmit,
-            ):
-                result.append(t_value)
-        return result
-    elif isinstance(template_data, dict):
-        result = {}
-        for key, value in template_data.items():
-            if isinstance(value, str):
-                if not isinstance(
-                    (
-                        t_value := _resolve_template_str(
-                            value,
-                            templar,
-                            overrides,
-                            preserve_trailing_newlines,
-                            escape_backslashes,
-                        )
-                    ),
-                    _K8SOmit,
-                ):
-                    result[key] = t_value
-            else:
-                result[key] = _resolve_template_data(
-                    value,
-                    templar,
-                    overrides,
-                    preserve_trailing_newlines,
-                    escape_backslashes,
-                )
-        return result
-    else:
-        # nothing to for bool, int...
-        return template_data
 
 
 class ActionModule(ActionBase):
@@ -383,15 +321,10 @@ class ActionModule(ActionBase):
                             )
                 self._templar.available_variables = temp_vars
                 if trust_as_template:
-                    for template_data in _load_template_data(template_data):
-                        result = _resolve_template_data(
-                            template_data,
-                            self._templar,
-                            overrides,
-                            preserve_trailing_newlines=True,
-                            escape_backslashes=True,
-                        )
-                        result_template.append(result)
+                    result = RemoveOmit.transform_template(
+                        template_data, self._templar, overrides
+                    )
+                    result_template.extend(RemoveOmit(result).output())
                 else:
                     result = self._templar.do_template(
                         template_data,
