@@ -11,6 +11,7 @@ plugins/module_utils/version.py pylint!skip
 plugins/modules/k8s.py validate-modules:parameter-type-not-in-doc
 plugins/modules/k8s_scale.py validate-modules:parameter-type-not-in-doc
 plugins/modules/k8s_service.py validate-modules:parameter-type-not-in-doc
+tests/unit/module_utils/fixtures/clusteroperator.yml yamllint!skip
 tests/unit/module_utils/fixtures/definitions.yml yamllint!skip
 tests/unit/module_utils/fixtures/deployments.yml yamllint!skip
 tests/integration/targets/k8s_delete/files/deployments.yaml yamllint!skip
