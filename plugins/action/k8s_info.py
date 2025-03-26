@@ -10,8 +10,6 @@ __metaclass__ = type
 import copy
 import os
 import platform
-import random
-import string
 import traceback
 from contextlib import contextmanager
 
@@ -28,77 +26,17 @@ from ansible.module_utils.six import iteritems, string_types
 from ansible.plugins.action import ActionBase
 
 try:
-    from ansible.errors import AnsibleValueOmittedError
     from ansible.template import trust_as_template
 except ImportError:
     trust_as_template = None
 
 
-class RemoveOmit(object):
-    _omit_value = "__omit_place_holder__" + "".join(
-        [random.choice(string.ascii_lowercase + string.digits) for i in range(41)]
-    )
-
-    def __init__(self, buffer, omit_value=None):
-        try:
-            import yaml
-        except ImportError:
-            raise AnsibleError("Failed to import the required Python library (PyYAML).")
-        self.data = yaml.safe_load_all(buffer)
-        self.omit = omit_value
-        if self.omit is None:
-            self.omit = RemoveOmit._omit_value
-
-    def remove_omit(self, data):
-        if isinstance(data, dict):
-            result = dict()
-            for key, value in iteritems(data):
-                if value == self.omit:
-                    continue
-                result[key] = self.remove_omit(value)
-            return result
-        if isinstance(data, list):
-            return [self.remove_omit(v) for v in data if v != self.omit]
-        return data
-
-    @staticmethod
-    def _resolve_template_str(data, templar, overrides):
-        data = trust_as_template(data)
-        try:
-            result = templar.template(
-                data,
-                preserve_trailing_newlines=True,
-                escape_backslashes=True,
-                overrides=overrides,
-            )
-        except AnsibleValueOmittedError:
-            result = RemoveOmit._omit_value
-        return result
-
-    @staticmethod
-    def transform_template(data, templar, overrides):
-        variable_end_string = overrides.get("variable_end_string", "}}")
-        variable_start_string = overrides.get("variable_start_string", "{{")
-        start = 0
-        while True:
-            start = data.find(variable_start_string, start)
-            if start > 0:
-                end = data.find(variable_end_string, start)
-                if end > 0:
-                    end_mark = end + 2
-                    resolved_data = RemoveOmit._resolve_template_str(
-                        data[start:end_mark], templar, overrides
-                    )
-                    copy_data = data[0:start] + resolved_data
-                    start = len(copy_data)
-                    copy_data += data[end_mark:]
-                    data = copy_data
-                    continue
-            break
-        return data
-
-    def output(self):
-        return [self.remove_omit(d) for d in self.data]
+def _from_yaml_to_definition(buffer):
+    try:
+        import yaml
+    except ImportError:
+        raise AnsibleError("Failed to import the required Python library (PyYAML).")
+    return list(yaml.safe_load_all(buffer))
 
 
 ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
@@ -257,7 +195,6 @@ class ActionModule(ActionBase):
                 "'template' is only a supported parameter for the 'k8s' module."
             )
 
-        omit_value = task_vars.get("omit")
         template_params = []
         if isinstance(template, string_types) or isinstance(template, dict):
             template_params.append(self.get_template_args(template))
@@ -323,20 +260,20 @@ class ActionModule(ActionBase):
                             )
                 self._templar.available_variables = temp_vars
                 if trust_as_template:
-                    result = RemoveOmit.transform_template(
-                        template_data, self._templar, overrides
+                    template_data = trust_as_template(template_data)
+                    result = self._templar.template(
+                        template_data,
+                        preserve_trailing_newlines=True,
+                        escape_backslashes=False,
+                        overrides=overrides,
                     )
-                    result_template.extend(RemoveOmit(result).output())
                 else:
                     result = self._templar.do_template(
                         template_data,
                         preserve_trailing_newlines=True,
                         escape_backslashes=False,
                     )
-                    if omit_value is not None:
-                        result_template.extend(RemoveOmit(result, omit_value).output())
-                    else:
-                        result_template.append(result)
+                result_template.extend(_from_yaml_to_definition(result))
         self._templar.available_variables = old_vars
         resource_definition = self._task.args.get("definition", None)
         if not resource_definition:
