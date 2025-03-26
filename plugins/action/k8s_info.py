@@ -77,11 +77,13 @@ class RemoveOmit(object):
 
     @staticmethod
     def transform_template(data, templar, overrides):
+        variable_end_string = overrides.get("variable_end_string", "}}")
+        variable_start_string = overrides.get("variable_start_string", "{{")
         start = 0
         while True:
-            start = data.find("{{", start)
+            start = data.find(variable_start_string, start)
             if start > 0:
-                end = data.find("}}", start)
+                end = data.find(variable_end_string, start)
                 if end > 0:
                     end_mark = end + 2
                     resolved_data = RemoveOmit._resolve_template_str(
