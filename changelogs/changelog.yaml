@@ -859,15 +859,15 @@ releases:
       minor_changes:
       - connection/kubectl.py - Added an example of using the kubectl connection plugin
         to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
+      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
       - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0
         (https://github.com/ansible-collections/kubernetes.core/pull/734).
-      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
       release_summary: This release comes with documentation updates.
     fragments:
     - 20240530-defer-removal-and-ansible-core-support-update.yaml
     - 20240601-doc-example-of-using-kubectl.yaml
-    - inventory-update_removal_date.yml
     - 3.2.0.yml
+    - inventory-update_removal_date.yml
     release_date: '2024-06-14'
   3.3.0:
     changes:
@@ -885,7 +885,8 @@ releases:
       minor_changes:
       - k8s_drain - Improve error message for pod disruption budget when draining
         a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
-      release_summary: This release comes with improvements to the error messages in the k8s_drain module and several bug fixes.
+      release_summary: This release comes with improvements to the error messages
+        in the k8s_drain module and several bug fixes.
     fragments:
     - 20240530-ansible-core-support-update.yaml
     - 20240611-helm-rc-version.yaml
@@ -946,10 +947,10 @@ releases:
       breaking_changes:
       - Remove support for ``ansible-core<2.15`` (https://github.com/ansible-collections/kubernetes.core/pull/737).
       minor_changes:
-      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0
-        (https://github.com/ansible-collections/kubernetes.core/pull/734).
       - connection/kubectl.py - Added an example of using the kubectl connection plugin
         to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
+      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0
+        (https://github.com/ansible-collections/kubernetes.core/pull/734).
       release_summary: This major release drops support for ``ansible-core<2.15``.
     fragments:
     - 20240530-ansible-core-support-update.yaml
@@ -976,8 +977,8 @@ releases:
       - k8s_drain - Improve error message for pod disruption budget when draining
         a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
       release_summary: This release came with new module ``helm_registry_auth``, improvements
-        to the error messages in the k8s_drain module, new parameter ``insecure_registry`` for
-        ``helm_template`` module and several bug fixes.
+        to the error messages in the k8s_drain module, new parameter ``insecure_registry``
+        for ``helm_template`` module and several bug fixes.
     fragments:
     - 0-readme.yml
     - 20240601-doc-example-of-using-kubectl.yaml
@@ -999,3 +1000,20 @@ releases:
       name: helm_registry_auth
       namespace: ''
     release_date: '2025-01-20'
+  5.2.0:
+    changes:
+      minor_changes:
+      - k8s - Extend hidden_fields to allow the expression of more complex field types
+        to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+      - k8s_info - Extend hidden_fields to allow the expression of more complex field
+        types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+      - 'waiter.py - add ClusterOperator support. The module can now check OpenShift
+        cluster health by verifying ClusterOperator status requiring ''Available:
+        True'', ''Degraded: False'', and ''Progressing: False'' for success. (https://github.com/ansible-collections/kubernetes.core/issues/869)'
+      release_summary: This release adds more functionality to the hidden_fields option
+        and support for waiting on ClusterOperators to reach a ready state.
+    fragments:
+    - 5.2.0.yml
+    - 643-extend-hidden-fields.yaml
+    - 879-clusteroperator-waiter.py.yaml
+    release_date: '2025-03-27'
