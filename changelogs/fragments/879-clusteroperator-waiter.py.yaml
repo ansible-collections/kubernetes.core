@@ -1,5 +1,0 @@
-minor_changes:
-  - >-
-    waiter.py - add ClusterOperator support. The module can now check OpenShift cluster health
-    by verifying ClusterOperator status requiring 'Available: True', 'Degraded: False', and
-    'Progressing: False' for success. (https://github.com/ansible-collections/kubernetes.core/issues/869)
