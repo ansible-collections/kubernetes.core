@@ -999,3 +999,9 @@ releases:
       name: helm_registry_auth
       namespace: ''
     release_date: '2025-01-20'
+  3.3.1:
+    changes:
+      release_summary: This release fixes the CI issues with the ``linters`` workflow.
+    fragments:
+    - release_summary.yml
+    release_date: '2025-03-26'

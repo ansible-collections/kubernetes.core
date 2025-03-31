@@ -4,6 +4,14 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v3.3.1
+======
+
+Release Summary
+---------------
+
+This release fixes the CI issues with the ``linters`` workflow.
+
 v5.1.0
 ======
 
