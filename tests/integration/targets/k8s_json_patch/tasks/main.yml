@@ -47,7 +47,7 @@
           - result.changed
           - result.result.metadata.labels.label2 == "bar"
           - result.result.spec.containers[0].image == "busybox:glibc"
-          - result.diff
+          - result.diff != {}
 
     - name: Describe pod
       kubernetes.core.k8s_info:
