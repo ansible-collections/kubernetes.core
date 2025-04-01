@@ -394,9 +394,11 @@
       register: k8s_info_testing6
       failed_when: not k8s_info_testing6.resources or k8s_info_testing6.resources[0].status.phase != "Active"
 
-    - name: Create large configmap data
-      command: dd if=/dev/urandom bs=500K count=1
-      register: cmap_data
+    - name: Create a file with specific size and attributes, to be used as swap space
+      community.general.filesize:
+        path: /tmp/configmap.bin
+        size: 500K
+        source: /dev/urandom
 
     - name: Create configmap with large value
       k8s:
@@ -407,7 +409,7 @@
             name: testmap
             namespace: testing
           data:
-            testkey: "{{ cmap_data.stdout | b64encode }}"
+            testkey: "{{ lookup('file', '/tmp/configmap.bin') | b64encode }}"
         wait: true
       register: result
 
@@ -424,7 +426,7 @@
 
     - assert:
         that:
-          - result.resources[0].data.testkey == (cmap_data.stdout | b64encode)
+          - result.resources[0].data.testkey == (lookup('file', '/tmp/configmap.bin') | b64encode)
 
     # test setting module defaults for kubernetes.core.k8s_info
     - block:

@@ -25,30 +25,18 @@ from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.six import iteritems, string_types
 from ansible.plugins.action import ActionBase
 
+try:
+    from ansible.template import trust_as_template
+except ImportError:
+    trust_as_template = None
 
-class RemoveOmit(object):
-    def __init__(self, buffer, omit_value):
-        try:
-            import yaml
-        except ImportError:
-            raise AnsibleError("Failed to import the required Python library (PyYAML).")
-        self.data = yaml.safe_load_all(buffer)
-        self.omit = omit_value
 
-    def remove_omit(self, data):
-        if isinstance(data, dict):
-            result = dict()
-            for key, value in iteritems(data):
-                if value == self.omit:
-                    continue
-                result[key] = self.remove_omit(value)
-            return result
-        if isinstance(data, list):
-            return [self.remove_omit(v) for v in data if v != self.omit]
-        return data
-
-    def output(self):
-        return [self.remove_omit(d) for d in self.data]
+def _from_yaml_to_definition(buffer):
+    try:
+        import yaml
+    except ImportError:
+        raise AnsibleError("Failed to import the required Python library (PyYAML).")
+    return list(yaml.safe_load_all(buffer))
 
 
 ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
@@ -207,7 +195,6 @@ class ActionModule(ActionBase):
                 "'template' is only a supported parameter for the 'k8s' module."
             )
 
-        omit_value = task_vars.get("omit")
         template_params = []
         if isinstance(template, string_types) or isinstance(template, dict):
             template_params.append(self.get_template_args(template))
@@ -230,17 +217,18 @@ class ActionModule(ActionBase):
         old_vars = self._templar.available_variables
 
         default_environment = {}
-        for key in (
-            "newline_sequence",
-            "variable_start_string",
-            "variable_end_string",
-            "block_start_string",
-            "block_end_string",
-            "trim_blocks",
-            "lstrip_blocks",
-        ):
-            if hasattr(self._templar.environment, key):
-                default_environment[key] = getattr(self._templar.environment, key)
+        if trust_as_template is None:
+            for key in (
+                "newline_sequence",
+                "variable_start_string",
+                "variable_end_string",
+                "block_start_string",
+                "block_end_string",
+                "trim_blocks",
+                "lstrip_blocks",
+            ):
+                if hasattr(self._templar.environment, key):
+                    default_environment[key] = getattr(self._templar.environment, key)
         for template_item in template_params:
             # We need to convert unescaped sequences to proper escaped sequences for Jinja2
             newline_sequence = template_item["newline_sequence"]
@@ -257,26 +245,35 @@ class ActionModule(ActionBase):
             with self.get_template_data(template_item["path"]) as template_data:
                 # add ansible 'template' vars
                 temp_vars = copy.deepcopy(task_vars)
+                overrides = {}
                 for key, value in iteritems(template_item):
                     if hasattr(self._templar.environment, key):
                         if value is not None:
-                            setattr(self._templar.environment, key, value)
-                        else:
+                            overrides[key] = value
+                            if trust_as_template is None:
+                                setattr(self._templar.environment, key, value)
+                        elif trust_as_template is None:
                             setattr(
                                 self._templar.environment,
                                 key,
                                 default_environment.get(key),
                             )
                 self._templar.available_variables = temp_vars
-                result = self._templar.do_template(
-                    template_data,
-                    preserve_trailing_newlines=True,
-                    escape_backslashes=False,
-                )
-                if omit_value is not None:
-                    result_template.extend(RemoveOmit(result, omit_value).output())
+                if trust_as_template:
+                    template_data = trust_as_template(template_data)
+                    result = self._templar.template(
+                        template_data,
+                        preserve_trailing_newlines=True,
+                        escape_backslashes=False,
+                        overrides=overrides,
+                    )
                 else:
-                    result_template.append(result)
+                    result = self._templar.do_template(
+                        template_data,
+                        preserve_trailing_newlines=True,
+                        escape_backslashes=False,
+                    )
+                result_template.extend(_from_yaml_to_definition(result))
         self._templar.available_variables = old_vars
         resource_definition = self._task.args.get("definition", None)
         if not resource_definition:

@@ -129,7 +129,7 @@
         that:
           - scale_down is changed
           - '"duration" in scale_down'
-          - scale_down.diff
+          - scale_down.diff != {}
 
     - name: Scale the deployment once again (idempotency)
       k8s_scale:
@@ -274,7 +274,7 @@
       assert:
         that:
           - scale_down_no_wait is changed
-          - scale_down_no_wait.diff
+          - scale_down_no_wait.diff != {}
           - scale_down_no_wait_pods.resources | length == 1
 
     # scale multiple resource using label selectors

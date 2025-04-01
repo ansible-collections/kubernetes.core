@@ -421,7 +421,7 @@
   - name: Assert that taints have been removed
     assert:
       that:
-      - _result.resources | selectattr('spec.taints', 'undefined')
+      - _result.resources | selectattr('spec.taints', 'undefined') | list | length > 0
 
   always:
 
