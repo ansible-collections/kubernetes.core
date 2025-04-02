@@ -4,13 +4,20 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
-v3.3.1
+v5.2.0
 ======
 
 Release Summary
 ---------------
 
-This release fixes the CI issues with the ``linters`` workflow.
+This release adds more functionality to the hidden_fields option and support for waiting on ClusterOperators to reach a ready state.
+
+Minor Changes
+-------------
+
+- k8s - Extend hidden_fields to allow the expression of more complex field types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+- k8s_info - Extend hidden_fields to allow the expression of more complex field types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+- waiter.py - add ClusterOperator support. The module can now check OpenShift cluster health by verifying ClusterOperator status requiring 'Available: True', 'Degraded: False', and 'Progressing: False' for success. (https://github.com/ansible-collections/kubernetes.core/issues/869)
 
 v5.1.0
 ======
@@ -94,6 +101,14 @@ Bugfixes
 - avoid unsafe conditions in integration tests (https://github.com/ansible-collections/kubernetes.core/pull/665).
 - helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
 - integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
+
+v3.3.1
+=======
+
+Release Summary
+---------------
+
+This release fixes the CI issues with the ``linters`` workflow.
 
 v3.3.0
 ======

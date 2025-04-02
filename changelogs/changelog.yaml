@@ -900,6 +900,12 @@ releases:
     - 798-drain-pdb-error-message.yaml
     - readme_template_update.yml
     release_date: '2025-01-20'
+  3.3.1:
+    changes:
+      release_summary: This release fixes the CI issues with the ``linters`` workflow.
+    fragments:
+    - release_summary.yml
+    release_date: '2025-03-26'
   4.0.0:
     changes:
       bugfixes:
@@ -1000,9 +1006,20 @@ releases:
       name: helm_registry_auth
       namespace: ''
     release_date: '2025-01-20'
-  3.3.1:
+  5.2.0:
     changes:
-      release_summary: This release fixes the CI issues with the ``linters`` workflow.
+      minor_changes:
+      - k8s - Extend hidden_fields to allow the expression of more complex field types
+        to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+      - k8s_info - Extend hidden_fields to allow the expression of more complex field
+        types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+      - 'waiter.py - add ClusterOperator support. The module can now check OpenShift
+        cluster health by verifying ClusterOperator status requiring ''Available:
+        True'', ''Degraded: False'', and ''Progressing: False'' for success. (https://github.com/ansible-collections/kubernetes.core/issues/869)'
+      release_summary: This release adds more functionality to the hidden_fields option
+        and support for waiting on ClusterOperators to reach a ready state.
     fragments:
-    - release_summary.yml
-    release_date: '2025-03-26'
+    - 5.2.0.yml
+    - 643-extend-hidden-fields.yaml
+    - 879-clusteroperator-waiter.py.yaml
+    release_date: '2025-03-27'
