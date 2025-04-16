@@ -12,7 +12,7 @@ DOCUMENTATION = r"""
 ---
 module: helm_pull
 short_description: download a chart from a repository and (optionally) unpack it in local directory.
-version_added: "2.4.0"
+version_added: 2.4.0
 author:
   - Aubin Bikouo (@abikouo)
 description:
@@ -190,7 +190,7 @@ def main():
         repo_password=dict(
             type="str", no_log=True, aliases=["password", "chart_repo_password"]
         ),
-        pass_credentials=dict(type="bool", default=False),
+        pass_credentials=dict(type="bool", default=False, no_log=False),
         skip_tls_certs_check=dict(
             type="bool", default=False, aliases=["insecure_skip_tls_verify"]
         ),

@@ -72,6 +72,15 @@ DOCUMENTATION = r"""
           - name: ansible_kubectl_extra_args
         env:
           - name: K8S_AUTH_EXTRA_ARGS
+      kubectl_local_env_vars:
+        description:
+          - Local enviromantal variable to be passed locally to the kubectl command line.
+          - Please be aware that this passes information directly on the command line and it could expose sensitive data.
+        default: {}
+        type: dict
+        version_added: 3.1.0
+        vars:
+          - name: ansible_kubectl_local_env_vars
       kubectl_kubeconfig:
         description:
           - Path to a kubectl config file. Defaults to I(~/.kube/config)
@@ -170,6 +179,81 @@ DOCUMENTATION = r"""
         env:
           - name: K8S_AUTH_VERIFY_SSL
         aliases: [ kubectl_verify_ssl ]
+"""
+
+EXAMPLES = r"""
+
+- name: Run a command in a pod using local kubectl with kubeconfig file ~/.kube/config
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_connection: kubernetes.core.kubectl
+    ansible_kubectl_namespace: my-namespace
+    ansible_kubectl_pod: my-pod
+    ansible_kubectl_container: my-container
+  tasks:
+    # be aware that the command is executed as the user that started the container
+    # and requires python to be installed in the image
+    - name: Run a command in a pod
+      ansible.builtin.command: echo "Hello, World!"
+
+- name: Run a command in a pod using local kubectl with inventory variables
+  # Example inventory:
+  # k8s:
+  #   hosts:
+  #     foo.example.com:
+  #       ansible_connection: kubernetes.core.kubectl
+  #       ansible_kubectl_kubeconfig: /root/.kube/foo.example.com.config
+  #       ansible_kubectl_pod: my-foo-pod
+  #       ansible_kubectl_container: my-foo-container
+  #       ansible_kubectl_namespace: my-foo-namespace
+  #     bar.example.com:
+  #       ansible_connection: kubernetes.core.kubectl
+  #       ansible_kubectl_kubeconfig: /root/.kube/bar.example.com.config
+  #       ansible_kubectl_pod: my-bar-pod
+  #       ansible_kubectl_container: my-bar-container
+  #       ansible_kubectl_namespace: my-bar-namespace
+  hosts: k8s
+  gather_facts: no
+  tasks:
+    # be aware that the command is executed as the user that started the container
+    # and requires python to be installed in the image
+    - name: Run a command in a pod
+      ansible.builtin.command: echo "Hello, World!"
+
+- name: Run a command in a pod using dynamic inventory
+  hosts: localhost
+  gather_facts: no
+  vars:
+    kubeconfig: /root/.kube/config
+    namespace: my-namespace
+    my_app: my-app
+  tasks:
+    - name: Get My App pod info based on label
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        namespace: "{{ namespace }}"
+        kind: Pod
+        label_selectors: app.kubernetes.io/name = "{{ my_app }}"
+      register: my_app_pod
+
+    - name: Get My App pod name
+      ansible.builtin.set_fact:
+        my_app_pod_name: "{{ my_app_pod.resources[0].metadata.name }}"
+
+    - name: Add My App pod to inventory
+      ansible.builtin.add_host:
+        name: "{{ my_app_pod_name }}"
+        ansible_connection: kubernetes.core.kubectl
+        ansible_kubectl_kubeconfig: "{{ kubeconfig }}"
+        ansible_kubectl_pod: "{{ my_app_pod_name }}"
+        ansible_kubectl_namespace: "{{ namespace }}"
+
+    - name: Run a command in My App pod
+      # be aware that the command is executed as the user that started the container
+      # and requires python to be installed in the image
+      ansible.builtin.command: echo "Hello, World!"
+      delegate_to: "{{ my_app_pod_name }}"
 """
 
 import json
@@ -301,6 +385,19 @@ class Connection(ConnectionBase):
 
         return local_cmd, censored_local_cmd
 
+    def _local_env(self):
+        """Return a dict of local environment variables to pass to the kubectl command"""
+        local_env = {}
+        local_local_env_vars_name = "{0}_local_env_vars".format(self.transport)
+        local_env_vars = self.get_option(local_local_env_vars_name)
+        if local_env_vars:
+            if isinstance(local_env_vars, dict):
+                local_env_vars = json.dumps(local_env_vars)
+            local_env = os.environ.copy()
+            local_env.update(json.loads(local_env_vars))
+            return local_env
+        return None
+
     def _connect(self, port=None):
         """Connect to the container. Nothing to do"""
         super(Connection, self)._connect()
@@ -329,6 +426,7 @@ class Connection(ConnectionBase):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=self._local_env(),
         )
 
         stdout, stderr = p.communicate(in_data)
@@ -378,7 +476,11 @@ class Connection(ConnectionBase):
             args = [to_bytes(i, errors="surrogate_or_strict") for i in args]
             try:
                 p = subprocess.Popen(
-                    args, stdin=in_file, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                    args,
+                    stdin=in_file,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=self._local_env(),
                 )
             except OSError:
                 raise AnsibleError(
@@ -415,7 +517,11 @@ class Connection(ConnectionBase):
         ) as out_file:
             try:
                 p = subprocess.Popen(
-                    args, stdin=subprocess.PIPE, stdout=out_file, stderr=subprocess.PIPE
+                    args,
+                    stdin=subprocess.PIPE,
+                    stdout=out_file,
+                    stderr=subprocess.PIPE,
+                    env=self._local_env(),
                 )
             except OSError:
                 raise AnsibleError(

@@ -57,15 +57,14 @@ options:
     - Whether to override the default patch merge approach with a specific type. By default, the strategic
       merge will typically be used.
     - For example, Custom Resource Definitions typically aren't updatable by the usual strategic merge. You may
-      want to use C(merge) if you see "strategic merge patch format is not supported"
+      want to use C(merge) if you see "strategic merge patch format is not supported".
     - See U(https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment)
     - If more than one C(merge_type) is given, the merge_types will be tried in order. This defaults to
       C(['strategic-merge', 'merge']), which is ideal for using the same parameters on resource kinds that
       combine Custom Resources and built-in resources.
-    - mutually exclusive with C(apply)
-    - I(merge_type=json) is deprecated and will be removed in version 3.0.0. Please use M(kubernetes.core.k8s_json_patch) instead.
+    - Mutually exclusive with C(apply).
+    - I(merge_type=json) has been removed in version 4.0.0. Please use M(kubernetes.core.k8s_json_patch) instead.
     choices:
-    - json
     - merge
     - strategic-merge
     type: list
@@ -101,7 +100,7 @@ options:
     - C(apply) compares the desired resource definition with the previously supplied resource definition,
       ignoring properties that are automatically generated
     - C(apply) works better with Services than 'force=yes'
-    - mutually exclusive with C(merge_type)
+    - Mutually exclusive with C(merge_type).
     default: False
     type: bool
   template:
@@ -182,17 +181,18 @@ options:
     - This parameter can be used with C(label_selectors) to restrict the resources to be deleted.
     type: bool
     default: false
-    version_added: 2.5.0
+    version_added: 3.0.0
     aliases:
     - all
   hidden_fields:
     description:
       - Hide fields matching this option in the result
       - An example might be C(hidden_fields=[metadata.managedFields])
-      - Only field definitions that don't reference list items are supported (so V(spec.containers[0]) would not work)
+        or V(hidden_fields=[spec.containers[0].env[3].value])
+        or V(hidden_fields=[metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]])
     type: list
     elements: str
-    version_added: 2.5.0
+    version_added: 3.0.0
 
 requirements:
   - "python >= 3.9"
@@ -460,7 +460,7 @@ def argspec():
     argument_spec.update(copy.deepcopy(AUTH_ARG_SPEC))
     argument_spec.update(copy.deepcopy(WAIT_ARG_SPEC))
     argument_spec["merge_type"] = dict(
-        type="list", elements="str", choices=["json", "merge", "strategic-merge"]
+        type="list", elements="str", choices=["merge", "strategic-merge"]
     )
     argument_spec["validate"] = dict(type="dict", default=None, options=validate_spec())
     argument_spec["append_hash"] = dict(type="bool", default=False)

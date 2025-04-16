@@ -51,7 +51,7 @@ def daemonset_ready(daemonset: ResourceInstance) -> bool:
     return bool(
         daemonset.status
         and daemonset.status.desiredNumberScheduled is not None
-        and daemonset.status.updatedNumberScheduled
+        and (daemonset.status.updatedNumberScheduled or 0)
         == daemonset.status.desiredNumberScheduled
         and daemonset.status.numberReady == daemonset.status.desiredNumberScheduled
         and daemonset.status.observedGeneration == daemonset.metadata.generation
@@ -117,11 +117,34 @@ def exists(resource: Optional[ResourceInstance]) -> bool:
     return bool(resource) and not empty_list(resource)
 
 
+def cluster_operator_ready(resource: ResourceInstance) -> bool:
+    """
+    Predicate to check if a single ClusterOperator is healthy.
+    Returns True if:
+      - "Available" is True
+      - "Degraded" is False
+      - "Progressing" is False
+    """
+    if not resource:
+        return False
+
+    # Extract conditions from the resource's status
+    conditions = resource.get("status", {}).get("conditions", [])
+
+    status = {x.get("type", ""): x.get("status") for x in conditions}
+    return (
+        (status.get("Degraded") == "False")
+        and (status.get("Progressing") == "False")
+        and (status.get("Available") == "True")
+    )
+
+
 RESOURCE_PREDICATES = {
     "DaemonSet": daemonset_ready,
     "Deployment": deployment_ready,
     "Pod": pod_ready,
     "StatefulSet": statefulset_ready,
+    "ClusterOperator": cluster_operator_ready,
 }
 
 

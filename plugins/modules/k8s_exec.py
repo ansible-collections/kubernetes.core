@@ -15,7 +15,7 @@ module: k8s_exec
 
 short_description: Execute command in Pod
 
-version_added: "0.10.0"
+version_added: 0.10.0
 
 author: "Tristan de Cacqueray (@tristanC)"
 
@@ -135,7 +135,7 @@ from ansible.module_utils._text import to_native
 from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule import (
     AnsibleModule,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.common import (
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
@@ -219,12 +219,6 @@ def execute_module(module, client):
     else:
         rc = int(err["details"]["causes"][0]["message"])
 
-    module.deprecate(
-        "The 'return_code' return key is being renamed to 'rc'. "
-        "Both keys are being returned for now to allow users to migrate their automation.",
-        version="4.0.0",
-        collection_name="kubernetes.core",
-    )
     module.exit_json(
         # Some command might change environment, but ultimately failing at end
         changed=True,

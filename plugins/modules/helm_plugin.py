@@ -12,7 +12,7 @@ DOCUMENTATION = r"""
 ---
 module: helm_plugin
 short_description: Manage Helm plugins
-version_added: "1.0.0"
+version_added: 1.0.0
 author:
   - Abhijeet Kasurde (@Akasurde)
 requirements:
@@ -47,7 +47,7 @@ options:
       - Ignored when C(state=absent) or C(state=latest).
     required: false
     type: str
-    version_added: "2.3.0"
+    version_added: 2.3.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """

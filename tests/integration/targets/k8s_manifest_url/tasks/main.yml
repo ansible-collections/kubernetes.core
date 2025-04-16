@@ -23,7 +23,7 @@
         - name: Update directory permissions
           file:
             path: "{{ manifests_dir.path }}"
-            mode: 0755
+            mode: '0755'
 
         - name: Create manifests files
           copy:

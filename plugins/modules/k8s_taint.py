@@ -13,7 +13,7 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 module: k8s_taint
 short_description: Taint a node in a Kubernetes/OpenShift cluster
-version_added: "2.3.0"
+version_added: 2.3.0
 author: Alina Buzachis (@alinabuzachis)
 description:
     - Taint allows a node to refuse Pod to be scheduled unless that Pod has a matching toleration.

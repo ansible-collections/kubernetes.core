@@ -2,7 +2,9 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 import copy
-from typing import Any, Dict, List, Optional, Tuple
+from json import loads
+from re import compile
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ansible.module_utils.common.dict_transformations import dict_merge
 from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
@@ -142,18 +144,12 @@ class K8sService:
         name: str,
         namespace: str,
         merge_type: str = None,
-    ) -> Dict:
-        if merge_type == "json":
-            self.module.deprecate(
-                msg="json as a merge_type value is deprecated. Please use the k8s_json_patch module instead.",
-                version="4.0.0",
-                collection_name="kubernetes.core",
-            )
+    ) -> Tuple[Dict, List[str]]:
         try:
-            params = dict(name=name, namespace=namespace)
+            params = dict(name=name, namespace=namespace, serialize=False)
             if merge_type:
                 params["content_type"] = "application/{0}-patch+json".format(merge_type)
-            return self.client.patch(resource, definition, **params).to_dict()
+            return decode_response(self.client.patch(resource, definition, **params))
         except Exception as e:
             reason = e.body if hasattr(e, "body") else e
             msg = "Failed to patch object: {0}".format(reason)
@@ -330,123 +326,124 @@ class K8sService:
             result["resources"].append(hide_fields(res, hidden_fields))
         return result
 
-    def create(self, resource: Resource, definition: Dict) -> Dict:
+    def create(self, resource: Resource, definition: Dict) -> Tuple[Dict, List[str]]:
         namespace = definition["metadata"].get("namespace")
         name = definition["metadata"].get("name")
 
         if self._client_side_dry_run:
-            k8s_obj = _encode_stringdata(definition)
-        else:
-            try:
-                k8s_obj = self.client.create(
-                    resource, definition, namespace=namespace
-                ).to_dict()
-            except ConflictError:
-                # Some resources, like ProjectRequests, can't be created multiple times,
-                # because the resources that they create don't match their kind
-                # In this case we'll mark it as unchanged and warn the user
-                self.module.warn(
-                    "{0} was not found, but creating it returned a 409 Conflict error. This can happen \
-                            if the resource you are creating does not directly create a resource of the same kind.".format(
-                        name
-                    )
+            return _encode_stringdata(definition), []
+
+        try:
+            return decode_response(
+                self.client.create(
+                    resource, definition, namespace=namespace, serialize=False
                 )
-                return dict()
-            except Exception as e:
-                reason = e.body if hasattr(e, "body") else e
-                msg = "Failed to create object: {0}".format(reason)
-                raise CoreException(msg) from e
-        return k8s_obj
+            )
+        except ConflictError:
+            # Some resources, like ProjectRequests, can't be created multiple times,
+            # because the resources that they create don't match their kind
+            # In this case we'll mark it as unchanged and warn the user
+            self.module.warn(
+                "{0} was not found, but creating it returned a 409 Conflict error. This can happen \
+                        if the resource you are creating does not directly create a resource of the same kind.".format(
+                    name
+                )
+            )
+            return dict(), []
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to create object: {0}".format(reason)
+            raise CoreException(msg) from e
 
     def apply(
         self,
         resource: Resource,
         definition: Dict,
         existing: Optional[ResourceInstance] = None,
-    ) -> Dict:
+    ) -> Tuple[Dict, List[str]]:
         namespace = definition["metadata"].get("namespace")
 
         server_side_apply = self.module.params.get("server_side_apply")
         if server_side_apply:
             requires("kubernetes", "19.15.0", reason="to use server side apply")
+
         if self._client_side_dry_run:
             ignored, patch = apply_object(resource, _encode_stringdata(definition))
             if existing:
-                k8s_obj = dict_merge(existing.to_dict(), patch)
+                return dict_merge(existing.to_dict(), patch), []
             else:
-                k8s_obj = patch
-        else:
-            try:
-                params = {}
-                if server_side_apply:
-                    params["server_side"] = True
-                    params.update(server_side_apply)
-                k8s_obj = self.client.apply(
-                    resource, definition, namespace=namespace, **params
-                ).to_dict()
-            except Exception as e:
-                reason = e.body if hasattr(e, "body") else e
-                msg = "Failed to apply object: {0}".format(reason)
-                raise CoreException(msg) from e
-        return k8s_obj
+                return patch, []
+
+        try:
+            params = {}
+            if server_side_apply:
+                params["server_side"] = True
+                params.update(server_side_apply)
+            return decode_response(
+                self.client.apply(
+                    resource, definition, namespace=namespace, serialize=False, **params
+                )
+            )
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to apply object: {0}".format(reason)
+            raise CoreException(msg) from e
 
     def replace(
         self,
         resource: Resource,
         definition: Dict,
         existing: ResourceInstance,
-    ) -> Dict:
+    ) -> Tuple[Dict, List[str]]:
         append_hash = self.module.params.get("append_hash", False)
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
 
         if self._client_side_dry_run:
-            k8s_obj = _encode_stringdata(definition)
-        else:
-            try:
-                k8s_obj = self.client.replace(
+            return _encode_stringdata(definition), []
+
+        try:
+            return decode_response(
+                self.client.replace(
                     resource,
                     definition,
                     name=name,
                     namespace=namespace,
                     append_hash=append_hash,
-                ).to_dict()
-            except Exception as e:
-                reason = e.body if hasattr(e, "body") else e
-                msg = "Failed to replace object: {0}".format(reason)
-                raise CoreException(msg) from e
-        return k8s_obj
+                    serialize=False,
+                )
+            )
+        except Exception as e:
+            reason = e.body if hasattr(e, "body") else e
+            msg = "Failed to replace object: {0}".format(reason)
+            raise CoreException(msg) from e
 
     def update(
         self, resource: Resource, definition: Dict, existing: ResourceInstance
-    ) -> Dict:
+    ) -> Tuple[Dict, List[str]]:
         name = definition["metadata"].get("name")
         namespace = definition["metadata"].get("namespace")
 
         if self._client_side_dry_run:
-            k8s_obj = dict_merge(existing.to_dict(), _encode_stringdata(definition))
-        else:
-            exception = None
-            for merge_type in self.module.params.get("merge_type") or [
-                "strategic-merge",
-                "merge",
-            ]:
-                try:
-                    k8s_obj = self.patch_resource(
-                        resource,
-                        definition,
-                        name,
-                        namespace,
-                        merge_type=merge_type,
-                    )
-                    exception = None
-                except CoreException as e:
-                    exception = e
-                    continue
-                break
-            if exception:
-                raise exception
-        return k8s_obj
+            return dict_merge(existing.to_dict(), _encode_stringdata(definition)), []
+
+        exception = None
+        for merge_type in self.module.params.get("merge_type") or [
+            "strategic-merge",
+            "merge",
+        ]:
+            try:
+                return self.patch_resource(
+                    resource,
+                    definition,
+                    name,
+                    namespace,
+                    merge_type=merge_type,
+                )
+            except CoreException as e:
+                exception = e
+                continue
+        raise exception
 
     def delete(
         self,
@@ -504,42 +501,214 @@ def diff_objects(
     result["before"] = diff[0]
     result["after"] = diff[1]
 
-    if list(result["after"].keys()) != ["metadata"] or list(
+    if list(result["after"].keys()) == ["metadata"] and list(
         result["before"].keys()
-    ) != ["metadata"]:
-        return False, result
+    ) == ["metadata"]:
+        # If only metadata.generation and metadata.resourceVersion changed, ignore it
+        ignored_keys = set(["generation", "resourceVersion"])
 
-    # If only metadata.generation and metadata.resourceVersion changed, ignore it
-    ignored_keys = set(["generation", "resourceVersion"])
-
-    if not set(result["after"]["metadata"].keys()).issubset(ignored_keys):
-        return False, result
-    if not set(result["before"]["metadata"].keys()).issubset(ignored_keys):
-        return False, result
+        if set(result["after"]["metadata"].keys()).issubset(ignored_keys) and set(
+            result["before"]["metadata"].keys()
+        ).issubset(ignored_keys):
+            return True, result
 
     result["before"] = hide_fields(result["before"], hidden_fields)
     result["after"] = hide_fields(result["after"], hidden_fields)
 
-    return True, result
+    return False, result
 
 
-def hide_fields(definition: dict, hidden_fields: Optional[list]) -> dict:
-    if not hidden_fields:
-        return definition
-    result = copy.deepcopy(definition)
-    for hidden_field in hidden_fields:
-        result = hide_field(result, hidden_field)
+def hide_field_tree(hidden_field: str) -> List[str]:
+    result = []
+    key, rest = hide_field_split2(hidden_field)
+    result.append(key)
+    while rest:
+        key, rest = hide_field_split2(rest)
+        result.append(key)
+
     return result
 
 
-# hide_field is not hugely sophisticated and designed to cope
-# with e.g. status or metadata.managedFields rather than e.g.
-# spec.template.spec.containers[0].env[3].value
-def hide_field(definition: dict, hidden_field: str) -> dict:
-    split = hidden_field.split(".", 1)
-    if split[0] in definition:
-        if len(split) == 2:
-            definition[split[0]] = hide_field(definition[split[0]], split[1])
-        else:
-            del definition[split[0]]
+def build_hidden_field_tree(hidden_fields: List[str]) -> Dict[str, Any]:
+    """Group hidden field targeting the same json key
+    Example:
+        Input: ['env[3]', 'env[0]']
+        Output: {'env': [0, 3]}
+    """
+    output = {}
+    for hidden_field in hidden_fields:
+        current = output
+        tree = hide_field_tree(hidden_field)
+        for idx, key in enumerate(tree):
+            if current.get(key, "") is None:
+                break
+            if idx == (len(tree) - 1):
+                current[key] = None
+            elif key not in current:
+                current[key] = {}
+            current = current[key]
+    return output
+
+
+# hide_field should be able to cope with simple or more complicated
+# field definitions
+# e.g. status or metadata.managedFields or
+# spec.template.spec.containers[0].env[3].value or
+# metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]
+def hide_field(
+    definition: Union[Dict[str, Any], List[Any]], hidden_field: Dict[str, Any]
+) -> Dict[str, Any]:
+    def dict_contains_key(obj: Dict[str, Any], key: str) -> bool:
+        return key in obj
+
+    def list_contains_key(obj: List[Any], key: str) -> bool:
+        return int(key) < len(obj)
+
+    hidden_keys = list(hidden_field.keys())
+    field_contains_key = dict_contains_key
+    field_get_key = str
+    if isinstance(definition, list):
+        # Sort with reverse=true so that when we delete an item from the list, the order is not changed
+        hidden_keys = sorted(
+            [k for k in hidden_field.keys() if k.isdecimal()], reverse=True
+        )
+        field_contains_key = list_contains_key
+        field_get_key = int
+
+    for key in hidden_keys:
+        if field_contains_key(definition, key):
+            value = hidden_field.get(key)
+            convert_key = field_get_key(key)
+            if value is None:
+                del definition[convert_key]
+            else:
+                definition[convert_key] = hide_field(definition[convert_key], value)
+                if (
+                    definition[convert_key] == dict()
+                    or definition[convert_key] == list()
+                ):
+                    del definition[convert_key]
+
     return definition
+
+
+def hide_fields(
+    definition: Dict[str, Any], hidden_fields: Optional[List[str]]
+) -> Dict[str, Any]:
+    if not hidden_fields:
+        return definition
+    result = copy.deepcopy(definition)
+    hidden_field_tree = build_hidden_field_tree(hidden_fields)
+    return hide_field(result, hidden_field_tree)
+
+
+def decode_response(resp) -> Tuple[Dict, List[str]]:
+    """
+    This function decodes unserialized responses from the Kubernetes python
+    client and decodes the RFC2616 14.46 warnings found in the response
+    headers.
+    """
+    obj = ResourceInstance(None, loads(resp.data.decode("utf8"))).to_dict()
+    warnings = []
+    if (
+        resp.headers is not None
+        and "warning" in resp.headers
+        and resp.headers["warning"] is not None
+    ):
+        warnings = resp.headers["warning"].split(", ")
+    return obj, decode_warnings(warnings)
+
+
+def decode_warnings(warnings: str) -> List[str]:
+    """
+    This function decodes RFC2616 14.46 warnings in a simplified way, where
+    only the warn-texts are returned in a list.
+    """
+    p = compile('\\d{3} .+ (".+")')
+
+    decoded = []
+    for warning in warnings:
+        m = p.match(warning)
+        if m:
+            try:
+                parsed, unused = parse_quoted_string(m.group(1))
+                decoded.append(parsed)
+            except ValueError:
+                continue
+
+    return decoded
+
+
+def parse_quoted_string(quoted_string: str) -> Tuple[str, str]:
+    """
+    This function was adapted from:
+    https://github.com/kubernetes/apimachinery/blob/bb8822152cabfb4f34dbc26270f874ce53db50de/pkg/util/net/http.go#L609
+    """
+    if len(quoted_string) == 0:
+        raise ValueError("invalid quoted string: 0-length")
+
+    if quoted_string[0] != '"':
+        raise ValueError("invalid quoted string: missing initial quote")
+
+    quoted_string = quoted_string[1:]
+    remainder = ""
+    escaping = False
+    closed_quote = False
+    result = []
+
+    for i, b in enumerate(quoted_string):
+        if b == '"':
+            if escaping:
+                result.append(b)
+                escaping = False
+            else:
+                closed_quote = True
+                remainder_start = i + 1
+                remainder = quoted_string[remainder_start:].strip()
+                break
+        elif b == "\\":
+            if escaping:
+                result.append(b)
+                escaping = False
+            else:
+                escaping = True
+        else:
+            result.append(b)
+            escaping = False
+
+    if not closed_quote:
+        raise ValueError("invalid quoted string: missing closing quote")
+
+    return "".join(result), remainder
+
+
+# hide_field_split2 returns the first key in hidden_field and the rest of the hidden_field
+# We expect the first key to either be in brackets, to be terminated by the start of a left
+# bracket, or to be terminated by a dot.
+
+# examples would be:
+# field.another.next -> (field, another.next)
+# field[key].value -> (field, [key].value)
+# [key].value -> (key, value)
+# [one][two] -> (one, [two])
+
+
+def hide_field_split2(hidden_field: str) -> Tuple[str, str]:
+    lbracket = hidden_field.find("[")
+    rbracket = hidden_field.find("]")
+    dot = hidden_field.find(".")
+
+    if lbracket == 0:
+        # skip past right bracket and any following dot
+        rest = hidden_field[rbracket + 1 :]  # noqa: E203
+        if rest and rest[0] == ".":
+            rest = rest[1:]
+        return (hidden_field[lbracket + 1 : rbracket], rest)  # noqa: E203
+
+    if lbracket != -1 and (dot == -1 or lbracket < dot):
+        return (hidden_field[:lbracket], hidden_field[lbracket:])
+
+    split = hidden_field.split(".", 1)
+    if len(split) == 1:
+        return split[0], ""
+    return split

@@ -53,7 +53,7 @@ options:
     default: false
     type: bool
     aliases: [ dep_up ]
-    version_added: "2.4.0"
+    version_added: 2.4.0
   disable_hook:
     description:
       - Prevent hooks from running during install.
@@ -72,6 +72,13 @@ options:
       - If the directory already exists, it will be overwritten.
     required: false
     type: path
+  insecure_registry:
+    description:
+      - Skip TLS certificate checks for the chart download
+    required: false
+    type: bool
+    default: false
+    version_added: 5.1.0
   release_name:
     description:
       - Release name to use in rendered templates.
@@ -139,15 +146,7 @@ options:
           - string
           - json
           - file
-    version_added: '2.4.0'
-  insecure_skip_tls_verify:
-    description:
-      - Skip tls certificate checks for the chart download. 
-      - Do not confuse with the C(validate_certs) option.
-    type: bool
-    default: False
-    aliases: [ skip_tls_certs_check ]
-    version_added: "3.0.1"
+    version_added: 2.4.0
 """
 
 EXAMPLES = r"""
@@ -229,6 +228,7 @@ def template(
     dependency_update=None,
     disable_hook=None,
     output_dir=None,
+    insecure_registry=None,
     show_only=None,
     release_name=None,
     release_namespace=None,
@@ -236,7 +236,6 @@ def template(
     values_files=None,
     include_crds=False,
     set_values=None,
-    insecure_skip_tls_verify=False,
 ):
     cmd += " template "
 
@@ -259,6 +258,9 @@ def template(
 
     if output_dir:
         cmd += " --output-dir=" + output_dir
+
+    if insecure_registry:
+        cmd += " --insecure-skip-tls-verify"
 
     if show_only:
         for template in show_only:
@@ -283,9 +285,6 @@ def template(
     if set_values:
         cmd += " " + set_values
 
-    if insecure_skip_tls_verify:
-        cmd += " --insecure-skip-tls-verify"
-
     return cmd
 
 
@@ -301,13 +300,13 @@ def main():
             include_crds=dict(type="bool", default=False),
             release_name=dict(type="str", aliases=["name"]),
             output_dir=dict(type="path"),
+            insecure_registry=dict(type="bool", default=False),
             release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
             show_only=dict(type="list", default=[], elements="str"),
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
             set_values=dict(type="list", elements="dict"),
-            insecure_skip_tls_verify=dict(type="bool", default=False, aliases=["skip_tls_certs_check"]),
         ),
         supports_check_mode=True,
     )
@@ -321,13 +320,13 @@ def main():
     include_crds = module.params.get("include_crds")
     release_name = module.params.get("release_name")
     output_dir = module.params.get("output_dir")
+    insecure_registry = module.params.get("insecure_registry")
     show_only = module.params.get("show_only")
     release_namespace = module.params.get("release_namespace")
     release_values = module.params.get("release_values")
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
     set_values = module.params.get("set_values")
-    insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
@@ -351,13 +350,13 @@ def main():
         disable_hook=disable_hook,
         release_name=release_name,
         output_dir=output_dir,
+        insecure_registry=insecure_registry,
         release_namespace=release_namespace,
         release_values=release_values,
         show_only=show_only,
         values_files=values_files,
         include_crds=include_crds,
         set_values=set_values_args,
-        insecure_skip_tls_verify=insecure_skip_tls_verify,
     )
 
     if not check_mode:

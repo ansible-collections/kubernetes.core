@@ -1,8 +1,7 @@
 - name: Install helm using set_values parameters
   helm:
     binary_path: "{{ helm_binary }}"
-    chart_ref: mariadb
-    chart_repo_url: https://charts.bitnami.com/bitnami
+    chart_ref: oci://registry-1.docker.io/bitnamicharts/mariadb
     release_name: test-mariadb
     release_namespace: "{{ helm_namespace }}"
     create_namespace: true
@@ -36,8 +35,7 @@
 - name: Install helm using set_values parameters
   helm:
     binary_path: "{{ helm_binary }}"
-    chart_ref: apache
-    chart_repo_url: https://charts.bitnami.com/bitnami
+    chart_ref: oci://registry-1.docker.io/bitnamicharts/apache
     release_name: test-apache
     release_namespace: "{{ helm_namespace }}"
     create_namespace: true
@@ -79,8 +77,7 @@
   - name: Install helm using set_values parameters
     helm:
       binary_path: "{{ helm_binary }}"
-      chart_ref: minio
-      chart_repo_url: https://charts.bitnami.com/bitnami
+      chart_ref: oci://registry-1.docker.io/bitnamicharts/minio
       release_name: test-minio
       release_namespace: "{{ helm_namespace }}"
       create_namespace: true
@@ -107,3 +104,11 @@
     file:
       state: absent
       path: "{{ ymlfile.path }}"
+    ignore_errors: true
+
+  - name: Delete namespace
+    k8s:
+      state: absent
+      kind: namespace
+      name: "{{ helm_namespace }}"
+    ignore_errors: true

@@ -214,6 +214,27 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>kubectl_local_env_vars</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 3.1.0</div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">{}</div>
+                </td>
+                    <td>
+                                <div>var: ansible_kubectl_local_env_vars</div>
+                    </td>
+                <td>
+                        <div>Local enviromantal variable to be passed locally to the kubectl command line.</div>
+                        <div>Please be aware that this passes information directly on the command line and it could expose sensitive data.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubectl_namespace</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -344,6 +365,82 @@ Parameters
 
 
 
+Examples
+--------
+
+.. code-block:: yaml
+
+    - name: Run a command in a pod using local kubectl with kubeconfig file ~/.kube/config
+      hosts: localhost
+      gather_facts: no
+      vars:
+        ansible_connection: kubernetes.core.kubectl
+        ansible_kubectl_namespace: my-namespace
+        ansible_kubectl_pod: my-pod
+        ansible_kubectl_container: my-container
+      tasks:
+        # be aware that the command is executed as the user that started the container
+        # and requires python to be installed in the image
+        - name: Run a command in a pod
+          ansible.builtin.command: echo "Hello, World!"
+
+    - name: Run a command in a pod using local kubectl with inventory variables
+      # Example inventory:
+      # k8s:
+      #   hosts:
+      #     foo.example.com:
+      #       ansible_connection: kubernetes.core.kubectl
+      #       ansible_kubectl_kubeconfig: /root/.kube/foo.example.com.config
+      #       ansible_kubectl_pod: my-foo-pod
+      #       ansible_kubectl_container: my-foo-container
+      #       ansible_kubectl_namespace: my-foo-namespace
+      #     bar.example.com:
+      #       ansible_connection: kubernetes.core.kubectl
+      #       ansible_kubectl_kubeconfig: /root/.kube/bar.example.com.config
+      #       ansible_kubectl_pod: my-bar-pod
+      #       ansible_kubectl_container: my-bar-container
+      #       ansible_kubectl_namespace: my-bar-namespace
+      hosts: k8s
+      gather_facts: no
+      tasks:
+        # be aware that the command is executed as the user that started the container
+        # and requires python to be installed in the image
+        - name: Run a command in a pod
+          ansible.builtin.command: echo "Hello, World!"
+
+    - name: Run a command in a pod using dynamic inventory
+      hosts: localhost
+      gather_facts: no
+      vars:
+        kubeconfig: /root/.kube/config
+        namespace: my-namespace
+        my_app: my-app
+      tasks:
+        - name: Get My App pod info based on label
+          kubernetes.core.k8s_info:
+            kubeconfig: "{{ kubeconfig }}"
+            namespace: "{{ namespace }}"
+            kind: Pod
+            label_selectors: app.kubernetes.io/name = "{{ my_app }}"
+          register: my_app_pod
+
+        - name: Get My App pod name
+          ansible.builtin.set_fact:
+            my_app_pod_name: "{{ my_app_pod.resources[0].metadata.name }}"
+
+        - name: Add My App pod to inventory
+          ansible.builtin.add_host:
+            name: "{{ my_app_pod_name }}"
+            ansible_connection: kubernetes.core.kubectl
+            ansible_kubectl_kubeconfig: "{{ kubeconfig }}"
+            ansible_kubectl_pod: "{{ my_app_pod_name }}"
+            ansible_kubectl_namespace: "{{ namespace }}"
+
+        - name: Run a command in My App pod
+          # be aware that the command is executed as the user that started the container
+          # and requires python to be installed in the image
+          ansible.builtin.command: echo "Hello, World!"
+          delegate_to: "{{ my_app_pod_name }}"
 
 
 

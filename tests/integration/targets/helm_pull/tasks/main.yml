@@ -180,6 +180,7 @@
               - '"--username ansible" in _result.command'
               - '"--password ***" in _result.command'
               - '"--keyring pubring.gpg" in _result.command'
+              - '"Module did not set no_log for pass_credentials" not in _result.stderr'
 
         - name: Download chart using chart_ref
           helm_pull:
@@ -203,9 +204,8 @@
         - name: Download chart using untar_chart
           helm_pull:
             binary_path: "{{ helm_path }}"
-            chart_ref: redis
+            chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
             destination: "{{ destination }}"
-            repo_url: "https://charts.bitnami.com/bitnami"
             untar_chart: true
           register: _result
 

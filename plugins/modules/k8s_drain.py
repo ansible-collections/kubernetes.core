@@ -15,7 +15,7 @@ module: k8s_drain
 
 short_description: Drain, Cordon, or Uncordon node in k8s cluster
 
-version_added: "2.2.0"
+version_added: 2.2.0
 
 author: Aubin Bikouo (@abikouo)
 
@@ -47,7 +47,7 @@ options:
       - This option has effect only when C(state) is set to I(drain).
     type: list
     elements: str
-    version_added: 2.5.0
+    version_added: 3.0.0
     aliases:
     - label_selectors
   delete_options:
@@ -106,7 +106,8 @@ EXAMPLES = r"""
   kubernetes.core.k8s_drain:
     state: drain
     name: foo
-    force: yes
+    delete_options:
+      force: yes
 
 - name: Drain node "foo", but abort if there are pods not managed by a ReplicationController, Job, or DaemonSet, and use a grace period of 15 minutes.
   kubernetes.core.k8s_drain:
@@ -143,6 +144,7 @@ result:
 """
 
 import copy
+import json
 import time
 import traceback
 from datetime import datetime
@@ -185,6 +187,17 @@ except ImportError:
         k8s_import_exception = e
         K8S_IMP_ERR = traceback.format_exc()
         HAS_EVICTION_API = False
+
+
+def format_dynamic_api_exc(exc):
+    if exc.body:
+        if exc.headers and exc.headers.get("Content-Type") == "application/json":
+            message = json.loads(exc.body).get("message")
+            if message:
+                return message
+        return exc.body
+    else:
+        return "%s Reason: %s" % (exc.status, exc.reason)
 
 
 def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
@@ -291,16 +304,19 @@ class K8sDrainAnsible(object):
             return (datetime.now() - start).seconds
 
         response = None
-        pod = pods.pop()
+        pod = None
         while (_elapsed_time() < wait_timeout or wait_timeout == 0) and pods:
             if not pod:
-                pod = pods.pop()
+                pod = pods[-1]
             try:
                 response = self._api_instance.read_namespaced_pod(
                     namespace=pod[0], name=pod[1]
                 )
-                if not response:
+                if not response or response.spec.node_name != self._module.params.get(
+                    "name"
+                ):
                     pod = None
+                    del pods[-1]
                 time.sleep(wait_sleep)
             except ApiException as exc:
                 if exc.reason != "Not Found":
@@ -308,6 +324,7 @@ class K8sDrainAnsible(object):
                         msg="Exception raised: {0}".format(exc.reason)
                     )
                 pod = None
+                del pods[-1]
             except Exception as e:
                 self._module.fail_json(msg="Exception raised: {0}".format(to_native(e)))
         if not pods:
@@ -334,7 +351,7 @@ class K8sDrainAnsible(object):
                 if exc.reason != "Not Found":
                     self._module.fail_json(
                         msg="Failed to delete pod {0}/{1} due to: {2}".format(
-                            namespace, name, exc.reason
+                            namespace, name, to_native(format_dynamic_api_exc(exc))
                         )
                     )
             except Exception as exc:
