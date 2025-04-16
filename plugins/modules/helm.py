@@ -225,7 +225,7 @@ options:
     type: bool
     default: False
     aliases: [ skip_tls_certs_check ]
-    version_added: "3.0.1"
+    version_added: "5.2.1"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -657,6 +657,7 @@ def helmdiff_check(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    insecure_skip_tls_verify=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -690,6 +691,9 @@ def helmdiff_check(
 
     if reuse_values:
         cmd += " --reuse-values"
+
+    if insecure_skip_tls_verify:
+        cmd += " --insecure-skip-tls-verify"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -926,6 +930,7 @@ def main():
                     set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    insecure_skip_tls_verify=insecure_skip_tls_verify,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -961,6 +966,7 @@ def main():
                     set_value_args=set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    insecure_skip_tls_verify=insecure_skip_tls_verify,
                 )
                 changed = True
 

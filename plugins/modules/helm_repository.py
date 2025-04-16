@@ -125,7 +125,7 @@ options:
     type: bool
     default: False
     aliases: [ skip_tls_certs_check ]
-    version_added: "3.0.1"
+    version_added: "5.2.1"
 """
 
 EXAMPLES = r"""
