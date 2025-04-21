@@ -21,7 +21,7 @@ plugin_routing:
     openshift:
       redirect: community.okd.openshift
     k8s:
-      deprecation:
+      tombstone:
         removal_version: 6.0.0
         warning_text: >-
           The k8s inventory plugin has been deprecated and
