@@ -1,0 +1,4 @@
+---
+major_changes:
+- k8s - Remove ``kubernetes.core.k8s`` inventory plugin
+  (https://github.com/ansible-collections/kubernetes.core/pull/902).
