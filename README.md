@@ -57,11 +57,6 @@ Name | Description
 --- | ---
 kubernetes.core.k8s_config_resource_name|Generate resource name for the given resource of type ConfigMap, Secret
 
-### Inventory plugins
-Name | Description
---- | ---
-[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_inventory.rst)|Kubernetes (K8s) inventory source
-
 ### Lookup plugins
 Name | Description
 --- | ---
