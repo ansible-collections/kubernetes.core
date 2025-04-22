@@ -225,7 +225,7 @@ options:
     type: bool
     default: False
     aliases: [ skip_tls_certs_check ]
-    version_added: "5.2.1"
+    version_added: "5.3.0"
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
