@@ -12,4 +12,4 @@ on:
 
 jobs:
   sanity:
-    uses: yurnov/github_actions/.github/workflows/sanity.yml@drop-2.15
+    uses: ansible-network/github_actions/.github/workflows/sanity.yml@main

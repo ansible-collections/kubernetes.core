@@ -29,7 +29,7 @@ jobs:
 
       - name: list changes for pull request
         id: splitter
-        uses: yurnov/github_actions/.github/actions/ansible_test_splitter@drop-2.15
+        uses: ansible-network/github_actions/.github/actions/ansible_test_splitter@main
         with:
           collections_to_test: ${{ env.source_dir }}
           total_jobs: 8
