@@ -438,6 +438,28 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>reset_then_reuse_values</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.0.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>When upgrading package, reset the values to the ones built into the chart, apply the last release&#x27;s values and merge in any overrides from parameters O(release_values), O(values_files) or O(set_values).</div>
+                        <div>If O(reset_values) or O(reuse_values) is set to V(True), this is ignored.</div>
+                        <div>This feature requires helm diff &gt;= 3.9.12.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>reset_values</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -474,27 +496,6 @@ Parameters
                 <td>
                         <div>When upgrading package, specifies wether to reuse the last release&#x27;s values and merge in any overrides from parameters <em>release_values</em>, <em>values_files</em> or <em>set_values</em>.</div>
                         <div>If <em>reset_values</em> is set to <code>True</code>, this is ignored.</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="ansibleOptionAnchor" id="parameter-"></div>
-                    <b>reset_then_reuse_values</b>
-                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                    <div style="font-size: small">
-                        <span style="color: purple">boolean</span>
-                    </div>
-                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.0.0</div>
-                </td>
-                <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
-                                    <li>yes</li>
-                        </ul>
-                </td>
-                <td>
-                        <div>When upgrading package, reset the values to the ones built into the chart, apply the last release&#x27;s values and merge in any overrides from parameters <em>release_values</em>, <em>values_files</em> or <em>set_values</em>.</div>
-                        <div>If <em>reset_values</em> or <em>reuse_values</em> is set to <code>True</code>, this is ignored.</div>
                 </td>
             </tr>
             <tr>
