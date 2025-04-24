@@ -169,6 +169,11 @@ def test_service_create_resource(mock_pod_resource_instance):
     result = svc.create(Mock(), pod_definition)
 
     assert result == mock_pod_resource_instance.to_dict()
+<<<<<<< HEAD
+=======
+    assert str(warnings[0]) == "test warning 1"
+    assert str(warnings[1]) == "test warning 2"
+>>>>>>> d4fc22c... Bugfix: fix unit-source for pre-release of ansible-core 2.20 (devel and milestone branch) (#903)
 
 
 def test_service_create_resource_check_mode():
@@ -236,8 +241,42 @@ def test_service_apply_existing_resource(mock_pod_resource_instance):
     assert result == mock_pod_resource_instance.to_dict()
 
 
-def test_service_replace_existing_resource(mock_pod_resource_instance):
-    spec = {"replace.side_effect": [mock_pod_resource_instance]}
+def test_service_apply_existing_resource_warnings(
+    mock_pod_warnings_response, mock_pod_resource_instance
+):
+    spec = {"apply.side_effect": [mock_pod_warnings_response]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {"apply": True}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    result, warnings = svc.apply(
+        Mock(), pod_definition_updated, mock_pod_resource_instance
+    )
+
+    assert result == mock_pod_resource_instance.to_dict()
+    assert str(warnings[0]) == "test warning 1"
+    assert str(warnings[1]) == "test warning 2"
+
+def test_service_replace_existing_resource(
+    mock_pod_response, mock_pod_resource_instance
+):
+    spec = {"replace.side_effect": [mock_pod_response]}
+    client = Mock(**spec)
+    module = Mock()
+    module.params = {}
+    module.check_mode = False
+    svc = K8sService(client, module)
+    result, warnings = svc.replace(Mock(), pod_definition, mock_pod_resource_instance)
+
+    assert result == mock_pod_resource_instance.to_dict()
+    assert not warnings
+
+
+def test_service_replace_existing_resource_warnings(
+    mock_pod_warnings_response, mock_pod_resource_instance
+):
+    spec = {"replace.side_effect": [mock_pod_warnings_response]}
     client = Mock(**spec)
     module = Mock()
     module.params = {}
