@@ -43,8 +43,6 @@ def test_warn_on_k8s_version(monkeypatch, stdin, capfd):
 
     assert return_value.get("warnings") is not None
     warnings = return_value["warnings"]
-    print(warnings)
-    print(type(warnings))
     assert len(warnings) == 1
     assert "kubernetes" in str(warnings[0])
     assert MINIMAL_K8S_VERSION in str(warnings[0])
