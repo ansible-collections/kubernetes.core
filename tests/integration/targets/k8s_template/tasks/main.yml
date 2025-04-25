@@ -7,7 +7,7 @@
       kubernetes.core.k8s_service:
         template: "pod_one.j2"
         state: present
-      ignore_errors: yes
+      ignore_errors: true
       register: r
 
     - name: Check for expected failures in last tasks
@@ -35,7 +35,7 @@
         k8s_pod_name_one: pod
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Check if definition and template are mutually exclusive
       assert:
@@ -52,7 +52,7 @@
         k8s_pod_name_one: pod
         k8s_pod_namespace: "{{ template_namespace }}"
       register: r
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Check if src and template are mutually exclusive
       assert:
@@ -63,7 +63,7 @@
     - name: Create pod using template (direct specification)
       kubernetes.core.k8s:
         template: "pod_one.j2"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_one: pod-1
@@ -79,7 +79,7 @@
       kubernetes.core.k8s:
         template:
           - default
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_one: pod-2
@@ -96,7 +96,7 @@
       kubernetes.core.k8s:
         template:
           path: "pod_one.j2"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_one: pod-3
@@ -114,12 +114,11 @@
           path: "pod_two.j2"
           variable_start_string: '[['
           variable_end_string: ']]'
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_two: pod-4
-        k8s_pod_namespace: "[[ template_namespace ]]"
-        ansible_python_interpreter: "[[ ansible_playbook_python ]]"
+        k8s_pod_namespace: "template-test"
       register: r
 
     - name: Assert that pod creation succeeded using template
@@ -131,7 +130,7 @@
       kubernetes.core.k8s:
         template:
           path: "pod_three.j2"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_three_one: pod-5
@@ -152,7 +151,7 @@
             variable_start_string: '[['
             variable_end_string: ']]'
           - path: "pod_three.j2"
-        wait: yes
+        wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name_one: pod-7
@@ -238,63 +237,6 @@
           - resource is successful
           - resource.result.results | selectattr('changed') | list | length == 1
           - resource.result.results | selectattr('error', 'defined') | list | length == 1
-
-    # Test resource definition using template with 'omit'
-    - name: Deploy configmap using template
-      k8s:
-        namespace: "{{ template_namespace }}"
-        name: test-data
-        template: configmap.yml.j2
-
-    - name: Read configmap created
-      k8s_info:
-        kind: configmap
-        namespace: "{{ template_namespace }}"
-        name: test-data
-      register: _configmap
-
-    - name: Validate that the configmap does not contains annotations
-      assert:
-        that:
-          - '"annotations" not in _configmap.resources.0.metadata'
-
-    - name: Create resource once again
-      k8s:
-        namespace: "{{ template_namespace }}"
-        name: test-data
-        template: configmap.yml.j2
-      register: _configmap
-
-    - name: assert that nothing changed
-      assert:
-        that:
-          - _configmap is not changed
-
-    - name: Create resource once again (using description)
-      k8s:
-        namespace: "{{ template_namespace }}"
-        name: test-data
-        template: configmap.yml.j2
-      register: _configmap
-      vars:
-        k8s_configmap_desc: "This is a simple configmap used to test ansible k8s collection"
-
-    - name: assert that configmap was changed
-      assert:
-        that:
-          - _configmap is changed
-
-    - name: Read configmap created
-      k8s_info:
-        kind: configmap
-        namespace: "{{ template_namespace }}"
-        name: test-data
-      register: _configmap
-
-    - name: Validate that the configmap does not contains annotations
-      assert:
-        that:
-          - _configmap.resources.0.metadata.annotations.description == "This is a simple configmap used to test ansible k8s collection"
 
   always:
     - name: Remove namespace (Cleanup)

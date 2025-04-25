@@ -26,7 +26,8 @@
       assert:
         that:
           - k8s_configmap is changed
-          - k8s_configmap.result.metadata.annotations|default(False)
+          - '"annotations" in k8s_configmap.result.metadata'
+          - k8s_configmap.result.metadata.annotations != {}
 
     - name: Add same configmap again
       k8s:
@@ -467,7 +468,7 @@
       assert:
         that:
           - k8s_secret is changed
-          - k8s_secret.result.data.foo
+          - k8s_secret.result.data.foo != ""
 
     - name: Add same secret
       k8s:
@@ -748,7 +749,7 @@
       assert:
         that:
           - _create is changed
-          - not _info.resources
+          - _info.resources | length == 0
 
     # server side apply over kubernetes client releases
     - name: Create temporary directory
