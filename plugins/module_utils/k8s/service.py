@@ -473,7 +473,7 @@ class K8sService:
         if label_selectors:
             params["label_selector"] = ",".join(label_selectors)
 
-        if delete_options:
+        if delete_options and not self.module.check_mode:
             body = {
                 "apiVersion": "v1",
                 "kind": "DeleteOptions",
