@@ -202,8 +202,8 @@ def test_service_create_resource_warnings(
     result, warnings = svc.create(Mock(), pod_definition)
 
     assert result == mock_pod_resource_instance.to_dict()
-    assert warnings[0] == "test warning 1"
-    assert warnings[1] == "test warning 2"
+    assert str(warnings[0]) == "test warning 1"
+    assert str(warnings[1]) == "test warning 2"
 
 
 def test_service_create_resource_check_mode():
@@ -289,8 +289,8 @@ def test_service_apply_existing_resource_warnings(
     )
 
     assert result == mock_pod_resource_instance.to_dict()
-    assert warnings[0] == "test warning 1"
-    assert warnings[1] == "test warning 2"
+    assert str(warnings[0]) == "test warning 1"
+    assert str(warnings[1]) == "test warning 2"
 
 
 def test_service_replace_existing_resource(
