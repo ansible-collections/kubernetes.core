@@ -754,7 +754,9 @@ def argument_spec():
             set_values=dict(type="list", elements="dict"),
             reuse_values=dict(type="bool"),
             reset_values=dict(type="bool", default=True),
-            insecure_skip_tls_verify=dict(type="bool", default=False, aliases=["skip_tls_certs_check"]),
+            insecure_skip_tls_verify=dict(
+                type="bool", default=False, aliases=["skip_tls_certs_check"]
+            ),
         )
     )
     return arg_spec
@@ -845,7 +847,9 @@ def main():
             helm_cmd += " --repo=" + chart_repo_url
 
         # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
-        chart_info = fetch_chart_info(module, helm_cmd, chart_ref, insecure_skip_tls_verify)
+        chart_info = fetch_chart_info(
+            module, helm_cmd, chart_ref, insecure_skip_tls_verify
+        )
 
         if dependency_update:
             if chart_info.get("dependencies"):
