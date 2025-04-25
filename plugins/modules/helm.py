@@ -220,7 +220,7 @@ options:
     version_added: 2.2.0
   insecure_skip_tls_verify:
     description:
-      - Skip tls certificate checks for the chart download. 
+      - Skip tls certificate checks for the chart download.
       - Do not confuse with the C(validate_certs) option.
     type: bool
     default: False

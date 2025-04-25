@@ -121,7 +121,7 @@ options:
     version_added: 2.4.0
   insecure_skip_tls_verify:
     description:
-      - Skip tls certificate checks for the repository url. 
+      - Skip tls certificate checks for the repository url.
     type: bool
     default: False
     aliases: [ skip_tls_certs_check ]
