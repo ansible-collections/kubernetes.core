@@ -75,7 +75,7 @@ options:
   skip_tls_certs_check:
     description:
     - Whether or not to check tls certificate for the chart download.
-    - Requires helm >= 3.3.0.
+    - Requires helm >= 3.3.0. Alias C(insecure_skip_tls_verify) added in 5.3.0.
     type: bool
     default: False
     aliases: [ insecure_skip_tls_verify ]
