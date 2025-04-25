@@ -152,6 +152,27 @@
       register: _deployment
       failed_when: _deployment.resources | length == 0
 
+    - name: Trying to delete nginx deployment in check mode and with deleteOptions set
+      k8s:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        name: nginx-d
+        state: absent
+        delete_options:
+          propagationPolicy: Foreground
+      check_mode: true
+      register: _delete
+
+    - name: Validate that Deployment nginx-d still exists
+      k8s_info:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        name: nginx-d
+      register: _deployment
+      failed_when: _deployment.resources | length != 1
+
     - name: Trying to delete using delete_all=true but missing kind option
       k8s:
         api_version: apps/v1
