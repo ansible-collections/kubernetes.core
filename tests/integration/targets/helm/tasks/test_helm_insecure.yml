@@ -1,0 +1,46 @@
+---
+- name: Test helm inse
+  vars:
+    helm_namespace: "{{ test_namespace[11] }}"
+  block:
+
+    - name: Initial chart installation (no flag set)
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_test_oci }}"
+        release_name: test-secure
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: true
+      register: install
+
+    - name: Validate that insecure flag is not set
+      assert:
+        that:
+          - install is changed
+          - '"--insecure-skip-tls-verify" not in install.command'
+
+    - name: Initial chart installation (insecure flag set)
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_test_oci }}"
+        release_name: test-insecure
+        release_namespace: "{{ helm_namespace }}"
+        insecure_skip_tls_verify: true
+      register: install
+
+    - debug:
+        msg: "Command: {{ install.command }}"
+
+    - name: Validate that insecure flag IS set
+      assert:
+        that:
+          - install is changed
+          - '"--insecure-skip-tls-verify" in install.command'
+
+  always:
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent

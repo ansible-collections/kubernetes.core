@@ -41,6 +41,9 @@
 - name: Test Skip CRDS feature in helm chart install
   include_tasks: test_crds.yml
 
+- name: Test insecure registry flag feature
+  include_tasks: test_helm_insecure.yml
+
 - name: Clean helm install
   file:
     path: "{{ item }}"
