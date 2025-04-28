@@ -58,7 +58,7 @@
           - "'managedFields' not in hf4.resources[0]['metadata']"
 
 
-    - name: Hiding a changed field should still result in a change
+    - name: Hiding a changed field should not result in a change
       k8s:
         definition: "{{ hide_fields_base_configmap | combine({'data':{'hello':'different'}}) }}"
         hidden_fields:
@@ -67,10 +67,10 @@
       register: hf5
       diff: true
 
-    - name: Ensure that hidden changed field changed
+    - name: Ensure that hidden changed field not changed
       assert:
         that:
-          - hf5.changed
+          - not hf5.changed
 
     - name: Apply works with hidden fields
       k8s:
