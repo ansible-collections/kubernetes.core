@@ -1,7 +1,7 @@
 ---
 - name: Test helm inse
   vars:
-    helm_namespace: "{{ test_namespace[11] }}"
+    helm_namespace: "{{ test_namespace[12] }}"
   block:
 
     - name: Initial chart installation (no flag set)
