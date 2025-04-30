@@ -1,5 +1,5 @@
 ---
-- name: Test helm inse
+- name: Test helm insecure
   vars:
     helm_namespace: "{{ test_namespace[12] }}"
   block:
@@ -27,15 +27,21 @@
         release_namespace: "{{ helm_namespace }}"
         insecure_skip_tls_verify: true
       register: install
+      ignore_errors: true
 
-    - debug:
-        msg: "Command: {{ install.command }}"
-
-    - name: Validate that insecure flag IS set
+    - name: Validate that insecure flag IS set if helm version is >= 3.16.0
       assert:
         that:
           - install is changed
           - '"--insecure-skip-tls-verify" in install.command'
+      when: '"v3.16.0" <= helm_version'
+
+    - name: Validate that feature fails for helm < 3.16.0
+      assert:
+        that:
+          - install is failed
+          - '"insecure_skip_tls_verify requires helm >= 3.16.0" in install.msg'
+      when: 'helm_version < "v3.16.0"'
 
   always:
     - name: Remove helm namespace

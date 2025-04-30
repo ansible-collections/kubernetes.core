@@ -232,6 +232,7 @@ options:
     description:
       - Skip tls certificate checks for the chart download.
       - Do not confuse with the C(validate_certs) option.
+      - This option is only available for helm >= 3.16.0.
     type: bool
     default: False
     aliases: [ skip_tls_certs_check ]
@@ -584,7 +585,15 @@ def deploy(
         deploy_command += " --create-namespace"
 
     if insecure_skip_tls_verify:
-        deploy_command += " --insecure-skip-tls-verify"
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="insecure_skip_tls_verify requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --insecure-skip-tls-verify"
 
     if values_files:
         for value_file in values_files:
