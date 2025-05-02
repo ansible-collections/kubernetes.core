@@ -244,7 +244,7 @@
       kind: Pod
       name: '{{ drain_pod_name }}'
     register: _result
-    failed_when: _result.resources
+    failed_when: _result.resources | length > 0
 
   - name: assert that emptyDir pod was deleted
     k8s_info:
@@ -346,7 +346,7 @@
       kind: Pod
       name: '{{ drain_pod_name }}-01'
     register: _result
-    failed_when: _result.resources
+    failed_when: _result.resources | length > 0
 
   # test: drain using pod_selectors
   - name: Uncordon node
