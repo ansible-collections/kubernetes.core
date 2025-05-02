@@ -75,9 +75,10 @@ options:
   skip_tls_certs_check:
     description:
     - Whether or not to check tls certificate for the chart download.
-    - Requires helm >= 3.3.0.
+    - Requires helm >= 3.3.0. Alias C(insecure_skip_tls_verify) added in 5.3.0.
     type: bool
     default: False
+    aliases: [ insecure_skip_tls_verify ]
   chart_devel:
     description:
     - Use development versions, too. Equivalent to version '>0.0.0-0'.
@@ -190,7 +191,9 @@ def main():
             type="str", no_log=True, aliases=["password", "chart_repo_password"]
         ),
         pass_credentials=dict(type="bool", default=False, no_log=False),
-        skip_tls_certs_check=dict(type="bool", default=False),
+        skip_tls_certs_check=dict(
+            type="bool", default=False, aliases=["insecure_skip_tls_verify"]
+        ),
         chart_devel=dict(type="bool"),
         untar_chart=dict(type="bool", default=False),
         destination=dict(type="path", required=True),
