@@ -1,3 +1,5 @@
 ---
+collections:
+  - kubernetes.core
 dependencies:
   - install_helm
