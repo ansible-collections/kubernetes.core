@@ -28,6 +28,9 @@
           - install is changed
           - install.status.name == "test-crds"
 
+    - ansible.builtin.command:
+        cmd: "{{ helm_binary }} list -n {{ helm_namespace }}"
+
     - name: Fail to create custom resource
       k8s:
         definition:
