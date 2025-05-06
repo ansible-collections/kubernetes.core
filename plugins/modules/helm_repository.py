@@ -119,6 +119,13 @@ options:
     aliases: [ force ]
     default: False
     version_added: 2.4.0
+  insecure_skip_tls_verify:
+    description:
+      - Skip tls certificate checks for the repository url.
+    type: bool
+    default: False
+    aliases: [ skip_tls_certs_check ]
+    version_added: "5.3.0"
 """
 
 EXAMPLES = r"""
@@ -226,6 +233,7 @@ def install_repository(
     repository_password,
     pass_credentials,
     force_update,
+    insecure_skip_tls_verify,
 ):
     install_command = command + " repo add " + repository_name + " " + repository_url
 
@@ -238,6 +246,9 @@ def install_repository(
 
     if force_update:
         install_command += " --force-update"
+
+    if insecure_skip_tls_verify:
+        install_command += " --insecure-skip-tls-verify"
 
     return install_command
 
@@ -262,6 +273,9 @@ def argument_spec():
             ),
             pass_credentials=dict(type="bool", default=False, no_log=True),
             force_update=dict(type="bool", default=False, aliases=["force"]),
+            insecure_skip_tls_verify=dict(
+                type="bool", default=False, aliases=["skip_tls_certs_check"]
+            ),
         )
     )
     return arg_spec
@@ -290,6 +304,7 @@ def main():
     repo_state = module.params.get("repo_state")
     pass_credentials = module.params.get("pass_credentials")
     force_update = module.params.get("force_update")
+    insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
 
     helm_cmd = module.get_helm_binary()
 
@@ -308,6 +323,7 @@ def main():
                 repo_password,
                 pass_credentials,
                 force_update,
+                insecure_skip_tls_verify,
             )
             changed = True
         elif repository_status["url"] != repo_url:
