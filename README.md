@@ -248,8 +248,6 @@ The process for uploading a supported release to Automation Hub is documented se
 <!--List available communication channels. In addition to channels specific to your collection, we also recommend to use the following ones.-->
 
 > **Note:** The `stable-4` branch, which handles all `4.x.y` releases of this collection, is no longer supported. This means that no backports nor releases will be performed on the `stable-4` branch.
->
-> All new features and bugfixes will be included in `stable-5` and `stable-6` branches (versions `5.x.y` and `6.x.y`, respectively), and only bugfixes will be backported to `stable-3` (which handles `3.x.y` releases).
 
 We announce releases and important changes through Ansible's [The Bullhorn newsletter](https://github.com/ansible/community/wiki/News#the-bullhorn). Be sure you are [subscribed](https://eepurl.com/gZmiEP).
 
