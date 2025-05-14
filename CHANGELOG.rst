@@ -10,7 +10,7 @@ v5.3.0
 Release Summary
 ---------------
 
-This release includes minor changes, bug fixes and also bumps ansible-lint version to ``25.1.2``.
+This release includes minor changes, bug fixes and also bumps ``ansible-lint`` version to ``25.1.2``.
 
 Minor Changes
 -------------
