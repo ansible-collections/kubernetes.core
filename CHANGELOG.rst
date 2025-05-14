@@ -23,7 +23,7 @@ Minor Changes
 Bugfixes
 --------
 
-- module_utils/k8s/service - fix issue when trying to delete resource using `delete_options` and `check_mode=true` (https://github.com/ansible-collections/kubernetes.core/issues/892).
+- module_utils/k8s/service - Fix issue when trying to delete resource using ``delete_options`` and ``check_mode=true`` (https://github.com/ansible-collections/kubernetes.core/issues/892).
 
 v5.2.0
 ======
