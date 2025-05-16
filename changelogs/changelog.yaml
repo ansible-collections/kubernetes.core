@@ -1044,3 +1044,11 @@ releases:
     - 898-k8s-dont-delete-in-check-mode.yaml
     - 919-update-ansible-lint-version.yaml
     release_date: '2025-05-16'
+  6.0.0:
+    changes:
+      breaking_changes:
+      - Remove deprecated ``k8s`` invetory plugin (https://github.com/ansible-collections/kubernetes.core/pull/867).
+      - Remove support for ``ansible-core<2.16`` (https://github.com/ansible-collections/kubernetes.core/pull/867).
+    fragments:
+    - 20250121-breaking-changes-6.0.0.yml
+    release_date: '2025-05-19'
