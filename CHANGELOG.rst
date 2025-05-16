@@ -123,6 +123,11 @@ Bugfixes
 - helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
 - integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
 
+v3.3.1
+=======
+
+This release fixes the CI issues with the ``linters`` workflow.
+
 v3.3.0
 ======
 
