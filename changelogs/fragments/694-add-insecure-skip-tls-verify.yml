@@ -1,4 +1,0 @@
----
-minor_changes:
-  - helm - add support for ``insecure_skip_tls_verify`` option to helm and
-    helm_repository(https://github.com/ansible-collections/kubernetes.core/issues/694).
