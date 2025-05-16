@@ -1037,4 +1037,4 @@ releases:
     - 800-helm-add-reset_then_reuse_values-support.yml
     - 898-k8s-dont-delete-in-check-mode.yaml
     - 919-update-ansible-lint-version.yaml
-    release_date: '2025-05-14'
+    release_date: '2025-05-16'
