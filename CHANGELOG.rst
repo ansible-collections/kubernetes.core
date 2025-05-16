@@ -4,30 +4,62 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
-v3.3.1
+v5.3.0
 ======
 
 Release Summary
 ---------------
 
-This release fixes the CI issues with the ``linters`` workflow.
+This release includes minor changes, bug fixes and also bumps ``ansible-lint`` version to ``25.1.2``.
+
+Minor Changes
+-------------
+
+- kubernetes.core - Bump version of ``ansible-lint`` to ``25.1.2`` (https://github.com/ansible-collections/kubernetes.core/pull/919).
+- action/k8s_info - update templating mechanism with changes from ``ansible-core 2.19`` (https://github.com/ansible-collections/kubernetes.core/pull/888).
+- helm - add ``reset_then_reuse_values`` support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
+- helm - add support for ``insecure_skip_tls_verify`` option to helm and ``helm_repository`` (https://github.com/ansible-collections/kubernetes.core/issues/694).
+
+Bugfixes
+--------
+
+- module_utils/k8s/service - Fix issue when trying to delete resource using ``delete_options`` and ``check_mode=true`` (https://github.com/ansible-collections/kubernetes.core/issues/892).
+
+v5.2.0
+======
+
+Release Summary
+---------------
+
+This release adds more functionality to the hidden_fields option and support for waiting on ClusterOperators to reach a ready state.
+
+Minor Changes
+-------------
+
+- k8s - Extend hidden_fields to allow the expression of more complex field types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+- k8s_info - Extend hidden_fields to allow the expression of more complex field types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+- waiter.py - add ClusterOperator support. The module can now check OpenShift cluster health by verifying ClusterOperator status requiring 'Available: True', 'Degraded: False', and 'Progressing: False' for success. (https://github.com/ansible-collections/kubernetes.core/issues/869)
 
 v5.1.0
 ======
+
+Release Summary
+---------------
+
+This release came with new module ``helm_registry_auth``, improvements to the error messages in the k8s_drain module, new parameter ``insecure_registry`` for ``helm_template`` module and several bug fixes.
 
 Minor Changes
 -------------
 
 - Bump version of ansible-lint to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
 - Parameter insecure_registry added to helm_template as equivalent of insecure-skip-tls-verify (https://github.com/ansible-collections/kubernetes.core/pull/805).
-- connection/kubectl.py - Added an example of using the kubectl connection plugin to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
 - k8s_drain - Improve error message for pod disruption budget when draining a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
 
 Bugfixes
 --------
 
 - helm - Helm version checks did not support RC versions. They now accept any version tags. (https://github.com/ansible-collections/kubernetes.core/pull/745).
-- helm_pull - Apply no_log=True to pass_credentials to silence false positive warning.. (https://github.com/ansible-collections/kubernetes.core/pull/796).
+- helm_pull - Apply no_log=True to pass_credentials to silence false positive warning. (https://github.com/ansible-collections/kubernetes.core/pull/796).
 - k8s_drain - Fix k8s_drain does not wait for single pod (https://github.com/ansible-collections/kubernetes.core/issues/769).
 - k8s_drain - Fix k8s_drain runs into a timeout when evicting a pod which is part of a stateful set  (https://github.com/ansible-collections/kubernetes.core/issues/792).
 - kubeconfig option should not appear in module invocation log (https://github.com/ansible-collections/kubernetes.core/issues/782).
@@ -50,6 +82,7 @@ This major release drops support for ``ansible-core<2.15``.
 Minor Changes
 -------------
 
+- connection/kubectl.py - Added an example of using the kubectl connection plugin to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
 - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
 
 Breaking Changes / Porting Guide
@@ -90,17 +123,29 @@ Bugfixes
 - helm - use ``reuse-values`` when running ``helm diff`` command (https://github.com/ansible-collections/kubernetes.core/issues/680).
 - integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
 
+v3.3.1
+=======
+
+This release fixes the CI issues with the ``linters`` workflow.
+
 v3.3.0
 ======
+
+Release Summary
+---------------
+
+This release comes with improvements to the error messages in the k8s_drain module and several bug fixes.
+
 Minor Changes
 -------------
-- inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
-- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
+
 - k8s_drain - Improve error message for pod disruption budget when draining a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
+
 Bugfixes
 --------
+
 - helm - Helm version checks did not support RC versions. They now accept any version tags. (https://github.com/ansible-collections/kubernetes.core/pull/745).
-- helm_pull - Apply no_log=True to pass_credentials to silence false positive warning.. (https://github.com/ansible-collections/kubernetes.core/pull/796).
+- helm_pull - Apply no_log=True to pass_credentials to silence false positive warning. (https://github.com/ansible-collections/kubernetes.core/pull/796).
 - k8s_drain - Fix k8s_drain does not wait for single pod (https://github.com/ansible-collections/kubernetes.core/issues/769).
 - k8s_drain - Fix k8s_drain runs into a timeout when evicting a pod which is part of a stateful set  (https://github.com/ansible-collections/kubernetes.core/issues/792).
 - kubeconfig option should not appear in module invocation log (https://github.com/ansible-collections/kubernetes.core/issues/782).
@@ -112,13 +157,15 @@ v3.2.0
 
 Release Summary
 ---------------
+
 This release comes with documentation updates.
 
 Minor Changes
 -------------
 
-- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
 - connection/kubectl.py - Added an example of using the kubectl connection plugin to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
+- inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/734).
 
 v3.1.0
 ======

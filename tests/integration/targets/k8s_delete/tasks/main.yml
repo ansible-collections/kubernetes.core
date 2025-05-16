@@ -38,7 +38,7 @@
     - name: Assert that there are pods
       assert:
         that:
-          - pods_create.resources
+          - pods_create.resources | length > 0
 
     - name: Remove the daemonset
       k8s:
@@ -74,7 +74,7 @@
     - name: Assert that deleting the daemonset deleted the pods
       assert:
         that:
-          - not pods_delete.resources
+          - pods_delete.resources | length == 0
 
     # test deletion using label selector
     - name: Deploy load balancer
@@ -151,6 +151,27 @@
           - context=ansible
       register: _deployment
       failed_when: _deployment.resources | length == 0
+
+    - name: Trying to delete nginx deployment in check mode and with deleteOptions set
+      k8s:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        name: nginx-d
+        state: absent
+        delete_options:
+          propagationPolicy: Foreground
+      check_mode: true
+      register: _delete
+
+    - name: Validate that Deployment nginx-d still exists
+      k8s_info:
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ test_namespace }}"
+        name: nginx-d
+      register: _deployment
+      failed_when: _deployment.resources | length != 1
 
     - name: Trying to delete using delete_all=true but missing kind option
       k8s:

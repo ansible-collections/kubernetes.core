@@ -4,10 +4,17 @@
     namespace_to_create: "{{ item.name | default(item) }}"
     namespace_labels: "{{ item.labels | default(omit) }}"
   with_items: "{{ test_namespace }}"
-  when: test_namespace | type_debug == "list"
+  when:
+    - test_namespace is not string
+    - test_namespace is not mapping
+    - test_namespace is iterable
 
 - include_tasks: tasks/create.yml
   vars:
     namespace_to_create: "{{ test_namespace }}"
     namespace_labels: "{{ test_namespace_labels | default(omit) }}"
-  when: test_namespace | type_debug == "AnsibleUnicode"
+  when:
+    - test_namespace is string
+    - test_namespace is iterable
+    - test_namespace is sequence
+    - test_namespace is not mapping

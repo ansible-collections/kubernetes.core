@@ -292,6 +292,29 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>insecure_skip_tls_verify</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 5.3.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Skip tls certificate checks for the chart download.</div>
+                        <div>Do not confuse with the <code>validate_certs</code> option.</div>
+                        <div>This option is only available for helm &gt;= 3.16.0.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: skip_tls_certs_check</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -433,6 +456,28 @@ Parameters
                         <div>Reuse the given name, only if that name is a deleted release which remains in the history.</div>
                         <div>This is unsafe in production environment.</div>
                         <div>mutually exclusive with with <code>history_max</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>reset_then_reuse_values</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.0.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>When upgrading package, reset the values to the ones built into the chart, apply the last release&#x27;s values and merge in any overrides from parameters O(release_values), O(values_files) or O(set_values).</div>
+                        <div>If O(reset_values) or O(reuse_values) is set to V(True), this is ignored.</div>
+                        <div>This feature requires helm diff &gt;= 3.9.12.</div>
                 </td>
             </tr>
             <tr>

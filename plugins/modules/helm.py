@@ -145,6 +145,16 @@ options:
     required: false
     default: True
     version_added: 3.0.0
+  reset_then_reuse_values:
+    description:
+      - When upgrading package, reset the values to the ones built into the chart, apply the last release's values and merge in any overrides from
+        parameters O(release_values), O(values_files) or O(set_values).
+      - If O(reset_values) or O(reuse_values) is set to V(True), this is ignored.
+      - This feature requires helm diff >= 3.9.12.
+    type: bool
+    required: false
+    default: False
+    version_added: 6.0.0
 
 #Helm options
   disable_hook:
@@ -218,6 +228,15 @@ options:
       - mutually exclusive with with C(replace).
     type: int
     version_added: 2.2.0
+  insecure_skip_tls_verify:
+    description:
+      - Skip tls certificate checks for the chart download.
+      - Do not confuse with the C(validate_certs) option.
+      - This option is only available for helm >= 3.16.0.
+    type: bool
+    default: False
+    aliases: [ skip_tls_certs_check ]
+    version_added: 5.3.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -476,11 +495,14 @@ def run_dep_update(module, chart_ref):
     rc, out, err = module.run_helm_command(dep_update)
 
 
-def fetch_chart_info(module, command, chart_ref):
+def fetch_chart_info(module, command, chart_ref, insecure_skip_tls_verify=False):
     """
     Get chart info
     """
     inspect_command = command + f" show chart '{chart_ref}'"
+
+    if insecure_skip_tls_verify:
+        inspect_command += " --insecure-skip-tls-verify"
 
     rc, out, err = module.run_helm_command(inspect_command)
 
@@ -509,6 +531,8 @@ def deploy(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    reset_then_reuse_values=False,
+    insecure_skip_tls_verify=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -525,6 +549,17 @@ def deploy(
 
     if reuse_values is not None:
         deploy_command += " --reuse-values=" + str(reuse_values)
+
+    if reset_then_reuse_values:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.14.0"):
+            module.fail_json(
+                msg="reset_then_reuse_values requires helm >= 3.14.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --reset-then-reuse-values"
 
     if wait:
         deploy_command += " --wait"
@@ -548,6 +583,17 @@ def deploy(
 
     if create_namespace:
         deploy_command += " --create-namespace"
+
+    if insecure_skip_tls_verify:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="insecure_skip_tls_verify requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --insecure-skip-tls-verify"
 
     if values_files:
         for value_file in values_files:
@@ -642,6 +688,8 @@ def helmdiff_check(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    reset_then_reuse_values=False,
+    insecure_skip_tls_verify=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -675,6 +723,27 @@ def helmdiff_check(
 
     if reuse_values:
         cmd += " --reuse-values"
+
+    if reset_then_reuse_values:
+        helm_diff_version = get_plugin_version("diff")
+        helm_version = module.get_helm_version()
+        fail_msg = ""
+        if LooseVersion(helm_diff_version) < LooseVersion("3.9.12"):
+            fail_msg = "reset_then_reuse_values requires helm diff >= 3.9.12, current version is {0}\n".format(
+                helm_diff_version
+            )
+        if LooseVersion(helm_version) < LooseVersion("3.14.0"):
+            fail_msg += "reset_then_reuse_values requires helm >= 3.14.0, current version is {0}\n".format(
+                helm_version
+            )
+
+        if fail_msg:
+            module.fail_json(msg=fail_msg)
+        else:
+            cmd += " --reset-then-reuse-values"
+
+    if insecure_skip_tls_verify:
+        cmd += " --insecure-skip-tls-verify"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -735,6 +804,10 @@ def argument_spec():
             set_values=dict(type="list", elements="dict"),
             reuse_values=dict(type="bool"),
             reset_values=dict(type="bool", default=True),
+            reset_then_reuse_values=dict(type="bool", default=False),
+            insecure_skip_tls_verify=dict(
+                type="bool", default=False, aliases=["skip_tls_certs_check"]
+            ),
         )
     )
     return arg_spec
@@ -787,6 +860,8 @@ def main():
     set_values = module.params.get("set_values")
     reuse_values = module.params.get("reuse_values")
     reset_values = module.params.get("reset_values")
+    reset_then_reuse_values = module.params.get("reset_then_reuse_values")
+    insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -824,7 +899,9 @@ def main():
             helm_cmd += " --repo=" + chart_repo_url
 
         # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
-        chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
+        chart_info = fetch_chart_info(
+            module, helm_cmd, chart_ref, insecure_skip_tls_verify
+        )
 
         if dependency_update:
             if chart_info.get("dependencies"):
@@ -883,6 +960,8 @@ def main():
                 set_value_args=set_value_args,
                 reuse_values=reuse_values,
                 reset_values=reset_values,
+                reset_then_reuse_values=reset_then_reuse_values,
+                insecure_skip_tls_verify=insecure_skip_tls_verify,
             )
             changed = True
 
@@ -908,6 +987,8 @@ def main():
                     set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    reset_then_reuse_values=reset_then_reuse_values,
+                    insecure_skip_tls_verify=insecure_skip_tls_verify,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -943,6 +1024,8 @@ def main():
                     set_value_args=set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    reset_then_reuse_values=reset_then_reuse_values,
+                    insecure_skip_tls_verify=insecure_skip_tls_verify,
                 )
                 changed = True
 
