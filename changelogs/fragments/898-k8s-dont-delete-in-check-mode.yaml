@@ -1,3 +1,0 @@
----
-bugfixes:
-  - module_utils/k8s/service - fix issue when trying to delete resource using `delete_options` and `check_mode=true` (https://github.com/ansible-collections/kubernetes.core/issues/892).
