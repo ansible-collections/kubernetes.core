@@ -498,8 +498,8 @@ def diff_objects(
     if not diff:
         return True, result
 
-    result["before"] = diff[0]
-    result["after"] = diff[1]
+    result["before"] = hide_fields(diff[0], hidden_fields)
+    result["after"] = hide_fields(diff[1], hidden_fields)
 
     if list(result["after"].keys()) == ["metadata"] and list(
         result["before"].keys()
@@ -511,9 +511,6 @@ def diff_objects(
             result["before"]["metadata"].keys()
         ).issubset(ignored_keys):
             return True, result
-
-    result["before"] = hide_fields(result["before"], hidden_fields)
-    result["after"] = hide_fields(result["after"], hidden_fields)
 
     return False, result
 
