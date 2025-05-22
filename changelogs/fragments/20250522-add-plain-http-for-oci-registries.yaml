@@ -1,0 +1,1 @@
+minor_changes: Parameter plain_http added to helm, helm_pull and helm_template for working with unsecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
