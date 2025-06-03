@@ -243,6 +243,7 @@ options:
       - Requires Helm >= 3.13.0
     type: bool
     default: False
+    version_added: 6.1.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
