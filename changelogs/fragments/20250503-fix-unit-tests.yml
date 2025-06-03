@@ -1,0 +1,3 @@
+---
+trivial:
+  - fix unit tests with ``ansible-core 2.19``.
