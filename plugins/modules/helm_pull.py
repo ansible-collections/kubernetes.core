@@ -120,6 +120,7 @@ options:
       - Requires Helm >= 3.13.0
     type: bool
     default: False
+    version_added: 6.1.0
 """
 
 EXAMPLES = r"""
