@@ -4,6 +4,20 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v6.0.0
+======
+
+Release Summary
+---------------
+
+This major release removes the deprecated ``k8s`` inventory plugin and also removes ``ansible-core<2.16`` support.
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- Remove deprecated ``k8s`` invetory plugin (https://github.com/ansible-collections/kubernetes.core/pull/867).
+- Remove support for ``ansible-core<2.16`` (https://github.com/ansible-collections/kubernetes.core/pull/867).
+
 v5.3.0
 ======
 
@@ -124,7 +138,7 @@ Bugfixes
 - integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
 
 v3.3.1
-=======
+======
 
 Release Summary
 ---------------

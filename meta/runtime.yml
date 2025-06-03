@@ -22,8 +22,7 @@ plugin_routing:
       redirect: community.okd.openshift
     k8s:
       tombstone:
-        # To be replaced with 6.0.0 in release 6.0.0 commit
-        removal_version: 6.0.0-dev0
+        removal_version: 6.0.0
         warning_text: >-
           The k8s inventory plugin was slated for deprecation in 3.3.0 and has been removed in release 6.0.0. Use kubernetes.core.k8s_info and ansible.builtin.add_host instead.
   modules:
