@@ -1,8 +1,23 @@
 ---
-- name: Test helm insecure
+- name: Test helm HTTP registry
   vars:
     helm_namespace: "{{ test_namespace[13] }}"
   block:
+    - name: Create temporary directory to download chart in
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .chart
+      register: chart_download
+
+    - name: Download chart
+      helm_pull:
+        chart_ref: "{{ chart_test_oci }}"
+        destination: "{{ chart_download.path }}"
+        binary_path: "{{ helm_binary }}"
+
+    - name: Push chart to local registry
+      ansible.builtin.command:
+        cmd: "{{ helm_binary }} push {{ chart_download.path }}/redis-*.tgz {{ chart_test_oci_insecure }} --plain-http"
 
     - name: Initial chart installation (no flag set)
       helm:
@@ -22,7 +37,7 @@
     - name: Initial chart installation (insecure flag set)
       helm:
         binary_path: "{{ helm_binary }}"
-        chart_ref: "{{ chart_test_oci_insecure }}"
+        chart_ref: "{{ chart_test_oci_insecure }}/redis"
         release_name: test-insecure
         release_namespace: "{{ helm_namespace }}"
         plain_http: true
