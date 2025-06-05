@@ -112,15 +112,15 @@
       when: _helm_version.stdout is ansible.builtin.version('v3.18.0', '<')
       block:
 
-      - name: Test logout idempotency
-        helm_registry_auth:
-          host: localhost:{{ registry_port }}
-          state: absent
-        register: _helm_registry_auth_logout_idempotency
+        - name: Test logout idempotency
+          helm_registry_auth:
+            host: localhost:{{ registry_port }}
+            state: absent
+          register: _helm_registry_auth_logout_idempotency
 
-      - name: Assert logout operation did not report change
-        ansible.builtin.assert:
-          that: _helm_registry_auth_logout_idempotency is not changed
+        - name: Assert logout operation did not report change
+          ansible.builtin.assert:
+            that: _helm_registry_auth_logout_idempotency is not changed
 
     - name: Ensure that not able to push to the registry
       ansible.builtin.shell: >-
