@@ -188,7 +188,8 @@
     - name: Assert that the registry is not logged in and auth data is not saved
       ansible.builtin.assert:
         that:
-          - "'401 Unauthorized' in _helm_registry_auth_wrong.stderr"
+          - "'401' in _helm_registry_auth_wrong.stderr"
+          - "'unauthorized' in _helm_registry_auth_wrong.stderr| lower"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.command"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stdout"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stderr"
