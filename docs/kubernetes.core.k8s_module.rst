@@ -395,8 +395,7 @@ Parameters
                 </td>
                 <td>
                         <div>Hide fields matching this option in the result</div>
-                        <div>An example might be <code>hidden_fields=[metadata.managedFields]</code></div>
-                        <div>Only field definitions that don&#x27;t reference list items are supported (so V(spec.containers[0]) would not work)</div>
+                        <div>An example might be <code>hidden_fields=[metadata.managedFields]</code> or V(hidden_fields=[spec.containers[0].env[3].value]) or V(hidden_fields=[metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]])</div>
                 </td>
             </tr>
             <tr>
