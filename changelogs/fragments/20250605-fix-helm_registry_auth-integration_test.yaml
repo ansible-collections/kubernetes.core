@@ -1,2 +1,2 @@
-minor:
+minor_changes:
   - Module helm_registry_auth do not support idempotency with `helm >= 2.18.0` (https://github.com/ansible-collections/kubernetes.core/pull/946)
