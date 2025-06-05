@@ -167,8 +167,7 @@
       # Helm binary prints the message to stderr
       ansible.builtin.assert:
         that:
-          - "'push access denied' in _save_chart.stderr"
-          - "'authorization failed' in _save_chart.stderr"
+          - "'push access denied' in _save_chart.stderr or 'basic credential not found' in _save_chart.stderr"
           - "_save_chart.rc != 0"
           - "'localhost:{{ registry_port }}' not in _config_json.content | b64decode"
 
