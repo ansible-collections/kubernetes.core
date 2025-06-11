@@ -16,7 +16,6 @@ HELM_AUTH_ARG_SPEC = dict(
         type="raw",
         aliases=["kubeconfig_path"],
         fallback=(env_fallback, ["K8S_AUTH_KUBECONFIG"]),
-        no_log=True,
     ),
     host=dict(type="str", fallback=(env_fallback, ["K8S_AUTH_HOST"])),
     ca_cert=dict(
