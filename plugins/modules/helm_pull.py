@@ -273,7 +273,7 @@ def main():
         skip_tls_certs_check=dict(key="insecure-skip-tls-verify"),
         chart_devel=dict(key="devel"),
         untar_chart=dict(key="untar"),
-        plain_http=dict(key="plain_http"),
+        plain_http=dict(key="plain-http"),
     )
 
     for k, v in helm_flag_args.items():
