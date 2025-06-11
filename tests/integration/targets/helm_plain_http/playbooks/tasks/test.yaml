@@ -1,0 +1,99 @@
+---
+- name: Run test for helm
+  block:
+    - name: Create temporary directory to install chart In
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .helm
+      register: install_path
+
+    - name: Install required helm version
+      ansible.builtin.include_role:
+        name: install_helm
+      vars:
+        helm_install_path: "{{ install_path.path }}"
+
+    - name: Set helm binary path
+      ansible.builtin.set_fact:
+        helm_binary: "{{ install_path.path }}/{{ ansible_system | lower }}-amd64/helm"
+
+    # helm
+    - name: Run helm with plain_http
+      kubernetes.core.helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_test_oci }}"
+        release_name: test-secure
+        release_namespace: "{{ test_namespace }}"
+        create_namespace: true
+        plain_http: true
+      register: install_chart
+      ignore_errors: true
+
+    - name: Ensure module failed as expected
+      ansible.builtin.assert:
+        that:
+          - install_chart is failed
+          - '"plain_http requires helm >= 3.13.0" in install_chart.msg'
+      when: tests_should_failed | bool
+
+    - name: Ensure the result command contains the expected option
+      ansible.builtin.assert:
+        that:
+          - install_chart is not failed
+          - '"--plain-http" in install_chart.command'
+      when: not (tests_should_failed | bool)
+
+    # helm_pull
+    - name: Trying to download helm chart with option plain_http
+      kubernetes.core.helm_pull:
+        chart_ref: "{{ chart_test_oci }}"
+        destination: "{{ playbook_dir }}"
+        binary_path: "{{ helm_binary }}"
+        plain_http: true
+      register: pull_chart
+      ignore_errors: true
+
+    - name: Ensure module failed as expected
+      ansible.builtin.assert:
+        that:
+          - pull_chart is failed
+          - '"plain_http requires helm >= 3.13.0" in pull_chart.msg'
+      when: tests_should_failed | bool
+
+    - name: Ensure the result command contains the expected option
+      ansible.builtin.assert:
+        that:
+          - pull_chart is not failed
+          - '"--plain-http" in pull_chart.command'
+      when: not (tests_should_failed | bool)
+
+    # helm_template
+    - name: Test helm render template
+      kubernetes.core.helm_template:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_test_oci }}"
+        output_dir: "{{ playbook_dir }}"
+        plain_http: true
+      register: template
+      ignore_errors: true
+
+    - name: Ensure module failed as expected
+      ansible.builtin.assert:
+        that:
+          - template is failed
+          - '"plain_http requires helm >= 3.13.0" in template.msg'
+      when: tests_should_failed | bool
+
+    - name: Ensure the result command contains the expected option
+      ansible.builtin.assert:
+        that:
+          - template is not failed
+          - '"--plain-http" in template.command'
+      when: not (tests_should_failed | bool)
+
+  always:
+    - name: Delete temporary file
+      ansible.builtin.file:
+        path: "{{ install_path.path }}"
+        state: absent
+      ignore_errors: true

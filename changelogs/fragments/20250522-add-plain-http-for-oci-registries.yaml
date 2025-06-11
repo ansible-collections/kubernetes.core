@@ -1,4 +1,4 @@
 minor_changes:
-  -  helm - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
-  -  helm_pull - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
-  -  helm_template - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
+  - helm - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
+  - helm_pull - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
+  - helm_template - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).

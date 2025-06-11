@@ -47,9 +47,6 @@
 - name: Test insecure registry flag feature
   include_tasks: test_helm_insecure.yml
 
-- name: Test plain http option
-  include_tasks: test_helm_plain_http.yml
-
 - name: Clean helm install
   file:
     path: "{{ item }}"
