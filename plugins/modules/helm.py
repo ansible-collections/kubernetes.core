@@ -623,15 +623,7 @@ def deploy(
             deploy_command += " --insecure-skip-tls-verify"
 
     if plain_http:
-        helm_version = module.get_helm_version()
-        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
-            module.fail_json(
-                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
-                    helm_version
-                )
-            )
-        else:
-            deploy_command += " --plain-http"
+        deploy_command += " --plain-http"
 
     if values_files:
         for value_file in values_files:
@@ -923,6 +915,16 @@ def main():
     release_status = get_release_status(module, release_name, all_status=all_status)
 
     helm_cmd = module.get_helm_binary()
+
+    if plain_http:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
+            module.fail_json(
+                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+
     opt_result = {}
     if release_state == "absent" and release_status is not None:
         # skip release statuses 'uninstalled' and 'uninstalling'

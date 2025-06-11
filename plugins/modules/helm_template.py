@@ -271,15 +271,7 @@ def template(
         cmd += " --insecure-skip-tls-verify"
 
     if plain_http:
-        helm_version = module.get_helm_version()
-        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
-            module.fail_json(
-                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
-                    helm_version
-                )
-            )
-        else:
-            cmd += " --plain-http"
+        cmd += " --plain-http"
 
     if show_only:
         for template in show_only:
@@ -353,6 +345,15 @@ def main():
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
     helm_cmd = module.get_helm_binary()
+
+    if plain_http:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
+            module.fail_json(
+                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
+                    helm_version
+                )
+            )
 
     if update_repo_cache:
         update_cmd = helm_cmd + " repo update"
