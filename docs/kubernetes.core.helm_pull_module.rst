@@ -279,7 +279,8 @@ Parameters
                 </td>
                 <td>
                         <div>Whether or not to check tls certificate for the chart download.</div>
-                        <div>Requires helm &gt;= 3.3.0.</div>
+                        <div>Requires helm &gt;= 3.3.0. Alias <code>insecure_skip_tls_verify</code> added in 5.3.0.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: insecure_skip_tls_verify</div>
                 </td>
             </tr>
             <tr>
