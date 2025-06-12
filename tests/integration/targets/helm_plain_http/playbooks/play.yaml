@@ -1,0 +1,14 @@
+- name: Run test for helm plain http option
+  hosts: all
+  gather_facts: true
+
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: "{{ ansible_playbook_python  }}"
+    chart_test_oci: "oci://registry-1.docker.io/bitnamicharts/redis"
+
+  roles:
+    - setup_namespace
+
+  tasks:
+    - ansible.builtin.include_tasks: tasks/test.yaml
