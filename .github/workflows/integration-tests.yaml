@@ -145,11 +145,9 @@ jobs:
           source_path: ${{ env.community_general }}
 
       - name: create kubernetes cluster
-        id: kind
         uses: helm/kind-action@v1.8.0
         with:
           node_image: "kindest/node:v1.29.2"
-          registry: true
 
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
