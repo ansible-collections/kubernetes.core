@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
