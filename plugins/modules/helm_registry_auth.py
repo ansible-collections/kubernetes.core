@@ -31,7 +31,7 @@ options:
       - Desired state of the registry.
       - If set to V(present) attempt to log in to the remote registry server using the URL specified in O(host).
       - If set to V(absent) attempt to log out from the remote registry server using the URL specified in O(host).
-      - As helm >= 2.18.0 resports sucessfull logout even if the user is not logged in, this module will report a change regardless of the current state.
+      - As helm >= 2.18.0 reports successful logout even if the user is not logged in, this module will report a change regardless of the current state.
     required: false
     default: present
     choices: ['present', 'absent']
