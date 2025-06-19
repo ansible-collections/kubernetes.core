@@ -130,6 +130,9 @@ failed:
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
 
 
 def arg_spec():
@@ -231,6 +234,13 @@ def main():
                 stderr=err,
                 command=helm_cmd,
             )
+
+    helm_version = module.get_helm_version()
+    if LooseVersion(helm_version) >= LooseVersion("3.18.0") and state == "absent":
+        # https://github.com/ansible-collections/kubernetes.core/issues/944
+        module.warn(
+            "The helm_registry_auth is not idempotent with helm >= 3.18.0, always report a change."
+        )
 
     module.exit_json(changed=changed, stdout=out, stderr=err, command=helm_cmd)
 
