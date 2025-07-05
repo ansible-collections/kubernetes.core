@@ -530,20 +530,22 @@
     - name: Assert multiple resources were rolled back
       assert:
         that:
-          - result is changed
-          - result.rollback_info | length == 3
-          - result.rollback_info | selectattr('method', 'equalto', 'patch') | list | length == 3
+          - result.results | length == 3
+          - result.results | selectattr('changed', 'equalto', true) | list | length == 3
+          - result.results | selectattr('rollback_info', 'defined') | list | length == 3
+          - result.results | map(attribute='rollback_info') | map('first') | map(attribute='method') | select('equalto', 'patch') | list | length == 3
 
     - name: Validate rollback_info structure for deployment
       assert:
         that:
-          - result.rollback_info is defined
-          - result.rollback_info | length > 0
-          - result.rollback_info[0].method == "patch"
-          - result.rollback_info[0].body is defined
-          - result.rollback_info[0].resources is defined
-          - result.rollback_info[0].resources.metadata is defined
-          - result.rollback_info[0].resources.spec is defined
+          - result.results is defined
+          - result.results[0].rollback_info is defined
+          - result.results[0].rollback_info | length > 0
+          - result.results[0].rollback_info[0].method == "patch"
+          - result.results[0].rollback_info[0].body is defined
+          - result.results[0].rollback_info[0].resources is defined
+          - result.results[0].rollback_info[0].resources.metadata is defined
+          - result.results[0].rollback_info[0].resources.spec is defined
 
     - name: Test rollback with field selectors
       k8s_rollback:
