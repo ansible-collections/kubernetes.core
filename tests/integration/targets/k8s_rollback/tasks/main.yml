@@ -520,7 +520,6 @@
       k8s_rollback:
         api_version: apps/v1
         kind: Deployment
-        name: multi-1
         namespace: "{{ namespace }}"
         label_selectors:
           - "group=multi-test"
@@ -548,7 +547,7 @@
       k8s_rollback:
         api_version: apps/v1
         kind: Deployment
-        name: multi-2
+        name: multi-1
         namespace: "{{ namespace }}"
         field_selectors:
           - "metadata.name=multi-1"
