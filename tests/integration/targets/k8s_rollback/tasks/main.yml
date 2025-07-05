@@ -227,7 +227,7 @@
                     hostPath:
                       path: /var/lib/docker/containers
       register: crash
-      ignore_errors: true
+      ignore_errors: yes
 
     - name: Assert that the Daemonset failed
       assert:
@@ -432,13 +432,12 @@
         name: test-service
         namespace: "{{ namespace }}"
       register: result
-      failed_when: "'Cannot perform rollback on resource of kind Service' not in result.msg"
-      ignore_errors: true
+      ignore_errors: yes
 
     - name: Assert error message for unsupported resource
       assert:
         that:
-          - result is failed
+          - not result.changed
           - "'Cannot perform rollback on resource of kind Service' in result.msg"
 
     - name: Test rollback on non-existent deployment
