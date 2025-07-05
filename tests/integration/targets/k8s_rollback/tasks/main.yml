@@ -520,10 +520,12 @@
       k8s_rollback:
         api_version: apps/v1
         kind: Deployment
+        name: "multi-{{ item }}"
         namespace: "{{ namespace }}"
         label_selectors:
           - "group=multi-test"
       register: result
+      loop: [1, 2, 3]
 
     - name: Assert multiple resources were rolled back
       assert:
