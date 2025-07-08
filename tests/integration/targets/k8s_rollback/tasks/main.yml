@@ -33,7 +33,6 @@
                     ports:
                       - containerPort: 80
 
-
     - name: Crash the existing deployment
       k8s:
         state: present
@@ -228,7 +227,7 @@
                     hostPath:
                       path: /var/lib/docker/containers
       register: crash
-      ignore_errors: true
+      ignore_errors: yes
 
     - name: Assert that the Daemonset failed
       assert:
@@ -290,6 +289,297 @@
       assert:
         that:
           - failed_version | int + 1 == result.resources[0].metadata.annotations['deprecated.daemonset.template.generation'] | int
+
+    - name: Create deployment with specific labels for selector testing
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx-labeled
+            namespace: "{{ namespace }}"
+            labels:
+              app: nginx
+              test-group: label-selector-test
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: nginx-labeled
+            template:
+              metadata:
+                labels:
+                  app: nginx-labeled
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:1.17
+                    ports:
+                      - containerPort: 80
+
+    - name: Update deployment to create second revision
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: 30
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx-labeled
+            namespace: "{{ namespace }}"
+            labels:
+              app: nginx
+              test-group: label-selector-test
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: nginx-labeled
+            template:
+              metadata:
+                labels:
+                  app: nginx-labeled
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:1.18
+                    ports:
+                      - containerPort: 80
+
+    - name: Test rollback with label selectors
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: nginx-labeled
+        namespace: "{{ namespace }}"
+        label_selectors:
+          - "test-group=label-selector-test"
+      register: result
+
+    - name: Assert label selector rollback worked
+      assert:
+        that:
+          - result is changed
+          - result.rollback_info | length == 1
+          - result.rollback_info[0].method == "patch"
+
+    - name: Create deployment with single revision
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: 30
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: single-revision
+            namespace: "{{ namespace }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: single-revision
+            template:
+              metadata:
+                labels:
+                  app: single-revision
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:1.17
+                    ports:
+                      - containerPort: 80
+
+    - name: Try to rollback deployment with no previous revisions
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: single-revision
+        namespace: "{{ namespace }}"
+      register: result
+
+    - name: Assert warning is returned for no rollout history
+      assert:
+        that:
+          - not result.changed
+          - result.rollback_info[0].warnings is defined
+          - "'No rollout history found' in result.rollback_info[0].warnings[0]"
+
+    - name: Create a service for unsupported resource test
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: test-service
+            namespace: "{{ namespace }}"
+          spec:
+            selector:
+              app: nginx
+            ports:
+              - port: 80
+                targetPort: 80
+
+    - name: Test rollback on unsupported resource type
+      k8s_rollback:
+        api_version: v1
+        kind: Service
+        name: test-service
+        namespace: "{{ namespace }}"
+      register: result
+      ignore_errors: yes
+
+    - name: Assert error message for unsupported resource
+      assert:
+        that:
+          - not result.changed
+          - "'Cannot perform rollback on resource of kind Service' in result.msg"
+
+    - name: Test rollback on non-existent deployment
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: non-existent
+        namespace: "{{ namespace }}"
+      register: result
+
+    - name: Assert no resources found
+      assert:
+        that:
+          - not result.changed
+          - result.rollback_info | length == 0
+
+    - name: Create multiple deployments with same label
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: 30
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "multi-{{ item }}"
+            namespace: "{{ namespace }}"
+            labels:
+              group: multi-test
+              app: multi
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "multi-{{ item }}"
+            template:
+              metadata:
+                labels:
+                  app: "multi-{{ item }}"
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:1.17
+                    ports:
+                      - containerPort: 80
+      loop: [1, 2, 3]
+
+    - name: Update multiple deployments to create second revisions
+      k8s:
+        state: present
+        wait: yes
+        wait_timeout: 30
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "multi-{{ item }}"
+            namespace: "{{ namespace }}"
+            labels:
+              group: multi-test
+              app: multi
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: "multi-{{ item }}"
+            template:
+              metadata:
+                labels:
+                  app: "multi-{{ item }}"
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:1.18
+                    ports:
+                      - containerPort: 80
+      loop: [1, 2, 3]
+
+    - name: Rollback multiple deployments using label selector
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: "multi-{{ item }}"
+        namespace: "{{ namespace }}"
+        label_selectors:
+          - "group=multi-test"
+      register: result
+      loop: [1, 2, 3]
+
+    - name: Assert multiple resources were rolled back
+      assert:
+        that:
+          - result.results | length == 3
+          - result.results | selectattr('changed', 'equalto', true) | list | length == 3
+          - result.results | selectattr('rollback_info', 'defined') | list | length == 3
+          - result.results | map(attribute='rollback_info') | map('first') | map(attribute='method') | select('equalto', 'patch') | list | length == 3
+
+    - name: Validate rollback_info structure for deployment
+      assert:
+        that:
+          - result.results is defined
+          - result.results[0].rollback_info is defined
+          - result.results[0].rollback_info | length > 0
+          - result.results[0].rollback_info[0].method == "patch"
+          - result.results[0].rollback_info[0].body is defined
+          - result.results[0].rollback_info[0].resources is defined
+          - result.results[0].rollback_info[0].resources.metadata is defined
+          - result.results[0].rollback_info[0].resources.spec is defined
+
+    - name: Test rollback with field selectors
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: multi-1
+        namespace: "{{ namespace }}"
+        field_selectors:
+          - "metadata.name=multi-1"
+      register: result
+
+    - name: Assert field selector rollback worked
+      assert:
+        that:
+          - result is changed
+          - result.rollback_info | length == 1
+          - result.rollback_info[0].resources.metadata.name == "multi-1"
+
+    - name: Test check mode return values
+      k8s_rollback:
+        api_version: apps/v1
+        kind: Deployment
+        name: multi-2
+        namespace: "{{ namespace }}"
+      register: result
+      check_mode: yes
+
+    - name: Validate check mode returns expected structure
+      assert:
+        that:
+          - result is changed
+          - result.rollback_info is defined
+          - result.rollback_info[0].method == "patch"
+          - result.rollback_info[0].body is defined
 
   always:
     - name: Delete {{ namespace }} namespace
