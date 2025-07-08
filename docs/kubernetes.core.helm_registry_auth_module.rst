@@ -170,6 +170,7 @@ Parameters
                         <div>Desired state of the registry.</div>
                         <div>If set to V(present) attempt to log in to the remote registry server using the URL specified in O(host).</div>
                         <div>If set to V(absent) attempt to log out from the remote registry server using the URL specified in O(host).</div>
+                        <div>As helm &gt;= 3.18.0 reports successful logout even if the user is not logged in, this module will report a change regardless of the current state.</div>
                 </td>
             </tr>
             <tr>
