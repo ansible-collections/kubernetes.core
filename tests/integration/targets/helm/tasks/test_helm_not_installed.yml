@@ -13,3 +13,11 @@
     that:
       - helm_missing_binary is failed
       - "'No such file or directory' in helm_missing_binary.msg"
+  when: ansible_version.full is version('2.20', '<')
+
+- name: Assert that helm is not installed (ansible 2.20+)
+  assert:
+    that:
+      - helm_missing_binary is failed
+      - "'Error executing command' in helm_missing_binary.msg"
+  when: ansible_version.full is version('2.20', '>=')
