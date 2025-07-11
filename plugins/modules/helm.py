@@ -244,6 +244,13 @@ options:
     type: bool
     default: False
     version_added: 6.1.0
+  take_ownership:
+    description:
+      - When upgrading, Helm will ignore the check for helm annotations and take ownership of the existing resources
+      - This feature requires helm >= 3.17.0
+    type: bool
+    default: False
+    version_added: 6.1.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -560,6 +567,7 @@ def deploy(
     reset_then_reuse_values=False,
     insecure_skip_tls_verify=False,
     plain_http=False,
+    take_ownership=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -573,6 +581,8 @@ def deploy(
         deploy_command = command + " upgrade -i"  # install/upgrade
         if reset_values:
             deploy_command += " --reset-values"
+        if take_ownership:
+            deploy_command += " --take-ownership"
 
     if reuse_values is not None:
         deploy_command += " --reuse-values=" + str(reuse_values)
@@ -851,6 +861,7 @@ def argument_spec():
                 type="bool", default=False, aliases=["skip_tls_certs_check"]
             ),
             plain_http=dict(type="bool", default=False),
+            take_ownership=dict(type="bool", default=False),
         )
     )
     return arg_spec
@@ -906,6 +917,7 @@ def main():
     reset_then_reuse_values = module.params.get("reset_then_reuse_values")
     insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
     plain_http = module.params.get("plain_http")
+    take_ownership = module.params.get("take_ownership")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -921,6 +933,14 @@ def main():
         if LooseVersion(helm_version) < LooseVersion("3.13.0"):
             module.fail_json(
                 msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+    if take_ownership:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.17.0"):
+            module.fail_json(
+                msg="take_ownership requires helm >= 3.17.0, current version is {0}".format(
                     helm_version
                 )
             )
@@ -1083,6 +1103,7 @@ def main():
                     reset_then_reuse_values=reset_then_reuse_values,
                     insecure_skip_tls_verify=insecure_skip_tls_verify,
                     plain_http=plain_http,
+                    take_ownership=take_ownership,
                 )
                 changed = True
 
