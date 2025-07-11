@@ -29,3 +29,4 @@ test_namespace:
   - "helm-chart-with-space-into-name"
   - "helm-reset-then-reuse-values"
   - "helm-insecure"
+  - "helm-test-take-ownership"
