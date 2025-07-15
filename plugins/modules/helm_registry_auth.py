@@ -31,6 +31,7 @@ options:
       - Desired state of the registry.
       - If set to V(present) attempt to log in to the remote registry server using the URL specified in O(host).
       - If set to V(absent) attempt to log out from the remote registry server using the URL specified in O(host).
+      - As helm >= 3.18.0 reports successful logout even if the user is not logged in, this module will report a change regardless of the current state.
     required: false
     default: present
     choices: ['present', 'absent']
@@ -128,6 +129,9 @@ failed:
 
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
 )
 
 
@@ -230,6 +234,13 @@ def main():
                 stderr=err,
                 command=helm_cmd,
             )
+
+    helm_version = module.get_helm_version()
+    if LooseVersion(helm_version) >= LooseVersion("3.18.0") and state == "absent":
+        # https://github.com/ansible-collections/kubernetes.core/issues/944
+        module.warn(
+            "The helm_registry_auth is not idempotent with helm >= 3.18.0, always report a change."
+        )
 
     module.exit_json(changed=changed, stdout=out, stderr=err, command=helm_cmd)
 

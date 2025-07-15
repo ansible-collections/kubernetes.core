@@ -108,15 +108,19 @@
       assert:
         that: "'Removing login credentials' in _helm_registry_auth_logout.stderr"
 
-    - name: Test logout idempotency
-      helm_registry_auth:
-        host: localhost:{{ registry_port }}
-        state: absent
-      register: _helm_registry_auth_logout_idempotency
+    - name: Test idempotency of logout with helm < 3.18.0
+      when: _helm_version.stdout is ansible.builtin.version('v3.18.0', '<')
+      block:
 
-    - name: Assert logout operation did not report change
-      ansible.builtin.assert:
-        that: _helm_registry_auth_logout_idempotency is not changed
+        - name: Test logout idempotency
+          helm_registry_auth:
+            host: localhost:{{ registry_port }}
+            state: absent
+          register: _helm_registry_auth_logout_idempotency
+
+        - name: Assert logout operation did not report change
+          ansible.builtin.assert:
+            that: _helm_registry_auth_logout_idempotency is not changed
 
     - name: Ensure that not able to push to the registry
       ansible.builtin.shell: >-
@@ -133,8 +137,7 @@
       # Helm binary prints the message to stderr
       ansible.builtin.assert:
         that:
-          - "'push access denied' in _save_chart.stderr"
-          - "'authorization failed' in _save_chart.stderr"
+          - "'push access denied' in _save_chart.stderr or 'basic credential not found' in _save_chart.stderr"
           - "_save_chart.rc != 0"
           - "'localhost:{{ registry_port }}' not in _config_json.content | b64decode"
 
@@ -155,7 +158,8 @@
     - name: Assert that the registry is not logged in and auth data is not saved
       ansible.builtin.assert:
         that:
-          - "'401 Unauthorized' in _helm_registry_auth_wrong.stderr"
+          - "'401' in _helm_registry_auth_wrong.stderr"
+          - "'unauthorized' in _helm_registry_auth_wrong.stderr | lower"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.command"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stdout"
           - "'{{ wrong_password }}' not in _helm_registry_auth_correct.stderr"
