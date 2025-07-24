@@ -1,0 +1,91 @@
+- vars:
+    pod: json-patch
+    k8s_wait_timeout: 400
+
+  block:
+    - name: Create a simple pod
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            namespace: "{{ test_namespace }}"
+            name: "{{ pod }}"
+            labels:
+              label1: foo
+          spec:
+            containers:
+              - image: busybox:musl
+                name: busybox
+                command:
+                  - sh
+                  - -c
+                  - while true; do echo $(date); sleep 10; done
+        wait: yes
+        wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
+
+
+    - name: Add a label, and hide some fields
+      kubernetes.core.k8s_json_patch:
+        kind: Pod
+        namespace: "{{ test_namespace }}"
+        name: "{{ pod }}"
+        patch:
+          - op: add
+            path: /metadata/labels/label2
+            value: bar
+        hidden_fields:
+          - metadata.managedFields
+      register: hf1
+
+    - name: Ensure hidden fields are not present
+      assert:
+        that:
+          - "'managedFields' not in hf1.result['metadata']"
+
+
+    - name: Add a label, without hiding our fields
+      kubernetes.core.k8s_json_patch:
+        kind: Pod
+        namespace: "{{ test_namespace }}"
+        name: "{{ pod }}"
+        patch:
+          - op: add
+            path: /metadata/labels/label3
+            value: bar
+        hidden_fields:
+          - something.else
+      register: hf2
+
+    - name: Ensure hidden fields are present
+      assert:
+        that:
+          - "'managedFields' in hf2.result['metadata']"
+
+
+    - name: Patching the same resource with missing hidden fields should have no effect
+      kubernetes.core.k8s_json_patch:
+        kind: Pod
+        namespace: "{{ test_namespace }}"
+        name: "{{ pod }}"
+        patch:
+          - op: add
+            path: /metadata/labels/label2
+            value: bar
+        hidden_fields:
+          - does.not.exist
+      register: hf2
+
+    - name: Ensure no change with missing hidden fields
+      assert:
+        that:
+          - not hf2.changed
+
+
+  always:
+    - name: Remove namespace
+      k8s:
+        kind: Namespace
+        name: "{{ test_namespace }}"
+        state: absent
+      ignore_errors: true
