@@ -40,7 +40,7 @@
       assert:
         that:
           - upgrade is failed
-          - '"-take_ownership requires helm >= 3.17.0" in upgrade.msg'
+          - '"take_ownership requires helm >= 3.17.0" in upgrade.msg'
       when: 'helm_version < "v3.17.0"'
 
     - name: Upgrade chart (take-onwership flag not set)
@@ -63,7 +63,7 @@
       assert:
         that:
           - upgrade is failed
-          - '"-take_ownership requires helm >= 3.17.0" not in upgrade.msg'
+          - '"take_ownership requires helm >= 3.17.0" not in upgrade.msg'
       when: 'helm_version < "v3.17.0"'
 
   always:
