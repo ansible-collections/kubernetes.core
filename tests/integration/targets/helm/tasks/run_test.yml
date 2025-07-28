@@ -47,6 +47,9 @@
 - name: Test insecure registry flag feature
   include_tasks: test_helm_insecure.yml
 
+- name: Test take ownership flag feature
+  include_tasks: test_helm_take_ownership.yml
+
 - name: Clean helm install
   file:
     path: "{{ item }}"
