@@ -1029,13 +1029,13 @@ releases:
       - module_utils/k8s/service - fix issue when trying to delete resource using
         `delete_options` and `check_mode=true` (https://github.com/ansible-collections/kubernetes.core/issues/892).
       minor_changes:
-      - Bump version of ansible-lint to 25.1.2 (https://github.com/ansible-collections/kubernetes.core/pull/919).
+      - kubernetes.core - Bump version of ``ansible-lint`` to ``25.1.2`` (https://github.com/ansible-collections/kubernetes.core/pull/919).
       - action/k8s_info - update templating mechanism with changes from ``ansible-core
         2.19`` (https://github.com/ansible-collections/kubernetes.core/pull/888).
-      - helm - add reset_then_reuse_values support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
-      - helm - add support for ``insecure_skip_tls_verify`` option to helm and helm_repository(https://github.com/ansible-collections/kubernetes.core/issues/694).
+      - helm - add ``reset_then_reuse_values`` support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
+      - helm - add support for ``insecure_skip_tls_verify`` option to helm and ``helm_repository`` (https://github.com/ansible-collections/kubernetes.core/issues/694).
       release_summary: This release includes minor changes, bug fixes and also bumps
-        ansible-lint version to ``25.1.2``.
+        ``ansible-lint`` version to ``25.1.2``.
     fragments:
     - 20250324-k8s_info-templating.yaml
     - 5.3.0.yml
@@ -1044,3 +1044,18 @@ releases:
     - 898-k8s-dont-delete-in-check-mode.yaml
     - 919-update-ansible-lint-version.yaml
     release_date: '2025-05-16'
+  5.4.0:
+    changes:
+      bugfixes:
+      - The ``kubeconfig`` option should return the full manifest output (https://github.com/ansible-collections/kubernetes.core/issues/870).
+      minor_changes:
+      - Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0``
+        (https://github.com/ansible-collections/kubernetes.core/pull/946).
+      release_summary: This release updates the ``helm_registry_auth`` module to match the behavior of ``helm >= 3.18.0`` which reports
+        a successful logout regardless of the current state (i.e., no idempotency).
+    fragments:
+    - 20250411-kubeconfig-no_log-revert.yaml
+    - 20250503-fix-unit-tests.yml
+    - 20250605-fix-helm_registry_auth-integration_test.yaml
+    - 5.4.0.yml
+    release_date: '2025-07-28'
