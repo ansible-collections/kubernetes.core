@@ -15,7 +15,7 @@ This release updates the ``helm_registry_auth`` module to match the behavior of 
 Minor Changes
 -------------
 
-- Module ``helm_registry_auth`` do not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946)
+- Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946)
 
 Bugfixes
 --------

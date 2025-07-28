@@ -1051,8 +1051,7 @@ releases:
       minor_changes:
       - Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0``
         (https://github.com/ansible-collections/kubernetes.core/pull/946).
-      release_summary: This release updates the ``helm_registry_auth`` module to match the behavior of ``helm >= 3.18.0`` which reports
-        a successful logout regardless of the current state (i.e., no idempotency).
+      release_summary: This release updates the ``helm_registry_auth`` module to match the behavior of ``helm >= 3.18.0`` which reports a successful logout regardless of the current state (i.e., no idempotency).
     fragments:
     - 20250411-kubeconfig-no_log-revert.yaml
     - 20250503-fix-unit-tests.yml
