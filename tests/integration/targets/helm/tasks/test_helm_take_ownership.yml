@@ -1,0 +1,81 @@
+---
+- name: Test helm take ownership
+  vars:
+    helm_namespace: "{{ test_namespace[13] }}"
+  block:
+
+    - name: Initial chart installation (no flag set)
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_test_oci }}"
+        release_name: test-take-ownership
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: true
+      register: install
+
+    - name: Validate that take-ownership flag is not set
+      assert:
+        that:
+          - install is changed
+          - '"--take-ownership" not in install.command'
+
+    - name: Upgrade chart (take-onwership flag set)
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_test_oci }}"
+        release_name: test-take-ownership
+        release_namespace: "{{ helm_namespace }}"
+        take_ownership: true
+        values:
+          commonLabels:
+            take-onwership: "set"
+      register: upgrade
+      ignore_errors: true
+
+    - name: Validate that take-ownership flag IS set if helm version is >= 3.17.0
+      assert:
+        that:
+          - upgrade is changed
+          - '"--take-ownership" in upgrade.command'
+      when: '"v3.17.0" <= helm_version'
+
+    - name: Validate that feature fails for helm < 3.17.0
+      assert:
+        that:
+          - upgrade is failed
+          - '"take_ownership requires helm >= 3.17.0" in upgrade.msg'
+      when: 'helm_version < "v3.17.0"'
+
+    - name: Upgrade chart (take-onwership flag not set)
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_test_oci }}"
+        release_name: test-take-ownership
+        release_namespace: "{{ helm_namespace }}"
+        values:
+          commonLabels:
+            take-onwership: "not-set"
+      register: upgrade
+      ignore_errors: true
+
+    - name: Validate that take-ownership flag IS set if helm version is >= 3.17.0
+      assert:
+        that:
+          - upgrade is changed
+          - '"--take-ownership" not in upgrade.command'
+      when: '"v3.17.0" <= helm_version'
+
+    - name: Validate that feature fails for helm < 3.17.0
+      assert:
+        that:
+          - upgrade is changed
+          - upgrade.msg is not defined
+      when: 'helm_version < "v3.17.0"'
+
+  always:
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent
