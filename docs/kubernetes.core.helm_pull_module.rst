@@ -196,6 +196,27 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>plain_http</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.1.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Use HTTP instead of HTTPS when working with OCI registries</div>
+                        <div>Requires Helm &gt;= 3.13.0</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>provenance</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -335,26 +356,6 @@ Parameters
                 <td>
                         <div>location of public keys used for verification.</div>
                 </td>
-            </tr>
-            <tr>
-              <td colspan="2">
-                  <div class="ansibleOptionAnchor" id="parameter-"></div>
-                  <b>plain_http</b>
-                  <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                  <div style="font-size: small">
-                      <span style="color: purple">boolean</span>
-                  </div>
-                  <div style="font-style: italic; font-size: small; color: darkgreen">added in 5.1.0</div>
-              </td>
-              <td>
-                      <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                  <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
-                                  <li>yes</li>
-                      </ul>
-              </td>
-              <td>
-                      <div>Use HTTP instead of HTTPS when working with OCI registries</div>
-              </td>
             </tr>
     </table>
     <br/>

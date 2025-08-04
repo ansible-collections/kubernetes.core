@@ -21,12 +21,10 @@ For more information about communication, see the [Ansible communication guide](
 ## Requirements
 
 <!--start requires_ansible-->
-### Ansible Version Compatibility
+## Ansible version compatibility
 
-This collection has been tested against following Ansible versions: **>=2.16.0**.
+This collection has been tested against the following Ansible versions: **>=2.16.0**.
 
-For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
-fully qualified collection name (for example, `cisco.ios.ios`).
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
@@ -47,17 +45,17 @@ This collection supports Kubernetes versions >= 1.24.
 Click on the name of a plugin or module to view that content's documentation:
 
 <!--start collection content-->
-### Connection Plugins
+### Connection plugins
 Name | Description
 --- | ---
 [kubernetes.core.kubectl](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
 
-### K8s Filter Plugins
+### K8s filter plugins
 Name | Description
 --- | ---
 kubernetes.core.k8s_config_resource_name|Generate resource name for the given resource of type ConfigMap, Secret
 
-### Lookup Plugins
+### Lookup plugins
 Name | Description
 --- | ---
 [kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_lookup.rst)|Query the K8s API
