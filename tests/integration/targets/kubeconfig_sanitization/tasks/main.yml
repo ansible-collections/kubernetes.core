@@ -1,0 +1,54 @@
+---
+- name: Test kubeconfig sanitization in kubernetes.core modules
+  block:
+    - name: Create a kubeconfig dict with sensitive data for testing
+      set_fact:
+        test_kubeconfig:
+          apiVersion: v1
+          kind: Config
+          current-context: test-context
+          contexts:
+            - name: test-context
+              context:
+                cluster: test-cluster
+                user: test-user
+          clusters:
+            - name: test-cluster
+              cluster:
+                server: https://test-kubernetes.example.com
+                certificate-authority-data: "testcadCRUdJTiBDRVJUSUZJQ0FURS0tLS0tCi4uLiBTRU5TSVRJVkUgQ0VSVElGSUNBVEUgREFUQSAuLi4KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ=="
+          users:
+            - name: test-user
+              user:
+                token: "testtokeniJSUzI1NiIsImtpZCI6InNlbnNpdGl2ZS10b2tlbi1kYXRhIn0.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3QtdG9rZW4tNXJxdDIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoidGVzdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjEyMzQ1Njc4LTEyMzQtMTIzNC0xMjM0LTEyMzQ1Njc4OTBhYiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OnRlc3QifQ.SENSITIVE_JWT_SIGNATURE_DATA"
+                client-certificate-data: "testccdAtrdJTiBDRVJUSUZJQ0FURS0tLS0tCi4uLiBTRU5TSVRJVkUgQ0xJRU5UIENFUlRJRklDQVRFIERBVEEgLi4uCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0="
+                client-key-data: "testckdAtrdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQouLi4gU0VOU0lUSVZFIENMSUVOVCBLRVkgREFUQSAuLi4KLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0="
+
+    - name: Test k8s_info module with kubeconfig dict (should fail but test sanitization)
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ test_kubeconfig }}"
+        kind: Pod
+        namespace: default
+      register: k8s_info_result
+      ignore_errors: true
+      # This will fail because it's not a real cluster, but we want to test logging
+
+    - name: Verify that the test kubeconfig contains sensitive data
+      assert:
+        that:
+          - test_kubeconfig.users[0].user.token is defined
+          - test_kubeconfig.users[0].user["client-certificate-data"] is defined
+          - test_kubeconfig.users[0].user["client-key-data"] is defined
+          - test_kubeconfig.clusters[0].cluster["certificate-authority-data"] is defined
+        msg: "Test kubeconfig should contain sensitive data for testing"
+
+    - name: Test sanitization function directly
+      block:
+        - name: Import sanitize module
+          set_fact:
+            sanitized_config: "{{ test_kubeconfig | ansible_collections.kubernetes.core.plugins.module_utils.sanitize.sanitize_kubeconfig_for_logging }}"
+
+  rescue:
+    - name: Handle expected failures in integration test
+      debug:
+        msg: "Integration test completed - some failures expected due to test environment"

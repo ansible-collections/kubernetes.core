@@ -6,6 +6,9 @@ from ansible.module_utils.common.text.converters import to_text
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.sanitize import (
+    sanitize_module_return_value,
+)
 
 
 class AnsibleK8SModule:
@@ -70,10 +73,16 @@ class AnsibleK8SModule:
         return self._module.debug(*args, **kwargs)
 
     def exit_json(self, *args, **kwargs):
-        return self._module.exit_json(*args, **kwargs)
+        # Apply kubeconfig sanitization to the result before logging
+        sanitized_result = sanitize_module_return_value(kwargs)
+
+        return self._module.exit_json(*args, **sanitized_result)
 
     def fail_json(self, *args, **kwargs):
-        return self._module.fail_json(*args, **kwargs)
+        # Apply kubeconfig sanitization to failure data as well
+        sanitized_result = sanitize_module_return_value(kwargs)
+
+        return self._module.fail_json(*args, **sanitized_result)
 
     def fail_from_exception(self, exception):
         msg = to_text(exception)

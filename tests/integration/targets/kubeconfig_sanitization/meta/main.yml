@@ -1,0 +1,4 @@
+---
+dependencies:
+  - setup_namespace
+  - setup_kubeconfig
