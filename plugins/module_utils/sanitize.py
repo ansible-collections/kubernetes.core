@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
 import copy
+
 from ansible.module_utils.six import string_types
 
 __metaclass__ = type
@@ -87,10 +88,10 @@ def sanitize_module_return_value(result):
         # Check module_args
         if "module_args" in invocation and isinstance(invocation["module_args"], dict):
             if "kubeconfig" in invocation["module_args"]:
-                invocation["module_args"]["kubeconfig"] = (
-                    sanitize_kubeconfig_for_logging(
-                        invocation["module_args"]["kubeconfig"]
-                    )
+                invocation["module_args"][
+                    "kubeconfig"
+                ] = sanitize_kubeconfig_for_logging(
+                    invocation["module_args"]["kubeconfig"]
                 )
 
         # Check direct args

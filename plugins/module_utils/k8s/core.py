@@ -3,11 +3,11 @@ from typing import Optional
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.common.text.converters import to_text
-from ansible_collections.kubernetes.core.plugins.module_utils.version import (
-    LooseVersion,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.sanitize import (
     sanitize_module_return_value,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
 )
 
 

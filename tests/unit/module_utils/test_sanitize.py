@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import copy
+
 from ansible_collections.kubernetes.core.plugins.module_utils.sanitize import (
+    SENSITIVE_CLUSTER_FIELDS,
+    SENSITIVE_USER_FIELDS,
+    sanitize_kubeconfig_dict,
     sanitize_kubeconfig_for_logging,
     sanitize_module_return_value,
-    sanitize_kubeconfig_dict,
-    SENSITIVE_USER_FIELDS,
-    SENSITIVE_CLUSTER_FIELDS,
 )
 
 
