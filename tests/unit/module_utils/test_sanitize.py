@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pytest
 import copy
 from ansible_collections.kubernetes.core.plugins.module_utils.sanitize import (
     sanitize_kubeconfig_for_logging,
