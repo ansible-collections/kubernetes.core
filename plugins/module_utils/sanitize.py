@@ -1,13 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Copyright: (c) 2024, Red Hat | Ansible
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
-"""
-Module for sanitizing sensitive data in module outputs and logs,
-specifically for kubeconfig data structures.
-"""
-
 from __future__ import absolute_import, division, print_function
 
 import copy
