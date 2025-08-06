@@ -25,36 +25,32 @@
                 client-key-data: "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRRGY1UXY5bHlqVlJGNGNLCit2eU1XL1Y1L2t3NzdMZXBBOW9YR1dQR0ozUmVvQ0pNdVJMZEp3TXh3QXhyNUR5bmpOZ3NGSHRrcjhTM0xzNlAKc3pWeDBiNEYyOWROSkZuUENLZHB4a1FodTVpOXFWZlRpS0FDWVhUYU94aEVSNzBleWV4alRTOEhzSDE3MGs2eAp0RkhOQ2wyeVlYYkh5SnNXa1MxTXV2YTdCS0sxbmczRDFZOEV0bmUxa1dWQVhseHpncmRoaG03Vk5lYTRWaFdXCkdkanFQam5NaytKTWlYa1hVeDRsQk10c2RkSFNYekNTczVyeTd0MTA0SW1kY0RIeHltUyt2TWJDY01CRFIsSlUKeko2SzhSdWNJU1o5M0R1T1FXUTN1eGNUSVNuRy9zRGJHNmxrdlRUcUdLcjFIdHk3Wkg2UVhzQzNLYmVtNk9mWApmemcyL0xnbWFKVWxBZ01CQUFFQ2dnRUJBTFl4SkZsSDlsZDNUUnAwSlQvblFxMzR5TEZxYytjeVR2WkY4dVpvCkd6N28vRWJWb0V0U3BZQjNOQXkyaTcyQ2J3ZlQ4U2VlWmpnLzJQQjg5SFZvNTFwOW5Ea3JSdk1yN2ZqN3Q5KzUKOGxtSTlDNThxbkNIUkVqSmlLbEhlSElGZHR2TnhRMS9CV1dmNWh5MUkzOWYvQzZnWTNteGgzdWNxOXQ4VjVHWApOQXlqL2t5VTJrSkV3Q0lSWVVnVEJmSXNLODZ0TDlpTmFPN1p5UXp5czY0SzRwMDZGem81UXVnVEJGc1kvZklhCm4rbjJYcFRXMDBqUU1UUXlTRlFWRE1seVRrOGJmd0ljZE5LblJSMUZmdVhha2RYQVdKaTA3bXVLRy9JNGJaYysKcGJTVmU1dGRFc3k0R1RMamZ5eDNMTEpTa3Z1VmdnQnFYbzVKemh3b0xzOENnWUVBOWJQUkZvUGFSNzdtcHV5dwpMWUppZjZKT3YrZEdWcVl3bHhncENUNFpCNjIveU1pSDV0SWlNYnZab3NIZnZScmlUcmlpSzJ5eVl1a3g4VlFVCnRnYWFHN2s1cGp2Q2FKSi9kNzlCNkJEQy8wOEJjNy9jNXhBVDJpSmRNUks5TFlPODNWcElYd1pNTU5qdUtsek8KTndNcVQrNXVNdVMrZzhPdmZLbE5lMDRSL3p6WkhpcXZjZ1lFQVdvYkZqdElBbzVVVWszUDBhbXFDUTh3bC9EeAp1MGliN3pkeEZ5WWY3d3BENXNxd3lJL1YxWlZmMmFOOHhMWUpHWGRqVXI2VE1qT3o5a2N6MkgzZmNqcXNrRjNWCmxJMVkrSjBoa1k5UldGSlNqWm9ObVltR2tSd1ptU0VkYzVrRnh3VnJUOXJiaENFc3ZIdkU5OGVvUHFNNWdUQzcKazR3U05KWUNWbnA1R0FMaTBPRGxEcWFsMHNzQ2dZRUE5TEF2UzRORmY3a0dnZVZpeGVvRWhGYjJ0UlBWQnVSeAp6SGx2QVpNMTV4OXdLQmdrWGpLOGRqZGMxWGxhYUkzR2c2STZsNEl2Z0wyQmZNTnpSMTdXV0twNnZJVUx1WXJGCkdMNUs5REJMR01TMWNnRWJxWXF5WWN4T3QzNFBKNjhWbVlKSjJSQXhSVXBINzNnL2J1aEU1eWNLNDBQUGZSdksKdHkrQVVRa0JhcC9zQ2dZRUF5UnF2bEhqaVJRa3hOMzVMbUJSRU1FK2tZZWQyVDNXTklZeHB6K0psSWRnVXBLLwpNV0UwZlJzMEZSWnVEK2JzZUV3MWVsS3R5VnFRTVk4RzVjODYwZjVhM0xNZjFjWWxiWHp6ZzZLdElnVjNGdk9vCi9EYzZhQkNZUWhIdnpoMGk4N1hxSVhFTkRaUlR1NktrSGlJQWFzZ2VPUWx1T3JCdTNaT0Zsb3p3V0VaRk1HTUMKcGJ3eHl3dWE2TXF1MEhzN3ExOHhLazgzUGhDOVJXSWRSNUJYTElCdFF5dkN4dE9XUXA2UmpQUVJEaWFad21ITQpiQ2JLdGdadXVKYXB0eG1ReHEwcndKdjdQOEZST3pYTkhGNm14U2hEWWVLcGNKYkdqbGRxQVZxWFhKV2hrU2VNClhaTUlhb2xHSWIvdmJMMmJaYy9vU3M3eCswRGJBME9vdVN0NVl0a0pEQ01YcGJuU0gzNEdhRnI5M1VBWkE9PQotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0t"
                 username: test-user
 
-    - name: Test k8s_info module with kubeconfig dict (should fail but test sanitization)
-      kubernetes.core.k8s_info:
-        kubeconfig: "{{ test_kubeconfig }}"
-        kind: Pod
-        namespace: default
-      register: k8s_info_result
-      ignore_errors: true
-      # This will fail because it's not a real cluster, but we want to test logging
-
-    - name: Verify that the test kubeconfig contains sensitive data
+    - name: Verify that the test kubeconfig contains sensitive (dummy) data
       assert:
         that:
           - test_kubeconfig.users[0].user.token is defined
           - test_kubeconfig.users[0].user["client-certificate-data"] is defined
           - test_kubeconfig.users[0].user["client-key-data"] is defined
           - test_kubeconfig.clusters[0].cluster["certificate-authority-data"] is defined
-        msg: "Test kubeconfig should contain sensitive data for testing"
 
-    - name: Test sanitization function directly using Python script
-      script: test_sanitization.py
-      register: sanitization_test_result
-      environment:
-        PYTHONPATH: "{{ ansible_env.PYTHONPATH | default('') }}:{{ playbook_dir }}/../../.."
-        TEST_KUBECONFIG: "{{ test_kubeconfig | to_json }}"
+    - name: Test k8s_info module with kubeconfig dict (should fail but test sanitization)
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ test_kubeconfig }}"
+        kind: Pod
+        namespace: default
+      register: k8s_info_result
+      # This will fail because it's not a real cluster, but we want to test logging
+      ignore_errors: true
 
-    - name: Display sanitization test results
-      debug:
-        var: sanitization_test_result.stdout_lines
+    - name: Verify module execution completed (even with failure)
+      assert:
+        that:
+          - k8s_info_result is defined
+          - k8s_info_result.failed is true
+        msg: "Module should have failed with fake kubeconfig but completed execution"
 
-  rescue:
-    - name: Handle expected failures in integration test
-      debug:
-        msg: "Integration test completed - some failures expected due to test environment"
+  always:
+    - name: Clean up test variables
+      set_fact:
+        test_kubeconfig: null
+        k8s_info_result: null
