@@ -1,6 +1,15 @@
 ---
 - name: Test kubeconfig sanitization in kubernetes.core modules
   block:
+    - name: Set up test data variables
+      set_fact:
+        test_token_data: "dGVzdC10b2tlbi1kYXRh"
+        test_client_cert_data: "dGVzdC1jbGllbnQtY2VydGlmaWNhdGUtZGF0YQ=="
+        test_client_key_data: "dGVzdC1jbGllbnQta2V5LWRhdGE="
+        test_ca_cert_data: "dGVzdC1jZXJ0aWZpY2F0ZS1hdXRob3JpdHktZGF0YQ=="
+        test_server_url: "https://test-kubernetes.example.com"
+        test_username: "test-user"
+
     - name: Create a kubeconfig dict with sensitive data for testing
       set_fact:
         test_kubeconfig:
@@ -15,15 +24,15 @@
           clusters:
             - name: test-cluster
               cluster:
-                server: https://test-kubernetes.example.com
-                certificate-authority-data: "dGVzdC1jZXJ0aWZpY2F0ZS1hdXRob3JpdHktZGF0YQ=="
+                server: "{{ test_server_url }}"
+                certificate-authority-data: "{{ test_ca_cert_data }}"
           users:
             - name: test-user
               user:
-                token: "dGVzdC10b2tlbi1kYXRh"
-                client-certificate-data: "dGVzdC1jbGllbnQtY2VydGlmaWNhdGUtZGF0YQ=="
-                client-key-data: "dGVzdC1jbGllbnQta2V5LWRhdGE="
-                username: test-user
+                token: "{{ test_token_data }}"
+                client-certificate-data: "{{ test_client_cert_data }}"
+                client-key-data: "{{ test_client_key_data }}"
+                username: "{{ test_username }}"
 
     - name: Verify that the test kubeconfig contains sensitive (dummy) data
       assert:
@@ -49,8 +58,42 @@
           - k8s_info_result.failed is true
         msg: "Module should have failed with fake kubeconfig but completed execution"
 
+    - name: Check that sensitive data was sanitized in module invocation
+      assert:
+        that:
+          # Sensitive data should not appear in clear text
+          - "test_token_data not in (k8s_info_result | string)"
+          - "test_client_key_data not in (k8s_info_result | string)"
+          - "test_client_cert_data not in (k8s_info_result | string)"
+          - "test_ca_cert_data not in (k8s_info_result | string)"
+          # Non-sensitive data should still be present
+          - "test_server_url in (k8s_info_result | string)"
+          - "test_username in (k8s_info_result | string)"
+        msg: "Sensitive kubeconfig data should be sanitized but non-sensitive data preserved"
+
+    - name: Test with string kubeconfig path (should be preserved)
+      kubernetes.core.k8s_info:
+        kubeconfig: "/tmp/fake-kubeconfig-file"
+        kind: Pod
+        namespace: default
+      register: string_kubeconfig_result
+      ignore_errors: true
+
+    - name: Verify string kubeconfig path is preserved in logs
+      assert:
+        that:
+          - "'/tmp/fake-kubeconfig-file' in (string_kubeconfig_result | string)"
+        msg: "String kubeconfig paths should be preserved, not sanitized"
+
   always:
     - name: Clean up test variables
       set_fact:
         test_kubeconfig: null
         k8s_info_result: null
+        string_kubeconfig_result: null
+        test_token_data: null
+        test_client_cert_data: null
+        test_client_key_data: null
+        test_ca_cert_data: null
+        test_server_url: null
+        test_username: null
