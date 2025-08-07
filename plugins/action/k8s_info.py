@@ -326,6 +326,44 @@ class ActionModule(ActionBase):
                 "a string or dict expected, but got %s instead" % type(kubeconfig)
             )
 
+    def _add_kubeconfig_sensitive_values_to_no_log(self, kubeconfig):
+        """
+        Add sensitive kubeconfig values to the no_log set to prevent them from being logged.
+
+        This method extracts sensitive values from a kubeconfig dictionary and adds them
+        to Ansible's no_log mechanism, ensuring they won't appear in logs.
+        """
+        sensitive_fields = [
+            "token",
+            "password",
+            "client-certificate-data",
+            "client-key-data",
+            "refresh-token",
+            "id-token",
+            "access-token",
+            "certificate-authority-data",
+            "client-secret",
+        ]
+
+        def _extract_sensitive_values(data, no_log_values):
+            """Recursively extract sensitive values from nested dictionaries"""
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    if key in sensitive_fields and value:
+                        # Add the sensitive value to no_log set
+                        no_log_values.add(str(value))
+                    elif isinstance(value, (dict, list)):
+                        _extract_sensitive_values(value, no_log_values)
+            elif isinstance(data, list):
+                for item in data:
+                    _extract_sensitive_values(item, no_log_values)
+
+        # Get or create the no_log_values set
+        if not hasattr(self, "_no_log_values"):
+            self._no_log_values = set()
+
+        _extract_sensitive_values(kubeconfig, self._no_log_values)
+
     def run(self, tmp=None, task_vars=None):
         """handler for k8s options"""
         if task_vars is None:
@@ -344,6 +382,10 @@ class ActionModule(ActionBase):
 
         kubeconfig = self._task.args.get("kubeconfig", None)
         if kubeconfig:
+            # Add sensitive kubeconfig values to no_log to prevent credential exposure
+            if isinstance(kubeconfig, dict):
+                self._add_kubeconfig_sensitive_values_to_no_log(kubeconfig)
+
             try:
                 self.get_kubeconfig(kubeconfig, remote_transport, new_module_args)
             except AnsibleError as e:
