@@ -1057,4 +1057,4 @@ releases:
     - 20250503-fix-unit-tests.yml
     - 20250605-fix-helm_registry_auth-integration_test.yaml
     - 5.4.0.yml
-    release_date: '2025-08-05'
+    release_date: '2025-08-11'
