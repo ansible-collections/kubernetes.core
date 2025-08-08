@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - checkout the head of the pull request for the splitter checkout-action, so it's able to test new integration tests during the PR check-workflows already (https://github.com/ansible-collections/kubernetes.core/pull/981).
