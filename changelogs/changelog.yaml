@@ -1046,8 +1046,6 @@ releases:
     release_date: '2025-05-16'
   5.4.0:
     changes:
-      bugfixes:
-      - The ``kubeconfig`` option should return the full manifest output (https://github.com/ansible-collections/kubernetes.core/issues/870).
       minor_changes:
       - Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0``
         (https://github.com/ansible-collections/kubernetes.core/pull/946).

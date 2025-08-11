@@ -17,11 +17,6 @@ Minor Changes
 
 - Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946)
 
-Bugfixes
---------
-
-- The ``kubeconfig`` option should return the full manifest output (https://github.com/ansible-collections/kubernetes.core/issues/870).
-
 v5.3.0
 ======
 
