@@ -333,6 +333,27 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>plain_http</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.1.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Use HTTP instead of HTTPS when working with OCI registries</div>
+                        <div>Requires Helm &gt;= 3.13.0</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>post_renderer</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -604,6 +625,27 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>skip_schema_validation</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.1.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Skip the schema validation during install/upgrade.</div>
+                        <div>This feature requires helm &gt;= 3.16.0</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>take_ownership</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -737,26 +779,6 @@ Parameters
                         <div>The use of <em>wait_timeout</em> to wait for kubernetes commands to complete has been deprecated and will be removed after 2022-12-01.</div>
                 </td>
             </tr>
-            <tr>
-              <td colspan="2">
-                  <div class="ansibleOptionAnchor" id="parameter-"></div>
-                  <b>plain_http</b>
-                  <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
-                  <div style="font-size: small">
-                      <span style="color: purple">boolean</span>
-                  </div>
-                  <div style="font-style: italic; font-size: small; color: darkgreen">added in 5.1.0</div>
-              </td>
-              <td>
-                      <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                  <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
-                                  <li>yes</li>
-                      </ul>
-              </td>
-              <td>
-                      <div>Use HTTP instead of HTTPS when working with OCI registries</div>
-                </td>
-            </tr>
     </table>
     <br/>
 
@@ -850,6 +872,12 @@ Examples
         name: test
         chart_ref: "https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz"
         release_namespace: monitoring
+
+    - name: Deploy Bitnami's MongoDB latest chart from OCI registry
+      kubernetes.core.helm:
+        name: test
+        chart_ref: "oci://registry-1.docker.io/bitnamicharts/mongodb"
+        release_namespace: database
 
     # Using complex Values
     - name: Deploy new-relic client chart
