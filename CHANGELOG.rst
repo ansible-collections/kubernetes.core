@@ -4,6 +4,19 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v5.4.0
+======
+
+Release Summary
+---------------
+
+This release updates the ``helm_registry_auth`` module to match the behavior of ``helm >= 3.18.0`` which reports a successful logout regardless of the current state (i.e., no idempotency).
+
+Minor Changes
+-------------
+
+- Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946)
+
 v5.3.0
 ======
 
@@ -124,7 +137,10 @@ Bugfixes
 - integrations test helm_kubeconfig - set helm version to v3.10.3 to avoid incompatability with new bitnami charts (https://github.com/ansible-collections/kubernetes.core/pull/670).
 
 v3.3.1
-=======
+======
+
+Release Summary
+---------------
 
 This release fixes the CI issues with the ``linters`` workflow.
 
