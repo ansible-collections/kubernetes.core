@@ -1,2 +1,0 @@
-trivial:
-  - k8s_rollback - Increase integration test coverage for k8s_rollback module (https://github.com/ansible-collections/kubernetes.core/pull/950).
