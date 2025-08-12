@@ -1081,4 +1081,4 @@ releases:
     - 20250720-k8s-patch-add-hidden-fields.yaml
     - 20250911-add-support-helm-take-ownership.yaml
     - release_summary.yml
-    release_date: '2025-08-12'
+    release_date: '2025-08-13'
