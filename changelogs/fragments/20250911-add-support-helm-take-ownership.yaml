@@ -1,2 +1,0 @@
-minor_changes:
-  - helm - Parameter take_ownership added (https://github.com/ansible-collections/kubernetes.core/pull/957).
