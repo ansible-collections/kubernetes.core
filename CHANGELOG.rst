@@ -26,7 +26,6 @@ Minor Changes
 Bugfixes
 --------
 
-- kubeconfig option should return the full manifest output (https://github.com/ansible-collections/kubernetes.core/issues/870).
 - module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
 
 v6.0.0

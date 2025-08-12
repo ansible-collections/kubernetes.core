@@ -1055,7 +1055,6 @@ releases:
   6.1.0:
     changes:
       bugfixes:
-      - kubeconfig option should return the full manifest output (https://github.com/ansible-collections/kubernetes.core/issues/870).
       - module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
       minor_changes:
       - Module helm_registry_auth do not support idempotency with `helm >= 3.18.0`
@@ -1081,4 +1080,4 @@ releases:
     - 20250720-k8s-patch-add-hidden-fields.yaml
     - 20250911-add-support-helm-take-ownership.yaml
     - release_summary.yml
-    release_date: '2025-08-13'
+    release_date: '2025-08-12'
