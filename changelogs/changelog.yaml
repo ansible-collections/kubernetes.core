@@ -1067,8 +1067,7 @@ releases:
         (https://github.com/ansible-collections/kubernetes.core/pull/934).
       - helm_template - Parameter plain_http added for working with insecure OCI registries
         (https://github.com/ansible-collections/kubernetes.core/pull/934).
-      release_summary: "This release includes a fix for kubeconfig output, added ``plain_http``
-        and ``take_ownership`` parameters for helm modules, support for ``hidden_fields``
+      release_summary: "This release adds ``plain_http`` and ``take_ownership`` parameters for helm modules, support for ``hidden_fields``
         in ``k8s_json_patch``, documented lack of idempotency support in ``helm_registry_auth``
         with ``helm \u2265 3.18.0``, and improved ``k8s_rollback`` test coverage."
     fragments:
