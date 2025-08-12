@@ -26,3 +26,4 @@ ignore: |
   .tox
   .ansible
   tests/output
+  plugins/connection/kubectl.py
