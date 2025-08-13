@@ -11,7 +11,7 @@ v6.1.0
 Release Summary
 ---------------
 
-This release includes a fix for kubeconfig output, added ``plain_http`` and ``take_ownership`` parameters for helm modules, support for ``hidden_fields`` in ``k8s_json_patch``, documented lack of idempotency support in ``helm_registry_auth`` with ``helm ≥ 3.18.0``, and improved ``k8s_rollback`` test coverage.
+This release adds ``plain_http`` and ``take_ownership`` parameters for helm modules, support for ``hidden_fields`` in ``k8s_json_patch``, documented lack of idempotency support in ``helm_registry_auth`` with ``helm ≥ 3.18.0``, and improved ``k8s_rollback`` test coverage.
 
 Minor Changes
 -------------
