@@ -4,6 +4,29 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v6.1.0
+======
+
+Release Summary
+---------------
+
+This release adds ``plain_http`` and ``take_ownership`` parameters for helm modules, support for ``hidden_fields`` in ``k8s_json_patch``, documented lack of idempotency support in ``helm_registry_auth`` with ``helm ≥ 3.18.0``, and improved ``k8s_rollback`` test coverage.
+
+Minor Changes
+-------------
+
+- Module helm_registry_auth do not support idempotency with `helm >= 3.18.0` (https://github.com/ansible-collections/kubernetes.core/pull/946)
+- Module k8s_json_patch - Add support for `hidden_fields` (https://github.com/ansible-collections/kubernetes.core/pull/964).
+- helm - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
+- helm - Parameter take_ownership added (https://github.com/ansible-collections/kubernetes.core/pull/957).
+- helm_pull - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
+- helm_template - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
+
+Bugfixes
+--------
+
+- module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
+
 v6.0.0
 ======
 
