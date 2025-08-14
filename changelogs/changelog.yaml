@@ -977,7 +977,7 @@ releases:
       - kustomize - kustomize plugin fails with deprecation warnings (https://github.com/ansible-collections/kubernetes.core/issues/639).
       - waiter - Fix waiting for daemonset when desired number of pods is 0. (https://github.com/ansible-collections/kubernetes.core/pull/756).
       minor_changes:
-      - Bump version of ansible-lint to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
+      - Bump version of ``ansible-lint`` to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
       - Parameter insecure_registry added to helm_template as equivalent of insecure-skip-tls-verify
         (https://github.com/ansible-collections/kubernetes.core/pull/805).
       - k8s_drain - Improve error message for pod disruption budget when draining
