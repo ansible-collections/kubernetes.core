@@ -43,20 +43,20 @@ v5.3.0
 Release Summary
 ---------------
 
-This release includes minor changes, bug fixes and also bumps ansible-lint version to ``25.1.2``.
+This release includes minor changes, bug fixes and also bumps ``ansible-lint`` version to ``25.1.2``.
 
 Minor Changes
 -------------
 
-- Bump version of ansible-lint to 25.1.2 (https://github.com/ansible-collections/kubernetes.core/pull/919).
+- Bump version of ``ansible-lint`` to 25.1.2 (https://github.com/ansible-collections/kubernetes.core/pull/919).
 - action/k8s_info - update templating mechanism with changes from ``ansible-core 2.19`` (https://github.com/ansible-collections/kubernetes.core/pull/888).
-- helm - add reset_then_reuse_values support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
+- helm - add ``reset_then_reuse_values`` support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
 - helm - add support for ``insecure_skip_tls_verify`` option to helm and helm_repository(https://github.com/ansible-collections/kubernetes.core/issues/694).
 
 Bugfixes
 --------
 
-- module_utils/k8s/service - fix issue when trying to delete resource using `delete_options` and `check_mode=true` (https://github.com/ansible-collections/kubernetes.core/issues/892).
+- module_utils/k8s/service - fix issue when trying to delete resource using ``delete_options`` and ``check_mode=true`` (https://github.com/ansible-collections/kubernetes.core/issues/892).
 
 v5.2.0
 ======
