@@ -251,6 +251,13 @@ options:
     type: bool
     default: False
     version_added: 6.1.0
+  skip_schema_validation:
+    description:
+      - Skip the schema validation during install/upgrade.
+      - This feature requires helm >= 3.16.0
+    type: bool
+    default: false
+    version_added: 6.1.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -568,6 +575,7 @@ def deploy(
     insecure_skip_tls_verify=False,
     plain_http=False,
     take_ownership=False,
+    skip_schema_validation=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -634,6 +642,17 @@ def deploy(
 
     if plain_http:
         deploy_command += " --plain-http"
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --skip-schema-validation"
 
     if values_files:
         for value_file in values_files:
@@ -731,6 +750,7 @@ def helmdiff_check(
     reset_then_reuse_values=False,
     insecure_skip_tls_verify=False,
     plain_http=False,
+    skip_schema_validation=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -747,6 +767,17 @@ def helmdiff_check(
         cmd += " " + "--reset-values=" + str(reset_values)
     if post_renderer:
         cmd += " --post-renderer=" + post_renderer
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            cmd += " --skip-schema-validation"
 
     if values_files:
         for value_file in values_files:
@@ -862,6 +893,7 @@ def argument_spec():
             ),
             plain_http=dict(type="bool", default=False),
             take_ownership=dict(type="bool", default=False),
+            skip_schema_validation=dict(type="bool", default=False),
         )
     )
     return arg_spec
@@ -918,6 +950,7 @@ def main():
     insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
     plain_http = module.params.get("plain_http")
     take_ownership = module.params.get("take_ownership")
+    skip_schema_validation = module.params.get("skip_schema_validation")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -1037,6 +1070,7 @@ def main():
                 reset_then_reuse_values=reset_then_reuse_values,
                 insecure_skip_tls_verify=insecure_skip_tls_verify,
                 plain_http=plain_http,
+                skip_schema_validation=skip_schema_validation,
             )
             changed = True
 
@@ -1065,6 +1099,7 @@ def main():
                     reset_then_reuse_values=reset_then_reuse_values,
                     insecure_skip_tls_verify=insecure_skip_tls_verify,
                     plain_http=plain_http,
+                    skip_schema_validation=skip_schema_validation,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -1104,6 +1139,7 @@ def main():
                     insecure_skip_tls_verify=insecure_skip_tls_verify,
                     plain_http=plain_http,
                     take_ownership=take_ownership,
+                    skip_schema_validation=skip_schema_validation,
                 )
                 changed = True
 
