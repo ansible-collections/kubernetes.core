@@ -193,6 +193,11 @@ options:
     type: list
     elements: str
     version_added: 3.0.0
+  subresource:
+    description:
+      - Provide the C(subresource) to run your definition against.
+    type: str
+    version_added: 6.1.0
 
 requirements:
   - "python >= 3.9"
@@ -481,6 +486,7 @@ def argspec():
     )
     argument_spec["delete_all"] = dict(type="bool", default=False, aliases=["all"])
     argument_spec["hidden_fields"] = dict(type="list", elements="str")
+    argument_spec["subresource"] = dict(type="str")
 
     return argument_spec
 
