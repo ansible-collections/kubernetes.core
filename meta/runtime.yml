@@ -8,13 +8,16 @@ action_groups:
     - helm_repository
   k8s:
     - k8s
-    - k8s_exec
-    - k8s_info
-    - k8s_log
-    - k8s_scale
-    - k8s_service
+    - k8s_cluster_info
     - k8s_cp
     - k8s_drain
+    - k8s_exec
+    - k8s_info
+    - k8s_json_patch
+    - k8s_log
+    - k8s_rollback
+    - k8s_scale
+    - k8s_service
 
 plugin_routing:
   inventory:
