@@ -18,6 +18,23 @@
         wait: yes
         template: pods_definition.j2
 
+    - name: Create Init Pod
+      k8s:
+        namespace: '{{ copy_namespace }}'
+        template: pods_definition_init.j2
+
+    - kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        name: '{{ pod_with_initcontainer_and_container.name }}'
+        namespace: '{{ copy_namespace }}'
+      register: init_pod_status
+      until: >-
+        init_pod_status.resources|length > 0
+        and 'initContainerStatuses' in init_pod_status.resources.0.status
+        and init_pod_status.resources.0.status.initContainerStatuses|length > 0
+        and init_pod_status.resources.0.status.initContainerStatuses.0.started|bool
+
     - include_tasks: test_copy_errors.yml
     - include_tasks: test_check_mode.yml
     - include_tasks: test_copy_file.yml
@@ -25,6 +42,7 @@
     - include_tasks: test_copy_directory.yml
     - include_tasks: test_copy_large_file.yml
     - include_tasks: test_copy_item_with_space_in_its_name.yml
+    - include_tasks: test_init_container_pod.yml
 
   always:
 
