@@ -575,7 +575,7 @@ def deploy(
     insecure_skip_tls_verify=False,
     plain_http=False,
     take_ownership=False,
-    skip_schema_validation=False
+    skip_schema_validation=False,
 ):
     """
     Install/upgrade/rollback release chart
