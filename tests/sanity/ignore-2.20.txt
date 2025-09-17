@@ -29,3 +29,9 @@ plugins/modules/k8s_taint.py validate-modules:return-syntax-error
 tests/integration/targets/helm_diff/files/test-chart-reuse-values/templates/configmap.yaml yamllint!skip
 tests/integration/targets/helm_registry_auth/tasks/main.yaml yamllint!skip
 tests/integration/targets/helm_diff/files/test-chart-deployment-time/templates/configmap.yaml yamllint!skip
+plugins/action/k8s_info.py pylint:ansible-bad-import-from
+plugins/module_utils/args_common.py pylint:ansible-bad-import-from
+plugins/module_utils/helm.py pylint:ansible-bad-import-from
+plugins/module_utils/k8s/client.py pylint:ansible-bad-import-from
+plugins/module_utils/k8s/resource.py pylint:ansible-bad-import-from
+tests/unit/conftest.py pylint:ansible-bad-import-from
