@@ -30,3 +30,4 @@ test_namespace:
   - "helm-reset-then-reuse-values"
   - "helm-insecure"
   - "helm-test-take-ownership"
+  - "helm-skip-schema-validation"

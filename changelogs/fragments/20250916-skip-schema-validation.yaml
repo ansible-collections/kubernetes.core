@@ -1,0 +1,2 @@
+minor_changes:
+  - Added support of skip-schema-validation in `helm` module (https://github.com/ansible-collections/kubernetes.core/pull/995)
