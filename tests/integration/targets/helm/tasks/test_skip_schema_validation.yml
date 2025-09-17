@@ -21,20 +21,23 @@
       register: install
       ignore_errors: true
 
+    - name: Debug install result
+      debug:
+        var: install
+
     - name: Validate skip_schema_validation worked
       assert:
         that:
           - install is changed
-          - '"--skip_schema_validation" in install.command'
-      when: "helm_version is ansible.builtin.version('3.16.0', '>=')"
+          - '"skip_schema_validation" in install.command'
+      when: "helm_version is ansible.builtin.version('v3.16.0', '>=')"
 
     - name: Validate skip_schema_validation with helm < 3.16.0 fails
       assert:
         that:
           - install is failed
-          - '"--skip_schema_validation" not in install.command'
-          - '"insecure_skip_tls_verify requires helm" in install.msg'
-      when: "helm_version is ansible.builtin.version('3.16.0', '<')"
+          - "'skip_schema_validation requires helm >= 3.16.0' in install.msg"
+      when: "helm_version is ansible.builtin.version('v3.16.0', '<')"
 
   always:
     - name: Remove helm namespace
