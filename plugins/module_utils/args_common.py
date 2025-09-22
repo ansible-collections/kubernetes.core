@@ -1,12 +1,10 @@
 from __future__ import absolute_import, division, print_function
 
-from ansible.module_utils.six import string_types
-
 __metaclass__ = type
 
 
 def list_dict_str(value):
-    if isinstance(value, (list, dict, string_types)):
+    if isinstance(value, (list, dict, str)):
         return value
     raise TypeError
 
