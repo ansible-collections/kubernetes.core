@@ -1,0 +1,2 @@
+bugfixes:
+  - Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).

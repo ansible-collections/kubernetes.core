@@ -5,7 +5,6 @@ import hashlib
 import os
 from typing import Any, Dict, List, Optional
 
-from ansible.module_utils.six import iteritems, string_types
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_MAP,
     AUTH_ARG_SPEC,
@@ -115,7 +114,7 @@ def _load_config(auth: Dict) -> None:
         "persist_config": auth.get("persist_config"),
     }
     if kubeconfig:
-        if isinstance(kubeconfig, string_types):
+        if isinstance(kubeconfig, str):
             kubernetes.config.load_kube_config(config_file=kubeconfig, **optional_arg)
         elif isinstance(kubeconfig, dict):
             kubernetes.config.load_kube_config_from_dict(
@@ -163,7 +162,7 @@ def _create_configuration(auth: Dict):
     except AttributeError:
         configuration = kubernetes.client.Configuration()
 
-    for key, value in iteritems(auth):
+    for key, value in auth.items():
         if key in AUTH_ARG_MAP.keys() and value is not None:
             if key == "api_key":
                 setattr(
