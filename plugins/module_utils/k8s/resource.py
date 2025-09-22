@@ -4,7 +4,6 @@
 import os
 from typing import Dict, Iterable, List, Optional, Union, cast
 
-from ansible.module_utils.six import string_types
 from ansible.module_utils.urls import Request
 
 try:
@@ -78,11 +77,11 @@ def create_definitions(params: Dict) -> List[ResourceDefinition]:
 def from_yaml(definition: Union[str, List, Dict]) -> Iterable[Dict]:
     """Load resource definitions from a yaml definition."""
     definitions: List[Dict] = []
-    if isinstance(definition, string_types):
+    if isinstance(definition, str):
         definitions += yaml.safe_load_all(definition)
     elif isinstance(definition, list):
         for item in definition:
-            if isinstance(item, string_types):
+            if isinstance(item, str):
                 definitions += yaml.safe_load_all(item)
             else:
                 definitions.append(item)

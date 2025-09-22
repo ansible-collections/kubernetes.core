@@ -22,7 +22,6 @@ from ansible.errors import (
 )
 from ansible.module_utils._text import to_bytes, to_native, to_text
 from ansible.module_utils.parsing.convert_bool import boolean
-from ansible.module_utils.six import iteritems, string_types
 from ansible.plugins.action import ActionBase
 
 try:
@@ -100,7 +99,7 @@ class ActionModule(ActionBase):
             "trim_blocks": True,
             "lstrip_blocks": False,
         }
-        if isinstance(template, string_types):
+        if isinstance(template, str):
             # treat this as raw_params
             template_param["path"] = template
         elif isinstance(template, dict):
@@ -120,7 +119,7 @@ class ActionModule(ActionBase):
             ):
                 if s_type in template_args:
                     value = ensure_type(template_args[s_type], "string")
-                    if value is not None and not isinstance(value, string_types):
+                    if value is not None and not isinstance(value, str):
                         raise AnsibleActionFail(
                             "%s is expected to be a string, but got %s instead"
                             % (s_type, type(value))
@@ -196,7 +195,7 @@ class ActionModule(ActionBase):
             )
 
         template_params = []
-        if isinstance(template, string_types) or isinstance(template, dict):
+        if isinstance(template, str) or isinstance(template, dict):
             template_params.append(self.get_template_args(template))
         elif isinstance(template, list):
             for element in template:
@@ -246,7 +245,7 @@ class ActionModule(ActionBase):
                 # add ansible 'template' vars
                 temp_vars = copy.deepcopy(task_vars)
                 overrides = {}
-                for key, value in iteritems(template_item):
+                for key, value in template_item.items():
                     if hasattr(self._templar.environment, key):
                         if value is not None:
                             overrides[key] = value
@@ -303,7 +302,7 @@ class ActionModule(ActionBase):
             )
 
     def get_kubeconfig(self, kubeconfig, remote_transport, new_module_args):
-        if isinstance(kubeconfig, string_types):
+        if isinstance(kubeconfig, str):
             # find the kubeconfig in the expected search path
             if not remote_transport:
                 # kubeconfig is local
