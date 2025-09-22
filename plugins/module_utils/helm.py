@@ -15,7 +15,6 @@ import tempfile
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible.module_utils.six import string_types
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -113,7 +112,7 @@ class AnsibleHelmModule(object):
         kubeconfig_content = None
         kubeconfig = self.params.get("kubeconfig")
         if kubeconfig:
-            if isinstance(kubeconfig, string_types):
+            if isinstance(kubeconfig, str):
                 with open(os.path.expanduser(kubeconfig)) as fd:
                     kubeconfig_content = yaml.safe_load(fd)
             elif isinstance(kubeconfig, dict):
