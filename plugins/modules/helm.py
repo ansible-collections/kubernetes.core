@@ -1067,6 +1067,7 @@ def main():
                 reset_then_reuse_values=reset_then_reuse_values,
                 insecure_skip_tls_verify=insecure_skip_tls_verify,
                 plain_http=plain_http,
+                skip_schema_validation=skip_schema_validation,
             )
             changed = True
 
