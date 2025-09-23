@@ -25,11 +25,11 @@
       debug:
         var: install
 
-    - name: Validate skip_schema_validation worked
+    - name: Validate skip_schema_validation with helm >= 3.16.0 works
       assert:
         that:
           - install is changed
-          - '"skip_schema_validation" in install.command'
+          - "'--skip-schema-validation' in install.command"
       when: "helm_version is ansible.builtin.version('v3.16.0', '>=')"
 
     - name: Validate skip_schema_validation with helm < 3.16.0 fails
