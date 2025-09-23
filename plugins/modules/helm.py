@@ -750,6 +750,7 @@ def helmdiff_check(
     reset_then_reuse_values=False,
     insecure_skip_tls_verify=False,
     plain_http=False,
+    skip_schema_validation=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -804,6 +805,17 @@ def helmdiff_check(
 
     if insecure_skip_tls_verify:
         cmd += " --insecure-skip-tls-verify"
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            cmd += " --skip-schema-validation"
 
     if plain_http:
         helm_version = module.get_helm_version()
@@ -1096,6 +1108,7 @@ def main():
                     reset_then_reuse_values=reset_then_reuse_values,
                     insecure_skip_tls_verify=insecure_skip_tls_verify,
                     plain_http=plain_http,
+                    skip_schema_validation=skip_schema_validation,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
