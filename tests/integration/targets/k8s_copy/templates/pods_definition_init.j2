@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: '{{ pod_with_initcontainer_and_container.name }}'
+spec:
+  initContainers:
+  - name: '{{ pod_with_initcontainer_and_container.container[0] }}'
+    image: busybox
+    command:
+      - /bin/sh
+      - -c
+      - while true;do date;sleep 5; done
+  containers:
+  - name: '{{ pod_with_initcontainer_and_container.container[1] }}'
+    image: busybox
+    command:
+      - /bin/sh
+      - -c
+      - while true;do date;sleep 5; done
