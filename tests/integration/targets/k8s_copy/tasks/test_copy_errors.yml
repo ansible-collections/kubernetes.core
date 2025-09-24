@@ -67,3 +67,21 @@
     that:
       - copy_fake_container is failed
       - copy_fake_container.msg == "Pod has no container this_is_a_fake_container"
+
+# copy file to not started container in pod should fail
+- name: copy file to not started container in pod should fail
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_initcontainer_and_container.name }}'
+    remote_path: /tmp
+    local_path: files/simple_file.txt
+    state: to_pod
+    container: '{{ pod_with_initcontainer_and_container.container[1] }}'
+  ignore_errors: true
+  register: copy_not_started_container
+
+- name: check that error message is as expected
+  assert:
+    that:
+      - copy_not_started_container is failed
+      - copy_not_started_container.msg == "Pod container {{ pod_with_initcontainer_and_container.container[1] }} is not started"

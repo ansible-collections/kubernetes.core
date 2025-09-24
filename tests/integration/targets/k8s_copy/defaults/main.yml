@@ -14,3 +14,9 @@ pod_with_two_container:
 
 pod_without_executable_find:
   name: openjdk-pod
+
+pod_with_initcontainer_and_container:
+  name: pod-copy-2
+  container:
+  - container-20
+  - container-21
