@@ -251,6 +251,13 @@ options:
     type: bool
     default: False
     version_added: 6.1.0
+  skip_schema_validation:
+    description:
+      - Disables JSON schema validation for Chart and values.
+      - This feature requires helm >= 3.16.0
+    type: bool
+    default: False
+    version_added: 6.2.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -568,6 +575,7 @@ def deploy(
     insecure_skip_tls_verify=False,
     plain_http=False,
     take_ownership=False,
+    skip_schema_validation=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -658,6 +666,17 @@ def deploy(
     if set_value_args:
         deploy_command += " " + set_value_args
 
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --skip-schema-validation"
+
     deploy_command += " " + release_name + f" '{chart_name}'"
     return deploy_command
 
@@ -731,6 +750,7 @@ def helmdiff_check(
     reset_then_reuse_values=False,
     insecure_skip_tls_verify=False,
     plain_http=False,
+    skip_schema_validation=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -785,6 +805,17 @@ def helmdiff_check(
 
     if insecure_skip_tls_verify:
         cmd += " --insecure-skip-tls-verify"
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            cmd += " --skip-schema-validation"
 
     if plain_http:
         helm_version = module.get_helm_version()
@@ -862,6 +893,7 @@ def argument_spec():
             ),
             plain_http=dict(type="bool", default=False),
             take_ownership=dict(type="bool", default=False),
+            skip_schema_validation=dict(type="bool", default=False),
         )
     )
     return arg_spec
@@ -918,6 +950,7 @@ def main():
     insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
     plain_http = module.params.get("plain_http")
     take_ownership = module.params.get("take_ownership")
+    skip_schema_validation = module.params.get("skip_schema_validation")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -941,6 +974,15 @@ def main():
         if LooseVersion(helm_version) < LooseVersion("3.17.0"):
             module.fail_json(
                 msg="take_ownership requires helm >= 3.17.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
                     helm_version
                 )
             )
@@ -1037,6 +1079,7 @@ def main():
                 reset_then_reuse_values=reset_then_reuse_values,
                 insecure_skip_tls_verify=insecure_skip_tls_verify,
                 plain_http=plain_http,
+                skip_schema_validation=skip_schema_validation,
             )
             changed = True
 
@@ -1065,6 +1108,7 @@ def main():
                     reset_then_reuse_values=reset_then_reuse_values,
                     insecure_skip_tls_verify=insecure_skip_tls_verify,
                     plain_http=plain_http,
+                    skip_schema_validation=skip_schema_validation,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -1104,6 +1148,7 @@ def main():
                     insecure_skip_tls_verify=insecure_skip_tls_verify,
                     plain_http=plain_http,
                     take_ownership=take_ownership,
+                    skip_schema_validation=skip_schema_validation,
                 )
                 changed = True
 
