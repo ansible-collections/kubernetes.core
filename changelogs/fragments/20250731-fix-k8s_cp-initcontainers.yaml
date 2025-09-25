@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).

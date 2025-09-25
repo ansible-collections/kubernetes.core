@@ -1,0 +1,25 @@
+---
+- set_fact:
+    random_content: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits,punctuation length=128') }}"
+
+- name: Copy content into init container
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_initcontainer_and_container.name }}'
+    remote_path: /file_from_localhost.txt
+    content: '{{ random_content }}'
+    container: '{{ pod_with_initcontainer_and_container.container[0] }}'
+    state: to_pod
+
+- name: Get the content from copied file
+  kubernetes.core.k8s_exec:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_initcontainer_and_container.name }}'
+    container: '{{ pod_with_initcontainer_and_container.container[0] }}'
+    command: cat /file_from_localhost.txt
+  register: exec_out
+
+- name: check that content is found and the same as generated earlier
+  assert:
+    that:
+      - exec_out.stdout == random_content
