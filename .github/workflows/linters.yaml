@@ -20,4 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: run-ansible-lint
-        uses: ansible/ansible-lint@v24.12.2
+        uses: ansible/ansible-lint@main
+        with:
+          gh_action_ref: "v25.5.0"

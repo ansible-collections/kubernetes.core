@@ -854,6 +854,58 @@ releases:
     - 652-fix-json-patch-action.yml
     - 654-helm-expand-user.yml
     release_date: '2024-05-16'
+  3.2.0:
+    changes:
+      minor_changes:
+      - connection/kubectl.py - Added an example of using the kubectl connection plugin
+        to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
+      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 5.0 (https://github.com/ansible-collections/kubernetes.core/pull/723).
+      - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0
+        (https://github.com/ansible-collections/kubernetes.core/pull/734).
+      release_summary: This release comes with documentation updates.
+    fragments:
+    - 20240530-defer-removal-and-ansible-core-support-update.yaml
+    - 20240601-doc-example-of-using-kubectl.yaml
+    - 3.2.0.yml
+    - inventory-update_removal_date.yml
+    release_date: '2024-06-14'
+  3.3.0:
+    changes:
+      bugfixes:
+      - helm - Helm version checks did not support RC versions. They now accept any
+        version tags. (https://github.com/ansible-collections/kubernetes.core/pull/745).
+      - helm_pull - Apply no_log=True to pass_credentials to silence false positive
+        warning. (https://github.com/ansible-collections/kubernetes.core/pull/796).
+      - k8s_drain - Fix k8s_drain does not wait for single pod (https://github.com/ansible-collections/kubernetes.core/issues/769).
+      - k8s_drain - Fix k8s_drain runs into a timeout when evicting a pod which is
+        part of a stateful set  (https://github.com/ansible-collections/kubernetes.core/issues/792).
+      - kubeconfig option should not appear in module invocation log (https://github.com/ansible-collections/kubernetes.core/issues/782).
+      - kustomize - kustomize plugin fails with deprecation warnings (https://github.com/ansible-collections/kubernetes.core/issues/639).
+      - waiter - Fix waiting for daemonset when desired number of pods is 0. (https://github.com/ansible-collections/kubernetes.core/pull/756).
+      minor_changes:
+      - k8s_drain - Improve error message for pod disruption budget when draining
+        a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
+      release_summary: This release comes with improvements to the error messages
+        in the k8s_drain module and several bug fixes.
+    fragments:
+    - 20240530-ansible-core-support-update.yaml
+    - 20240611-helm-rc-version.yaml
+    - 20240620-fix-kustomize-plugin-fails-with-deprecation-warnings.yml
+    - 20241102-fix-ci-post-2.18-issue.yaml
+    - 20241213-kubeconfig-set-no_log-true.yaml
+    - 756-fix-daemonset-waiting.yaml
+    - 770-fix-k8s-drain-doesnt-wait-for-single-pod.yaml
+    - 793-fix-k8s-drain-runs-into-timeout.yaml
+    - 796-false-positive-helmull.yaml
+    - 798-drain-pdb-error-message.yaml
+    - readme_template_update.yml
+    release_date: '2025-01-20'
+  3.3.1:
+    changes:
+      release_summary: This release fixes the CI issues with the ``linters`` workflow.
+    fragments:
+    - release_summary.yml
+    release_date: '2025-03-26'
   4.0.0:
     changes:
       bugfixes:
@@ -901,6 +953,8 @@ releases:
       breaking_changes:
       - Remove support for ``ansible-core<2.15`` (https://github.com/ansible-collections/kubernetes.core/pull/737).
       minor_changes:
+      - connection/kubectl.py - Added an example of using the kubectl connection plugin
+        to the documentation (https://github.com/ansible-collections/kubernetes.core/pull/741).
       - inventory/k8s.py - Defer removal of k8s inventory plugin to version 6.0.0
         (https://github.com/ansible-collections/kubernetes.core/pull/734).
       release_summary: This major release drops support for ``ansible-core<2.15``.
@@ -909,3 +963,132 @@ releases:
     - 20240530-defer-removal-and-ansible-core-support-update.yaml
     - 5.0.0.yml
     release_date: '2024-05-31'
+  5.1.0:
+    changes:
+      bugfixes:
+      - helm - Helm version checks did not support RC versions. They now accept any
+        version tags. (https://github.com/ansible-collections/kubernetes.core/pull/745).
+      - helm_pull - Apply no_log=True to pass_credentials to silence false positive
+        warning. (https://github.com/ansible-collections/kubernetes.core/pull/796).
+      - k8s_drain - Fix k8s_drain does not wait for single pod (https://github.com/ansible-collections/kubernetes.core/issues/769).
+      - k8s_drain - Fix k8s_drain runs into a timeout when evicting a pod which is
+        part of a stateful set  (https://github.com/ansible-collections/kubernetes.core/issues/792).
+      - kubeconfig option should not appear in module invocation log (https://github.com/ansible-collections/kubernetes.core/issues/782).
+      - kustomize - kustomize plugin fails with deprecation warnings (https://github.com/ansible-collections/kubernetes.core/issues/639).
+      - waiter - Fix waiting for daemonset when desired number of pods is 0. (https://github.com/ansible-collections/kubernetes.core/pull/756).
+      minor_changes:
+      - Bump version of ``ansible-lint`` to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
+      - Parameter insecure_registry added to helm_template as equivalent of insecure-skip-tls-verify
+        (https://github.com/ansible-collections/kubernetes.core/pull/805).
+      - k8s_drain - Improve error message for pod disruption budget when draining
+        a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
+      release_summary: This release came with new module ``helm_registry_auth``, improvements
+        to the error messages in the k8s_drain module, new parameter ``insecure_registry``
+        for ``helm_template`` module and several bug fixes.
+    fragments:
+    - 0-readme.yml
+    - 20240601-doc-example-of-using-kubectl.yaml
+    - 20240611-helm-rc-version.yaml
+    - 20240620-fix-kustomize-plugin-fails-with-deprecation-warnings.yml
+    - 20241102-fix-ci-post-2.18-issue.yaml
+    - 20241103-completly-remove-obsolate-communication-channel.yaml
+    - 20241207-add-insecure-skip-tls-verify-to-helm-template.yaml
+    - 20241213-kubeconfig-set-no_log-true.yaml
+    - 756-fix-daemonset-waiting.yaml
+    - 765-bump-ansible-lint-version.yml
+    - 770-fix-k8s-drain-doesnt-wait-for-single-pod.yaml
+    - 793-fix-k8s-drain-runs-into-timeout.yaml
+    - 796-false-positive-helmull.yaml
+    - 798-drain-pdb-error-message.yaml
+    - readme_template_update.yml
+    modules:
+    - description: Helm registry authentication module
+      name: helm_registry_auth
+      namespace: ''
+    release_date: '2025-01-20'
+  5.2.0:
+    changes:
+      minor_changes:
+      - k8s - Extend hidden_fields to allow the expression of more complex field types
+        to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+      - k8s_info - Extend hidden_fields to allow the expression of more complex field
+        types to be hidden (https://github.com/ansible-collections/kubernetes.core/pull/872)
+      - 'waiter.py - add ClusterOperator support. The module can now check OpenShift
+        cluster health by verifying ClusterOperator status requiring ''Available:
+        True'', ''Degraded: False'', and ''Progressing: False'' for success. (https://github.com/ansible-collections/kubernetes.core/issues/869)'
+      release_summary: This release adds more functionality to the hidden_fields option
+        and support for waiting on ClusterOperators to reach a ready state.
+    fragments:
+    - 5.2.0.yml
+    - 643-extend-hidden-fields.yaml
+    - 879-clusteroperator-waiter.py.yaml
+    release_date: '2025-03-27'
+  5.3.0:
+    changes:
+      bugfixes:
+      - module_utils/k8s/service - fix issue when trying to delete resource using
+        `delete_options` and `check_mode=true` (https://github.com/ansible-collections/kubernetes.core/issues/892).
+      minor_changes:
+      - kubernetes.core - Bump version of ``ansible-lint`` to ``25.1.2`` (https://github.com/ansible-collections/kubernetes.core/pull/919).
+      - action/k8s_info - update templating mechanism with changes from ``ansible-core
+        2.19`` (https://github.com/ansible-collections/kubernetes.core/pull/888).
+      - helm - add ``reset_then_reuse_values`` support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
+      - helm - add support for ``insecure_skip_tls_verify`` option to helm and ``helm_repository`` (https://github.com/ansible-collections/kubernetes.core/issues/694).
+      release_summary: This release includes minor changes, bug fixes and also bumps
+        ``ansible-lint`` version to ``25.1.2``.
+    fragments:
+    - 20250324-k8s_info-templating.yaml
+    - 5.3.0.yml
+    - 694-add-insecure-skip-tls-verify.yml
+    - 800-helm-add-reset_then_reuse_values-support.yml
+    - 898-k8s-dont-delete-in-check-mode.yaml
+    - 919-update-ansible-lint-version.yaml
+    release_date: '2025-05-16'
+  5.4.0:
+    changes:
+      minor_changes:
+      - Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0``
+        (https://github.com/ansible-collections/kubernetes.core/pull/946).
+      release_summary: This release updates the ``helm_registry_auth`` module to match the behavior of ``helm >= 3.18.0`` which reports a successful logout regardless of the current state (i.e., no idempotency).
+    fragments:
+    - 20250411-kubeconfig-no_log-revert.yaml
+    - 20250503-fix-unit-tests.yml
+    - 20250605-fix-helm_registry_auth-integration_test.yaml
+    - 5.4.0.yml
+    release_date: '2025-08-12'
+  6.0.0:
+    changes:
+      breaking_changes:
+      - Remove deprecated ``k8s`` invetory plugin (https://github.com/ansible-collections/kubernetes.core/pull/867).
+      - Remove support for ``ansible-core<2.16`` (https://github.com/ansible-collections/kubernetes.core/pull/867).
+    fragments:
+    - 20250121-breaking-changes-6.0.0.yml
+    release_date: '2025-05-19'
+  6.1.0:
+    changes:
+      bugfixes:
+      - module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
+      minor_changes:
+      - Module helm_registry_auth do not support idempotency with `helm >= 3.18.0`
+        (https://github.com/ansible-collections/kubernetes.core/pull/946)
+      - Module k8s_json_patch - Add support for `hidden_fields` (https://github.com/ansible-collections/kubernetes.core/pull/964).
+      - helm - Parameter plain_http added for working with insecure OCI registries
+        (https://github.com/ansible-collections/kubernetes.core/pull/934).
+      - helm - Parameter take_ownership added (https://github.com/ansible-collections/kubernetes.core/pull/957).
+      - helm_pull - Parameter plain_http added for working with insecure OCI registries
+        (https://github.com/ansible-collections/kubernetes.core/pull/934).
+      - helm_template - Parameter plain_http added for working with insecure OCI registries
+        (https://github.com/ansible-collections/kubernetes.core/pull/934).
+      release_summary: "This release adds ``plain_http`` and ``take_ownership`` parameters for helm modules, support for ``hidden_fields``
+        in ``k8s_json_patch``, documented lack of idempotency support in ``helm_registry_auth``
+        with ``helm \u2265 3.18.0``, and improved ``k8s_rollback`` test coverage."
+    fragments:
+    - 20250411-kubeconfig-no_log-revert.yaml
+    - 20250428-k8s-service-hide-fields-first.yaml
+    - 20250522-add-plain-http-for-oci-registries.yaml
+    - 20250605-fix-helm_registry_auth-integration_test.yaml
+    - 20250704-k8s-rollback-integration-test-coverage.yaml
+    - 20250720-k8s-patch-add-hidden-fields.yaml
+    - 20250911-add-support-helm-take-ownership.yaml
+    - release_summary.yml
+    release_date: '2025-08-12'

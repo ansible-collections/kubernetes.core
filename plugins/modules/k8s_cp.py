@@ -79,6 +79,7 @@ options:
 
 notes:
     - the tar binary is required on the container when copying from local filesystem to pod.
+    - the (init) container has to be started before you copy files or directories to it.
 """
 
 EXAMPLES = r"""

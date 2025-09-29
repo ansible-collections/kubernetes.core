@@ -5,16 +5,25 @@ rules:
   braces:
     max-spaces-inside: 1
     level: error
+
   brackets:
     max-spaces-inside: 1
     level: error
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
   document-start: disable
   line-length: disable
   truthy: disable
   indentation:
     spaces: 2
     indent-sequences: consistent
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
 ignore: |
   .cache
   .tox
+  .ansible
   tests/output
+  plugins/connection/kubectl.py

@@ -145,6 +145,16 @@ options:
     required: false
     default: True
     version_added: 3.0.0
+  reset_then_reuse_values:
+    description:
+      - When upgrading package, reset the values to the ones built into the chart, apply the last release's values and merge in any overrides from
+        parameters O(release_values), O(values_files) or O(set_values).
+      - If O(reset_values) or O(reuse_values) is set to V(True), this is ignored.
+      - This feature requires helm diff >= 3.9.12.
+    type: bool
+    required: false
+    default: False
+    version_added: 6.0.0
 
 #Helm options
   disable_hook:
@@ -218,6 +228,36 @@ options:
       - mutually exclusive with with C(replace).
     type: int
     version_added: 2.2.0
+  insecure_skip_tls_verify:
+    description:
+      - Skip tls certificate checks for the chart download.
+      - Do not confuse with the C(validate_certs) option.
+      - This option is only available for helm >= 3.16.0.
+    type: bool
+    default: False
+    aliases: [ skip_tls_certs_check ]
+    version_added: 5.3.0
+  plain_http:
+    description:
+      - Use HTTP instead of HTTPS when working with OCI registries
+      - Requires Helm >= 3.13.0
+    type: bool
+    default: False
+    version_added: 6.1.0
+  take_ownership:
+    description:
+      - When upgrading, Helm will ignore the check for helm annotations and take ownership of the existing resources
+      - This feature requires helm >= 3.17.0
+    type: bool
+    default: False
+    version_added: 6.1.0
+  skip_schema_validation:
+    description:
+      - Disables JSON schema validation for Chart and values.
+      - This feature requires helm >= 3.16.0
+    type: bool
+    default: False
+    version_added: 6.2.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -299,6 +339,12 @@ EXAMPLES = r"""
     name: test
     chart_ref: "https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz"
     release_namespace: monitoring
+
+- name: Deploy Bitnami's MongoDB latest chart from OCI registry
+  kubernetes.core.helm:
+    name: test
+    chart_ref: "oci://registry-1.docker.io/bitnamicharts/mongodb"
+    release_namespace: database
 
 # Using complex Values
 - name: Deploy new-relic client chart
@@ -476,11 +522,27 @@ def run_dep_update(module, chart_ref):
     rc, out, err = module.run_helm_command(dep_update)
 
 
-def fetch_chart_info(module, command, chart_ref):
+def fetch_chart_info(
+    module, command, chart_ref, insecure_skip_tls_verify=False, plain_http=False
+):
     """
     Get chart info
     """
     inspect_command = command + f" show chart '{chart_ref}'"
+
+    if insecure_skip_tls_verify:
+        inspect_command += " --insecure-skip-tls-verify"
+
+    if plain_http:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
+            module.fail_json(
+                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            inspect_command += " --plain-http"
 
     rc, out, err = module.run_helm_command(inspect_command)
 
@@ -509,6 +571,11 @@ def deploy(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    reset_then_reuse_values=False,
+    insecure_skip_tls_verify=False,
+    plain_http=False,
+    take_ownership=False,
+    skip_schema_validation=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -522,9 +589,22 @@ def deploy(
         deploy_command = command + " upgrade -i"  # install/upgrade
         if reset_values:
             deploy_command += " --reset-values"
+        if take_ownership:
+            deploy_command += " --take-ownership"
 
     if reuse_values is not None:
         deploy_command += " --reuse-values=" + str(reuse_values)
+
+    if reset_then_reuse_values:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.14.0"):
+            module.fail_json(
+                msg="reset_then_reuse_values requires helm >= 3.14.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --reset-then-reuse-values"
 
     if wait:
         deploy_command += " --wait"
@@ -549,6 +629,20 @@ def deploy(
     if create_namespace:
         deploy_command += " --create-namespace"
 
+    if insecure_skip_tls_verify:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="insecure_skip_tls_verify requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --insecure-skip-tls-verify"
+
+    if plain_http:
+        deploy_command += " --plain-http"
+
     if values_files:
         for value_file in values_files:
             deploy_command += " --values=" + value_file
@@ -571,6 +665,17 @@ def deploy(
 
     if set_value_args:
         deploy_command += " " + set_value_args
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            deploy_command += " --skip-schema-validation"
 
     deploy_command += " " + release_name + f" '{chart_name}'"
     return deploy_command
@@ -642,6 +747,10 @@ def helmdiff_check(
     set_value_args=None,
     reuse_values=None,
     reset_values=True,
+    reset_then_reuse_values=False,
+    insecure_skip_tls_verify=False,
+    plain_http=False,
+    skip_schema_validation=False,
 ):
     """
     Use helm diff to determine if a release would change by upgrading a chart.
@@ -675,6 +784,49 @@ def helmdiff_check(
 
     if reuse_values:
         cmd += " --reuse-values"
+
+    if reset_then_reuse_values:
+        helm_diff_version = get_plugin_version("diff")
+        helm_version = module.get_helm_version()
+        fail_msg = ""
+        if LooseVersion(helm_diff_version) < LooseVersion("3.9.12"):
+            fail_msg = "reset_then_reuse_values requires helm diff >= 3.9.12, current version is {0}\n".format(
+                helm_diff_version
+            )
+        if LooseVersion(helm_version) < LooseVersion("3.14.0"):
+            fail_msg += "reset_then_reuse_values requires helm >= 3.14.0, current version is {0}\n".format(
+                helm_version
+            )
+
+        if fail_msg:
+            module.fail_json(msg=fail_msg)
+        else:
+            cmd += " --reset-then-reuse-values"
+
+    if insecure_skip_tls_verify:
+        cmd += " --insecure-skip-tls-verify"
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            cmd += " --skip-schema-validation"
+
+    if plain_http:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
+            module.fail_json(
+                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+        else:
+            cmd += " --plain-http"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -735,6 +887,13 @@ def argument_spec():
             set_values=dict(type="list", elements="dict"),
             reuse_values=dict(type="bool"),
             reset_values=dict(type="bool", default=True),
+            reset_then_reuse_values=dict(type="bool", default=False),
+            insecure_skip_tls_verify=dict(
+                type="bool", default=False, aliases=["skip_tls_certs_check"]
+            ),
+            plain_http=dict(type="bool", default=False),
+            take_ownership=dict(type="bool", default=False),
+            skip_schema_validation=dict(type="bool", default=False),
         )
     )
     return arg_spec
@@ -787,6 +946,11 @@ def main():
     set_values = module.params.get("set_values")
     reuse_values = module.params.get("reuse_values")
     reset_values = module.params.get("reset_values")
+    reset_then_reuse_values = module.params.get("reset_then_reuse_values")
+    insecure_skip_tls_verify = module.params.get("insecure_skip_tls_verify")
+    plain_http = module.params.get("plain_http")
+    take_ownership = module.params.get("take_ownership")
+    skip_schema_validation = module.params.get("skip_schema_validation")
 
     if update_repo_cache:
         run_repo_update(module)
@@ -796,6 +960,33 @@ def main():
     release_status = get_release_status(module, release_name, all_status=all_status)
 
     helm_cmd = module.get_helm_binary()
+
+    if plain_http:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
+            module.fail_json(
+                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+    if take_ownership:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.17.0"):
+            module.fail_json(
+                msg="take_ownership requires helm >= 3.17.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+
+    if skip_schema_validation:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.16.0"):
+            module.fail_json(
+                msg="skip_schema_validation requires helm >= 3.16.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+
     opt_result = {}
     if release_state == "absent" and release_status is not None:
         # skip release statuses 'uninstalled' and 'uninstalling'
@@ -824,7 +1015,9 @@ def main():
             helm_cmd += " --repo=" + chart_repo_url
 
         # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
-        chart_info = fetch_chart_info(module, helm_cmd, chart_ref)
+        chart_info = fetch_chart_info(
+            module, helm_cmd, chart_ref, insecure_skip_tls_verify, plain_http
+        )
 
         if dependency_update:
             if chart_info.get("dependencies"):
@@ -883,6 +1076,10 @@ def main():
                 set_value_args=set_value_args,
                 reuse_values=reuse_values,
                 reset_values=reset_values,
+                reset_then_reuse_values=reset_then_reuse_values,
+                insecure_skip_tls_verify=insecure_skip_tls_verify,
+                plain_http=plain_http,
+                skip_schema_validation=skip_schema_validation,
             )
             changed = True
 
@@ -908,6 +1105,10 @@ def main():
                     set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    reset_then_reuse_values=reset_then_reuse_values,
+                    insecure_skip_tls_verify=insecure_skip_tls_verify,
+                    plain_http=plain_http,
+                    skip_schema_validation=skip_schema_validation,
                 )
                 if would_change and module._diff:
                     opt_result["diff"] = {"prepared": prepared}
@@ -943,6 +1144,11 @@ def main():
                     set_value_args=set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
+                    reset_then_reuse_values=reset_then_reuse_values,
+                    insecure_skip_tls_verify=insecure_skip_tls_verify,
+                    plain_http=plain_http,
+                    take_ownership=take_ownership,
+                    skip_schema_validation=skip_schema_validation,
                 )
                 changed = True
 

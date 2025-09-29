@@ -147,6 +147,13 @@ options:
           - json
           - file
     version_added: 2.4.0
+  plain_http:
+    description:
+      - Use HTTP instead of HTTPS when working with OCI registries
+      - Requires Helm >= 3.13.0
+    type: bool
+    default: False
+    version_added: 6.1.0
 """
 
 EXAMPLES = r"""
@@ -218,6 +225,9 @@ from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
 
 
 def template(
@@ -236,6 +246,7 @@ def template(
     values_files=None,
     include_crds=False,
     set_values=None,
+    plain_http=False,
 ):
     cmd += " template "
 
@@ -261,6 +272,9 @@ def template(
 
     if insecure_registry:
         cmd += " --insecure-skip-tls-verify"
+
+    if plain_http:
+        cmd += " --plain-http"
 
     if show_only:
         for template in show_only:
@@ -307,6 +321,7 @@ def main():
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
             set_values=dict(type="list", elements="dict"),
+            plain_http=dict(type="bool", default=False),
         ),
         supports_check_mode=True,
     )
@@ -327,11 +342,21 @@ def main():
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
     set_values = module.params.get("set_values")
+    plain_http = module.params.get("plain_http")
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
     helm_cmd = module.get_helm_binary()
+
+    if plain_http:
+        helm_version = module.get_helm_version()
+        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
+            module.fail_json(
+                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
+                    helm_version
+                )
+            )
 
     if update_repo_cache:
         update_cmd = helm_cmd + " repo update"
@@ -357,6 +382,7 @@ def main():
         values_files=values_files,
         include_crds=include_crds,
         set_values=set_values_args,
+        plain_http=plain_http,
     )
 
     if not check_mode:

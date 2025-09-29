@@ -58,7 +58,7 @@
           - "'managedFields' not in hf4.resources[0]['metadata']"
 
 
-    - name: Hiding a changed field should still result in a change
+    - name: Hiding a changed field should not result in a change
       k8s:
         definition: "{{ hide_fields_base_configmap | combine({'data':{'hello':'different'}}) }}"
         hidden_fields:
@@ -67,16 +67,17 @@
       register: hf5
       diff: true
 
-    - name: Ensure that hidden changed field changed
+    - name: Ensure that hidden changed field not changed
       assert:
         that:
-          - hf5.changed
+          - not hf5.changed
 
     - name: Apply works with hidden fields
       k8s:
         definition: "{{ hide_fields_base_configmap | combine({'data':{'anew':'value'}}) }}"
         hidden_fields:
           - data
+          - metadata.annotations[kubectl.kubernetes.io/last-applied-configuration]
         apply: true
       register: hf6
       diff: true
@@ -85,6 +86,22 @@
       assert:
         that:
           - hf6.changed
+
+    - name: Ensure hidden fields are not present
+      assert:
+        that:
+          - >-
+            'annotations' not in hf6.result.metadata or
+            'kubectl.kubernetes.io/last-applied-configuration'
+            not in hf6.result.metadata.annotations
+          - >-
+            'annotations' not in hf6.diff.before.metadata or
+            'kubectl.kubernetes.io/last-applied-configuration'
+            not in hf6.diff.before.metadata.annotations
+          - >-
+            'annotations' not in hf6.diff.after.metadata or
+            'kubectl.kubernetes.io/last-applied-configuration'
+            not in hf6.diff.after.metadata.annotations
 
     - name: Hidden field should not show up in deletion
       k8s:

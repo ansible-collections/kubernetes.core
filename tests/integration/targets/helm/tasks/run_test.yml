@@ -28,6 +28,9 @@
 - name: test helm upgrade with reuse_values
   include_tasks: test_helm_reuse_values.yml
 
+- name: test helm upgrade with reset_then_reuse_values
+  include_tasks: test_helm_reset_then_reuse_values.yml
+
 - name: test helm dependency update
   include_tasks: test_up_dep.yml
 
@@ -40,6 +43,15 @@
 # https://github.com/ansible-collections/community.kubernetes/issues/296
 - name: Test Skip CRDS feature in helm chart install
   include_tasks: test_crds.yml
+
+- name: Test insecure registry flag feature
+  include_tasks: test_helm_insecure.yml
+
+- name: Test take ownership flag feature
+  include_tasks: test_helm_take_ownership.yml
+
+- name: Test helm skip_schema_validation
+  include_tasks: test_skip_schema_validation.yml
 
 - name: Clean helm install
   file:

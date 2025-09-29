@@ -23,10 +23,8 @@ For more information about communication, see the [Ansible communication guide](
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against following Ansible versions: **>=2.15.0**.
+This collection has been tested against the following Ansible versions: **>=2.16.0**.
 
-For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
-fully qualified collection name (for example, `cisco.ios.ios`).
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
@@ -42,7 +40,7 @@ Note: Python2 is deprecated from [1st January 2020](https://www.python.org/doc/s
 
 This collection supports Kubernetes versions >= 1.24.
 
-### Included content
+### Included Content
 
 Click on the name of a plugin or module to view that content's documentation:
 
@@ -56,11 +54,6 @@ Name | Description
 Name | Description
 --- | ---
 kubernetes.core.k8s_config_resource_name|Generate resource name for the given resource of type ConfigMap, Secret
-
-### Inventory plugins
-Name | Description
---- | ---
-[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_inventory.rst)|Kubernetes (K8s) inventory source
 
 ### Lookup plugins
 Name | Description
@@ -106,7 +99,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 5.0.0
+    version: 6.1.0
 ```
 
 ### Installing the Kubernetes Python Library
@@ -183,7 +176,7 @@ If upgrading older playbooks which were built prior to Ansible 2.10 and this col
 
 For documentation on how to use individual modules and other content included in this collection, please see the links in the 'Included content' section earlier in this README.
 
-## Ansible Turbo mode Tech Preview
+## Ansible Turbo Mode Tech Preview
 
 
 The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection. By default, this feature is disabled. To enable Turbo mode for modules, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. For example:
@@ -202,7 +195,7 @@ defined in the playbook using `environment` keyword as above, you must set it us
 
 Please read more about Ansible Turbo mode - [here](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/ansible_turbo_mode.rst).
 
-## Contributing to this collection
+## Contributing to this Collection
 
 If you want to develop new content for this collection or improve what's already here, the easiest way to work on the collection is to clone it into one of the configured [`COLLECTIONS_PATHS`](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths), and work on it there.
 
@@ -252,6 +245,8 @@ The process for uploading a supported release to Automation Hub is documented se
 
 <!--List available communication channels. In addition to channels specific to your collection, we also recommend to use the following ones.-->
 
+> **Note:** The `stable-4` branch, which handles all `4.x.y` releases of this collection, is no longer supported. This means that no backports nor releases will be performed on the `stable-4` branch.
+
 We announce releases and important changes through Ansible's [The Bullhorn newsletter](https://github.com/ansible/community/wiki/News#the-bullhorn). Be sure you are [subscribed](https://eepurl.com/gZmiEP).
 
 We take part in the global quarterly [Ansible Contributor Summit](https://github.com/ansible/community/wiki/Contributor-Summit) virtually or in-person. Track [The Bullhorn newsletter](https://eepurl.com/gZmiEP) and join us.
@@ -263,7 +258,7 @@ For the latest supported versions, refer to the release notes below.
 If you encounter issues or have questions, you can submit a support request through the following channels:
  - GitHub Issues: Report bugs, request features, or ask questions by opening an issue in the [GitHub repository]((https://github.com/ansible-collections/kubernetes.core/).
 
-## Release notes
+## Release Notes
 
 See the [raw generated changelog](https://github.com/ansible-collections/kubernetes.core/blob/main/CHANGELOG.rst).
 

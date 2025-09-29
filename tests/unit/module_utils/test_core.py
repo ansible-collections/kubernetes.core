@@ -2,50 +2,57 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import json
+import re
 
 import kubernetes
 import pytest
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
     AnsibleK8SModule,
 )
+from mock import MagicMock, patch
 
 MINIMAL_K8S_VERSION = "24.2.0"
 UNSUPPORTED_K8S_VERSION = "11.0.0"
 
 
-@pytest.mark.parametrize("stdin", [{}], indirect=["stdin"])
-def test_no_warn(monkeypatch, stdin, capfd):
+class FakeAnsibleModule:
+    def __init__(self, **kwargs):
+        pass
+
+    def exit_json(self):
+        raise SystemExit(0)
+
+
+@patch.object(AnsibleK8SModule, "warn")
+def test_no_warn(m_ansible_k8s_module_warn, monkeypatch, capfd):
     monkeypatch.setattr(kubernetes, "__version__", MINIMAL_K8S_VERSION)
 
-    module = AnsibleK8SModule(argument_spec={})
+    m_ansible_k8s_module_warn.side_effect = print
+    module = AnsibleK8SModule(argument_spec={}, module_class=FakeAnsibleModule)
     with pytest.raises(SystemExit):
         module.exit_json()
     out, err = capfd.readouterr()
-
-    return_value = json.loads(out)
-
-    assert return_value.get("exception") is None
-    assert return_value.get("warnings") is None
-    assert return_value.get("failed") is None
+    m_ansible_k8s_module_warn.assert_not_called()
 
 
-@pytest.mark.parametrize("stdin", [{}], indirect=["stdin"])
-def test_warn_on_k8s_version(monkeypatch, stdin, capfd):
+@patch.object(AnsibleK8SModule, "warn")
+def test_warn_on_k8s_version(m_ansible_k8s_module_warn, monkeypatch, capfd):
     monkeypatch.setattr(kubernetes, "__version__", UNSUPPORTED_K8S_VERSION)
 
-    module = AnsibleK8SModule(argument_spec={})
+    m_ansible_k8s_module_warn.side_effect = print
+    module = AnsibleK8SModule(argument_spec={}, module_class=FakeAnsibleModule)
     with pytest.raises(SystemExit):
         module.exit_json()
+
+    m_ansible_k8s_module_warn.assert_called_once()
     out, err = capfd.readouterr()
-
-    return_value = json.loads(out)
-
-    assert return_value.get("warnings") is not None
-    warnings = return_value["warnings"]
-    assert len(warnings) == 1
-    assert "kubernetes" in warnings[0]
-    assert MINIMAL_K8S_VERSION in warnings[0]
+    assert (
+        re.search(
+            r"kubernetes<([0-9]+\.[0-9]+\.[0-9]+) is not supported or tested. Some features may not work.",
+            out,
+        )
+        is not None
+    )
 
 
 dependencies = [
@@ -58,9 +65,17 @@ dependencies = [
 @pytest.mark.parametrize(
     "stdin,desired,actual,result", [({}, *d) for d in dependencies], indirect=["stdin"]
 )
-def test_has_at_least(monkeypatch, stdin, desired, actual, result, capfd):
+@patch.object(AnsibleK8SModule, "warn")
+def test_has_at_least(
+    m_ansible_k8s_module_warn, monkeypatch, stdin, desired, actual, result, capfd
+):
     monkeypatch.setattr(kubernetes, "__version__", actual)
 
+    def fake_warn(x):
+        print(x)
+        raise SystemExit(1)
+
+    m_ansible_k8s_module_warn.side_effect = fake_warn
     module = AnsibleK8SModule(argument_spec={})
 
     assert module.has_at_least("kubernetes", desired) is result
@@ -80,11 +95,18 @@ def test_requires_fails_with_message(
     monkeypatch, stdin, dependency, version, msg, capfd
 ):
     monkeypatch.setattr(kubernetes, "__version__", "24.2.0")
-    module = AnsibleK8SModule(argument_spec={})
+    module = AnsibleK8SModule(argument_spec={}, module_class=FakeAnsibleModule)
+
+    def fake_fail_json(**kwargs):
+        print(f"Printing message => {kwargs}")
+        print(kwargs.get("msg"))
+        raise SystemExit(1)
+
+    module.fail_json = MagicMock()
+    module.fail_json.side_effect = fake_fail_json
+
     with pytest.raises(SystemExit):
         module.requires(dependency, version)
+    module.fail_json.assert_called_once()
     out, err = capfd.readouterr()
-    return_value = json.loads(out)
-
-    assert return_value.get("failed")
-    assert msg in return_value.get("msg")
+    assert msg in out

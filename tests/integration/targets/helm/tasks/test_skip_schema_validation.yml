@@ -1,0 +1,48 @@
+---
+- name: Test helm skip_schema_validation
+  vars:
+    helm_namespace: "{{ test_namespace[14] }}"
+    chart_release_values:
+      replica:
+        replicaCount: 3
+      master:
+        count: 1
+        kind: Deployment
+  block:
+    - name: Chart installation
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: oci://registry-1.docker.io/bitnamicharts/redis
+        release_name: test-redis
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: true
+        release_values: "{{ chart_release_values }}"
+        skip_schema_validation: true
+      register: install
+      ignore_errors: true
+
+    - name: Debug install result
+      debug:
+        var: install
+
+    - name: Validate skip_schema_validation with helm >= 3.16.0 works
+      assert:
+        that:
+          - install is changed
+          - "'--skip-schema-validation' in install.command"
+      when: "helm_version is ansible.builtin.version('v3.16.0', '>=')"
+
+    - name: Validate skip_schema_validation with helm < 3.16.0 fails
+      assert:
+        that:
+          - install is failed
+          - "'skip_schema_validation requires helm >= 3.16.0' in install.msg"
+      when: "helm_version is ansible.builtin.version('v3.16.0', '<')"
+
+  always:
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent

@@ -3,6 +3,7 @@ helm_default_archive_name: "helm-{{ helm_version }}-{{ ansible_system | lower }}
 helm_binary: "/tmp/helm/{{ ansible_system | lower }}-amd64/helm"
 
 chart_test: "ingress-nginx"
+chart_test_oci: "oci://registry-1.docker.io/bitnamicharts/redis"
 chart_test_local_path: "nginx-ingress"
 chart_test_version: 4.2.4
 chart_test_version_local_path: 1.32.0
@@ -26,3 +27,7 @@ test_namespace:
   - "helm-from-url"
   - "helm-reuse-values"
   - "helm-chart-with-space-into-name"
+  - "helm-reset-then-reuse-values"
+  - "helm-insecure"
+  - "helm-test-take-ownership"
+  - "helm-skip-schema-validation"

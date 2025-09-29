@@ -1,8 +1,0 @@
----
-profile: production
-
-exclude_paths:
-  - .ansible/
-  - tests/integration
-  - tests/unit
-  - tests/sanity
