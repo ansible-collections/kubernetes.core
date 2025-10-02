@@ -512,6 +512,7 @@ Notes
 
 .. note::
    - the tar binary is required on the container when copying from local filesystem to pod.
+   - the (init) container has to be started before you copy files or directories to it.
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
 
