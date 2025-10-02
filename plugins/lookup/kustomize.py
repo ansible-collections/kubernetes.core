@@ -66,9 +66,9 @@ EXAMPLES = """
   kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment='HTTP_PROXY=http://proxy.example.com:3128') }}"
 
-  - name: Create kubernetes resources for lookup output with environment variables in dict format
-    kubernetes.core.k8s:
-      definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment={'HTTP_PROXY': 'http://proxy.example.com:3128'}) }}""
+- name: Create kubernetes resources for lookup output with environment variables in dict format
+  kubernetes.core.k8s:
+    definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment={'HTTP_PROXY': 'http://proxy.example.com:3128'}) }}"
 """
 
 RETURN = """
