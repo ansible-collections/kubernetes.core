@@ -37,9 +37,9 @@ DOCUMENTATION = """
       environment:
         description:
         - The environment variables to pass to the kustomize or kubectl command.
-        type: dict
+        type: raw
         default: {}
-        version_added: 6.0.0
+        version_added: 6.2.0
 
     requirements:
       - "python >= 3.6"
@@ -62,9 +62,13 @@ EXAMPLES = """
   kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
 
-- name: Create kubernetes resources for lookup output with environment variables
+- name: Create kubernetes resources for lookup output with environment variables in string format
   kubernetes.core.k8s:
     definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment='HTTP_PROXY=http://proxy.example.com:3128') }}"
+
+  - name: Create kubernetes resources for lookup output with environment variables in dict format
+    kubernetes.core.k8s:
+      definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment={'HTTP_PROXY': 'http://proxy.example.com:3128'}) }}""
 """
 
 RETURN = """
@@ -161,7 +165,7 @@ class LookupModule(LookupBase):
             if isinstance(environment, str):
                 if not all(env.count("=") == 1 for env in environment.split(" ")):
                     raise AnsibleLookupError(
-                        "environment should be dict or string in the format key=value"
+                        "environment should be dict or string in the format key=value, multiple pairs separated by space"
                     )
                 for env in environment.split(" "):
                     key, value = env.split("=")

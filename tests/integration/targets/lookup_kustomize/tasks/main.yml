@@ -118,7 +118,11 @@
     - name: Test kustomize lookup plugin with environment variables in the string format
       set_fact:
         resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='HTTPS_PROXY=http://localhost:8888 VAR2=Flase') }}"
-      ignore_errors: true
+
+    - name: Test kustomize lookup plugin with environment variables in the dict format
+      set_fact:
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment={'HTTPS_PROXY': 'http://localhost:8888', 'VAR2': 'Flase'}) }}"
+
 
     - name: Stop tinyproxy
       ansible.builtin.command: "docker stop tinyproxy"
