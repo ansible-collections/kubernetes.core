@@ -98,6 +98,26 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>environment</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">raw</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.2.0</div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">{}</div>
+                </td>
+                    <td>
+                    </td>
+                <td>
+                        <div>The environment variables to pass to the kustomize or kubectl command.</div>
+                        <div>This can be a dictionary or a string in the format key=value, multiple pairs separated by space.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>opt_dirs</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -144,6 +164,14 @@ Examples
     - name: Create kubernetes resources for lookup output with `--enable-helm` set
       kubernetes.core.k8s:
         definition: "{{ lookup('kubernetes.core.kustomize', dir='/path/to/kustomization', enable_helm=True) }}"
+
+    - name: Create kubernetes resources for lookup output with environment variables in string format
+      kubernetes.core.k8s:
+        definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment='HTTP_PROXY=http://proxy.example.com:3128') }}"
+
+    - name: Create kubernetes resources for lookup output with environment variables in dict format
+      kubernetes.core.k8s:
+        definition: "{{ lookup('kubernetes.core.kustomize', binary_path='/path/to/kubectl', environment={'HTTP_PROXY': 'http://proxy.example.com:3128'}) }}"
 
 
 
