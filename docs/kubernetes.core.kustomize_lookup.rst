@@ -112,6 +112,7 @@ Parameters
                     </td>
                 <td>
                         <div>The environment variables to pass to the kustomize or kubectl command.</div>
+                        <div>This can be a dictionary or a string in the format key=value, multiple pairs separated by space.</div>
                 </td>
             </tr>
             <tr>

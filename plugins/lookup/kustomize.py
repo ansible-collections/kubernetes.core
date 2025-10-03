@@ -37,6 +37,7 @@ DOCUMENTATION = """
       environment:
         description:
         - The environment variables to pass to the kustomize or kubectl command.
+        - This can be a dictionary or a string in the format key=value, multiple pairs separated by space.
         type: raw
         default: {}
         version_added: 6.2.0
