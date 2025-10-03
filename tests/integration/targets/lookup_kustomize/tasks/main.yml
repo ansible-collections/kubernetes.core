@@ -94,6 +94,52 @@
         namespace: "{{ kustomize_ns }}"
         definition: "{{ lookup('kubernetes.core.kustomize', dir=kustomize_dir, opt_dirs=tmp_dir_path) }}"
 
+    - name: Create temporarly directory for test
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .testkustomize
+      register: _tmp_dir_kustomize
+
+    - name: Download helloWorld example
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/refs/heads/master/examples/loadHttp/kustomization.yaml"
+        dest: "{{ _tmp_dir_kustomize.path }}"
+
+    - name: Run tinyproxy in docker
+      # Replace the 'app: hello' with 'app: ${TEST_APP}'
+      ansible.builtin.command: "docker run --rm -d -p 8888:8888 --name=tinyproxy dannydirect/tinyproxy ANY"
+
+    - name: Ensure that tinyproxy is running
+      ansible.builtin.wait_for:
+        host: localhost
+        port: 8888
+        state: started
+
+    - name: Test kustomize lookup plugin with environment variables in the string format
+      set_fact:
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='HTTPS_PROXY=http://localhost:8888 VAR2=Flase') }}"
+
+    - name: Test kustomize lookup plugin with environment variables in the dict format
+      set_fact:
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment={'HTTPS_PROXY': 'http://localhost:8888', 'VAR2': 'Flase'}) }}"
+
+
+    - name: Stop tinyproxy
+      ansible.builtin.command: "docker stop tinyproxy"
+
+    - name: Ensure kustomize lookup plugin fail with proxy down
+      set_fact:
+        resource_kustomize: "{{ lookup('kubernetes.core.kustomize', dir=_tmp_dir_kustomize.path, environment='HTTPS_PROXY=http://localhost:8888 VAR2=Flase') }}"
+      register: result
+      ignore_errors: true
+
+    - name: Assert that kustomize lookup plugin failed
+      ansible.builtin.assert:
+        that:
+        - result.failed
+        - "'proxyconnect tcp: dial' in result.msg"
+        - "'connection refused' in result.msg"
+
   always:
   - name: Delete namespace
     k8s:
@@ -105,4 +151,11 @@
   - name: Delete temporary directory
     file:
       state: absent
-      path: "{{ tmp_dir_path }}"
+      path: "{{ item }}"
+    with_items:
+    - "{{ tmp_dir_path }}"
+    - "{{ _tmp_dir_kustomize.path }}"
+
+  - name: Stop tinyproxy
+    ansible.builtin.command: "docker stop tinyproxy"
+    ignore_errors: true
