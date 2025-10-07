@@ -56,6 +56,34 @@ Breaking Changes / Porting Guide
 - Remove deprecated ``k8s`` invetory plugin (https://github.com/ansible-collections/kubernetes.core/pull/867).
 - Remove support for ``ansible-core<2.16`` (https://github.com/ansible-collections/kubernetes.core/pull/867).
 
+v5.4.0
+======
+
+Release Summary
+---------------
+
+This release updates the ``helm_registry_auth`` module to match the behavior of ``helm >= 3.18.0`` which reports a successful logout regardless of the current state (i.e., no idempotency).
+
+Minor Changes
+-------------
+
+- Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946)
+
+v5.4.1
+======
+
+Release Summary
+---------------
+
+This release includes bugfixes for k8s service field handling, k8s_cp init containers support, and removes deprecated ansible.module_utils.six imports.
+
+Bugfixes
+--------
+
+- Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
+- Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
+- module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
+
 v5.3.0
 ======
 
