@@ -9,16 +9,14 @@ def list_dict_str(value):
     raise TypeError
 
 
-def redact_kubeconfig_sensitive_fields(kubeconfig_data):
+def _extract_sensitive_values_from_kubeconfig(kubeconfig_data):
     """
-    Recursively redact sensitive fields from kubeconfig data.
+    Extract only sensitive string values from kubeconfig data for no_log_values.
 
     :arg kubeconfig_data: Dictionary containing kubeconfig data
-    :returns: Dictionary with sensitive fields redacted
+    :returns: Set of sensitive string values to be added to no_log_values
     """
-    if not isinstance(kubeconfig_data, dict):
-        return kubeconfig_data
-
+    values = set()
     sensitive_fields = {
         "token",
         "password",
@@ -31,25 +29,21 @@ def redact_kubeconfig_sensitive_fields(kubeconfig_data):
         "refresh-token",
     }
 
-    redacted_data = {}
-    for key, value in kubeconfig_data.items():
-        if key in sensitive_fields:
-            redacted_data[key] = "REDACTED"
-        elif isinstance(value, dict):
-            redacted_data[key] = redact_kubeconfig_sensitive_fields(value)
-        elif isinstance(value, list):
-            redacted_data[key] = [
-                (
-                    redact_kubeconfig_sensitive_fields(item)
-                    if isinstance(item, dict)
-                    else item
-                )
-                for item in value
-            ]
-        else:
-            redacted_data[key] = value
+    def _extract_recursive(data, current_path=""):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                path = f"{current_path}.{key}" if current_path else key
+                if key in sensitive_fields:
+                    if isinstance(value, str):
+                        values.add(value)
+                else:
+                    _extract_recursive(value, path)
+        elif isinstance(data, list):
+            for i, item in enumerate(data):
+                _extract_recursive(item, f"{current_path}[{i}]")
 
-    return redacted_data
+    _extract_recursive(kubeconfig_data)
+    return values
 
 
 AUTH_PROXY_HEADERS_SPEC = dict(

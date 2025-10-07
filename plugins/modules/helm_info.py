@@ -232,37 +232,6 @@ def main():
         supports_check_mode=True,
     )
 
-    # Apply kubeconfig redaction for logging purposes
-    kubeconfig = module.params.get("kubeconfig")
-    if kubeconfig and isinstance(kubeconfig, dict):
-        # Add sensitive values to no_log_values to prevent them from appearing in logs
-        sensitive_values = set()
-        sensitive_fields = {
-            "token",
-            "password",
-            "secret",
-            "client-key-data",
-            "client-certificate-data",
-            "certificate-authority-data",
-            "api_key",
-            "access-token",
-            "refresh-token",
-        }
-
-        def _extract_recursive(data):
-            if isinstance(data, dict):
-                for key, value in data.items():
-                    if key in sensitive_fields and isinstance(value, str):
-                        sensitive_values.add(value)
-                    else:
-                        _extract_recursive(value)
-            elif isinstance(data, list):
-                for item in data:
-                    _extract_recursive(item)
-
-        _extract_recursive(kubeconfig)
-        module.no_log_values.update(sensitive_values)
-
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 

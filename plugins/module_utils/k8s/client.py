@@ -107,43 +107,6 @@ def _create_auth_spec(module=None, **kwargs) -> Dict:
     return auth
 
 
-def _extract_sensitive_values_from_kubeconfig(kubeconfig_data):
-    """
-    Extract only sensitive string values from kubeconfig data for no_log_values.
-
-    :arg kubeconfig_data: Dictionary containing kubeconfig data
-    :returns: Set of sensitive string values to be added to no_log_values
-    """
-    values = set()
-    sensitive_fields = {
-        "token",
-        "password",
-        "secret",
-        "client-key-data",
-        "client-certificate-data",
-        "certificate-authority-data",
-        "api_key",
-        "access-token",
-        "refresh-token",
-    }
-
-    def _extract_recursive(data, current_path=""):
-        if isinstance(data, dict):
-            for key, value in data.items():
-                path = f"{current_path}.{key}" if current_path else key
-                if key in sensitive_fields:
-                    if isinstance(value, str):
-                        values.add(value)
-                else:
-                    _extract_recursive(value, path)
-        elif isinstance(data, list):
-            for i, item in enumerate(data):
-                _extract_recursive(item, f"{current_path}[{i}]")
-
-    _extract_recursive(kubeconfig_data)
-    return values
-
-
 def _load_config(auth: Dict) -> None:
     kubeconfig = auth.get("kubeconfig")
     optional_arg = {
@@ -373,16 +336,6 @@ class K8SClient:
 
 def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
     auth_spec = _create_auth_spec(module, **kwargs)
-
-    # Apply kubeconfig redaction for logging purposes
-    if module and auth_spec.get("kubeconfig"):
-        kubeconfig = auth_spec.get("kubeconfig")
-        if isinstance(kubeconfig, dict):
-            # Add original sensitive values to no_log_values to prevent them from appearing in logs
-            module.no_log_values.update(
-                _extract_sensitive_values_from_kubeconfig(kubeconfig)
-            )
-
     if module:
         requires = module.requires
     else:

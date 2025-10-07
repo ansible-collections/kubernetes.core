@@ -18,6 +18,9 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    _extract_sensitive_values_from_kubeconfig,
+)
 
 try:
     import yaml
@@ -27,43 +30,6 @@ try:
 except ImportError:
     YAML_IMP_ERR = traceback.format_exc()
     HAS_YAML = False
-
-
-def _extract_sensitive_values_from_kubeconfig(kubeconfig_data):
-    """
-    Extract only sensitive string values from kubeconfig data for no_log_values.
-
-    :arg kubeconfig_data: Dictionary containing kubeconfig data
-    :returns: Set of sensitive string values to be added to no_log_values
-    """
-    values = set()
-    sensitive_fields = {
-        "token",
-        "password",
-        "secret",
-        "client-key-data",
-        "client-certificate-data",
-        "certificate-authority-data",
-        "api_key",
-        "access-token",
-        "refresh-token",
-    }
-
-    def _extract_recursive(data, current_path=""):
-        if isinstance(data, dict):
-            for key, value in data.items():
-                path = f"{current_path}.{key}" if current_path else key
-                if key in sensitive_fields:
-                    if isinstance(value, str):
-                        values.add(value)
-                else:
-                    _extract_recursive(value, path)
-        elif isinstance(data, list):
-            for i, item in enumerate(data):
-                _extract_recursive(item, f"{current_path}[{i}]")
-
-    _extract_recursive(kubeconfig_data)
-    return values
 
 
 def parse_helm_plugin_list(output=None):
