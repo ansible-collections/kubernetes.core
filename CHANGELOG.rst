@@ -4,6 +4,25 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v6.2.0
+======
+
+Release Summary
+---------------
+
+This release adds minor changes and bugfixes, including support of skip-schema-validation in ``helm`` module and removing deprecated ``ansible.module_utils.six`` imports.
+
+Minor Changes
+-------------
+
+- Add support of skip-schema-validation in ``helm`` module (https://github.com/ansible-collections/kubernetes.core/pull/995)
+- kustomize - Add support of local environ (https://github.com/ansible-collections/kubernetes.core/pull/786).
+
+Bugfixes
+--------
+
+- Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
+- Update the ``k8s_cp`` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
 
 v6.1.0
 ======
@@ -84,7 +103,7 @@ This release came with new module ``helm_registry_auth``, improvements to the er
 Minor Changes
 -------------
 
-- Bump version of ansible-lint to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
+- Bump version of ``ansible-lint`` to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
 - Parameter insecure_registry added to helm_template as equivalent of insecure-skip-tls-verify (https://github.com/ansible-collections/kubernetes.core/pull/805).
 - k8s_drain - Improve error message for pod disruption budget when draining a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
 

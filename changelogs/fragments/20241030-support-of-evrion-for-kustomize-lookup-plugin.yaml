@@ -1,2 +1,0 @@
-minor_changes:
-  - kustomize - add support of local environ (https://github.com/ansible-collections/kubernetes.core/pull/786).
