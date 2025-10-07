@@ -15,11 +15,11 @@ import tempfile
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible_collections.kubernetes.core.plugins.module_utils.version import (
-    LooseVersion,
-)
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     extract_sensitive_values_from_kubeconfig,
+)
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
 )
 
 try:
