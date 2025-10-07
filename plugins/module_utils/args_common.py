@@ -9,6 +9,49 @@ def list_dict_str(value):
     raise TypeError
 
 
+def redact_kubeconfig_sensitive_fields(kubeconfig_data):
+    """
+    Recursively redact sensitive fields from kubeconfig data.
+
+    :arg kubeconfig_data: Dictionary containing kubeconfig data
+    :returns: Dictionary with sensitive fields redacted
+    """
+    if not isinstance(kubeconfig_data, dict):
+        return kubeconfig_data
+
+    sensitive_fields = {
+        "token",
+        "password",
+        "secret",
+        "client-key-data",
+        "client-certificate-data",
+        "certificate-authority-data",
+        "api_key",
+        "access-token",
+        "refresh-token",
+    }
+
+    redacted_data = {}
+    for key, value in kubeconfig_data.items():
+        if key in sensitive_fields:
+            redacted_data[key] = "REDACTED"
+        elif isinstance(value, dict):
+            redacted_data[key] = redact_kubeconfig_sensitive_fields(value)
+        elif isinstance(value, list):
+            redacted_data[key] = [
+                (
+                    redact_kubeconfig_sensitive_fields(item)
+                    if isinstance(item, dict)
+                    else item
+                )
+                for item in value
+            ]
+        else:
+            redacted_data[key] = value
+
+    return redacted_data
+
+
 AUTH_PROXY_HEADERS_SPEC = dict(
     proxy_basic_auth=dict(type="str", no_log=True),
     basic_auth=dict(type="str", no_log=True),
@@ -16,7 +59,7 @@ AUTH_PROXY_HEADERS_SPEC = dict(
 )
 
 AUTH_ARG_SPEC = {
-    "kubeconfig": {"type": "raw", "no_log": True},
+    "kubeconfig": {"type": "raw"},
     "context": {},
     "host": {},
     "api_key": {"no_log": True},
