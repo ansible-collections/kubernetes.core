@@ -157,9 +157,6 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common i
     HELM_AUTH_ARG_SPEC,
     HELM_AUTH_MUTUALLY_EXCLUSIVE,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    redact_kubeconfig_sensitive_fields,
-)
 
 
 # Get Release from all deployed releases

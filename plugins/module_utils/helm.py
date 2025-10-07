@@ -18,9 +18,6 @@ from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
-from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    redact_kubeconfig_sensitive_fields,
-)
 
 try:
     import yaml
