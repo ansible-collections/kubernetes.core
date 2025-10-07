@@ -9,7 +9,7 @@ def list_dict_str(value):
     raise TypeError
 
 
-def _extract_sensitive_values_from_kubeconfig(kubeconfig_data):
+def extract_sensitive_values_from_kubeconfig(kubeconfig_data):
     """
     Extract only sensitive string values from kubeconfig data for no_log_values.
 

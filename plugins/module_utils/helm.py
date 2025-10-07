@@ -19,7 +19,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
-    _extract_sensitive_values_from_kubeconfig,
+    extract_sensitive_values_from_kubeconfig,
 )
 
 try:
@@ -125,7 +125,7 @@ class AnsibleHelmModule(object):
             if kubeconfig_content:
                 # Add original sensitive values to no_log_values to prevent them from appearing in logs
                 self._module.no_log_values.update(
-                    _extract_sensitive_values_from_kubeconfig(kubeconfig_content)
+                    extract_sensitive_values_from_kubeconfig(kubeconfig_content)
                 )
 
         if self.params.get("ca_cert"):
