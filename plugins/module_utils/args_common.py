@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import warnings
+
 
 def list_dict_str(value):
     if isinstance(value, (list, dict, str)):
@@ -28,6 +30,17 @@ def extract_sensitive_values_from_kubeconfig(kubeconfig_data):
         "access-token",
         "refresh-token",
     }
+
+    # Check API version and warn if not v1
+    if isinstance(kubeconfig_data, dict):
+        api_version = kubeconfig_data.get("apiVersion", "v1")
+        if api_version != "v1":
+            warnings.warn(
+                f"Kubeconfig API version '{api_version}' is not 'v1'. "
+                f"Sensitive field redaction is only guaranteed for API version 'v1'. "
+                f"Some sensitive data may not be properly redacted from the logs.",
+                UserWarning,
+            )
 
     def _extract_recursive(data, current_path=""):
         if isinstance(data, dict):

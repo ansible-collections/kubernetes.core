@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import warnings
 
 import pytest
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
@@ -122,6 +123,33 @@ def mock_kubeconfig_without_sensitive_data():
                 "name": "test-user",
                 "user": {
                     "username": "testuser",
+                },
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def mock_kubeconfig_v2():
+    """Mock kubeconfig with API version v2 to test warning behavior."""
+    return {
+        "apiVersion": "v2",
+        "kind": "Config",
+        "clusters": [
+            {
+                "name": "test-cluster",
+                "cluster": {
+                    "server": "https://test-cluster.example.com",
+                    "certificate-authority-data": "fake-ca-data-v2",
+                },
+            }
+        ],
+        "users": [
+            {
+                "name": "test-user",
+                "user": {
+                    "token": "fake-token-v2",
+                    "password": "fake-password-v2",
                 },
             }
         ],
@@ -300,3 +328,74 @@ def test_redaction_placeholder_appears_in_nested_output(
         redacted_output["kubeconfig"]["users"][0]["user"]["refresh-token"]
         == "VALUE_SPECIFIED_IN_NO_LOG_PARAMETER"
     )
+
+
+def test_warning_for_non_v1_api_version(mock_kubeconfig_v2):
+    with pytest.warns(UserWarning) as warning_list:
+        result = extract_sensitive_values_from_kubeconfig(mock_kubeconfig_v2)
+
+    # Verify that exactly one warning was raised
+    assert len(warning_list) == 1
+
+    # Verify the warning message content
+    warning = warning_list[0]
+    assert "Kubeconfig API version 'v2' is not 'v1'" in str(warning.message)
+
+    # Verify that the function still works and extracts sensitive values
+    expected_values = {
+        "fake-ca-data-v2",
+        "fake-token-v2",
+        "fake-password-v2",
+    }
+    assert result == expected_values
+
+
+def test_no_warning_for_v1_api_version(mock_kubeconfig_with_sensitive_data):
+    with warnings.catch_warnings(record=True) as warning_list:
+        warnings.simplefilter("always")  # Capture all warnings
+        result = extract_sensitive_values_from_kubeconfig(
+            mock_kubeconfig_with_sensitive_data
+        )
+
+    # Filter for UserWarning specifically (our warning type)
+    user_warnings = [w for w in warning_list if issubclass(w.category, UserWarning)]
+    assert len(user_warnings) == 0
+
+    # Verify that the function still works normally
+    assert len(result) > 0
+
+
+def test_no_warning_for_missing_api_version():
+    """Test that no warning is raised when apiVersion field is missing (defaults to v1)."""
+    kubeconfig_no_version = {
+        "kind": "Config",
+        "clusters": [
+            {
+                "name": "test-cluster",
+                "cluster": {
+                    "server": "https://test-cluster.example.com",
+                    "certificate-authority-data": "fake-ca-data",
+                },
+            }
+        ],
+        "users": [
+            {
+                "name": "test-user",
+                "user": {
+                    "token": "fake-token",
+                },
+            }
+        ],
+    }
+
+    with warnings.catch_warnings(record=True) as warning_list:
+        warnings.simplefilter("always")  # Capture all warnings
+        result = extract_sensitive_values_from_kubeconfig(kubeconfig_no_version)
+
+    # Filter for UserWarning specifically (our warning type)
+    user_warnings = [w for w in warning_list if issubclass(w.category, UserWarning)]
+    assert len(user_warnings) == 0
+
+    # Verify that the function still works normally
+    expected_values = {"fake-ca-data", "fake-token"}
+    assert result == expected_values
