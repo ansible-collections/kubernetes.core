@@ -2,11 +2,61 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import warnings
+
 
 def list_dict_str(value):
     if isinstance(value, (list, dict, str)):
         return value
     raise TypeError
+
+
+def extract_sensitive_values_from_kubeconfig(kubeconfig_data):
+    """
+    Extract only sensitive string values from kubeconfig data for no_log_values.
+
+    :arg kubeconfig_data: Dictionary containing kubeconfig data
+    :returns: Set of sensitive string values to be added to no_log_values
+    """
+    values = set()
+    sensitive_fields = {
+        "token",
+        "password",
+        "secret",
+        "client-key-data",
+        "client-certificate-data",
+        "certificate-authority-data",
+        "api_key",
+        "access-token",
+        "refresh-token",
+    }
+
+    # Check API version and warn if not v1
+    if isinstance(kubeconfig_data, dict):
+        api_version = kubeconfig_data.get("apiVersion", "v1")
+        if api_version != "v1":
+            warnings.warn(
+                f"Kubeconfig API version '{api_version}' is not 'v1'. "
+                f"Sensitive field redaction is only guaranteed for API version 'v1'. "
+                f"Some sensitive data may not be properly redacted from the logs.",
+                UserWarning,
+            )
+
+    def _extract_recursive(data, current_path=""):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                path = f"{current_path}.{key}" if current_path else key
+                if key in sensitive_fields:
+                    if isinstance(value, str):
+                        values.add(value)
+                else:
+                    _extract_recursive(value, path)
+        elif isinstance(data, list):
+            for i, item in enumerate(data):
+                _extract_recursive(item, f"{current_path}[{i}]")
+
+    _extract_recursive(kubeconfig_data)
+    return values
 
 
 AUTH_PROXY_HEADERS_SPEC = dict(
@@ -16,7 +66,7 @@ AUTH_PROXY_HEADERS_SPEC = dict(
 )
 
 AUTH_ARG_SPEC = {
-    "kubeconfig": {"type": "raw", "no_log": True},
+    "kubeconfig": {"type": "raw"},
     "context": {},
     "host": {},
     "api_key": {"no_log": True},
