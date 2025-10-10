@@ -88,11 +88,11 @@ DOCUMENTATION = """
           variable.
       no_proxy:
         description:
-        - The comma separated list of hosts/domains/IP/CIDR that shouldn't go through proxy. Can also be specified via 
-          K8S_AUTH_NO_PROXY environment variable.
+        - The comma separated list of hosts/domains/IP/CIDR that shouldn't go through proxy.
+          Can also be specified via K8S_AUTH_NO_PROXY environment variable.
         - Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).
-        - This feature requires kubernetes>=19.15.0. When kubernetes library is less than 19.15.0, 
-          it fails even if no_proxy is set correctly.
+        - This feature requires kubernetes>=19.15.0. 
+          When kubernetes library is less than 19.15.0, it fails even if no_proxy is set correctly.
         type: str
       password:
         description:
@@ -106,7 +106,7 @@ DOCUMENTATION = """
       proxy_headers:
         description:
         - The Header used for the HTTP proxy.
-        - Documentation can be found here 
+        - Documentation can be found here
           U(https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html?highlight=proxy_headers#urllib3.util.make_headers).
         type: dict
         suboptions:
