@@ -86,14 +86,48 @@ DOCUMENTATION = """
         description:
         - Provide a username for authenticating with the API. Can also be specified via K8S_AUTH_USERNAME environment
           variable.
+      no_proxy:
+        description:
+        - The comma separated list of hosts/domains/IP/CIDR that shouldn't go through proxy.
+          Can also be specified via K8S_AUTH_NO_PROXY environment variable.
+        - Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).
+        - This feature requires kubernetes>=19.15.0.
+          When kubernetes library is less than 19.15.0, it fails even if no_proxy is set correctly.
+        type: str
       password:
         description:
         - Provide a password for authenticating with the API. Can also be specified via K8S_AUTH_PASSWORD environment
           variable.
+      proxy:
+        description:
+        - The URL of an HTTP proxy to use for the connection. Can also be specified via K8S_AUTH_PROXY environment variable.
+        - Please note that this module does not pick up typical proxy settings from the environment (e.g. HTTP_PROXY).
+        type: str
+      proxy_headers:
+        description:
+        - The Header used for the HTTP proxy.
+        - Documentation can be found here
+          U(https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html?highlight=proxy_headers#urllib3.util.make_headers).
+        type: dict
+        suboptions:
+          proxy_basic_auth:
+            type: str
+            description:
+            - Colon-separated username:password for proxy basic authentication header.
+            - Can also be specified via K8S_AUTH_PROXY_HEADERS_PROXY_BASIC_AUTH environment.
+          basic_auth:
+            type: str
+            description:
+            - Colon-separated username:password for basic authentication header.
+            - Can also be specified via K8S_AUTH_PROXY_HEADERS_BASIC_AUTH environment.
+          user_agent:
+            type: str
+            description:
+            - String representing the user-agent you want, such as foo/1.0.
+            - Can also be specified via K8S_AUTH_PROXY_HEADERS_USER_AGENT environment.
       client_cert:
         description:
-        - Path to a certificate used to authenticate with the API. Can also be specified via K8S_AUTH_CERT_FILE
-          environment
+        - Path to a certificate used to authenticate with the API. Can also be specified via K8S_AUTH_CERT_FILE environment
           variable.
         aliases: [ cert_file ]
       client_key:
