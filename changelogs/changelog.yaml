@@ -1094,9 +1094,10 @@ releases:
         (https://github.com/ansible-collections/kubernetes.core/pull/934).
       - helm_template - Parameter plain_http added for working with insecure OCI registries
         (https://github.com/ansible-collections/kubernetes.core/pull/934).
-      release_summary: "This release adds ``plain_http`` and ``take_ownership`` parameters for helm modules, support for ``hidden_fields``
-        in ``k8s_json_patch``, documented lack of idempotency support in ``helm_registry_auth``
-        with ``helm \u2265 3.18.0``, and improved ``k8s_rollback`` test coverage."
+      release_summary: "This release adds ``plain_http`` and ``take_ownership`` parameters
+        for helm modules, support for ``hidden_fields`` in ``k8s_json_patch``, documented
+        lack of idempotency support in ``helm_registry_auth`` with ``helm \u2265 3.18.0``,
+        and improved ``k8s_rollback`` test coverage."
     fragments:
     - 20250411-kubeconfig-no_log-revert.yaml
     - 20250428-k8s-service-hide-fields-first.yaml
@@ -1107,3 +1108,22 @@ releases:
     - 20250911-add-support-helm-take-ownership.yaml
     - release_summary.yml
     release_date: '2025-08-12'
+  6.2.0:
+    changes:
+      bugfixes:
+      - Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
+      - Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
+      minor_changes:
+      - Add support of skip-schema-validation in ``helm`` module (https://github.com/ansible-collections/kubernetes.core/pull/995)
+      - kustomize - Add support of local environ (https://github.com/ansible-collections/kubernetes.core/pull/786).
+      release_summary: This release adds minor changes and bugfixes, including support
+        of skip-schema-validation in ``helm`` module and removing deprecated
+        ``ansible.module_utils.six`` imports.
+
+    fragments:
+    - 20241030-support-of-evrion-for-kustomize-lookup-plugin.yaml
+    - 20250731-fix-k8s_cp-initcontainers.yaml
+    - 20250916-skip-schema-validation.yaml
+    - 20250922-remove-ansible-six-imports.yaml
+    - 6_2_0.yml
+    release_date: '2025-10-07'
