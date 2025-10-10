@@ -91,7 +91,7 @@ DOCUMENTATION = """
         - The comma separated list of hosts/domains/IP/CIDR that shouldn't go through proxy.
           Can also be specified via K8S_AUTH_NO_PROXY environment variable.
         - Please note that this module does not pick up typical proxy settings from the environment (e.g. NO_PROXY).
-        - This feature requires kubernetes>=19.15.0. 
+        - This feature requires kubernetes>=19.15.0.
           When kubernetes library is less than 19.15.0, it fails even if no_proxy is set correctly.
         type: str
       password:
