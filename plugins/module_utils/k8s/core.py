@@ -3,6 +3,9 @@ from typing import Optional
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.common.text.converters import to_text
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    extract_sensitive_values_from_kubeconfig,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -32,6 +35,15 @@ class AnsibleK8SModule:
         self.settings = local_settings
 
         self._module = self.settings["module_class"](**kwargs)
+
+        # Apply kubeconfig redaction for logging purposes
+        if hasattr(self._module, "params") and hasattr(self._module, "no_log_values"):
+            kubeconfig = self._module.params.get("kubeconfig")
+            if kubeconfig and isinstance(kubeconfig, dict):
+                # Add sensitive values to no_log_values to prevent them from appearing in logs
+                self._module.no_log_values.update(
+                    extract_sensitive_values_from_kubeconfig(kubeconfig)
+                )
 
         if self.settings["check_k8s"]:
             self.requires("kubernetes")
