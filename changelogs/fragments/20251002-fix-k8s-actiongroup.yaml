@@ -1,0 +1,2 @@
+bugfixes:
+- meta - Add ``k8s_cluster_info``, ``k8s_json_patch`` and ``k8s_rollback`` to k8s action group (https://github.com/ansible-collections/kubernetes.core/pull/992).
