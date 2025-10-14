@@ -15,6 +15,9 @@ import tempfile
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    extract_sensitive_values_from_kubeconfig,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
@@ -117,6 +120,13 @@ class AnsibleHelmModule(object):
                     kubeconfig_content = yaml.safe_load(fd)
             elif isinstance(kubeconfig, dict):
                 kubeconfig_content = kubeconfig
+
+            # Redact sensitive fields from kubeconfig for logging purposes
+            if kubeconfig_content:
+                # Add original sensitive values to no_log_values to prevent them from appearing in logs
+                self._module.no_log_values.update(
+                    extract_sensitive_values_from_kubeconfig(kubeconfig_content)
+                )
 
         if self.params.get("ca_cert"):
             ca_cert = self.params.get("ca_cert")
