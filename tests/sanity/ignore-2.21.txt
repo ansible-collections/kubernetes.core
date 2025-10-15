@@ -1,5 +1,10 @@
+tests/integration/targets/helm_diff/files/test-chart-deployment-time/templates/configmap.yaml yamllint!skip
 tests/integration/targets/helm_diff/files/test-chart-reuse-values/templates/configmap.yaml yamllint!skip
-tests/integration/targets/helm_diff/files/test-chart/templates/configmap.yamlyamllint!skip
+tests/integration/targets/helm_diff/files/test-chart/templates/configmap.yaml yamllint!skip
+tests/integration/targets/helm/files/appversionless-chart-v2/templates/configmap.yaml yamllint!skip
+tests/integration/targets/helm/files/appversionless-chart/templates/configmap.yaml yamllint!skip
+tests/integration/targets/helm/files/test-chart-v2/templates/configmap.yaml yamllint!skip
+tests/integration/targets/helm/files/test-chart/templates/configmap.yaml yamllint!skip
 tests/integration/targets/k8s_delete/files/deployments.yaml yamllint!skip
 tests/integration/targets/k8s_scale/files/deployment.yaml yamllint!skip
 tests/unit/module_utils/fixtures/clusteroperator.yml yamllint!skip
