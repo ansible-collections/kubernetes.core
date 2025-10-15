@@ -11,4 +11,4 @@ on:
 
 jobs:
   galaxy_importer:
-    uses: ansible-network/github_actions/.github/workflows/galaxy_importer.yml@main
+    uses: yurnov/github_actions/.github/workflows/galaxy_importer.yml@main
