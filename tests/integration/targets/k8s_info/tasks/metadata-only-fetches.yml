@@ -1,0 +1,22 @@
+---
+- name: Retrieve Node list with metadata_only
+  kubernetes.core.k8s_info:
+    kind: Node
+    metadata_only: true
+  register: node_metadata_only_list
+
+- name: Assert response has kind PartialObjectMetadata
+  assert:
+    that:
+      - node_metadata_only_list.resources[0].kind == "PartialObjectMetadata"
+
+- name: Retrieve full Node list
+  kubernetes.core.k8s_info:
+    kind: Node
+    metadata_only: false
+  register: node_full_list
+
+- name: Assert response has kind Node
+  assert:
+    that:
+      - node_full_list.resources[0].kind == "Node"

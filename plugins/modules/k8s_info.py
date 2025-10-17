@@ -53,6 +53,15 @@ options:
     type: list
     elements: str
     version_added: 3.0.0
+  metadata_only:
+    description:
+      - Request metadata only response from the Kubernetes API server.
+      - This feature is useful for clients that only need to check for the existence of an object,
+      - or that only need to read its metadata.
+      - It can significantly reduce the size of the response from the API server.
+    type: bool
+    default: false
+    version_added: 6.3.0
 
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
@@ -120,6 +129,12 @@ EXAMPLES = r"""
     namespace: default
     wait_sleep: 10
     wait_timeout: 360
+
+- name: Get a list of all pods metadata only
+  kubernetes.core.k8s_info:
+    kind: Pod
+    metadata_only: true
+  register: pod_metadata_list
 """
 
 RETURN = r"""
@@ -165,6 +180,8 @@ from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule impo
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
     WAIT_ARG_SPEC,
+    METADATA_ONLY_HEADERS_SPEC,
+    METADATA_ONLY_HEADER_VALUES
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
@@ -209,6 +226,7 @@ def argspec():
             label_selectors=dict(type="list", elements="str", default=[]),
             field_selectors=dict(type="list", elements="str", default=[]),
             hidden_fields=dict(type="list", elements="str"),
+            metadata_only=dict(type="bool", default=False),
         )
     )
     return args
@@ -218,8 +236,24 @@ def main():
     module = AnsibleK8SModule(
         module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
     )
+
+    metadata_only_headers = {}
+    if module.params["metadata_only"]:
+        metadata_only_headers = copy.deepcopy(METADATA_ONLY_HEADERS_SPEC)
+        metadata_only_headers.update(
+            dict(
+                accept=METADATA_ONLY_HEADER_VALUES["partial_object_list"]
+            )
+        )
+        if module.params["name"]:
+            metadata_only_headers.update(
+                dict(
+                    accept=METADATA_ONLY_HEADER_VALUES["partial_object"]
+                )
+            )
+
     try:
-        client = get_api_client(module)
+        client = get_api_client(module, **metadata_only_headers)
         svc = K8sService(client, module)
         execute_module(module, svc)
     except CoreException as e:
