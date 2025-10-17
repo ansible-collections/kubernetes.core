@@ -19,4 +19,4 @@
 - name: Assert response has kind Node
   assert:
     that:
-      - node_metadata_only_list.resources[0].kind == "Node"
+      - node_full_list.resources[0].kind == "Node"
