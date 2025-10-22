@@ -246,7 +246,7 @@ options:
     version_added: 6.1.0
   take_ownership:
     description:
-      - When upgrading, Helm will ignore the check for helm annotations and take ownership of the existing resources
+      - Helm will ignore the check for helm annotations and take ownership of the existing resources
       - This feature requires helm >= 3.17.0
     type: bool
     default: False
@@ -1089,6 +1089,7 @@ def main():
                 reset_then_reuse_values=reset_then_reuse_values,
                 insecure_skip_tls_verify=insecure_skip_tls_verify,
                 plain_http=plain_http,
+                take_ownership=take_ownership,
                 skip_schema_validation=skip_schema_validation,
             )
             changed = True
