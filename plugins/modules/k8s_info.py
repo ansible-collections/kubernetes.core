@@ -181,7 +181,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.args_common import
     AUTH_ARG_SPEC,
     WAIT_ARG_SPEC,
     METADATA_ONLY_HEADERS_SPEC,
-    METADATA_ONLY_HEADER_VALUES
+    METADATA_ONLY_HEADER_VALUES,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
@@ -241,15 +241,11 @@ def main():
     if module.params["metadata_only"]:
         metadata_only_headers = copy.deepcopy(METADATA_ONLY_HEADERS_SPEC)
         metadata_only_headers.update(
-            dict(
-                accept=METADATA_ONLY_HEADER_VALUES["partial_object_list"]
-            )
+            dict(accept=METADATA_ONLY_HEADER_VALUES["partial_object_list"])
         )
         if module.params["name"]:
             metadata_only_headers.update(
-                dict(
-                    accept=METADATA_ONLY_HEADER_VALUES["partial_object"]
-                )
+                dict(accept=METADATA_ONLY_HEADER_VALUES["partial_object"])
             )
 
     try:
