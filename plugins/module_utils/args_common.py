@@ -150,6 +150,12 @@ METADATA_ONLY_HEADERS_SPEC = dict(
 )
 
 METADATA_ONLY_HEADER_VALUES = {
-    "partial_object": "application/json;as=PartialObjectMetadata;g=meta.k8s.io;v=v1, application/json;q=0.9",
-    "partial_object_list":"application/json;as=PartialObjectMetadataList;g=meta.k8s.io;v=v1, application/json;q=0.9"
+    "partial_object": (
+        "application/json;as=PartialObjectMetadata;g=meta.k8s.io;v=v1,"
+        "application/json;q=0.9"
+    ),
+    "partial_object_list": (
+        "application/json;as=PartialObjectMetadataList;g=meta.k8s.io;v=v1,"
+        "application/json;q=0.9"
+    ),
 }
