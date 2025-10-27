@@ -283,6 +283,29 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>metadata_only</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.3.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Request metadata only response from the Kubernetes API server.</div>
+                        <div>This feature is useful for clients that only need to check for the existence of an object,</div>
+                        <div>or that only need to read its metadata.</div>
+                        <div>It can significantly reduce the size of the response from the API server.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -700,6 +723,12 @@ Examples
         namespace: default
         wait_sleep: 10
         wait_timeout: 360
+
+    - name: Get a list of all pods metadata only
+      kubernetes.core.k8s_info:
+        kind: Pod
+        metadata_only: true
+      register: pod_metadata_list
 
 
 
