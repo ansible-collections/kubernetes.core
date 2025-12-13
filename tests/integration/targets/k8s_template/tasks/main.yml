@@ -238,7 +238,55 @@
           - resource.result.results | selectattr('changed') | list | length == 1
           - resource.result.results | selectattr('error', 'defined') | list | length == 1
 
+    - name: Apply template where all items are disabled (empty output)
+      kubernetes.core.k8s:
+        state: present
+        template:
+          path: "conditional_empty.j2"
+      vars:
+        items:
+          - name: test1
+            enabled: false
+          - name: test2
+            enabled: false
+        k8s_pod_namespace: "{{ template_namespace }}"
+      register: r
+
+    - name: Check that empty template succeeds with no changes
+      assert:
+        that:
+          - r is successful
+          - r is not changed
+
+    - name: Apply template where some items are enabled
+      kubernetes.core.k8s:
+        state: present
+        template:
+          path: "conditional_empty.j2"
+      vars:
+        items:
+          - name: conditional-configmap-1
+            enabled: true
+          - name: conditional-configmap-2
+            enabled: false
+        k8s_pod_namespace: "{{ template_namespace }}"
+      register: r
+
+    - name: Check that partial template creates resources
+      assert:
+        that:
+          - r is successful
+          - r is changed
+
   always:
+    - name: Cleanup conditional configmap
+      kubernetes.core.k8s:
+        state: absent
+        kind: ConfigMap
+        name: conditional-configmap-1
+        namespace: "{{ template_namespace }}"
+      ignore_errors: true
+
     - name: Remove namespace (Cleanup)
       kubernetes.core.k8s:
         kind: Namespace
