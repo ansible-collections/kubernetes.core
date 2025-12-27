@@ -30,6 +30,10 @@ A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
 <!--end requires_ansible-->
 
+### Helm Version Compatibility
+
+Helm modules in this collection are compatible with Helm v3.x and are not yet compatible with Helm v4. Individual modules and their parameters may support a more specific range of Helm versions.
+
 ### Python Support
 
 * Collection supports 3.9+
