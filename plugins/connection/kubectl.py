@@ -264,7 +264,7 @@ import subprocess
 import tempfile
 
 from ansible.errors import AnsibleError, AnsibleFileNotFound
-from ansible.module_utils._text import to_bytes
+from ansible.module_utils.common.text.converters import to_bytes
 from ansible.module_utils.six.moves import shlex_quote
 from ansible.parsing.yaml.loader import AnsibleLoader
 from ansible.plugins.connection import BUFSIZE, ConnectionBase
