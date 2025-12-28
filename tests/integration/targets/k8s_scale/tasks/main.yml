@@ -49,6 +49,7 @@
         namespace: "{{ scale_namespace }}"
         replicas: 0
         wait: true
+        wait_timeout: 60
       register: scale_down
       check_mode: true
 
@@ -80,6 +81,7 @@
         namespace: "{{ scale_namespace }}"
         replicas: 0
         wait: true
+        wait_timeout: 60
       register: scale_down
       check_mode: true
 
@@ -143,6 +145,7 @@
         namespace: "{{ scale_namespace }}"
         replicas: 0
         wait: true
+        wait_timeout: 60
       register: scale_down_idempotency
       diff: true
 
@@ -233,6 +236,7 @@
         namespace: "{{ scale_namespace }}"
         replicas: 2
         wait: yes
+        wait_timeout: 60
       register: scale_up_noop
       diff: false
 
@@ -308,6 +312,7 @@
         resource_version: 0
         label_selectors:
           - app=nginx
+        wait_timeout: 60
       register: scale_out
 
     - assert:
