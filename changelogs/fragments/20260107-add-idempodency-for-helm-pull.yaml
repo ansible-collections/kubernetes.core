@@ -1,0 +1,2 @@
+bugfixes:
+  - Add idempotency for ``helm_pull`` module (https://github.com/ansible-collections/kubernetes.core/pull/1055).
