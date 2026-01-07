@@ -235,29 +235,31 @@ def chart_exists(destination, chart_ref, chart_version, untar_chart):
         return False
 
     # Extract chart name from chart_ref (handle URLs and simple names)
-    chart_name = chart_ref.split('/')[-1]
+    chart_name = chart_ref.split("/")[-1]
     # Remove any query parameters or fragments from URL-based refs first
-    if '?' in chart_name:
-        chart_name = chart_name.split('?')[0]
-    if '#' in chart_name:
-        chart_name = chart_name.split('#')[0]
+    if "?" in chart_name:
+        chart_name = chart_name.split("?")[0]
+    if "#" in chart_name:
+        chart_name = chart_name.split("#")[0]
     # Remove .tgz extension if present
-    if chart_name.endswith('.tgz'):
+    if chart_name.endswith(".tgz"):
         chart_name = chart_name[:-4]
 
     if untar_chart:
         # Check for extracted directory
         chart_dir = os.path.join(destination, chart_name)
-        chart_yaml_path = os.path.join(chart_dir, 'Chart.yaml')
+        chart_yaml_path = os.path.join(chart_dir, "Chart.yaml")
 
         if os.path.isdir(chart_dir) and os.path.isfile(chart_yaml_path):
             try:
-                with open(chart_yaml_path, 'r', encoding='utf-8') as chart_file:
+                with open(chart_yaml_path, "r", encoding="utf-8") as chart_file:
                     chart_metadata = yaml.safe_load(chart_file)
                     # Ensure chart_metadata is a dict and has a version that matches
-                    if (chart_metadata and
-                        isinstance(chart_metadata, dict) and
-                        chart_metadata.get('version') == chart_version):
+                    if (
+                        chart_metadata
+                        and isinstance(chart_metadata, dict)
+                        and chart_metadata.get("version") == chart_version
+                    ):
                         return True
             except (yaml.YAMLError, IOError, OSError, TypeError):
                 # If we can't read or parse the file, treat as non-existent
@@ -269,7 +271,7 @@ def chart_exists(destination, chart_ref, chart_version, untar_chart):
         if os.path.isfile(chart_file):
             try:
                 # Verify it's a valid tarball with matching version
-                with tarfile.open(chart_file, 'r:gz') as tar:
+                with tarfile.open(chart_file, "r:gz") as tar:
                     # Try to extract Chart.yaml to verify version
                     # Look for Chart.yaml at the expected path: <chart-name>/Chart.yaml
                     expected_chart_yaml = f"{chart_name}/Chart.yaml"
@@ -280,9 +282,11 @@ def chart_exists(destination, chart_ref, chart_version, untar_chart):
                             try:
                                 chart_metadata = yaml.safe_load(chart_yaml_file)
                                 # Ensure chart_metadata is a dict and has a version that matches
-                                if (chart_metadata and
-                                    isinstance(chart_metadata, dict) and
-                                    chart_metadata.get('version') == chart_version):
+                                if (
+                                    chart_metadata
+                                    and isinstance(chart_metadata, dict)
+                                    and chart_metadata.get("version") == chart_version
+                                ):
                                     return True
                             except (yaml.YAMLError, TypeError):
                                 # If we can't parse the YAML, treat as non-existent
@@ -403,12 +407,12 @@ def main():
     )
 
     # Check if chart already exists (idempotency)
-    if module.params.get('chart_version') and not module.params.get('force'):
+    if module.params.get("chart_version") and not module.params.get("force"):
         chart_exists_locally = chart_exists(
-            module.params.get('destination'),
-            module.params.get('chart_ref'),
-            module.params.get('chart_version'),
-            module.params.get('untar_chart')
+            module.params.get("destination"),
+            module.params.get("chart_ref"),
+            module.params.get("chart_version"),
+            module.params.get("untar_chart"),
         )
 
         if chart_exists_locally:
