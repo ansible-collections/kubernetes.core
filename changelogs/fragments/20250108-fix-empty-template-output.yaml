@@ -1,0 +1,2 @@
+bugfixes:
+- k8s_info - Handle empty template output gracefully by returning ``changed=false`` instead of failing when Jinja2 template renders to an empty string (https://github.com/ansible-collections/kubernetes.core/issues/1042).
