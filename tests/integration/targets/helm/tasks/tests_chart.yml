@@ -57,7 +57,7 @@
         that:
           - install_check_mode is changed
           - install_check_mode.status is defined
-          - install_check_mode.status.values is defined
+          - install_check_mode.status.release_values is defined
 
     - name: "Install {{ chart_test }} from {{ source }}"
       helm:
@@ -131,7 +131,7 @@
           - install is changed
           - install.status.status | lower == 'deployed'
           - install.status.chart == chart_test+"-"+chart_test_version
-          - "install.status['values'].revisionHistoryLimit == 0"
+          - "install.status['release_values'].revisionHistoryLimit == 0"
 
     - name: Check idempotency after adding vars
       helm:
@@ -149,7 +149,7 @@
           - install is not changed
           - install.status.status | lower == 'deployed'
           - install.status.chart == chart_test+"-"+chart_test_version
-          - "install.status['values'].revisionHistoryLimit == 0"
+          - "install.status['release_values'].revisionHistoryLimit == 0"
 
     - name: "Remove Vars to {{ chart_test }} from {{ source }}"
       helm:
@@ -166,7 +166,7 @@
           - install is changed
           - install.status.status | lower == 'deployed'
           - install.status.chart == chart_test+"-"+chart_test_version
-          - install.status['values'] == {}
+          - install.status['release_values'] == {}
 
     - name: Check idempotency after removing vars
       helm:
@@ -183,7 +183,7 @@
           - install is not changed
           - install.status.status | lower == 'deployed'
           - install.status.chart == chart_test+"-"+chart_test_version
-          - install.status['values'] == {}
+          - install.status['release_values'] == {}
 
     - name: "Upgrade {{ chart_test }} from {{ source }}"
       helm:
@@ -317,7 +317,7 @@
           - install is changed
           - install.status.status | lower == 'deployed'
           - install.status.chart == chart_test+"-"+chart_test_version
-          - "install.status['values'].revisionHistoryLimit == 0"
+          - "install.status['release_values'].revisionHistoryLimit == 0"
 
     - name: "Install {{ chart_test }} from {{ source }} with values_files (again)"
       helm:
@@ -402,7 +402,7 @@
         namespace: "{{ helm_namespace }}"
         create_namespace: true
         context: does-not-exist
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - name: Assert that release fails with non-existent context
