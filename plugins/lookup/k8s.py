@@ -211,7 +211,7 @@ RETURN = """
 import os
 
 from ansible.errors import AnsibleError
-from ansible.module_utils.common._collections_compat import KeysView
+from collections.abc import KeysView
 from ansible.module_utils.common.validation import check_type_bool
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
