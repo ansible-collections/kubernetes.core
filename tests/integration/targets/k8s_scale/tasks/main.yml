@@ -24,10 +24,10 @@
                   app: scale-deploy
               spec:
                 containers:
-                - name: nginx
-                  image: nginx:latest
-                  ports:
-                  - containerPort: 80
+                  - name: nginx
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: true
@@ -170,10 +170,10 @@
                   app: scale-deploy
               spec:
                 containers:
-                - name: nginx
-                  image: nginx:latest
-                  ports:
-                  - containerPort: 80
+                  - name: nginx
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: true
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: true
