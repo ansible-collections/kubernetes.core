@@ -313,10 +313,10 @@
               spec:
                 serviceAccount: apply-deploy
                 containers:
-                - name: nginx
-                  image: nginx:latest
-                  ports:
-                  - containerPort: 80
+                  - name: nginx
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
@@ -341,10 +341,10 @@
               spec:
                 serviceAccount: apply-deploy
                 containers:
-                - name: nginx-2
-                  image: nginx:latest
-                  ports:
-                  - containerPort: 80
+                  - name: nginx-2
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
@@ -377,10 +377,10 @@
               spec:
                 serviceAccount: apply-deploy
                 containers:
-                - name: nginx-2
-                  image: nginx:latest
-                  ports:
-                  - containerPort: 80
+                  - name: nginx-2
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
@@ -422,10 +422,10 @@
               spec:
                 serviceAccount: apply-deploy
                 containers:
-                - name: nginx-3
-                  image: nginx:latest
-                  ports:
-                  - containerPort: 80
+                  - name: nginx-3
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
