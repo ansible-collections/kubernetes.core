@@ -419,14 +419,14 @@ status:
       returned: always
       description: The Date of last update
     values:
-      type: str
+      type: dict
       returned: always
       description:
         - Dict of Values used to deploy.
         - This return value has been deprecated and will be removed in a release after
           2027-01-08. Use RV(status.release_values) instead.
     release_values:
-      type: str
+      type: dict
       returned: always
       description:
         - Dict of Values used to deploy.
