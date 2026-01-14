@@ -383,28 +383,24 @@ result:
   contains:
      api_version:
        description: The versioned schema of this representation of an object.
-       returned: success
+       returned: when O(resource_definition) or O(src) contains a single object.
        type: str
      kind:
        description: Represents the REST resource this object represents.
-       returned: success
+       returned: when O(resource_definition) or O(src) contains a single object.
        type: str
      metadata:
        description: Standard object metadata. Includes name, namespace, annotations, labels, etc.
-       returned: success
+       returned: when O(resource_definition) or O(src) contains a single object.
        type: complex
      spec:
        description: Specific attributes of the object. Will vary based on the I(api_version) and I(kind).
-       returned: success
+       returned: when O(resource_definition) or O(src) contains a single object.
        type: complex
      status:
        description: Current status details for the object.
-       returned: success
+       returned: when O(resource_definition) or O(src) contains a single object.
        type: complex
-     items:
-       description: Returned only when multiple yaml documents are passed to src or resource_definition
-       returned: when resource_definition or src contains list of objects
-       type: list
      duration:
        description: elapsed time of task in seconds
        returned: when C(wait) is true
@@ -414,6 +410,46 @@ result:
        description: error while trying to create/delete the object.
        returned: error
        type: complex
+     results:
+       description: An array of created, patched, or otherwise present objects.
+       returned: when O(resource_definition) or O(src) contains a list of objects.
+       type: complex
+       contains:
+         api_version:
+           description: The versioned schema of this representation of an object.
+           returned: when O(resource_definition) or O(src) contains a single object.
+           type: str
+         kind:
+           description: Represents the REST resource this object represents.
+           returned: when O(resource_definition) or O(src) contains a single object.
+           type: str
+         metadata:
+           description: Standard object metadata. Includes name, namespace, annotations, labels, etc.
+           returned: when O(resource_definition) or O(src) contains a single object.
+           type: complex
+         spec:
+           description: Specific attributes of the object. Will vary based on the I(api_version) and I(kind).
+           returned: when O(resource_definition) or O(src) contains a single object.
+           type: complex
+         status:
+           description: Current status details for the object.
+           returned: when O(resource_definition) or O(src) contains a single object.
+           type: complex
+         duration:
+           description: elapsed time of task in seconds
+           returned: when C(wait) is true
+           type: int
+           sample: 48
+         error:
+           description: error while trying to create/delete the object.
+           returned: error
+           type: complex
+method:
+  description:
+  - The method used to deploy the resource.
+  returned: success
+  type: str
+  sample: create
 """
 
 import copy

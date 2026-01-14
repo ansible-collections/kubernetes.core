@@ -1,12 +1,15 @@
 plugins/module_utils/client/discovery.py import-3.11!skip
 plugins/module_utils/client/discovery.py import-3.12!skip
 plugins/module_utils/client/discovery.py import-3.13!skip
+plugins/module_utils/client/discovery.py import-3.14!skip
 plugins/module_utils/client/resource.py import-3.11!skip
 plugins/module_utils/client/resource.py import-3.12!skip
 plugins/module_utils/client/resource.py import-3.13!skip
+plugins/module_utils/client/resource.py import-3.14!skip
 plugins/module_utils/k8sdynamicclient.py import-3.11!skip
 plugins/module_utils/k8sdynamicclient.py import-3.12!skip
 plugins/module_utils/k8sdynamicclient.py import-3.13!skip
+plugins/module_utils/k8sdynamicclient.py import-3.14!skip
 plugins/module_utils/version.py pylint!skip
 plugins/modules/k8s.py validate-modules:parameter-type-not-in-doc
 plugins/modules/k8s_scale.py validate-modules:parameter-type-not-in-doc
