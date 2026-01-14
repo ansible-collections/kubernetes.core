@@ -1,0 +1,11 @@
+---
+bugfixes:
+  - k8s - Fix return block from the module documentation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+deprecated_features:
+  - helm - the ``status.values`` return value has been deprecated and will be removed in a release after 2027-01-08.
+    Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+  - helm_info - the ``status.values`` return value has been deprecated and will be removed in a release after 2027-01-08.
+    Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+minor_changes:
+  - helm - added ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+  - helm_info - added ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).

@@ -6,7 +6,7 @@ metadata:
 spec:
   containers:
   - name: '{{ pod_with_one_container.container }}'
-    image: busybox
+    image: busybox:latest
     command:
       - /bin/sh
       - -c
@@ -19,13 +19,13 @@ metadata:
 spec:
   containers:
   - name: '{{ pod_with_two_container.container[0] }}'
-    image: busybox:1.32.0
+    image: busybox:latest
     command:
       - /bin/sh
       - -c
       - while true;do date;sleep 5; done
   - name: '{{ pod_with_two_container.container[1] }}'
-    image: busybox:1.33.0
+    image: busybox:latest
     command:
       - /bin/sh
       - -c
@@ -37,8 +37,8 @@ metadata:
   name: '{{ pod_without_executable_find.name }}'
 spec:
   containers:
-  - name: openjdk17
-    image: openjdk:17
+  - name: openjdk
+    image: openjdk:27-ea
     command:
     - /bin/sh
     - -c

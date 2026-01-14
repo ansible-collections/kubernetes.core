@@ -17,7 +17,7 @@
         wait_timeout: 400
       vars:
         k8s_pod_name: delete-ds
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_image: docker.io/nginx:latest
       register: ds
 
     - name: Check that daemonset wait worked

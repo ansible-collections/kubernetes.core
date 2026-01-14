@@ -36,7 +36,7 @@
         that:
           - install is changed
           - '"--reset-then-reuse-values" not in install.command'
-          - release_value["status"]["values"] == chart_release_values
+          - release_value["status"]["release_values"] == chart_release_values
 
     - name: Upgrade chart using reset_then_reuse_values=true
       helm:
@@ -64,7 +64,7 @@
           - '"--reset-then-reuse-values" in upgrade.command'
           - '"--reuse-values " not in upgrade.command'
           - '"--reset-values" not in upgrade.command'
-          - release_value["status"]["values"] == chart_release_values | combine(chart_reset_then_reuse_values, recursive=true)
+          - release_value["status"]["release_values"] == chart_release_values | combine(chart_reset_then_reuse_values, recursive=true)
 
   always:
     - name: Remove helm namespace

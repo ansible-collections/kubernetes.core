@@ -24,7 +24,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: openjdk-d
+  name: busybox-d
   labels:
     context: ansible
 spec:
@@ -38,8 +38,8 @@ spec:
         context: ansible
     spec:
       containers:
-      - name: openjdk
-        image: openjdk:17
+      - name: busybox
+        image: busybox:latest
         command:
         - /bin/sh
         - -c
