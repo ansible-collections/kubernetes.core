@@ -292,36 +292,34 @@
 
     - name: Add a deployment
       k8s:
+        namespace: "{{ test_namespace }}"
         definition:
+          definition:
           apiVersion: apps/v1
           kind: Deployment
           metadata:
             name: apply-deploy
-            namespace: "{{ test_namespace }}"
+            labels:
+              app: apply-deploy
           spec:
             replicas: 1
             selector:
               matchLabels:
-                app: "{{ k8s_pod_name }}"
-            template: "{{ k8s_pod_template }}"
+                app: apply-deploy
+            template:
+              metadata:
+                labels:
+                  app: apply-deploy
+              spec:
+                serviceAccount: apply-deploy
+                containers:
+                  - name: nginx
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
-      vars:
-        k8s_pod_name: apply-deploy
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-green
-        k8s_pod_service_account: apply-deploy
-        k8s_pod_ports:
-          - containerPort: 8080
-            name: http
-            protocol: TCP
-        k8s_pod_resources:
-          requests:
-            cpu: 100m
-            memory: 100Mi
-          limits:
-            cpu: 100m
-            memory: 100Mi
 
     - name: Update the earlier deployment in check mode
       k8s:
@@ -335,33 +333,29 @@
             replicas: 1
             selector:
               matchLabels:
-                app: "{{ k8s_pod_name }}"
-            template: "{{ k8s_pod_template }}"
+                app: apply-deploy
+            template:
+              metadata:
+                labels:
+                  app: apply-deploy
+              spec:
+                serviceAccount: apply-deploy
+                containers:
+                  - name: nginx-2
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
       check_mode: yes
-      vars:
-        k8s_pod_name: apply-deploy
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple
-        k8s_pod_service_account: apply-deploy
-        k8s_pod_ports:
-          - containerPort: 8080
-            name: http
-            protocol: TCP
-        k8s_pod_resources:
-          requests:
-            cpu: 50m
-          limits:
-            cpu: 50m
-            memory: 50Mi
       register: update_deploy_check_mode
 
     - name: Ensure check mode change took
       assert:
         that:
           - update_deploy_check_mode is changed
-          - "update_deploy_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple'"
+          - "update_deploy_check_mode.result.spec.template.spec.containers[0].name == 'nginx-2'"
 
     - name: Update the earlier deployment
       k8s:
@@ -375,32 +369,28 @@
             replicas: 1
             selector:
               matchLabels:
-                app: "{{ k8s_pod_name }}"
-            template: "{{ k8s_pod_template }}"
+                app: apply-deploy
+            template:
+              metadata:
+                labels:
+                  app: apply-deploy
+              spec:
+                serviceAccount: apply-deploy
+                containers:
+                  - name: nginx-2
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
-      vars:
-        k8s_pod_name: apply-deploy
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple
-        k8s_pod_service_account: apply-deploy
-        k8s_pod_ports:
-          - containerPort: 8080
-            name: http
-            protocol: TCP
-        k8s_pod_resources:
-          requests:
-            cpu: 50m
-          limits:
-            cpu: 50m
-            memory: 50Mi
       register: update_deploy_for_real
 
     - name: Ensure change took
       assert:
         that:
           - update_deploy_for_real is changed
-          - "update_deploy_for_real.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:v0.10.0-purple'"
+          - "update_deploy_for_real.result.spec.template.spec.containers[0].name == 'nginx-2'"
 
     - name: Remove the serviceaccount
       k8s:
@@ -424,27 +414,23 @@
             replicas: 1
             selector:
               matchLabels:
-                app: "{{ k8s_pod_name }}"
-            template: "{{ k8s_pod_template }}"
+                app: apply-deploy
+            template:
+              metadata:
+                labels:
+                  app: apply-deploy
+              spec:
+                serviceAccount: apply-deploy
+                containers:
+                  - name: nginx-3
+                    image: nginx:latest
+                    ports:
+                      - containerPort: 80
         wait: yes
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
         apply: yes
-      vars:
-        k8s_pod_name: apply-deploy
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:v0.10.0-green
-        k8s_pod_service_account: apply-deploy
-        k8s_pod_ports:
-          - containerPort: 8080
-            name: http
-            protocol: TCP
-        k8s_pod_resources:
-          requests:
-            cpu: 50m
-          limits:
-            cpu: 50m
-            memory: 50Mi
+      ignore_errors: true
       register: deploy_after_serviceaccount_removal
-      ignore_errors: yes
 
     - name: Ensure that updating deployment after service account removal failed
       assert:
