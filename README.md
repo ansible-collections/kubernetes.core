@@ -178,7 +178,6 @@ For documentation on how to use individual modules and other content included in
 
 ## Ansible Turbo Mode Tech Preview
 
-
 The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection. By default, this feature is disabled. To enable Turbo mode for modules, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. For example:
 
 ```yaml
@@ -217,7 +216,7 @@ You can run the collection's test suites with the commands:
 
 ### Testing with `molecule`
 
-There are also integration tests in the `molecule` directory which are meant to be run against a local Kubernetes cluster, e.g. using [KinD](https://kind.sigs.k8s.io) or [Minikube](https://minikube.sigs.k8s.io). To setup a local cluster using KinD and run Molecule:
+There are also integration tests in the `molecule` directory which are meant to be run against a local Kubernetes cluster, e.g. using [KinD](https://kind.sigs.k8s.io) or [Minikube](https://minikube.sigs.k8s.io). To set up a local cluster using KinD and run Molecule:
 
     kind create cluster
     make test-molecule
@@ -256,7 +255,7 @@ For more information about communication, refer to the [Ansible Communication gu
 For the latest supported versions, refer to the release notes below.
 
 If you encounter issues or have questions, you can submit a support request through the following channels:
- - GitHub Issues: Report bugs, request features, or ask questions by opening an issue in the [GitHub repository]((https://github.com/ansible-collections/kubernetes.core/).
+ - GitHub Issues: Report bugs, request features, or ask questions by opening an issue in the [GitHub repository](https://github.com/ansible-collections/kubernetes.core/).
 
 ## Release Notes
 
@@ -268,9 +267,8 @@ We follow the [Ansible Code of Conduct](https://docs.ansible.com/ansible/devel/c
 
 If you encounter abusive behavior, please refer to the [policy violations](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html#policy-violations) section of the Code for information on how to raise a complaint.
 
-
 ## License
 
 GNU General Public License v3.0 or later
 
-See LICENCE to see the full text.
+See LICENSE to see the full text.
