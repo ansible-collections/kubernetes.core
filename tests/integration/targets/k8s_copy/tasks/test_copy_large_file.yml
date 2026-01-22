@@ -10,9 +10,13 @@
       path: "{{ test_directory }}"
       state: directory
 
-  - name: Create a large text file
-    ansible.builtin.shell:
-      cmd: base64 /dev/random | head -c 150M > {{ test_directory }}/large_text_file.txt
+  - name: Create a text file with specific content
+    ansible.builtin.copy:
+      dest: "{{ test_directory }}/large_text_file.txt"
+      content: |
+        This is a large text file
+        {{ 'Repeat this line 1000 times\n' * 1000 }}
+      mode: '0644'
 
   - name: Create a large binary file
     ansible.builtin.command:

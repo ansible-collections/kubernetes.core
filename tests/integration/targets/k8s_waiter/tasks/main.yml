@@ -40,7 +40,7 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-ds
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_image: docker.io/busybox:latest
         k8s_pod_command:
           - sleep
           - "600"
@@ -71,7 +71,7 @@
         wait_timeout: 180
       vars:
         k8s_pod_name: wait-ds
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
+        k8s_pod_image: docker.io/alpine:latest
         k8s_pod_command:
           - sleep
           - "600"
@@ -82,7 +82,7 @@
       assert:
         that:
           - update_ds_check_mode is changed
-          - "update_ds_check_mode.result.spec.template.spec.containers[0].image == 'gcr.io/kuar-demo/kuard-amd64:2'"
+          - "update_ds_check_mode.result.spec.template.spec.containers[0].image == 'docker.io/alpine:latest'"
 
     - name: Update a daemonset
       k8s:
@@ -104,7 +104,7 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-ds
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:3
+        k8s_pod_image: docker.io/busybox:latest
         k8s_pod_command:
           - sleep
           - "600"
@@ -125,7 +125,7 @@
       assert:
         that:
           - ds.result.status.currentNumberScheduled == ds.result.status.desiredNumberScheduled
-          - updated_ds_pods.resources[0].spec.containers[0].image.endswith(":3")
+          - updated_ds_pods.resources[0].spec.containers[0].image == 'docker.io/busybox:latest'
 
     - name: Create daemonset with nodeSelector and not existing label
       k8s:
@@ -145,7 +145,7 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-daemonset-not-existing-label
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_image: docker.io/busybox:latest
         k8s_pod_command:
           - sleep
           - "600"
@@ -187,7 +187,7 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-sts
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_image: docker.io/busybox:latest
         k8s_pod_command:
           - sleep
           - "600"
@@ -251,7 +251,7 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-sts
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:3
+        k8s_pod_image: docker.io/alpine:latest
         k8s_pod_command:
           - sleep
           - "600"
@@ -272,7 +272,7 @@
       assert:
         that:
           - sts.result.spec.replicas == sts.result.status.readyReplicas
-          - updated_sts_pods.resources[0].spec.containers[0].image.endswith(":3")
+          - updated_sts_pods.resources[0].spec.containers[0].image == 'docker.io/alpine:latest'
 
     - name: Add a crashing pod
       k8s:
@@ -288,11 +288,11 @@
         wait_timeout: 30
       vars:
         k8s_pod_name: wait-crash-pod
-        k8s_pod_image: alpine:3.8
+        k8s_pod_image: busybox:latest
         k8s_pod_command:
           - /bin/false
       register: crash_pod
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Check that task failed
       assert:
@@ -315,7 +315,7 @@
         k8s_pod_name: wait-no-image-pod
         k8s_pod_image: i_made_this_up:and_this_too
       register: no_image_pod
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Check that task failed
       assert:
@@ -340,12 +340,11 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-deploy
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:1
+        k8s_pod_image: docker.io/nginx:latest
         k8s_pod_ports:
           - containerPort: 8080
             name: http
             protocol: TCP
-
       register: deploy
 
     - name: Check that deployment wait worked
@@ -371,7 +370,7 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-deploy
-        k8s_pod_image: gcr.io/kuar-demo/kuard-amd64:2
+        k8s_pod_image: docker.io/nginx:stable-alpine
         k8s_pod_ports:
           - containerPort: 8080
             name: http
@@ -394,7 +393,7 @@
         field_selectors:
           - status.phase=Running
       register: updated_deploy_pods
-      until: updated_deploy_pods.resources[0].spec.containers[0].image.endswith(':2')
+      until: updated_deploy_pods.resources[0].spec.containers[0].image == 'docker.io/nginx:stable-alpine'
       retries: 6
       delay: 5
 
@@ -474,11 +473,11 @@
         wait_timeout: "{{ k8s_wait_timeout | default(omit) }}"
       vars:
         k8s_pod_name: wait-crash-deploy
-        k8s_pod_image: alpine:3.8
+        k8s_pod_image: docker.io/nginx:latest
         k8s_pod_command:
           - /bin/false
       register: wait_crash_deploy
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Check that task failed
       assert:
@@ -495,7 +494,7 @@
         wait: yes
         wait_sleep: 2
         wait_timeout: 5
-      ignore_errors: yes
+      ignore_errors: true
       register: short_wait_remove_pod
 
     - name: Check that task failed
@@ -509,4 +508,4 @@
         kind: Namespace
         name: "{{ wait_namespace }}"
         state: absent
-      ignore_errors: yes
+      ignore_errors: true
