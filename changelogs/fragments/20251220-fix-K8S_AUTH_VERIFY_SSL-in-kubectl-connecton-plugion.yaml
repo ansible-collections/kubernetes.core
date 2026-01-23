@@ -1,0 +1,2 @@
+bugfixes:
+  - Fixed a bug where setting K8S_AUTH_VERIFY_SSL=true (or any string value) caused the value to be treated as a separate kubectl command argument. (https://github.com/ansible-collections/kubernetes.core/pull/1049).
