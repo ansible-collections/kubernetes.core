@@ -265,6 +265,7 @@ import tempfile
 
 from ansible.errors import AnsibleError, AnsibleFileNotFound
 from ansible.module_utils._text import to_bytes
+from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.six.moves import shlex_quote
 from ansible.parsing.yaml.loader import AnsibleLoader
 from ansible.plugins.connection import BUFSIZE, ConnectionBase
@@ -324,9 +325,12 @@ class Connection(ConnectionBase):
         # Build command options based on doc string
         doc_yaml = AnsibleLoader(self.documentation).get_single_data()
         for key in doc_yaml.get("options"):
-            if key.endswith("verify_ssl") and self.get_option(key) != "":
-                # Translate verify_ssl to skip_verify_ssl, and output as string
-                skip_verify_ssl = not self.get_option(key)
+            if key == "validate_certs" and self.get_option(key) != "":
+                # Translate validate_certs to --insecure-skip-tls-verify flag
+                # validate_certs=True means verify certs (don't skip verification)
+                # validate_certs=False means don't verify certs (skip verification)
+                validate_certs_value = boolean(self.get_option(key), strict=False)
+                skip_verify_ssl = not validate_certs_value
                 local_cmd.append(
                     "{0}={1}".format(
                         self.connection_options[key], str(skip_verify_ssl).lower()
