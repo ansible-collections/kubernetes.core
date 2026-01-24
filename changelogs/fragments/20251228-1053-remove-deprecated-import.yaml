@@ -1,0 +1,2 @@
+minor_changes:
+- Remove deprecated import from ``ansible.module_utils._text`` (https://github.com/ansible-collections/kubernetes.core/pull/1053).
