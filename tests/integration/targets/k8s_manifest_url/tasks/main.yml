@@ -81,6 +81,7 @@
         replicas: 1
         current_replicas: 3
         wait: true
+        wait_timeout: 60
       register: scale
 
     - name: Read deployment
