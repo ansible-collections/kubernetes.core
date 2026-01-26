@@ -243,10 +243,12 @@ def execute_module(client, module):
             module.fail_json(msg=error, **return_attributes)
 
     def _continue_or_exit(warn):
+        if warn:
+            module.warn(warn)
         if multiple_scale:
-            return_attributes["results"].append({"warning": warn, "changed": False})
+            return_attributes["results"].append({"changed": False})
         else:
-            module.exit_json(warning=warn, **return_attributes)
+            module.exit_json(**return_attributes)
 
     for existing in existing_items:
         if kind.lower() == "job":

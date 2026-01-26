@@ -402,12 +402,16 @@
         namespace: "{{ namespace }}"
       register: result
 
+    - name: Debug result
+      debug:
+        var: result
+
     - name: Assert warning is returned for no rollout history
       assert:
         that:
           - not result.changed
-          - result.rollback_info[0].warnings is defined
-          - "'No rollout history found' in result.rollback_info[0].warnings[0]"
+          - result.warnings is defined
+          - "'No rollout history found' in result.warnings[0]"
 
     - name: Create a service for unsupported resource test
       k8s:
