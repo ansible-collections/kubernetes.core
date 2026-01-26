@@ -168,7 +168,9 @@ def perform_action(svc, resource):
             module.params["kind"],
             resource["metadata"]["name"],
         )
-        result = {"changed": False, "warnings": [warn]}
+        if warn:
+            module.warn(warn)
+        result = {"changed": False}
         return result
 
     if module.params["kind"] == "Deployment":
