@@ -6,8 +6,5 @@
   with_items:
     - "v3.15.4"
     - "v3.16.0"
-<<<<<<< HEAD
-=======
     - "v3.17.0"
     - "v4.0.0"
->>>>>>> 13791ec (Limit compatibility to Helm =>v3.0.0,<4.0.0 (#1039))
