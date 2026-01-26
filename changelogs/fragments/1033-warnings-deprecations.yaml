@@ -1,0 +1,2 @@
+bugfixes:
+  - Replace passing ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` in the ``k8s_drain``, ``k8s_rollback.py`` and ``k8s_scale.py`` modules as it deprecated in ``ansible-core>=2.19.0`` and will be removed in ``ansible-core>=2.23.0`` (https://github.com/ansible-collections/kubernetes.core/pull/1033).
