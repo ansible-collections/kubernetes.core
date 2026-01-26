@@ -161,6 +161,9 @@ def main():
         mutually_exclusive=mutually_exclusive(),
     )
 
+    # Validate Helm version >=3.0.0,<4.0.0
+    module.validate_helm_version()
+
     state = module.params.get("state")
 
     helm_cmd_common = module.get_helm_binary() + " plugin"

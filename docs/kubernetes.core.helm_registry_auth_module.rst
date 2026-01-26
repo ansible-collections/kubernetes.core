@@ -25,7 +25,7 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- helm (https://github.com/helm/helm/releases) => 3.8.0
+- helm (https://github.com/helm/helm/releases) >= 3.8.0, <4.0.0
 
 
 Parameters
@@ -215,7 +215,7 @@ Examples
 
 Return Values
 -------------
-Common return values are documented `here <https://docs.ansible.com/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
+Common return values are documented `here <https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
 
 .. raw:: html
 

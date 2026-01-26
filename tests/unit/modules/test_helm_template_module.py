@@ -43,15 +43,21 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
     def test_dependency_update_option_not_defined(self):
         set_module_args({"chart_ref": "/tmp/path"})
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm_template.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm template /tmp/path", environ_update={}, data=None
+        # Check the last call was the actual helm template command
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm template /tmp/path"
         )
         assert result.exception.args[0]["command"] == "/usr/bin/helm template /tmp/path"
 
@@ -64,17 +70,21 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
             }
         )
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm_template.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm template test --repo=https://charts.com/test",
-            environ_update={},
-            data=None,
+        # Check the last call was the actual helm template command
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm template test --repo=https://charts.com/test"
         )
         assert (
             result.exception.args[0]["command"]
@@ -86,17 +96,21 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
             {"chart_ref": "https://charts/example.tgz", "dependency_update": True}
         )
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm_template.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm template https://charts/example.tgz --dependency-update",
-            environ_update={},
-            data=None,
+        # Check the last call was the actual helm template command
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm template https://charts/example.tgz --dependency-update"
         )
         assert (
             result.exception.args[0]["command"]
