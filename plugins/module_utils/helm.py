@@ -202,6 +202,24 @@ class AnsibleHelmModule(object):
             return m.group(1)
         return None
 
+    def validate_helm_version(self):
+        """
+        Validate that Helm version is >=3.0.0 and <4.0.0.
+        Helm 4 is not yet supported.
+        """
+        helm_version = self.get_helm_version()
+        if helm_version is None:
+            self.fail_json(msg="Unable to determine Helm version")
+
+        if (LooseVersion(helm_version) < LooseVersion("3.0.0")) or (
+            LooseVersion(helm_version) >= LooseVersion("4.0.0")
+        ):
+            self.fail_json(
+                msg="Helm version must be >=3.0.0,<4.0.0, current version is {0}".format(
+                    helm_version
+                )
+            )
+
     def get_values(self, release_name, get_all=False):
         """
         Get Values from deployed release
