@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import unittest
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 from ansible.module_utils import basic
 from ansible_collections.kubernetes.core.plugins.modules import helm
@@ -77,18 +77,22 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         helm.run_dep_update = MagicMock()
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         helm.run_dep_update.assert_not_called()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'"
         )
         assert (
             result.exception.args[0]["command"]
@@ -108,18 +112,22 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         helm.run_dep_update = MagicMock()
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
         helm.run_dep_update.assert_not_called()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'"
         )
         assert (
             result.exception.args[0]["command"]
@@ -139,19 +147,23 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_with_dep)
 
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = 0, "configuration updated", ""
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with patch.object(basic.AnsibleModule, "warn") as mock_warn:
                 with self.assertRaises(AnsibleExitJson) as result:
                     helm.main()
         mock_warn.assert_not_called()
-        mock_run_command.assert_has_calls(
-            [
-                call(
-                    "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
-                    environ_update={"HELM_NAMESPACE": "test"},
-                    data=None,
-                )
-            ]
+        # Check calls include the actual helm command (after version check)
+        assert any(
+            "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'" in str(call)
+            for call in mock_run_command.call_args_list
         )
         assert (
             result.exception.args[0]["command"]
@@ -170,23 +182,23 @@ class TestDependencyUpdateWithoutChartRepoUrlOption(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with patch.object(basic.AnsibleModule, "warn") as mock_warn:
                 with self.assertRaises(AnsibleExitJson) as result:
                     helm.main()
         mock_warn.assert_called_once()
-        mock_run_command.assert_has_calls(
-            [
-                call(
-                    "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'",
-                    environ_update={"HELM_NAMESPACE": "test"},
-                    data=None,
-                )
-            ]
+        # Check calls include the actual helm command (after version check)
+        assert any(
+            "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'" in str(call)
+            for call in mock_run_command.call_args_list
         )
         assert (
             result.exception.args[0]["command"]
@@ -245,17 +257,21 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'"
         )
         assert (
             result.exception.args[0]["command"]
@@ -275,17 +291,21 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test 'chart1'"
         )
         assert (
             result.exception.args[0]["command"]
@@ -305,11 +325,15 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_with_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleFailJson) as result:
                 helm.main()
         # mock_run_command.assert_called_once_with('/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test chart1',
@@ -334,17 +358,21 @@ class TestDependencyUpdateWithChartRepoUrlOption(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm --repo=http://repo.example/charts install --dependency-update --replace test 'chart1'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm --repo=http://repo.example/charts install --dependency-update --replace test 'chart1'"
         )
         assert (
             result.exception.args[0]["command"]
@@ -402,17 +430,21 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'"
         )
         assert (
             result.exception.args[0]["command"]
@@ -431,17 +463,21 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm upgrade -i --reset-values test 'http://repo.example/charts/application.tgz'"
         )
         assert (
             result.exception.args[0]["command"]
@@ -460,11 +496,15 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_with_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleFailJson) as result:
                 helm.main()
         # mock_run_command.assert_called_once_with('/usr/bin/helm --repo=http://repo.example/charts upgrade -i --reset-values test chart1',
@@ -488,17 +528,21 @@ class TestDependencyUpdateWithChartRefIsUrl(unittest.TestCase):
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info_without_dep)
         with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
-            mock_run_command.return_value = (
-                0,
-                "configuration updated",
-                "",
-            )  # successful execution
+            # Mock responses: first call is helm version, second is the actual command
+            mock_run_command.side_effect = [
+                (
+                    0,
+                    'version.BuildInfo{Version:"v3.10.0", GitCommit:"", GoVersion:"go1.18"}',
+                    "",
+                ),
+                (0, "configuration updated", ""),
+            ]
             with self.assertRaises(AnsibleExitJson) as result:
                 helm.main()
-        mock_run_command.assert_called_once_with(
-            "/usr/bin/helm install --dependency-update --replace test 'http://repo.example/charts/application.tgz'",
-            environ_update={"HELM_NAMESPACE": "test"},
-            data=None,
+        # Check the last call (actual helm command, after version check)
+        assert (
+            mock_run_command.call_args_list[-1][0][0]
+            == "/usr/bin/helm install --dependency-update --replace test 'http://repo.example/charts/application.tgz'"
         )
         assert (
             result.exception.args[0]["command"]

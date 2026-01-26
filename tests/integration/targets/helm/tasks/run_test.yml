@@ -13,45 +13,53 @@
   include_role:
     name: install_helm
 
-- name: "Ensure we honor the environment variables"
-  include_tasks: test_read_envvars.yml
+- name: Main helm tests with Helm v3
+  when: helm_version != "v4.0.0"
+  block:
 
-- name: Deploy charts
-  include_tasks: "tests_chart/{{ test_chart_type }}.yml"
-  loop_control:
-    loop_var: test_chart_type
-  with_items:
-    - from_local_path
-    - from_repository
-    - from_url
+    - name: "Ensure we honor the environment variables"
+      include_tasks: test_read_envvars.yml
+      when: helm_version != "v4.0.0"
 
-- name: test helm upgrade with reuse_values
-  include_tasks: test_helm_reuse_values.yml
+    - name: Deploy charts
+      include_tasks: "tests_chart/{{ test_chart_type }}.yml"
+      loop_control:
+        loop_var: test_chart_type
+      with_items:
+        - from_local_path
+        - from_repository
+        - from_url
 
-- name: test helm upgrade with reset_then_reuse_values
-  include_tasks: test_helm_reset_then_reuse_values.yml
+    - name: test helm upgrade with reuse_values
+      include_tasks: test_helm_reuse_values.yml
 
-- name: test helm dependency update
-  include_tasks: test_up_dep.yml
+    - name: test helm upgrade with reset_then_reuse_values
+      include_tasks: test_helm_reset_then_reuse_values.yml
 
-- name: Test helm uninstall
-  include_tasks: test_helm_uninstall.yml
+    - name: test helm dependency update
+      include_tasks: test_up_dep.yml
 
-- name: Test helm install with chart name containing space
-  include_tasks: test_helm_with_space_into_chart_name.yml
+    - name: Test helm uninstall
+      include_tasks: test_helm_uninstall.yml
 
-# https://github.com/ansible-collections/community.kubernetes/issues/296
-- name: Test Skip CRDS feature in helm chart install
-  include_tasks: test_crds.yml
+    - name: Test helm install with chart name containing space
+      include_tasks: test_helm_with_space_into_chart_name.yml
 
-- name: Test insecure registry flag feature
-  include_tasks: test_helm_insecure.yml
+    # https://github.com/ansible-collections/community.kubernetes/issues/296
+    - name: Test Skip CRDS feature in helm chart install
+      include_tasks: test_crds.yml
 
-- name: Test take ownership flag feature
-  include_tasks: test_helm_take_ownership.yml
+    - name: Test insecure registry flag feature
+      include_tasks: test_helm_insecure.yml
 
-- name: Test helm skip_schema_validation
-  include_tasks: test_skip_schema_validation.yml
+    - name: Test take ownership flag feature
+      include_tasks: test_helm_take_ownership.yml
+
+    - name: Test helm skip_schema_validation
+      include_tasks: test_skip_schema_validation.yml
+
+- name: Test helm version
+  include_tasks: test_helm_version.yml
 
 - name: Clean helm install
   file:

@@ -295,6 +295,9 @@ def main():
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
+    # Validate Helm version >=3.0.0,<4.0.0
+    module.validate_helm_version()
+
     changed = False
 
     repo_name = module.params.get("repo_name")
