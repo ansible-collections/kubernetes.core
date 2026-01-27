@@ -342,6 +342,7 @@ Parameters
                 </td>
                 <td>
                         <div>if set to true, will untar the chart after downloading it.</div>
+                        <div>Mutually exclusive with <code>force</code>.</div>
                 </td>
             </tr>
             <tr>

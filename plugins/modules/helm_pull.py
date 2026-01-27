@@ -87,6 +87,7 @@ options:
   untar_chart:
     description:
     - if set to true, will untar the chart after downloading it.
+    - Mutually exclusive with C(force).
     type: bool
     default: False
   force:
@@ -343,7 +344,7 @@ def main():
             repo_username=("repo_password"),
             repo_password=("repo_username"),
         ),
-        mutually_exclusive=[("chart_version", "chart_devel")],
+        mutually_exclusive=[("chart_version", "chart_devel"), ("untar_chart", "force")],
     )
 
     helm_version = module.get_helm_version()
