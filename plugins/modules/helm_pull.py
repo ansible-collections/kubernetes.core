@@ -185,6 +185,11 @@ command:
   description: Full `helm pull` command built by this module, in case you want to re-run the command outside the module or debug a problem.
   returned: always
   sample: helm pull --repo test ...
+msg:
+  type: str
+  description: A message indicating the result of the operation.
+  returned: when chart already exists
+  sample: Chart redis version 17.0.0 already exists in destination directory
 rc:
   type: int
   description: Helm pull command return code
@@ -259,6 +264,7 @@ def chart_exists(destination, chart_ref, chart_version, untar_chart):
                         chart_metadata
                         and isinstance(chart_metadata, dict)
                         and chart_metadata.get("version") == chart_version
+                        and chart_metadata.get("name") == chart_name
                     ):
                         return True
             except (yaml.YAMLError, IOError, OSError, TypeError):
@@ -286,6 +292,7 @@ def chart_exists(destination, chart_ref, chart_version, untar_chart):
                                     chart_metadata
                                     and isinstance(chart_metadata, dict)
                                     and chart_metadata.get("version") == chart_version
+                                    and chart_metadata.get("name") == chart_name
                                 ):
                                     return True
                             except (yaml.YAMLError, TypeError):
@@ -419,12 +426,10 @@ def main():
             module.exit_json(
                 failed=False,
                 changed=False,
-                # Not sure if we want to keep this message or not, if keeping then need to be added to DOCUMENTATION too
-                # msg="Chart {0} version {1} already exists in destination directory".format(
-                #     module.params.get('chart_ref'),
-                #     module.params.get('chart_version')
-                # ),
-                command=helm_cmd_common,
+                msg="Chart {0} version {1} already exists in destination directory".format(
+                    module.params.get("chart_ref"), module.params.get("chart_version")
+                ),
+                command="",
                 stdout="",
                 stderr="",
                 rc=0,
