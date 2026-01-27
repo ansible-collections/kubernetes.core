@@ -305,7 +305,7 @@
           assert:
             that:
               - _result_untar_force is failed
-              - '"Parameters untar_chart and force are mutually exclusive." in _result_untar_force.msg'
+              - '"parameters are mutually exclusive: untar_chart|force" in _result_untar_force.msg'
 
       vars:
         helm_path: "{{ temp_dir }}/3.8.0/linux-amd64/helm"
