@@ -221,6 +221,101 @@
               - _chart.stat.exists
               - _chart.stat.isdir
 
+        # Test idempotency with tarred chart
+        - name: Download chart with version (first time)
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
+            destination: "{{ destination }}"
+            chart_version: "24.1.0"
+          register: _result_first
+
+        - name: Download chart with version (second time - should be idempotent)
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
+            destination: "{{ destination }}"
+            chart_version: "24.1.0"
+          register: _result_second
+
+        - name: Validate idempotency for tarred chart
+          assert:
+            that:
+              - _result_first is changed
+              - _result_second is not changed
+
+        # Test force parameter with tarred chart
+        - name: Download chart with force=true (should always download)
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
+            destination: "{{ destination }}"
+            chart_version: "24.1.0"
+            force: true
+          register: _result_force
+
+        - name: Validate force parameter causes download
+          assert:
+            that:
+              - _result_force is changed
+
+        # Test idempotency with untarred chart in the separate folder
+        - name: Create separate directory for untar test under {{ temp_dir }}
+          ansible.builtin.file:
+            path: "{{ destination }}/untar_test"
+            state: directory
+            mode: '0755'
+
+        - name: Download and untar chart (first time)
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
+            destination: "{{ destination }}/untar_test"
+            chart_version: "24.0.0"
+            untar_chart: true
+          register: _result_untar_first
+
+        - name: Download and untar chart (second time - should be idempotent)
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
+            destination: "{{ destination }}/untar_test"
+            chart_version: "24.0.0"
+            untar_chart: true
+          register: _result_untar_second
+
+        - name: Validate idempotency for untarred chart
+          assert:
+            that:
+              - _result_untar_first is changed
+              - _result_untar_second is not changed
+
+        - name: Download and untar chart with force=true (should remove existing directory and re-extract)
+          helm_pull:
+            binary_path: "{{ helm_path }}"
+            chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
+            destination: "{{ destination }}/untar_test"
+            chart_version: "24.0.0"
+            untar_chart: true
+            force: true
+          register: _result_untar_force
+
+        - name: Validate first force extraction works
+          assert:
+            that:
+              - _result_untar_force is changed
+
+        - name: Verify chart directory still exists after force re-extraction
+          stat:
+            path: "{{ destination }}/untar_test/redis"
+          register: _chart_after_force
+
+        - name: Validate chart directory exists
+          assert:
+            that:
+              - _chart_after_force.stat.exists
+              - _chart_after_force.stat.isdir
+
       vars:
         helm_path: "{{ temp_dir }}/3.8.0/linux-amd64/helm"
 
