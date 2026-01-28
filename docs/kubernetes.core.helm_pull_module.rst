@@ -193,6 +193,7 @@ Parameters
                 <td>
                         <div>Force download of the chart even if it already exists in the destination directory.</div>
                         <div>By default, the module will skip downloading if the chart with the same version already exists for idempotency.</div>
+                        <div>When used with <code>untar_chart</code>, will remove any existing chart directory before extracting.</div>
                 </td>
             </tr>
             <tr>
@@ -342,7 +343,6 @@ Parameters
                 </td>
                 <td>
                         <div>if set to true, will untar the chart after downloading it.</div>
-                        <div>Mutually exclusive with <code>force</code>.</div>
                 </td>
             </tr>
             <tr>
@@ -425,6 +425,15 @@ Examples
         repo_url: https://charts.bitnami.com/bitnami
         chart_version: '17.0.0'
         destination: /path/to/chart
+        force: yes
+
+    - name: Download and untar chart (force re-extraction even if directory exists)
+      kubernetes.core.helm_pull:
+        chart_ref: redis
+        repo_url: https://charts.bitnami.com/bitnami
+        chart_version: '17.0.0'
+        destination: /path/to/chart
+        untar_chart: yes
         force: yes
 
 

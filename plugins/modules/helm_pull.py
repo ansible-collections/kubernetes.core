@@ -87,13 +87,13 @@ options:
   untar_chart:
     description:
     - if set to true, will untar the chart after downloading it.
-    - Mutually exclusive with C(force).
     type: bool
     default: False
   force:
     description:
     - Force download of the chart even if it already exists in the destination directory.
     - By default, the module will skip downloading if the chart with the same version already exists for idempotency.
+    - When used with C(untar_chart), will remove any existing chart directory before extracting.
     type: bool
     default: False
     version_added: 6.3.0
@@ -168,6 +168,15 @@ EXAMPLES = r"""
     chart_version: '17.0.0'
     destination: /path/to/chart
     force: yes
+
+- name: Download and untar chart (force re-extraction even if directory exists)
+  kubernetes.core.helm_pull:
+    chart_ref: redis
+    repo_url: https://charts.bitnami.com/bitnami
+    chart_version: '17.0.0'
+    destination: /path/to/chart
+    untar_chart: yes
+    force: yes
 """
 
 RETURN = r"""
@@ -199,7 +208,9 @@ rc:
 """
 
 import os
+import shutil
 import tarfile
+import uuid
 
 try:
     import yaml
@@ -214,6 +225,28 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
+
+
+def extract_chart_name(chart_ref):
+    """
+    Extract chart name from chart reference.
+
+    Args:
+        chart_ref (str): Chart reference (name, URL, or OCI reference)
+
+    Returns:
+        str: Extracted chart name
+    """
+    chart_name = chart_ref.split("/")[-1]
+    # Remove any query parameters or fragments from URL-based refs
+    if "?" in chart_name:
+        chart_name = chart_name.split("?")[0]
+    if "#" in chart_name:
+        chart_name = chart_name.split("#")[0]
+    # Remove .tgz extension if present
+    if chart_name.endswith(".tgz"):
+        chart_name = chart_name[:-4]
+    return chart_name
 
 
 def chart_exists(destination, chart_ref, chart_version, untar_chart):
@@ -240,16 +273,8 @@ def chart_exists(destination, chart_ref, chart_version, untar_chart):
     if not chart_version:
         return False
 
-    # Extract chart name from chart_ref (handle URLs and simple names)
-    chart_name = chart_ref.split("/")[-1]
-    # Remove any query parameters or fragments from URL-based refs first
-    if "?" in chart_name:
-        chart_name = chart_name.split("?")[0]
-    if "#" in chart_name:
-        chart_name = chart_name.split("#")[0]
-    # Remove .tgz extension if present
-    if chart_name.endswith(".tgz"):
-        chart_name = chart_name[:-4]
+    # Extract chart name from chart_ref using shared helper
+    chart_name = extract_chart_name(chart_ref)
 
     if untar_chart:
         # Check for extracted directory
@@ -344,7 +369,7 @@ def main():
             repo_username=("repo_password"),
             repo_password=("repo_username"),
         ),
-        mutually_exclusive=[("chart_version", "chart_devel"), ("untar_chart", "force")],
+        mutually_exclusive=[("chart_version", "chart_devel")],
     )
 
     helm_version = module.get_helm_version()
@@ -436,8 +461,49 @@ def main():
                 rc=0,
             )
 
+    # When both untar_chart and force are enabled, we need to remove the existing chart directory
+    # BEFORE running helm pull to prevent helm's "directory already exists" error.
+    # We do this by:
+    # 1. Renaming the existing directory to a temporary name (if it exists)
+    # 2. Running helm pull
+    # 3. On success: remove the temporary directory
+    # 4. On failure: restore the temporary directory and report the error
+    chart_dir_renamed = False
+    chart_dir = None
+    chart_dir_backup = None
+
+    if module.params.get("untar_chart") and module.params.get("force"):
+        chart_name = extract_chart_name(module.params.get("chart_ref"))
+        chart_dir = os.path.join(module.params.get("destination"), chart_name)
+
+        # Check if directory exists and contains a Chart.yaml (to be safe)
+        if os.path.isdir(chart_dir):
+            chart_yaml_path = os.path.join(chart_dir, "Chart.yaml")
+            # Only rename if it looks like a Helm chart directory (have Chart.yaml)
+            if os.path.isfile(chart_yaml_path):
+                if not module.check_mode:
+                    # Rename to temporary backup name using uuid for uniqueness
+                    backup_suffix = uuid.uuid4().hex[:8]
+                    chart_dir_backup = os.path.join(
+                        module.params.get("destination"),
+                        f".{chart_name}_backup_{backup_suffix}",
+                    )
+                    os.rename(chart_dir, chart_dir_backup)
+                    chart_dir_renamed = True
+
     if not module.check_mode:
         rc, out, err = module.run_helm_command(helm_cmd_common, fails_on_error=False)
+
+        # Handle cleanup/restore based on helm command result
+        if chart_dir_renamed:
+            if rc == 0:
+                # Success: remove the backup directory
+                if os.path.isdir(chart_dir_backup):
+                    shutil.rmtree(chart_dir_backup)
+            else:
+                # Failure: restore the backup directory
+                if os.path.isdir(chart_dir_backup) and not os.path.exists(chart_dir):
+                    os.rename(chart_dir_backup, chart_dir)
     else:
         rc, out, err = (0, "", "")
 

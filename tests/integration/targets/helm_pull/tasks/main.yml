@@ -290,7 +290,7 @@
               - _result_untar_first is changed
               - _result_untar_second is not changed
 
-        - name: Download and untar chart with force=true (not supported, untar_chart and force is mutually exclusive)
+        - name: Download and untar chart with force=true (should remove existing directory and re-extract)
           helm_pull:
             binary_path: "{{ helm_path }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
@@ -299,13 +299,22 @@
             untar_chart: true
             force: true
           register: _result_untar_force
-          ignore_errors: yes
 
-        - name: Validate mutually exclusive error for untar_chart and force
+        - name: Validate first force extraction works
           assert:
             that:
-              - _result_untar_force is failed
-              - '"parameters are mutually exclusive: untar_chart|force" in _result_untar_force.msg'
+              - _result_untar_force is changed
+
+        - name: Verify chart directory still exists after force re-extraction
+          stat:
+            path: "{{ destination }}/untar_test/redis"
+          register: _chart_after_force
+
+        - name: Validate chart directory exists
+          assert:
+            that:
+              - _chart_after_force.stat.exists
+              - _chart_after_force.stat.isdir
 
       vars:
         helm_path: "{{ temp_dir }}/3.8.0/linux-amd64/helm"
