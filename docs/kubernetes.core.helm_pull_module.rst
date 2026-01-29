@@ -193,7 +193,7 @@ Parameters
                 <td>
                         <div>Force download of the chart even if it already exists in the destination directory.</div>
                         <div>By default, the module will skip downloading if the chart with the same version already exists for idempotency.</div>
-                        <div>When used with <code>untar_chart</code>, will remove any existing chart directory before extracting.</div>
+                        <div>When used with O(untar_chart=true), will remove any existing chart directory before extracting.</div>
                 </td>
             </tr>
             <tr>
