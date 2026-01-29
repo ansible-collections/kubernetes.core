@@ -177,6 +177,28 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>force</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.3.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Force download of the chart even if it already exists in the destination directory.</div>
+                        <div>By default, the module will skip downloading if the chart with the same version already exists for idempotency.</div>
+                        <div>When used with O(untar_chart=true), will remove any existing chart directory before extracting.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>pass_credentials</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -397,6 +419,23 @@ Examples
         username: myuser
         password: mypassword123
 
+    - name: Download Chart (force re-download even if exists)
+      kubernetes.core.helm_pull:
+        chart_ref: redis
+        repo_url: https://charts.bitnami.com/bitnami
+        chart_version: '17.0.0'
+        destination: /path/to/chart
+        force: yes
+
+    - name: Download and untar chart (force re-extraction even if directory exists)
+      kubernetes.core.helm_pull:
+        chart_ref: redis
+        repo_url: https://charts.bitnami.com/bitnami
+        chart_version: '17.0.0'
+        destination: /path/to/chart
+        untar_chart: yes
+        force: yes
+
 
 
 Return Values
@@ -426,6 +465,23 @@ Common return values are documented `here <https://docs.ansible.com/projects/ans
                     <br/>
                         <div style="font-size: smaller"><b>Sample:</b></div>
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">helm pull --repo test ...</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>msg</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>when chart already exists</td>
+                <td>
+                            <div>A message indicating the result of the operation.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">Chart redis version 17.0.0 already exists in destination directory</div>
                 </td>
             </tr>
             <tr>
