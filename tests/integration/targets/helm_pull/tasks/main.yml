@@ -47,7 +47,7 @@
           assert:
             that:
               - _result is failed
-              - _result.msg == "This module requires helm >= 3.0.0, current version is 2.3.0"
+              - _result.msg == "Helm version must be >=3.0.0,<4.0.0, current version is 2.3.0"
 
       vars:
         helm_path: "{{ temp_dir }}/2.3.0/linux-amd64/helm"
