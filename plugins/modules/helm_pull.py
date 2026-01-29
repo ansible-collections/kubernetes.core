@@ -89,6 +89,14 @@ options:
     - if set to true, will untar the chart after downloading it.
     type: bool
     default: False
+  force:
+    description:
+    - Force download of the chart even if it already exists in the destination directory.
+    - By default, the module will skip downloading if the chart with the same version already exists for idempotency.
+    - When used with O(untar_chart=true), will remove any existing chart directory before extracting.
+    type: bool
+    default: False
+    version_added: 6.3.0
   destination:
     description:
     - location to write the chart.
@@ -145,6 +153,23 @@ EXAMPLES = r"""
     destination: /path/to/chart
     username: myuser
     password: mypassword123
+
+- name: Download Chart (force re-download even if exists)
+  kubernetes.core.helm_pull:
+    chart_ref: redis
+    repo_url: https://charts.bitnami.com/bitnami
+    chart_version: '17.0.0'
+    destination: /path/to/chart
+    force: yes
+
+- name: Download and untar chart (force re-extraction even if directory exists)
+  kubernetes.core.helm_pull:
+    chart_ref: redis
+    repo_url: https://charts.bitnami.com/bitnami
+    chart_version: '17.0.0'
+    destination: /path/to/chart
+    untar_chart: yes
+    force: yes
 """
 
 RETURN = r"""
@@ -163,6 +188,11 @@ command:
   description: Full `helm pull` command built by this module, in case you want to re-run the command outside the module or debug a problem.
   returned: always
   sample: helm pull --repo test ...
+msg:
+  type: str
+  description: A message indicating the result of the operation.
+  returned: when chart already exists
+  sample: Chart redis version 17.0.0 already exists in destination directory
 rc:
   type: int
   description: Helm pull command return code
@@ -170,12 +200,133 @@ rc:
   sample: 1
 """
 
+import os
+import shutil
+import tarfile
+import uuid
+
+try:
+    import yaml
+
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.version import (
     LooseVersion,
 )
+
+
+def extract_chart_name(chart_ref):
+    """
+    Extract chart name from chart reference.
+
+    Args:
+        chart_ref (str): Chart reference (name, URL, or OCI reference)
+
+    Returns:
+        str: Extracted chart name
+    """
+    chart_name = chart_ref.split("/")[-1]
+    # Remove any query parameters or fragments from URL-based refs
+    if "?" in chart_name:
+        chart_name = chart_name.split("?")[0]
+    if "#" in chart_name:
+        chart_name = chart_name.split("#")[0]
+    # Remove .tgz extension if present
+    if chart_name.endswith(".tgz"):
+        chart_name = chart_name[:-4]
+    return chart_name
+
+
+def chart_exists(destination, chart_ref, chart_version, untar_chart):
+    """
+    Check if the chart already exists in the destination directory.
+
+    For untarred charts: check if directory exists with Chart.yaml matching version
+    For tarred charts: check if .tgz file exists and contains matching version
+
+    Args:
+        destination (str): Destination directory path
+        chart_ref (str): Chart reference (name or URL)
+        chart_version (str): Chart version to check for
+        untar_chart (bool): Whether to check for untarred or tarred chart
+
+    Returns:
+        bool: True if chart with matching version exists, False otherwise
+    """
+    # YAML is required for version checking
+    if not HAS_YAML:
+        return False
+
+    # Without version, we can't reliably check
+    if not chart_version:
+        return False
+
+    # Extract chart name from chart_ref using shared helper
+    chart_name = extract_chart_name(chart_ref)
+
+    if untar_chart:
+        # Check for extracted directory
+        chart_dir = os.path.join(destination, chart_name)
+        chart_yaml_path = os.path.join(chart_dir, "Chart.yaml")
+
+        if os.path.isdir(chart_dir) and os.path.isfile(chart_yaml_path):
+            try:
+                with open(chart_yaml_path, "r", encoding="utf-8") as chart_file:
+                    chart_metadata = yaml.safe_load(chart_file)
+                    # Ensure chart_metadata is a dict and has a version that matches
+                    if (
+                        chart_metadata
+                        and isinstance(chart_metadata, dict)
+                        and chart_metadata.get("version") == chart_version
+                        and chart_metadata.get("name") == chart_name
+                    ):
+                        return True
+            except (yaml.YAMLError, IOError, OSError, TypeError):
+                # If we can't read or parse the file, treat as non-existent
+                pass
+    else:
+        # Check for .tgz file
+        chart_file = os.path.join(destination, f"{chart_name}-{chart_version}.tgz")
+
+        if os.path.isfile(chart_file):
+            try:
+                # Verify it's a valid tarball with matching version
+                with tarfile.open(chart_file, "r:gz") as tar:
+                    # Try to extract Chart.yaml to verify version
+                    # Look for Chart.yaml at the expected path: <chart-name>/Chart.yaml
+                    expected_chart_yaml = f"{chart_name}/Chart.yaml"
+                    try:
+                        member = tar.getmember(expected_chart_yaml)
+                        chart_yaml_file = tar.extractfile(member)
+                        if chart_yaml_file:
+                            try:
+                                chart_metadata = yaml.safe_load(chart_yaml_file)
+                                # Ensure chart_metadata is a dict and has a version that matches
+                                if (
+                                    chart_metadata
+                                    and isinstance(chart_metadata, dict)
+                                    and chart_metadata.get("version") == chart_version
+                                    and chart_metadata.get("name") == chart_name
+                                ):
+                                    return True
+                            except (yaml.YAMLError, TypeError):
+                                # If we can't parse the YAML, treat as non-existent
+                                pass
+                            finally:
+                                chart_yaml_file.close()
+                    except KeyError:
+                        # Chart.yaml not found at expected path
+                        pass
+            except (tarfile.TarError, yaml.YAMLError, IOError, OSError, TypeError):
+                # If we can't read or parse the tarball, treat as non-existent
+                pass
+
+    return False
 
 
 def main():
@@ -196,6 +347,7 @@ def main():
         ),
         chart_devel=dict(type="bool"),
         untar_chart=dict(type="bool", default=False),
+        force=dict(type="bool", default=False),
         destination=dict(type="path", required=True),
         chart_ca_cert=dict(type="path"),
         chart_ssl_cert_file=dict(type="path"),
@@ -273,8 +425,72 @@ def main():
         module.params.get("chart_ref"),
         " ".join(helm_pull_opts),
     )
+
+    # Check if chart already exists (idempotency)
+    if module.params.get("chart_version") and not module.params.get("force"):
+        chart_exists_locally = chart_exists(
+            module.params.get("destination"),
+            module.params.get("chart_ref"),
+            module.params.get("chart_version"),
+            module.params.get("untar_chart"),
+        )
+
+        if chart_exists_locally:
+            module.exit_json(
+                failed=False,
+                changed=False,
+                msg="Chart {0} version {1} already exists in destination directory".format(
+                    module.params.get("chart_ref"), module.params.get("chart_version")
+                ),
+                command="",
+                stdout="",
+                stderr="",
+                rc=0,
+            )
+
+    # When both untar_chart and force are enabled, we need to remove the existing chart directory
+    # BEFORE running helm pull to prevent helm's "directory already exists" error.
+    # We do this by:
+    # 1. Renaming the existing directory to a temporary name (if it exists)
+    # 2. Running helm pull
+    # 3. On success: remove the temporary directory
+    # 4. On failure: restore the temporary directory and report the error
+    chart_dir_renamed = False
+    chart_dir = None
+    chart_dir_backup = None
+
+    if module.params.get("untar_chart") and module.params.get("force"):
+        chart_name = extract_chart_name(module.params.get("chart_ref"))
+        chart_dir = os.path.join(module.params.get("destination"), chart_name)
+
+        # Check if directory exists and contains a Chart.yaml (to be safe)
+        if os.path.isdir(chart_dir):
+            chart_yaml_path = os.path.join(chart_dir, "Chart.yaml")
+            # Only rename if it looks like a Helm chart directory (have Chart.yaml)
+            if os.path.isfile(chart_yaml_path):
+                if not module.check_mode:
+                    # Rename to temporary backup name using uuid for uniqueness
+                    backup_suffix = uuid.uuid4().hex[:8]
+                    chart_dir_backup = os.path.join(
+                        module.params.get("destination"),
+                        f".{chart_name}_backup_{backup_suffix}",
+                    )
+                    os.rename(chart_dir, chart_dir_backup)
+                    chart_dir_renamed = True
+
     if not module.check_mode:
         rc, out, err = module.run_helm_command(helm_cmd_common, fails_on_error=False)
+
+        # Handle cleanup/restore based on helm command result
+        if chart_dir_renamed:
+            if rc == 0:
+                # Success: remove the backup directory
+                if os.path.isdir(chart_dir_backup):
+                    shutil.rmtree(chart_dir_backup)
+            else:
+                # Failure: restore the backup directory
+                if os.path.isdir(chart_dir_backup) and not os.path.exists(chart_dir):
+                    os.rename(chart_dir_backup, chart_dir)
     else:
         rc, out, err = (0, "", "")
 
