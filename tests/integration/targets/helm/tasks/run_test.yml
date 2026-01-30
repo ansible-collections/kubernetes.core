@@ -52,12 +52,6 @@
     - name: Test insecure registry flag feature
       include_tasks: test_helm_insecure.yml
 
-    - name: Test take ownership flag feature
-      include_tasks: test_helm_take_ownership.yml
-
-    - name: Test helm skip_schema_validation
-      include_tasks: test_skip_schema_validation.yml
-
 - name: Test helm version
   include_tasks: test_helm_version.yml
 

@@ -1,7 +1,7 @@
 ---
 - name: Test helm reuse_values
   vars:
-    helm_namespace: "{{ test_namespace[14] }}"
+    helm_namespace: "{{ test_namespace[12] }}"
     chart_release_values:
       replica:
         replicaCount: 3
