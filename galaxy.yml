@@ -25,7 +25,7 @@ tags:
   - openshift
   - okd
   - cluster
-version: 5.4.1
+version: 5.4.2
 build_ignore:
   - .DS_Store
   - "*.tar.gz"
