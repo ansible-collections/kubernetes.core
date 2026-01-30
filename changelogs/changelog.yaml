@@ -1047,9 +1047,11 @@ releases:
   5.4.0:
     changes:
       minor_changes:
-      - Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0``
-        (https://github.com/ansible-collections/kubernetes.core/pull/946).
-      release_summary: This release updates the ``helm_registry_auth`` module to match the behavior of ``helm >= 3.18.0`` which reports a successful logout regardless of the current state (i.e., no idempotency).
+      - Module ``helm_registry_auth`` does not support idempotency with ``helm >=
+        3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946).
+      release_summary: This release updates the ``helm_registry_auth`` module to match
+        the behavior of ``helm >= 3.18.0`` which reports a successful logout regardless
+        of the current state (i.e., no idempotency).
     fragments:
     - 20250411-kubeconfig-no_log-revert.yaml
     - 20250503-fix-unit-tests.yml
@@ -1117,9 +1119,8 @@ releases:
       - Add support of skip-schema-validation in ``helm`` module (https://github.com/ansible-collections/kubernetes.core/pull/995)
       - kustomize - Add support of local environ (https://github.com/ansible-collections/kubernetes.core/pull/786).
       release_summary: This release adds minor changes and bugfixes, including support
-        of skip-schema-validation in ``helm`` module and removing deprecated
-        ``ansible.module_utils.six`` imports.
-
+        of skip-schema-validation in ``helm`` module and removing deprecated ``ansible.module_utils.six``
+        imports.
     fragments:
     - 20241030-support-of-evrion-for-kustomize-lookup-plugin.yaml
     - 20250731-fix-k8s_cp-initcontainers.yaml
@@ -1127,3 +1128,48 @@ releases:
     - 20250922-remove-ansible-six-imports.yaml
     - 6_2_0.yml
     release_date: '2025-10-07'
+  6.2.1:
+    changes:
+      bugfixes:
+      - Add idempotency for ``helm_pull`` module (https://github.com/ansible-collections/kubernetes.core/pull/1055).
+      - Fixed a bug where setting ``K8S_AUTH_VERIFY_SSL=true`` (or any string value)
+        caused the value to be treated as a separate ``kubectl`` command argument.
+        (https://github.com/ansible-collections/kubernetes.core/pull/1049).
+      - Limit supported versions of Helm to <4.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/1039).
+      - Replace passing ``warnings`` to ``exit_json`` with ``AnsibleModule.warn``
+        in the ``k8s_drain``, ``k8s_rollback.py`` and ``k8s_scale.py`` modules as
+        it deprecated in ``ansible-core>=2.19.0`` and will be removed in ``ansible-core>=2.23.0``
+        (https://github.com/ansible-collections/kubernetes.core/pull/1033).
+      - k8s - Fix return block from the module documentation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+      - meta - Add ``k8s_cluster_info``, ``k8s_json_patch`` and ``k8s_rollback`` to
+        k8s action group (https://github.com/ansible-collections/kubernetes.core/pull/992).
+      deprecated_features:
+      - helm - the ``status.values`` return value has been deprecated and will be
+        removed in a release after 2027-01-08. Use ``status.release_values`` instead
+        (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+      - helm_info - the ``status.values`` return value has been deprecated and will
+        be removed in a release after 2027-01-08. Use ``status.release_values`` instead
+        (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+      minor_changes:
+      - Remove deprecated import from ``ansible.module_utils._text`` (https://github.com/ansible-collections/kubernetes.core/pull/1053).
+      - helm - add ``release_values`` key to ``status`` return value that can be accessed
+        using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+      - helm_info - add ``release_values`` key to ``status`` return value that can
+        be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+      release_summary: This release includes bugfixes such as implementing idempotency
+        for the ``helm_pull`` module as well as a security update for selectively
+        redacting sensitive information from kubeconfig.
+      security_fixes:
+      - Selectively redact sensitive info from kubeconfig instead of applying blanket
+        ``no_log=True`` (https://github.com/ansible-collections/kubernetes.core/pull/1014).
+    fragments:
+    - 1033-warnings-deprecations.yaml
+    - 20251002-fix-k8s-actiongroup.yaml
+    - 20251007-selective-kubeconfig-redaction.yaml
+    - 20251115-limit-versions-of-helm.yaml
+    - 20251220-fix-K8S_AUTH_VERIFY_SSL-in-kubectl-connecton-plugion.yaml
+    - 20251228-1053-remove-deprecated-import.yaml
+    - 20260107-add-idempodency-for-helm-pull.yaml
+    - 20260108-fix-sanity-failures.yml
+    - 6-2-1.yaml
+    release_date: '2026-02-03'
