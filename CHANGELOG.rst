@@ -4,7 +4,7 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
-v6.2.1
+v6.3.0
 ======
 
 Release Summary

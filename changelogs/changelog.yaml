@@ -1128,7 +1128,7 @@ releases:
     - 20250922-remove-ansible-six-imports.yaml
     - 6_2_0.yml
     release_date: '2025-10-07'
-  6.2.1:
+  6.3.0:
     changes:
       bugfixes:
       - Add idempotency for ``helm_pull`` module (https://github.com/ansible-collections/kubernetes.core/pull/1055).
@@ -1171,5 +1171,5 @@ releases:
     - 20251228-1053-remove-deprecated-import.yaml
     - 20260107-add-idempodency-for-helm-pull.yaml
     - 20260108-fix-sanity-failures.yml
-    - 6-2-1.yaml
+    - 6-3-0.yaml
     release_date: '2026-02-03'
