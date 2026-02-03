@@ -4,6 +4,41 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v5.4.2
+======
+
+Release Summary
+---------------
+
+This release includes bugfixes such as replacing the passing of ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` as well as a security update for selectively redacting sensitive information from kubeconfig.
+
+Minor Changes
+-------------
+
+- helm - add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+- helm_info - add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+
+Deprecated Features
+-------------------
+
+- helm - the ``status.values`` return value has been deprecated and will be removed in a release after 2027-01-08. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+- helm_info - the ``status.values`` return value has been deprecated and will be removed in a release after 2027-01-08. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+
+Security Fixes
+--------------
+
+- Selectively redact sensitive info from kubeconfig instead of applying blanket ``no_log=True`` (https://github.com/ansible-collections/kubernetes.core/pull/1014).
+
+Bugfixes
+--------
+
+- Add idempotency for ``helm_pull`` module (https://github.com/ansible-collections/kubernetes.core/pull/1055).
+- Fixed a bug where setting ``K8S_AUTH_VERIFY_SSL=true`` (or any string value) caused the value to be treated as a separate ``kubectl`` command argument (https://github.com/ansible-collections/kubernetes.core/pull/1049).
+- Limit supported versions of Helm to <4.0.0 (https://github.com/ansible-collections/kubernetes.core/pull/1039).
+- Replace passing ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` in the ``k8s_drain``, ``k8s_rollback.py`` and ``k8s_scale.py`` modules as it deprecated in ``ansible-core>=2.19.0`` and will be removed in ``ansible-core>=2.23.0`` (https://github.com/ansible-collections/kubernetes.core/pull/1033).
+- k8s - Fix return block from the module documentation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+- meta - Add ``k8s_cluster_info``, ``k8s_json_patch`` and ``k8s_rollback`` to k8s action group (https://github.com/ansible-collections/kubernetes.core/pull/992).
+
 v5.4.1
 ======
 
@@ -79,7 +114,7 @@ This release came with new module ``helm_registry_auth``, improvements to the er
 Minor Changes
 -------------
 
-- Bump version of ansible-lint to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
+- Bump version of ``ansible-lint`` to minimum 24.7.0 (https://github.com/ansible-collections/kubernetes.core/pull/765).
 - Parameter insecure_registry added to helm_template as equivalent of insecure-skip-tls-verify (https://github.com/ansible-collections/kubernetes.core/pull/805).
 - k8s_drain - Improve error message for pod disruption budget when draining a node (https://github.com/ansible-collections/kubernetes.core/issues/797).
 
