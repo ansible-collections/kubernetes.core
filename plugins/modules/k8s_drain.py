@@ -230,7 +230,7 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
                 else:
                     to_delete.append((pod.metadata.namespace, pod.metadata.name))
 
-    warnings, errors = [], []
+    warnings, errors, info = [], [], []
     if unmanaged:
         pod_names = ",".join([pod[0] + "/" + pod[1] for pod in unmanaged])
         if not force:
@@ -242,7 +242,7 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
             )
         else:
             # Pod not managed will be deleted as 'force' is true
-            warnings.append(
+            info.append(
                 "Deleting Pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: {0}.".format(
                     pod_names
                 )
@@ -264,7 +264,7 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
                 "cannot delete Pods with local storage: {0}.".format(pod_names)
             )
         else:
-            warnings.append("Deleting Pods with local storage: {0}.".format(pod_names))
+            info.append("Deleting Pods with local storage: {0}.".format(pod_names))
             for pod in localStorage:
                 to_delete.append((pod[0], pod[1]))
 
@@ -278,8 +278,8 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
                 )
             )
         else:
-            warnings.append("Ignoring DaemonSet-managed Pods: {0}.".format(pod_names))
-    return to_delete, warnings, errors
+            info.append("Ignoring DaemonSet-managed Pods: {0}.".format(pod_names))
+    return to_delete, warnings, errors, info
 
 
 class K8sDrainAnsible(object):
@@ -334,18 +334,19 @@ class K8sDrainAnsible(object):
     def evict_pods(self, pods):
         for namespace, name in pods:
             try:
-                if self._drain_options.get("disable_eviction"):
-                    self._api_instance.delete_namespaced_pod(
-                        name=name, namespace=namespace, body=self._delete_options
-                    )
-                else:
-                    body = v1_eviction(
-                        delete_options=self._delete_options,
-                        metadata=V1ObjectMeta(name=name, namespace=namespace),
-                    )
-                    self._api_instance.create_namespaced_pod_eviction(
-                        name=name, namespace=namespace, body=body
-                    )
+                if not self._module.check_mode:
+                    if self._drain_options.get("disable_eviction"):
+                        self._api_instance.delete_namespaced_pod(
+                            name=name, namespace=namespace, body=self._delete_options
+                        )
+                    else:
+                        body = v1_eviction(
+                            delete_options=self._delete_options,
+                            metadata=V1ObjectMeta(name=name, namespace=namespace),
+                        )
+                        self._api_instance.create_namespaced_pod_eviction(
+                            name=name, namespace=namespace, body=body
+                        )
                 self._changed = True
             except ApiException as exc:
                 if exc.reason != "Not Found":
@@ -362,11 +363,7 @@ class K8sDrainAnsible(object):
                 )
 
     def list_pods(self):
-        params = {
-            "field_selector": "spec.nodeName={name}".format(
-                name=self._module.params.get("name")
-            )
-        }
+        params = {"field_selector": "spec.nodeName=" + self._module.params.get("name")}
         pod_selectors = self._module.params.get("pod_selectors")
         if pod_selectors:
             params["label_selector"] = ",".join(pod_selectors)
@@ -376,7 +373,8 @@ class K8sDrainAnsible(object):
         # Mark node as unschedulable
         result = []
         if not node_unschedulable:
-            self.patch_node(unschedulable=True)
+            if not self._module.check_mode:
+                self.patch_node(unschedulable=True)
             result.append(
                 "node {0} marked unschedulable.".format(self._module.params.get("name"))
             )
@@ -391,7 +389,8 @@ class K8sDrainAnsible(object):
         def _revert_node_patch():
             if self._changed:
                 self._changed = False
-                self.patch_node(unschedulable=False)
+                if not self._module.check_mode:
+                    self.patch_node(unschedulable=False)
 
         try:
             pod_list = self.list_pods()
@@ -401,7 +400,7 @@ class K8sDrainAnsible(object):
             delete_emptydir_data = self._drain_options.get(
                 "delete_emptydir_data", False
             )
-            pods, warnings, errors = filter_pods(
+            pods, warnings, errors, info = filter_pods(
                 pod_list.items, force, ignore_daemonset, delete_emptydir_data
             )
             if errors:
@@ -431,18 +430,25 @@ class K8sDrainAnsible(object):
         if pods:
             self.evict_pods(pods)
             number_pod = len(pods)
-            if self._drain_options.get("wait_timeout") is not None:
-                warn = self.wait_for_pod_deletion(
-                    pods,
-                    self._drain_options.get("wait_timeout"),
-                    self._drain_options.get("wait_sleep"),
+            if self._module.check_mode:
+                result.append(
+                    "Would have deleted {0} Pod(s) from node if not in check mode.".format(
+                        number_pod
+                    )
                 )
-                if warn:
-                    warnings.append(warn)
-            result.append("{0} Pod(s) deleted from node.".format(number_pod))
+            else:
+                wait_timeout = self._drain_options.get("wait_timeout")
+                wait_sleep = self._drain_options.get("wait_sleep")
+                if wait_timeout is not None:
+                    warn = self.wait_for_pod_deletion(pods, wait_timeout, wait_sleep)
+                    if warn:
+                        warnings.append(warn)
+                result.append("{0} Pod(s) deleted from node.".format(number_pod))
         if warnings:
             for warning in warnings:
                 self._module.warn(warning)
+        for line in info:
+            self._module.debug(line)
         return dict(result=" ".join(result))
 
     def patch_node(self, unschedulable):
@@ -483,7 +489,8 @@ class K8sDrainAnsible(object):
                 self._module.exit_json(
                     result="node {0} already marked unschedulable.".format(name)
                 )
-            self.patch_node(unschedulable=True)
+            if not self._module.check_mode:
+                self.patch_node(unschedulable=True)
             result["result"] = "node {0} marked unschedulable.".format(name)
             self._changed = True
 
@@ -492,7 +499,8 @@ class K8sDrainAnsible(object):
                 self._module.exit_json(
                     result="node {0} already marked schedulable.".format(name)
                 )
-            self.patch_node(unschedulable=False)
+            if not self._module.check_mode:
+                self.patch_node(unschedulable=False)
             result["result"] = "node {0} marked schedulable.".format(name)
             self._changed = True
 
@@ -535,7 +543,9 @@ def argspec():
 
 
 def main():
-    module = AnsibleK8SModule(module_class=AnsibleModule, argument_spec=argspec())
+    module = AnsibleK8SModule(
+        module_class=AnsibleModule, argument_spec=argspec(), supports_check_mode=True
+    )
 
     if not HAS_EVICTION_API:
         module.fail_json(

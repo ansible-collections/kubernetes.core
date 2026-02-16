@@ -1,0 +1,54 @@
+---
+- name: Uncordon node (check_mode=true)
+  k8s_drain:
+    state: uncordon
+    name: '{{ node_to_drain }}'
+  register: uncordon_check_mode
+  check_mode: true
+
+- name: Assert that module reported change while running in check_mode
+  assert:
+    that:
+    - uncordon_check_mode is changed
+
+- name: Ensure the node is still unschedulable (uncordon run in check_mode)
+  ansible.builtin.include_tasks: tasks/validate_node_status.yml
+
+- name: Uncordon node
+  k8s_drain:
+    state: uncordon
+    name: '{{ node_to_drain }}'
+  register: uncordon
+
+- name: Assert that module reported change
+  assert:
+    that:
+    - uncordon is changed
+
+- name: Ensure the node is now schedulable
+  ansible.builtin.include_tasks: tasks/validate_node_status.yml
+  vars:
+    schedulable: true
+
+- name: Test uncordon idempotency (check_mode=true)
+  k8s_drain:
+    state: uncordon
+    name: '{{ node_to_drain }}'
+  register: uncordon_checkmode_idempotency
+  check_mode: true
+
+- name: assert that uncordon is not changed (idempotency with check mode)
+  assert:
+    that:
+    - uncordon_checkmode_idempotency is not changed
+
+- name: Test uncordon idempotency
+  k8s_drain:
+    state: uncordon
+    name: '{{ node_to_drain }}'
+  register: uncordon
+
+- name: assert that uncordon is not changed
+  assert:
+    that:
+    - uncordon is not changed
