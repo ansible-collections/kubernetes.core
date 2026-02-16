@@ -739,8 +739,8 @@ def get_plugin_version(plugin):
         return None
 
     for line in out:
-        if line[0] == plugin:
-            return line[1]
+        if line["name"] == plugin:
+            return line["version"]
     return None
 
 
