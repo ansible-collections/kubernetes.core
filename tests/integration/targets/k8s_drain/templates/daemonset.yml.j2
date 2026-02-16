@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: '{{ daemonset_name }}'
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchFields:
+          - key: metadata.name
+            operator: In
+            values:
+            - '{{ node_to_drain }}'
+  selector:
+    matchLabels:
+      drain: daemonset-pod
+  template:
+    metadata:
+      labels:
+        drain: daemonset-pod
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/node-exporter
+        ports:
+        - containerPort: 80

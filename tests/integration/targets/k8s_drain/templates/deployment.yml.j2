@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{{ deployment_name }}'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      drain: emptyDir
+  template:
+    metadata:
+      labels:
+        drain: emptyDir
+    spec:
+      metadata:
+        labels:
+          drain: emptyDir
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchFields:
+              - key: metadata.name
+                operator: In
+                values:
+                - '{{ node_to_drain }}'
+      containers:
+        - name: busybox-container
+          image: busybox
+          command:
+            - /bin/sh
+            - -c
+            - while true;do date;sleep 5; done
+          volumeMounts:
+            - mountPath: /emptydir
+              name: emptydir
+      volumes:
+        - name: emptydir
+          emptyDir: {}

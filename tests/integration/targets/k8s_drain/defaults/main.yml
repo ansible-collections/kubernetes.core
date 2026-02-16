@@ -1,3 +1,7 @@
 ---
 test_namespace: "drain"
 k8s_wait_timeout: 400
+daemonset_name: promotheus
+deployment_name: busybox-emptydir
+pod1_name: "busybox-1"
+pod2_name: "busybox-2"

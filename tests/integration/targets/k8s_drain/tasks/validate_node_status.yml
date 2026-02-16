@@ -1,0 +1,18 @@
+---
+- name: Retrieve node information
+  k8s_info:
+    kind: Node
+    name: "{{ node_to_drain }}"
+  register: node_info
+
+- name: Validate that node is schedulable
+  ansible.builtin.assert:
+    that:
+      - node_info.resources.0.spec.unschedulable is undefined
+  when: schedulable | default('false') | bool
+
+- name: Validate that node is unschedulable
+  ansible.builtin.assert:
+    that:
+      - node_info.resources.0.spec.unschedulable | bool
+  when: not (schedulable | default('false') | bool)
