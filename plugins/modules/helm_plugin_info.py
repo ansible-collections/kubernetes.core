@@ -98,9 +98,6 @@ def main():
         supports_check_mode=True,
     )
 
-    # Validate Helm version >=3.0.0,<4.0.0
-    module.validate_helm_version()
-
     plugin_name = module.params.get("plugin_name")
 
     rc, output, err, command = module.get_helm_plugin_list()
