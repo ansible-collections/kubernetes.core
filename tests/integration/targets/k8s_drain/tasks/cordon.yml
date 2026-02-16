@@ -1,0 +1,65 @@
+---
+- name: Cordon node (check mode)
+  k8s_drain:
+    state: cordon
+    name: '{{ node_to_drain }}'
+  register: cordon_check_mode
+  check_mode: true
+
+- name: assert that module reported change while running in check_mode
+  assert:
+    that:
+    - cordon_check_mode is changed
+
+- name: Ensure the node remain schedulable (cordon run on check mode)
+  ansible.builtin.include_tasks: tasks/validate_node_status.yml
+  vars:
+    schedulable: true
+
+- name: Cordon node
+  k8s_drain:
+    state: cordon
+    name: '{{ node_to_drain }}'
+  register: cordon
+
+- name: assert that cordon is changed
+  assert:
+    that:
+    - cordon is changed
+
+- name: Ensure the node is unschedulable
+  ansible.builtin.include_tasks: tasks/validate_node_status.yml
+
+- name: Test cordon idempotency (check_mode=true)
+  k8s_drain:
+    state: cordon
+    name: '{{ node_to_drain }}'
+  register: cordon_checkmode_idempotency
+  check_mode: true
+
+- name: Assert that module is idempotent while running in check mode
+  assert:
+    that:
+    - cordon_checkmode_idempotency is not changed
+
+- name: Test cordon idempotency
+  k8s_drain:
+    state: cordon
+    name: '{{ node_to_drain }}'
+  register: cordon
+
+- name: assert that cordon is not changed
+  assert:
+    that:
+    - cordon is not changed
+
+- name: Get pods
+  k8s_info:
+    kind: Pod
+    namespace: '{{ test_namespace }}'
+  register: Pod
+
+- name: assert that pods are running on cordoned node
+  assert:
+    that:
+    - Pod.resources | selectattr('status.phase', 'equalto', 'Running') | selectattr('spec.nodeName', 'equalto', node_to_drain) | list | length > 0
