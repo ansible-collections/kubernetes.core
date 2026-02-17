@@ -216,7 +216,7 @@ class AnsibleHelmModule(object):
             self.fail_json(msg="Unable to determine Helm version")
 
         if not support_v4:
-            if(LooseVersion(helm_version) < LooseVersion("3.0.0")) or (
+            if (LooseVersion(helm_version) < LooseVersion("3.0.0")) or (
                 LooseVersion(helm_version) >= LooseVersion("4.0.0")
             ):
                 self.fail_json(
