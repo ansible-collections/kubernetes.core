@@ -206,20 +206,27 @@ class AnsibleHelmModule(object):
             return m.group(1)
         return None
 
-    def validate_helm_version(self):
+    def validate_helm_version(self, support_v4=False):
         """
-        Validate that Helm version is >=3.0.0 and <4.0.0.
-        Helm 4 is not yet supported.
+        Validate that Helm version is >=3.0.0.
+        When support_v4 is False the module does not support Helm v4
         """
         helm_version = self.get_helm_version()
         if helm_version is None:
             self.fail_json(msg="Unable to determine Helm version")
 
-        if (LooseVersion(helm_version) < LooseVersion("3.0.0")) or (
-            LooseVersion(helm_version) >= LooseVersion("4.0.0")
-        ):
+        if not support_v4:
+            if(LooseVersion(helm_version) < LooseVersion("3.0.0")) or (
+                LooseVersion(helm_version) >= LooseVersion("4.0.0")
+            ):
+                self.fail_json(
+                    msg="Helm version must be >=3.0.0,<4.0.0, current version is {0}".format(
+                        helm_version
+                    )
+                )
+        elif LooseVersion(helm_version) < LooseVersion("3.0.0"):
             self.fail_json(
-                msg="Helm version must be >=3.0.0,<4.0.0, current version is {0}".format(
+                msg="Helm version must be >=3.0.0, current version is {0}".format(
                     helm_version
                 )
             )

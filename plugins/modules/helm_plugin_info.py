@@ -16,7 +16,7 @@ version_added: 1.0.0
 author:
   - Abhijeet Kasurde (@Akasurde)
 requirements:
-  - "helm (https://github.com/helm/helm/releases)"
+  - "helm >= 3.0.0 (https://github.com/helm/helm/releases)"
 description:
   -  Gather information about Helm plugins installed in namespace.
 options:
@@ -97,6 +97,9 @@ def main():
         mutually_exclusive=HELM_AUTH_MUTUALLY_EXCLUSIVE,
         supports_check_mode=True,
     )
+
+    # Validate helm version >= 3.0.0
+    module.validate_helm_version(support_v4=True)
 
     plugin_name = module.params.get("plugin_name")
 
