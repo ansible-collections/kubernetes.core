@@ -6,6 +6,7 @@
       - 3.1.0
       - 3.0.0
       - 2.3.0
+      - 4.0.0
 
 - block:
     - name: Create temp directory for helm tests
@@ -20,18 +21,14 @@
     - set_fact:
         destination: "{{ temp_dir }}"
 
-    - name: Create Helm directories
-      file:
-        state: directory
-        path: "{{ temp_dir }}/{{ item }}"
-      with_items: "{{ helm_versions }}"
-
-    - name: Unarchive Helm binary
-      unarchive:
-        src: "https://get.helm.sh/helm-v{{ item }}-linux-amd64.tar.gz"
-        dest: "{{ temp_dir }}/{{ item }}"
-        remote_src: yes
-      with_items: "{{ helm_versions }}"
+    - name: Install Helm versions
+      ansible.builtin.include_role:
+        name: install_helm
+      loop: "{{ helm_versions }}"
+      loop_control:
+        loop_var: helm_version
+      vars:
+        helm_install_path: "{{ temp_dir }}/{{ helm_version }}"
 
     # Testing helm pull with helm version == 2.3.0
     - block:
@@ -47,7 +44,7 @@
           assert:
             that:
               - _result is failed
-              - _result.msg == "Helm version must be >=3.0.0,<4.0.0, current version is 2.3.0"
+              - _result.msg == "Helm version must be >=3.0.0, current version is 2.3.0"
 
       vars:
         helm_path: "{{ temp_dir }}/2.3.0/linux-amd64/helm"
