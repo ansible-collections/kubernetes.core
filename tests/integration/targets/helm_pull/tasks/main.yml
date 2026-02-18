@@ -25,10 +25,9 @@
       ansible.builtin.include_role:
         name: install_helm
       loop: "{{ helm_versions }}"
-      loop_control:
-        loop_var: helm_version
       vars:
-        helm_install_path: "{{ temp_dir }}/{{ helm_version }}"
+        helm_version: "v{{ item }}"
+        helm_install_path: "{{ temp_dir }}/{{ item }}"
 
     # Testing helm pull with helm version == 2.3.0
     - block:

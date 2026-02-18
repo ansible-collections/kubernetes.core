@@ -21,6 +21,7 @@
     DESIRED_VERSION: "{{ helm_version }}"
     HELM_INSTALL_DIR: "{{ helm_install_path }}"
     PATH: "{{ os_path }}:{{ helm_install_path }}"
+    VERIFY_CHECKSUM: "false"
   register: helm_install_result
   changed_when: "'is already at the latest version' not in helm_install_result.stdout"
 
