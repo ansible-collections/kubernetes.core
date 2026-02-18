@@ -15,7 +15,7 @@
   vars:
     major_version: "{{ helm_version | split('.') | first | replace('v', '') }}"
 
-- name: Run the install script
+- name: Run the install script (helm version = {{ helm_version }})
   ansible.builtin.command: /tmp/get_helm.sh
   environment:
     DESIRED_VERSION: "{{ helm_version }}"

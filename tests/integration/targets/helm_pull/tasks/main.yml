@@ -5,7 +5,6 @@
       - 3.8.0
       - 3.1.0
       - 3.0.0
-      - 2.3.0
       - 4.0.0
 
 - block:
@@ -28,25 +27,6 @@
       vars:
         helm_version: "v{{ item }}"
         helm_install_path: "{{ temp_dir }}/{{ item }}"
-
-    # Testing helm pull with helm version == 2.3.0
-    - block:
-        - name: Assert that helm pull failed with helm <= 3.0.0
-          helm_pull:
-            binary_path: "{{ helm_path }}"
-            chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
-            destination: "{{ destination }}"
-          ignore_errors: true
-          register: _result
-
-        - name: assert that module failed with proper message
-          assert:
-            that:
-              - _result is failed
-              - _result.msg == "Helm version must be >=3.0.0, current version is 2.3.0"
-
-      vars:
-        helm_path: "{{ temp_dir }}/2.3.0/linux-amd64/helm"
 
     # Testing helm pull with helm version == 3.0.0
     - block:
@@ -99,7 +79,7 @@
               - _result.msg == "Parameter chart_ca_cert requires helm >= 3.1.0, current version is 3.0.0"
 
       vars:
-        helm_path: "{{ temp_dir }}/3.0.0/linux-amd64/helm"
+        helm_path: "{{ temp_dir }}/3.0.0/helm"
 
     # Testing helm pull with helm version == 3.1.0
     - block:
@@ -139,7 +119,7 @@
               - _result.msg == "Parameter skip_tls_certs_check requires helm >= 3.3.0, current version is 3.1.0"
 
       vars:
-        helm_path: "{{ temp_dir }}/3.1.0/linux-amd64/helm"
+        helm_path: "{{ temp_dir }}/3.1.0/helm"
 
     # Testing helm pull with helm version == 3.8.0
     - block:
@@ -313,7 +293,7 @@
               - _chart_after_force.stat.isdir
 
       vars:
-        helm_path: "{{ temp_dir }}/3.8.0/linux-amd64/helm"
+        helm_path: "{{ temp_dir }}/3.8.0/helm"
 
 
   always:
