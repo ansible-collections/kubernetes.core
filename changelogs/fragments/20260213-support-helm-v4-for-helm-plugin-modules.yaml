@@ -2,3 +2,4 @@
 minor_changes:
   - helm_plugin - Ensure compatibility with Heml v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
   - helm_plugin_info - Ensure compatibility with Heml v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+  - helm_info - Ensure compatibility with Heml v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
