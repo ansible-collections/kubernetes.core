@@ -1,0 +1,60 @@
+---
+- name: Run tests for helm_registry_auth with different helm versions
+  block:
+    - name: Create temporary directory to install helm binaries
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .helm
+      register: _tmpdir
+
+    - name: Ensure that Docker demon is running
+      ansible.builtin.command: "docker info"
+      register: _docker_info
+      failed_when: _docker_info.rc != 0
+
+    - name: Copy htpasswd to the tmpfile directory
+      ansible.builtin.copy:
+        src: registry.password
+        dest: "{{ _tmpdir.path }}/registry.password"
+
+    - name: Pull test helm chart
+      ansible.builtin.uri:
+        url: "{{ test_chart }}"
+        dest: "{{ _tmpdir.path }}/k8s-monitoring-1.6.8.tgz"
+        return_content: no
+        status_code: 200
+
+    - name: Setup the registry
+      ansible.builtin.command: >-
+        docker run -d --rm
+        -p {{ registry_port }}:5000
+        --name "{{ registry_name }}"
+        -v "{{ _tmpdir.path }}:/auth"
+        -e "REGISTRY_AUTH=htpasswd"
+        -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm"
+        -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/registry.password
+        registry:2
+      register: _setup_registry
+      failed_when: _setup_registry.rc != 0
+
+    - name: Ensure that the registry is running and rechable
+      ansible.builtin.wait_for:
+        host: localhost
+        port: "{{ registry_port }}"
+
+    - name: Run tests
+      ansible.builtin.include_tasks: run_tests.yml
+      loop: "{{ helm_versions }}"
+      loop_control:
+        loop_var: helm_version
+
+  always:
+    - name: Stop and remove the registry
+      ansible.builtin.command: docker stop {{ registry_name }}
+      ignore_errors: true
+
+    - name: Delete temporary directory
+      ansible.builtin.file:
+        state: absent
+        path: "{{ _tmpdir.path }}"
+      ignore_errors: true
