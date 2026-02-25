@@ -10,16 +10,16 @@ The Ansible Kubernetes collection includes a variety of Ansible content to help 
   - [Python version compatibility](#python-version-compatibility)
   - [Kubernetes version compatibility](#kubernetes-version-compatibility)
   - [Helm version compatibility](#helm-version-compatibility)
-- [Included content](#included-content)
+- [Included Content](#included-content)
 - [Installation](#installation)
   - [Installing the Kubernetes Python Library](#installing-the-kubernetes-python-library)
 - [Use Cases](#use-cases)
 - [Ansible Turbo Mode Tech Preview](#ansible-turbo-mode-tech-preview)
 - [Testing](#testing)
-- [Contributing to this collection](#contributing-to-this-collection)
+- [Contributing to This Collection](#contributing-to-this-collection)
 - [Publishing New Versions](#publishing-new-versions)
 - [Support](#support)
-- [Release notes](#release-notes)
+- [Release Notes](#release-notes)
 - [Related Information](#related-information)
 - [Code of Conduct](#code-of-conduct)
 - [License Information](#license-information)
@@ -68,7 +68,7 @@ This collection supports Kubernetes versions >= 1.24.
 
 Helm modules in this collection are compatible with Helm v3.x and are not yet compatible with Helm v4. Individual modules and their parameters may support a more specific range of Helm versions.
 
-## Included content
+## Included Content
 
 Click on the name of a plugin or module to view that content's documentation:
 
@@ -147,7 +147,7 @@ collections:
     version: 6.3.0
 ```
 
-or using the ansible-galaxy command as follows:
+or using the `ansible-galaxy` command as follows:
 
 ```shell
 ansible-galaxy collection install kubernetes.core:==6.3.0
@@ -238,7 +238,7 @@ If upgrading older playbooks which were built prior to Ansible 2.10 and this col
         state: present
 ```
 
-For documentation on how to use individual modules and other content included in this collection, please see the links in the [Included content](#included-content) section.
+For documentation on how to use individual modules and other content included in this collection, please see the links in the [Included Content](#included-content) section.
 
 ## Ansible Turbo Mode Tech Preview
 
@@ -284,7 +284,7 @@ kind create cluster
 make test-molecule
 ```
 
-## Contributing to this collection
+## Contributing to This Collection
 
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Kubernetes collection repository](https://github.com/ansible-collections/kubernetes.core).
 
@@ -331,7 +331,7 @@ For the latest supported versions, refer to the release notes below.
 If you encounter issues or have questions, you can submit a support request through the following channels:
  - GitHub Issues: Report bugs, request features, or ask questions by opening an issue in the [GitHub repository](https://github.com/ansible-collections/kubernetes.core/).
 
-## Release notes
+## Release Notes
 
 See the [raw generated changelog](https://github.com/ansible-collections/kubernetes.core/blob/main/CHANGELOG.rst).
 
