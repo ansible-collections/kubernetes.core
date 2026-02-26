@@ -38,7 +38,7 @@ The collection requires:
 | stable-2.16 | 3.10, 3.11 | 3.10, 3.11 | - |
 | milestone | - | - | 3.12 |
 
-**Note**: ansible-core 2.16 will reach EOL in May 2025.
+**Note**: ansible-core 2.16 reached EOL in May 2025.
 
 ### Integration Test Details
 
