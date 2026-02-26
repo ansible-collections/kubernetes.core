@@ -206,28 +206,35 @@ class AnsibleHelmModule(object):
             return m.group(1)
         return None
 
-    def validate_helm_version(self, support_v4=False):
+    def is_helm_v4(self):
+        helm_version = self.get_helm_version()
+        if helm_version is None:
+            return False
+        return LooseVersion(helm_version) >= LooseVersion("4.0.0")
+
+    def is_helm_version_compatible_with_helm_diff(self, helm_diff_version):
         """
-        Validate that Helm version is >=3.0.0.
-        When support_v4 is False the module does not support Helm v4
+        Return true if the helm version is compatible with the helm diff version
+        Helm v4 requires helm diff v3.14.0
+        """
+        if not helm_diff_version:
+            return False
+        if self.is_helm_v4():
+            return LooseVersion(helm_diff_version) >= LooseVersion("3.14.0")
+        return True
+
+    def validate_helm_version(self, version="3.0.0"):
+        """
+        Validate that Helm version is >= version (default version=3.0.0).
         """
         helm_version = self.get_helm_version()
         if helm_version is None:
             self.fail_json(msg="Unable to determine Helm version")
 
-        if not support_v4:
-            if (LooseVersion(helm_version) < LooseVersion("3.0.0")) or (
-                LooseVersion(helm_version) >= LooseVersion("4.0.0")
-            ):
-                self.fail_json(
-                    msg="Helm version must be >=3.0.0,<4.0.0, current version is {0}".format(
-                        helm_version
-                    )
-                )
-        elif LooseVersion(helm_version) < LooseVersion("3.0.0"):
+        if LooseVersion(helm_version) < LooseVersion(version):
             self.fail_json(
-                msg="Helm version must be >=3.0.0, current version is {0}".format(
-                    helm_version
+                msg="Helm version must be >= {0}, current version is {1}".format(
+                    version, helm_version
                 )
             )
 

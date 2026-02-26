@@ -177,7 +177,7 @@ def main():
     )
 
     # Validate helm version >= 3.0.0
-    module.validate_helm_version(support_v4=True)
+    module.validate_helm_version()
 
     state = module.params.get("state")
 

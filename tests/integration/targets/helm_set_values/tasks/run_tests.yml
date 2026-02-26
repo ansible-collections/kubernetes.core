@@ -1,0 +1,68 @@
+---
+# install chart using set_values and release_values
+- name: 'Install helm binary (> 3.10.0) requires to use set-json (helm_version={{ item }})'
+  include_role:
+    name: install_helm
+  vars:
+    helm_version: "{{ item }}"
+
+- name: Install helm using set_values parameters
+  helm:
+    binary_path: "{{ helm_binary }}"
+    chart_ref: oci://registry-1.docker.io/bitnamicharts/apache
+    release_name: 'test-apache-{{ item }}'
+    release_namespace: "{{ helm_namespace }}"
+    create_namespace: true
+    set_values:
+    - value: 'master.image={"registry": "docker.io", "repository": "bitnami/apache", "tag": "2.4.54-debian-11-r74"}'
+      value_type: json
+    release_values:
+      replicaCount: 3
+
+- name: Get release info
+  helm_info:
+    binary_path: "{{ helm_binary }}"
+    release_name: 'test-apache-{{ item }}'
+    release_namespace: "{{ helm_namespace }}"
+  register: values
+
+- name: Assert that release was created with user-defined variables
+  assert:
+    that:
+    - values.status["release_values"].replicaCount == 3
+    - values.status["release_values"].master.image.registry == "docker.io"
+    - values.status["release_values"].master.image.repository == "bitnami/apache"
+    - values.status["release_values"].master.image.tag == "2.4.54-debian-11-r74"
+
+# install chart using set_values and values_files
+- name: copy content into values file
+  copy:
+    content: |
+      ---
+      mode: distributed
+    dest: "{{ ymlfile.path }}"
+
+- name: Install helm using set_values parameters
+  helm:
+    binary_path: "{{ helm_binary }}"
+    chart_ref: oci://registry-1.docker.io/bitnamicharts/minio
+    release_name: 'test-minio-{{ item }}'
+    release_namespace: "{{ helm_namespace }}"
+    create_namespace: true
+    set_values:
+    - value: 'disableWebUI=true'
+    values_files:
+    - "{{ ymlfile.path }}"
+
+- name: Get release info
+  helm_info:
+    binary_path: "{{ helm_binary }}"
+    release_name: 'test-minio-{{ item }}'
+    release_namespace: "{{ helm_namespace }}"
+  register: values
+
+- name: Assert that release was created with user-defined variables
+  assert:
+    that:
+    - values.status["release_values"].mode == "distributed"
+    - values.status["release_values"].disableWebUI is true

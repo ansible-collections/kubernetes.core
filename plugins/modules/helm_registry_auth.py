@@ -78,7 +78,7 @@ options:
   plain_http:
     description:
       - Use insecure HTTP connections for C(helm registry login).
-      - Requires Helm >= 3.10.0
+      - Requires Helm >= 3.18.0
     required: false
     type: bool
     default: False
@@ -206,8 +206,8 @@ def main():
         supports_check_mode=True,
     )
 
-    # Validate Helm version >=3.0.0
-    module.validate_helm_version(support_v4=True)
+    # Validate Helm version >=3.8.0
+    module.validate_helm_version(version="3.8.0")
 
     changed = False
 
