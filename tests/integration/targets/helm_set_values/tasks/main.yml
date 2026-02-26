@@ -26,13 +26,13 @@
     - user_values.status["release_values"]["versioned"] is false
 
 - block:
-    - name: create temporary file to save values in
-      tempfile:
-        suffix: .yml
-      register: ymlfile
+  - name: create temporary file to save values in
+    tempfile:
+      suffix: .yml
+    register: ymlfile
 
-    - ansible.builtin.include_tasks: run_tests.yml
-      loop: "{{ helm_versions }}"
+  - ansible.builtin.include_tasks: run_tests.yml
+    loop: "{{ helm_versions }}"
 
   always:
   - name: Delete temporary file

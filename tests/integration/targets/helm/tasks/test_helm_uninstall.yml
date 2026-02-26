@@ -31,8 +31,8 @@
   - name: assert warning has been raised
     assert:
       that:
-        - uninstall.warnings is defined
-        - '"helm uninstall support option --wait for helm release >= 3.7.0" in uninstall.warnings'
+      - uninstall.warnings is defined
+      - '"helm uninstall support option --wait for helm release >= 3.7.0" in uninstall.warnings'
 
   - name: Install Helm v4
     ansible.builtin.include_role:
@@ -88,10 +88,10 @@
       - _info.status is undefined
 
   always:
-    - name: Remove namespace
-      k8s:
-        kind: Namespace
-        name: "{{ helm_namespace }}"
-        state: absent
-      ignore_errors: true
+  - name: Remove namespace
+    k8s:
+      kind: Namespace
+      name: "{{ helm_namespace }}"
+      state: absent
+    ignore_errors: true
   when: test_version.result
