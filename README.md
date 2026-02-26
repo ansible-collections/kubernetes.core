@@ -6,10 +6,10 @@ The Ansible Kubernetes collection includes a variety of Ansible content to help 
 - [Description](#description)
 - [Communication](#communication)
 - [Requirements](#requirements)
-  - [Ansible version compatibility](#ansible-version-compatibility)
-  - [Python version compatibility](#python-version-compatibility)
-  - [Kubernetes version compatibility](#kubernetes-version-compatibility)
-  - [Helm version compatibility](#helm-version-compatibility)
+  - [Ansible Version Compatibility](#ansible-version-compatibility)
+  - [Python Version Compatibility](#python-version-compatibility)
+  - [Kubernetes Version Compatibility](#kubernetes-version-compatibility)
+  - [Helm Version Compatibility](#helm-version-compatibility)
 - [Included Content](#included-content)
 - [Installation](#installation)
   - [Installing the Kubernetes Python Library](#installing-the-kubernetes-python-library)
@@ -44,7 +44,7 @@ For more information about communication, see the [Ansible communication guide](
 
 ## Requirements
 
-### Ansible version compatibility
+### Ansible Version Compatibility
 
 <!--start requires_ansible-->
 This collection has been tested against the following Ansible versions: **>=2.16.0**.
@@ -54,17 +54,17 @@ A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
 <!--end requires_ansible-->
 
-### Python version compatibility
+### Python Version Compatibility
 
-This collection requires Python 3.9 or greater.
+This collection requires Python 3.10 or greater.
 
 Note: Python 2 is deprecated as of [1st January 2020](https://www.python.org/doc/sunset-python-2/). Please use Python 3.
 
-### Kubernetes version compatibility
+### Kubernetes Version Compatibility
 
 This collection supports Kubernetes versions >= 1.24.
 
-### Helm version compatibility
+### Helm Version Compatibility
 
 Helm modules in this collection are compatible with Helm v3.x and are not yet compatible with Helm v4. Individual modules and their parameters may support a more specific range of Helm versions.
 

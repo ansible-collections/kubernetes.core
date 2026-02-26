@@ -24,21 +24,25 @@ The following tests run on every pull request:
 
 These are determined by the reusable workflows from [ansible-network/github_actions](https://github.com/ansible-network/github_actions) and the collection's minimum requirements.
 
+For the official Ansible core support matrix, see the [Ansible documentation](https://docs.ansible.com/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix).
+
 The collection requires:
-- **ansible-core**: >=2.16.0
-- **Python**: 3.9+
+- **ansible-core**: >=2.16
+- **Python**: 3.10+
 
 | ansible-core Version | Sanity Tests | Unit Tests | Integration Tests |
 | -------------------- | ------------ | ---------- | ----------------- |
 | devel | 3.12, 3.13, 3.14 | 3.12, 3.13 | - |
-| stable-2.20 | 3.12, 3.13, 3.14 | 3.12, 3.13 | - |
+| stable-2.20 | 3.12, 3.13, 3.14 | 3.12, 3.13, 3.14 | - |
 | stable-2.19 | 3.11, 3.12, 3.13 | 3.11, 3.12, 3.13 | - |
 | stable-2.18 | 3.11, 3.12, 3.13 | 3.11, 3.12, 3.13 | - |
 | stable-2.17 | 3.10, 3.11, 3.12 | 3.10, 3.11, 3.12 | - |
 | stable-2.16 | 3.10, 3.11 | 3.10, 3.11 | - |
 | milestone | - | - | 3.12 |
 
-**Note**: ansible-core 2.16 reached EOL in May 2025.
+**Note**:
+- ansible-core 2.16 reached EOL in May 2025.
+- ansible-core 2.17 reached EOL in November 2025.
 
 ### Integration Test Details
 
