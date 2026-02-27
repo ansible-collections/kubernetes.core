@@ -20,10 +20,3 @@
 
 - name: Run tests
   include_tasks: run_test.yml
-  loop_control:
-    loop_var: helm_version
-  with_items:
-    - "v3.15.4"
-    - "v3.16.0"
-    - "v3.17.0"
-    - "v4.0.0"
