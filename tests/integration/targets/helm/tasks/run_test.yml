@@ -3,6 +3,11 @@
   include_role:
     name: install_helm
 
+- name: Define namespaces
+  ansible.builtin.set_fact:
+    test_namespace: "{{ test_namespace | default([]) + [item + helm_version | replace('.', '-')] }}"
+  loop: "{{ default_namespace }}"
+
 - name: Main helm tests with Helm v3
   block:
     - name: Install helm-diff plugin

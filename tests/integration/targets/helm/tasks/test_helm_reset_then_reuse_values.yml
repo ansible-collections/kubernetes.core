@@ -95,4 +95,4 @@
         kind: Namespace
         name: "{{ helm_namespace }}"
         state: absent
-        wait: true
+        wait: false

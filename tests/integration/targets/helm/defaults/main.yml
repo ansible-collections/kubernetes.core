@@ -15,7 +15,7 @@ chart_test_values:
   revisionHistoryLimit: 0
   myValue: "changed"
 
-test_namespace:
+default_namespace:
   - "helm-test-crds"
   - "helm-uninstall"
   - "helm-read-envvars"

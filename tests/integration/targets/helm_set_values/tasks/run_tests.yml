@@ -66,4 +66,3 @@
     that:
     - values.status["release_values"].mode == "distributed"
     - values.status["release_values"].disableWebUI is true
-  
