@@ -9,7 +9,10 @@ chart_test_version: 4.2.4
 chart_test_version_local_path: 1.32.0
 chart_test_version_upgrade: 4.2.5
 chart_test_version_upgrade_local_path: 1.33.0
-chart_test_repo: "https://kubernetes.github.io/ingress-nginx"
+chart_test_repo: "https://kubelauncher.github.io/charts"
+chart_test_repo_name: redis
+chart_test_repo_version: 0.2.12
+chart_test_repo_version_upgrade: 0.2.13
 chart_test_git_repo: "http://github.com/helm/charts.git"
 chart_test_values:
   revisionHistoryLimit: 0

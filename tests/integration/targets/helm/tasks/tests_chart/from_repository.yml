@@ -9,9 +9,9 @@
   include_tasks: "../tests_chart.yml"
   vars:
     source: repository
-    chart_source: "test_helm/{{ chart_test }}"
-    chart_source_version: "{{ chart_test_version }}"
-    chart_source_version_upgrade: "{{ chart_test_version_upgrade }}"
+    chart_source: "test_helm/{{ chart_test_repo_name }}"
+    chart_source_version: "{{ chart_test_repo_version }}"
+    chart_source_version_upgrade: "{{ chart_test_repo_version_upgrade }}"
     helm_namespace: "{{ test_namespace[7] }}"
 
 - name: Remove chart repo
