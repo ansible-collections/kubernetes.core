@@ -25,7 +25,7 @@
         that:
           - empty_info.status is undefined
 
-    - name: "Install fail {{ chart_test }} from {{ source }}"
+    - name: "Install fail {{ chart_repository | default(chart_test) }} from {{ source }}"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -35,13 +35,13 @@
       ignore_errors: yes
       register: install_fail
 
-    - name: "Assert that Install fail {{ chart_test }} from {{ source }}"
+    - name: "Assert that Install fail {{ chart_repository | default(chart_test) }} from {{ source }}"
       assert:
         that:
           - install_fail is failed
           - "'Error: create: failed to create: namespaces \"' + helm_namespace + '\" not found' in install_fail.stderr"
 
-    - name: "Install {{ chart_test }} from {{ source }} in check mode"
+    - name: "Install {{ chart_repository | default(chart_test) }} from {{ source }} in check mode"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -52,14 +52,14 @@
       register: install_check_mode
       check_mode: true
 
-    - name: "Assert that {{ chart_test }} chart is installed from {{ source }} in check mode"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is installed from {{ source }} in check mode"
       assert:
         that:
           - install_check_mode is changed
           - install_check_mode.status is defined
           - install_check_mode.status.release_values is defined
 
-    - name: "Install {{ chart_test }} from {{ source }}"
+    - name: "Install {{ chart_repository | default(chart_test) }} from {{ source }}"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -69,11 +69,11 @@
         create_namespace: true
       register: install
 
-    - name: "Assert that {{ chart_test }} chart is installed from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is installed from {{ source }}"
       assert:
         that:
           - install is changed
-          - install.status.chart == chart_test+"-"+chart_test_version
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - install.status.status | lower == 'deployed'
 
     - name: Check helm_info content
@@ -92,10 +92,10 @@
           - deployed
       register: release_state_content_info
 
-    - name: "Assert that {{ chart_test }} is installed from {{ source }} with helm_info"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} is installed from {{ source }} with helm_info"
       assert:
         that:
-          - content_info.status.chart == chart_test+"-"+chart_test_version
+          - content_info.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - content_info.status.status | lower == 'deployed'
           - release_state_content_info.status.status | lower == 'deployed'
 
@@ -112,10 +112,10 @@
       assert:
         that:
           - install is not changed
-          - install.status.chart == chart_test+"-"+chart_test_version
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - install.status.status | lower == 'deployed'
 
-    - name: "Add vars to {{ chart_test }} from {{ source }}"
+    - name: "Add vars to {{ chart_repository | default(chart_test) }} from {{ source }}"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -125,12 +125,12 @@
         values: "{{ chart_test_values }}"
       register: install
 
-    - name: "Assert that {{ chart_test }} chart is upgraded with new var from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is upgraded with new var from {{ source }}"
       assert:
         that:
           - install is changed
           - install.status.status | lower == 'deployed'
-          - install.status.chart == chart_test+"-"+chart_test_version
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - "install.status['release_values'].revisionHistoryLimit == 0"
 
     - name: Check idempotency after adding vars
@@ -148,10 +148,10 @@
         that:
           - install is not changed
           - install.status.status | lower == 'deployed'
-          - install.status.chart == chart_test+"-"+chart_test_version
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - "install.status['release_values'].revisionHistoryLimit == 0"
 
-    - name: "Remove Vars to {{ chart_test }} from {{ source }}"
+    - name: "Remove Vars to {{ chart_repository | default(chart_test) }} from {{ source }}"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -160,12 +160,12 @@
         namespace: "{{ helm_namespace }}"
       register: install
 
-    - name: "Assert that {{ chart_test }} chart is upgraded with new var from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is upgraded with new var from {{ source }}"
       assert:
         that:
           - install is changed
           - install.status.status | lower == 'deployed'
-          - install.status.chart == chart_test+"-"+chart_test_version
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - install.status['release_values'] == {}
 
     - name: Check idempotency after removing vars
@@ -182,10 +182,10 @@
         that:
           - install is not changed
           - install.status.status | lower == 'deployed'
-          - install.status.chart == chart_test+"-"+chart_test_version
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - install.status['release_values'] == {}
 
-    - name: "Upgrade {{ chart_test }} from {{ source }}"
+    - name: "Upgrade {{ chart_repository | default(chart_test) }} from {{ source }}"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -194,12 +194,12 @@
         namespace: "{{ helm_namespace }}"
       register: install
 
-    - name: "Assert that {{ chart_test }} chart is upgraded with new version from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is upgraded with new version from {{ source }}"
       assert:
         that:
           - install is changed
           - install.status.status | lower == 'deployed'
-          - install.status.chart == chart_test+"-"+chart_test_version_upgrade
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_test_version_upgrade
 
     - name: Check idempotency after upgrade
       helm:
@@ -215,9 +215,9 @@
         that:
           - install is not changed
           - install.status.status | lower == 'deployed'
-          - install.status.chart == chart_test+"-"+chart_test_version_upgrade
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_test_version_upgrade
 
-    - name: "Remove {{ chart_test }} from {{ source }}"
+    - name: "Remove {{ chart_repository | default(chart_test) }} from {{ source }}"
       helm:
         binary_path: "{{ helm_binary }}"
         state: absent
@@ -225,7 +225,7 @@
         namespace: "{{ helm_namespace }}"
       register: install
 
-    - name: "Assert that {{ chart_test }} chart is removed from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is removed from {{ source }}"
       assert:
         that:
           - install is changed
@@ -253,7 +253,7 @@
         namespace: "{{ helm_namespace }}"
       register: install
 
-    - name: "Assert that {{ chart_test }} chart is installed from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is installed from {{ source }}"
       assert:
         that:
           - install is changed
@@ -282,12 +282,12 @@
         replace: True
       register: install
 
-    - name: "Assert that {{ chart_test }} chart is installed from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart is installed from {{ source }}"
       assert:
         that:
           - install is changed
 
-    - name: Remove {{ chart_test }} (cleanup)
+    - name: Remove {{ chart_repository | default(chart_test) }} (cleanup)
       helm:
         binary_path: "{{ helm_binary }}"
         state: absent
@@ -300,7 +300,7 @@
         that:
           - install is changed
 
-    - name: "Install {{ chart_test }} from {{ source }} with values_files"
+    - name: "Install {{ chart_repository | default(chart_test) }} from {{ source }} with values_files"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -311,15 +311,15 @@
           - "{{ role_path }}/files/values.yaml"
       register: install
 
-    - name: "Assert that {{ chart_test }} chart has var from {{ source }}"
+    - name: "Assert that {{ chart_repository | default(chart_test) }} chart has var from {{ source }}"
       assert:
         that:
           - install is changed
           - install.status.status | lower == 'deployed'
-          - install.status.chart == chart_test+"-"+chart_test_version
+          - install.status.chart == chart_repository | default(chart_test)+"-"+chart_repository_version | default(chart_test_version)
           - "install.status['release_values'].revisionHistoryLimit == 0"
 
-    - name: "Install {{ chart_test }} from {{ source }} with values_files (again)"
+    - name: "Install {{ chart_repository | default(chart_test) }} from {{ source }} with values_files (again)"
       helm:
         binary_path: "{{ helm_binary }}"
         name: "{{ chart_release_name }}"
@@ -361,7 +361,7 @@
 
     - name: Check templates created
       stat:
-        path: "{{ temp_dir }}/{{ chart_test }}/templates"
+        path: "{{ temp_dir }}/{{ chart_repository | default(chart_test) }}/templates"
       register: result
 
     - assert:
