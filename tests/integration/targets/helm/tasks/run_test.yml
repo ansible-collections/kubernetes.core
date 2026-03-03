@@ -3,7 +3,7 @@
   include_role:
     name: install_helm
 
-- name: Main helm tests with Helm v3
+- name: Main helm tests
   block:
     - name: Install helm-diff plugin
       helm_plugin:
