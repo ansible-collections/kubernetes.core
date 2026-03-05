@@ -32,7 +32,7 @@ PEP440 is the schema used to describe the versions of Ansible.
 
 ### Helm Version Compatibility
 
-This collection supports Helm v3.x and newer. Please note that specific modules or certain parameters may have additional version requirements
+This collection supports Helm v3.x and newer. Please note that specific modules or certain parameters may have additional version requirements.
 
 ### Python Support
 
