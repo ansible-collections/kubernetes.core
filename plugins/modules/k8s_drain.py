@@ -214,21 +214,24 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
             to_delete.append((pod.metadata.namespace, pod.metadata.name))
             continue
 
-        # Pod with local storage cannot be deleted
-        if pod.spec.volumes and any(vol.empty_dir for vol in pod.spec.volumes):
-            localStorage.append((pod.metadata.namespace, pod.metadata.name))
-            continue
-
         # Check replicated Pod
         owner_ref = pod.metadata.owner_references
         if not owner_ref:
-            unmanaged.append((pod.metadata.namespace, pod.metadata.name))
+            # Pod with local storage cannot be deleted
+            if pod.spec.volumes and any(vol.empty_dir for vol in pod.spec.volumes):
+                localStorage.append((pod.metadata.namespace, pod.metadata.name))
+            else:
+                unmanaged.append((pod.metadata.namespace, pod.metadata.name))
         else:
             for owner in owner_ref:
                 if owner.kind == "DaemonSet":
                     daemonSet.append((pod.metadata.namespace, pod.metadata.name))
                 else:
-                    to_delete.append((pod.metadata.namespace, pod.metadata.name))
+                    # Pod with local storage cannot be deleted
+                    if pod.spec.volumes and any(vol.empty_dir for vol in pod.spec.volumes):
+                        localStorage.append((pod.metadata.namespace, pod.metadata.name))
+                    else:
+                        to_delete.append((pod.metadata.namespace, pod.metadata.name))
 
     warnings, errors, info = [], [], []
     if unmanaged:
