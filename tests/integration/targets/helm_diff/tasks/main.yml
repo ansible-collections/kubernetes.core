@@ -239,6 +239,7 @@
           vars:
             chart_local_path: '{{ _tmpd.path }}/test-chart-deployment-time'
             chart_repo_path: 'testing'
+            helm_binary_path: "{{ helm_binary }}"
       always:
         - name: Delete temporary directory
           ansible.builtin.file:

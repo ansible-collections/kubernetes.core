@@ -92,25 +92,11 @@
         path: /tmp/helm/
         state: absent
 
-    - name: Init Helm folders
-      file:
-        path: /tmp/helm
-        state: directory
-
-    - name: Set Helm old version
-      set_fact:
-        helm_archive_name: "helm-v3.8.0-linux-amd64.tar.gz"
-        helm_diff_old_version: "3.8.0"
-
-    - name: Unarchive Helm binary
-      unarchive:
-        src: "https://get.helm.sh/{{ helm_archive_name | default(helm_default_archive_name) }}"
-        dest: /tmp/helm/
-        remote_src: yes
-      retries: 10
-      delay: 5
-      register: result
-      until: result is not failed
+    - name: Install old version of helm
+      ansible.builtin.include_role:
+        name: install_helm
+      vars:
+        helm_version: "v3.8.0"
 
     - name: Upgrade helm release (with reset_then_reuse_values=true)
       kubernetes.core.helm:
@@ -140,7 +126,7 @@
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
-        plugin_version: "{{ helm_diff_old_version }}"
+        plugin_version: "3.8.0"
 
     - name: Upgrade helm release (with reset_then_reuse_values=true)
       kubernetes.core.helm:
@@ -166,6 +152,11 @@
           - '"reset_then_reuse_values requires helm diff >= 3.9.12, current version is" in helm_upgrade.msg'
 
   always:
+    - name: Delete Helm folders
+      file:
+        path: /tmp/helm/
+        state: absent
+
     - name: Remove temporary directory
       file:
         path: "{{ helm_dir.path }}"

@@ -1,0 +1,9 @@
+---
+minor_changes:
+  - helm_plugin - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+  - helm_plugin_info - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+  - helm_info - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+  - helm_pull - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+  - helm_registry_auth - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+  - helm_registry_auth - add new option plain_http to allow insecure http connection when running ``helm registry login`` (https://github.com/ansible-collections/kubernetes.core/pull/1090).
+  - helm_repository - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).

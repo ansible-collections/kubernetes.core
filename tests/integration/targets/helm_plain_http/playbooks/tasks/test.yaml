@@ -13,10 +13,6 @@
       vars:
         helm_install_path: "{{ install_path.path }}"
 
-    - name: Set helm binary path
-      ansible.builtin.set_fact:
-        helm_binary: "{{ install_path.path }}/{{ ansible_system | lower }}-amd64/helm"
-
     # helm
     - name: Run helm with plain_http
       kubernetes.core.helm:

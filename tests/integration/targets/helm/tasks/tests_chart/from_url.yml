@@ -3,6 +3,11 @@
   include_tasks: "../tests_chart.yml"
   vars:
     source: url
-    chart_source: "https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-{{ chart_test_version }}/{{ chart_test }}-{{ chart_test_version }}.tgz"
-    chart_source_upgrade: "https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-{{ chart_test_version_upgrade }}/{{ chart_test }}-{{ chart_test_version_upgrade }}.tgz"
+    chart_test: "k8status"
+    chart_test_values:
+      replicaCount: 3
+    chart_test_version: "0.16.1"
+    chart_test_version_upgrade: "0.16.2"
+    chart_source: https://github.com/stenic/k8status/releases/download/k8status-0.16.1/k8status-0.16.1.tgz
+    chart_source_upgrade: https://github.com/stenic/k8status/releases/download/k8status-0.16.2/k8status-0.16.2.tgz
     helm_namespace: "{{ test_namespace[8] }}"

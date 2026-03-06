@@ -5,18 +5,38 @@
     name: test_helm
     repo_url: "{{ chart_test_repo }}"
 
-- name: Install Chart from repository
-  include_tasks: "../tests_chart.yml"
-  vars:
-    source: repository
-    chart_source: "test_helm/{{ chart_test }}"
-    chart_source_version: "{{ chart_test_version }}"
-    chart_source_version_upgrade: "{{ chart_test_version_upgrade }}"
-    helm_namespace: "{{ test_namespace[7] }}"
+- name: Create temporary file to save values in
+  ansible.builtin.tempfile:
+    suffix: .helm_values
+  register: value_file
 
-- name: Remove chart repo
-  helm_repository:
-    binary_path: "{{ helm_binary }}"
-    name: test_helm
-    repo_url: "{{ chart_test_repo }}"
-    state: absent
+- vars:
+    source: repository
+    chart_test: k8status
+    chart_source: "test_helm/k8status"
+    chart_test_version: "0.16.1"
+    chart_test_version_upgrade: "0.16.2"
+    helm_namespace: "{{ test_namespace[7] }}"
+    chart_test_values:
+      replicaCount: 3
+  block:
+    - name: Save values into file
+      ansible.builtin.copy:
+        content: "{{ chart_test_values }}"
+        dest: "{{ value_file.path }}"
+
+    - name: Install Chart from repository
+      ansible.builtin.include_tasks: "../tests_chart.yml"
+
+  always:
+    - name: Remove temporary file
+      ansible.builtin.file:
+        state: absent
+        path: "{{ value_file.path }}"
+
+    - name: Remove chart repo
+      helm_repository:
+        binary_path: "{{ helm_binary }}"
+        name: test_helm
+        repo_url: "{{ chart_test_repo }}"
+        state: absent
