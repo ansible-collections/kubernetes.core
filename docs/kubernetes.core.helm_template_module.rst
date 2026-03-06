@@ -20,6 +20,13 @@ Synopsis
 
 
 
+Requirements
+------------
+The below requirements are needed on the host that executes this module.
+
+- helm >= 3.0.0 (https://github.com/helm/helm/releases)
+- yaml (https://pypi.org/project/PyYAML/)
+
 
 Parameters
 ----------
@@ -430,7 +437,7 @@ Examples
 
 Return Values
 -------------
-Common return values are documented `here <https://docs.ansible.com/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
+Common return values are documented `here <https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
 
 .. raw:: html
 

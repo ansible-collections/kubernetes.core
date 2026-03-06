@@ -25,7 +25,7 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- helm (https://github.com/helm/helm/releases)
+- helm >= 3.0.0 (https://github.com/helm/helm/releases)
 - yaml (https://pypi.org/project/PyYAML/)
 
 
@@ -660,7 +660,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>When upgrading, Helm will ignore the check for helm annotations and take ownership of the existing resources</div>
+                        <div>Helm will ignore the check for helm annotations and take ownership of the existing resources</div>
                         <div>This feature requires helm &gt;= 3.17.0</div>
                 </td>
             </tr>
@@ -920,7 +920,7 @@ Examples
 
 Return Values
 -------------
-Common return values are documented `here <https://docs.ansible.com/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
+Common return values are documented `here <https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
 
 .. raw:: html
 
@@ -1030,6 +1030,23 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <td class="elbow-placeholder">&nbsp;</td>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>release_values</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">dictionary</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.3.0</div>
+                </td>
+                <td>always</td>
+                <td>
+                            <div>Dict of Values used to deploy.</div>
+                    <br/>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder">&nbsp;</td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
                     <b>revision</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
@@ -1081,12 +1098,13 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                     <b>values</b>
                     <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
                     <div style="font-size: small">
-                      <span style="color: purple">string</span>
+                      <span style="color: purple">dictionary</span>
                     </div>
                 </td>
                 <td>always</td>
                 <td>
-                            <div>Dict of Values used to deploy</div>
+                            <div>Dict of Values used to deploy.</div>
+                            <div>This return value has been deprecated and will be removed in a release after 2027-01-08. Use RV(status.release_values) instead.</div>
                     <br/>
                 </td>
             </tr>
