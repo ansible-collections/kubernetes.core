@@ -1140,7 +1140,7 @@ def main():
                     module.warn(
                         "Idempotency checks are currently disabled due to a version mismatch."
                         f" Helm version {module.get_helm_version()} requires helm-diff >= 3.14.0,"
-                        " but the environment is currently running {helm_diff_version}."
+                        f" but the environment is currently running {helm_diff_version}."
                         " Please align the plugin versions to restore standard behavior."
                     )
                 else:
