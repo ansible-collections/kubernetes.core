@@ -25,7 +25,7 @@ Requirements
 ------------
 The below requirements are needed on the host that executes this module.
 
-- helm (https://github.com/helm/helm/releases) >= 3.8.0, <4.0.0
+- helm (https://github.com/helm/helm/releases) >= 3.8.0
 
 
 Parameters
@@ -149,6 +149,27 @@ Parameters
                 <td>
                         <div>Password for the registry.</div>
                         <div style="font-size: small; color: darkgreen"><br/>aliases: repo_password</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>plain_http</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.4.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Use insecure HTTP connections for <code>helm registry login</code>.</div>
+                        <div>Requires Helm &gt;= 3.18.0</div>
                 </td>
             </tr>
             <tr>
