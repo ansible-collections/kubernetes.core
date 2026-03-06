@@ -5,5 +5,9 @@ username: testuser
 password: testpassword
 wrong_password: 'WrongPassword'
 registry_name: oci_registry
-registry_port: 5000
+registry_port: 5002
 test_chart: https://github.com/grafana/helm-charts/releases/download/k8s-monitoring-1.6.8/k8s-monitoring-1.6.8.tgz
+helm_versions:
+  - v3.17.0
+  - v3.20.0
+  - v4.0.0

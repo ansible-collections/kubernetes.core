@@ -1,0 +1,195 @@
+---
+- name: "Install {{ helm_version }}"
+  include_role:
+    name: install_helm
+
+- block:
+    - name: Install env plugin in check mode
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: present
+        plugin_path: https://github.com/adamreese/helm-env
+        verify: false
+      register: check_install_env
+      check_mode: true
+
+    - assert:
+        that:
+          - check_install_env.changed
+
+    - name: Install env plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: present
+        plugin_path: https://github.com/adamreese/helm-env
+        verify: false
+      register: install_env
+
+    - assert:
+        that:
+          - install_env.changed
+
+    - name: Gather info about all plugin
+      helm_plugin_info:
+        binary_path: "{{ helm_binary }}"
+      register: plugin_info
+
+    - assert:
+        that:
+          - plugin_info.plugin_list is defined
+
+    - name: Install env plugin again
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: present
+        plugin_path: https://github.com/adamreese/helm-env
+        verify: false
+      register: install_env
+
+    - assert:
+        that:
+          - not install_env.changed
+
+    - name: Uninstall env plugin in check mode
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: env
+        verify: false
+      register: check_uninstall_env
+      check_mode: true
+
+    - assert:
+        that:
+          - check_uninstall_env.changed
+
+    - name: Uninstall env plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: env
+      register: uninstall_env
+
+    - assert:
+        that:
+          - uninstall_env.changed
+
+    - name: Uninstall env plugin again
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: env
+      register: uninstall_env
+
+    - assert:
+        that:
+          - not uninstall_env.changed
+
+  always:
+    - name: Uninstall env plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: env
+
+# https://github.com/ansible-collections/community.kubernetes/issues/399
+- block:
+    - name: Copy required plugin files
+      copy:
+        src: "files/sample_plugin"
+        dest: "/tmp/helm_plugin_test/"
+
+    - name: Install sample_plugin from the directory
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: present
+        plugin_path: "/tmp/helm_plugin_test/sample_plugin"
+      register: sample_plugin_output
+
+    - name: Assert that sample_plugin is installed or not
+      assert:
+        that:
+          - sample_plugin_output.changed
+
+    - name: Gather Helm plugin info
+      helm_plugin_info:
+        binary_path: "{{ helm_binary }}"
+      register: r
+
+    - name: Set sample_plugin version
+      set_fact:
+        plugin_version: "{{ ( r.plugin_list | selectattr('name', 'equalto', plugin_name) | list )[0].version }}"
+      vars:
+        plugin_name: "sample_plugin"
+
+    - name: Assert if sample_plugin with multiline comment is installed
+      assert:
+        that:
+          - plugin_version == "0.0.1"
+  always:
+    - name: Uninstall sample_plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: sample_plugin
+      ignore_errors: true
+
+- block:
+    - name: uninstall helm plugin unittest
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_name: unittest
+        state: absent
+
+    - name: install helm-unittest on a specific version
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_path: https://github.com/helm-unittest/helm-unittest
+        plugin_version: v1.0.1
+        verify: false
+        state: present
+
+    - name: list helm plugin
+      helm_plugin_info:
+        plugin_name: unittest
+        binary_path: "{{ helm_binary }}"
+      register: plugin_list
+
+    - name: assert that unittest has been installed with specified version
+      assert:
+        that:
+          - plugin_list.plugin_list[0].version == "1.0.1"
+
+    - name: Update helm plugin version to latest (check mode)
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_name: unittest
+        state: latest
+      register: _update_checkmode
+      check_mode: true
+
+    - name: Assert that module reported change while running in check mode
+      assert:
+        that:
+          - _update_checkmode.changed
+          - '"Updated plugin: unittest" not in _update_checkmode.stdout'
+
+    - name: Update helm plugin version to latest
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_name: unittest
+        state: latest
+      register: _update
+
+    - name: assert update was performed
+      assert:
+        that:
+          - _update.changed
+          - '"Updated plugin: unittest" in _update.stdout'
+
+  always:
+    - name: Uninstall sample_plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        state: absent
+        plugin_name: unittest

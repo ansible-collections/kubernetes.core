@@ -1,25 +1,19 @@
 ---
-- name: Ensure helm is not installed
-  file:
-    path: "{{ item }}"
-    state: absent
-  with_items:
-    - "/tmp/helm"
-
-- name: Check failed if helm is not installed
-  include_tasks: test_helm_not_installed.yml
-
 - name: "Install {{ helm_version }}"
   include_role:
     name: install_helm
 
-- name: Main helm tests with Helm v3
-  when: helm_version != "v4.0.0"
+- name: Main helm tests
   block:
+    - name: Install helm-diff plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_path: https://github.com/databus23/helm-diff
+        plugin_version: "{{ helm_version is version('v4.0.0', '>=') | ternary('v3.14.0', 'v3.10.0') }}"
+        verify: false
 
     - name: "Ensure we honor the environment variables"
       include_tasks: test_read_envvars.yml
-      when: helm_version != "v4.0.0"
 
     - name: Deploy charts
       include_tasks: "tests_chart/{{ test_chart_type }}.yml"
@@ -39,9 +33,6 @@
     - name: test helm dependency update
       include_tasks: test_up_dep.yml
 
-    - name: Test helm uninstall
-      include_tasks: test_helm_uninstall.yml
-
     - name: Test helm install with chart name containing space
       include_tasks: test_helm_with_space_into_chart_name.yml
 
@@ -58,12 +49,15 @@
     - name: Test helm skip_schema_validation
       include_tasks: test_skip_schema_validation.yml
 
-- name: Test helm version
-  include_tasks: test_helm_version.yml
+  always:
+    - name: Remove helm-diff plugin
+      helm_plugin:
+        binary_path: "{{ helm_binary }}"
+        plugin_name: diff
+        state: absent
+      ignore_errors: true
 
-- name: Clean helm install
-  file:
-    path: "{{ item }}"
-    state: absent
-  with_items:
-    - "/tmp/helm/"
+    - name: Clean helm install
+      ansible.builtin.file:
+        path: "/tmp/helm/"
+        state: absent

@@ -1,10 +1,22 @@
 ---
+- name: Ensure helm is not installed
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/tmp/helm"
+
+- name: Check failed if helm is not installed
+  include_tasks: test_helm_not_installed.yml
+
+- name: Install Helm v4
+  ansible.builtin.include_role:
+    name: install_helm
+  vars:
+    helm_version: v3.6.0
+
+- name: Test helm uninstall
+  ansible.builtin.include_tasks: test_helm_uninstall.yml
+
 - name: Run tests
   include_tasks: run_test.yml
-  loop_control:
-    loop_var: helm_version
-  with_items:
-    - "v3.15.4"
-    - "v3.16.0"
-    - "v3.17.0"
-    - "v4.0.0"
