@@ -16,7 +16,7 @@ version_added: 1.0.0
 author:
   - Abhijeet Kasurde (@Akasurde)
 requirements:
-  - "helm (https://github.com/helm/helm/releases)"
+  - "helm >= 3.0.0 (https://github.com/helm/helm/releases)"
 description:
   -  Manages Helm plugins.
 options:
@@ -48,6 +48,14 @@ options:
     required: false
     type: str
     version_added: 2.3.0
+  verify:
+    description:
+      - Verify the plugin signature before installing.
+      - This option requires helm version >= 4.0.0
+      - Used with I(state=present).
+    type: bool
+    default: true
+    version_added: 6.4.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -118,6 +126,9 @@ from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common i
     HELM_AUTH_ARG_SPEC,
     HELM_AUTH_MUTUALLY_EXCLUSIVE,
 )
+from ansible_collections.kubernetes.core.plugins.module_utils.version import (
+    LooseVersion,
+)
 
 
 def argument_spec():
@@ -137,6 +148,10 @@ def argument_spec():
                 type="str",
                 default="present",
                 choices=["present", "absent", "latest"],
+            ),
+            verify=dict(
+                type="bool",
+                default=True,
             ),
         )
     )
@@ -161,7 +176,7 @@ def main():
         mutually_exclusive=mutually_exclusive(),
     )
 
-    # Validate Helm version >=3.0.0,<4.0.0
+    # Validate helm version >= 3.0.0
     module.validate_helm_version()
 
     state = module.params.get("state")
@@ -171,8 +186,19 @@ def main():
     if state == "present":
         helm_cmd_common += " install %s" % module.params.get("plugin_path")
         plugin_version = module.params.get("plugin_version")
+        verify = module.params.get("verify")
         if plugin_version is not None:
             helm_cmd_common += " --version=%s" % plugin_version
+        if not verify:
+            helm_version = module.get_helm_version()
+            if LooseVersion(helm_version) < LooseVersion("4.0.0"):
+                module.warn(
+                    "verify parameter requires helm >= 4.0.0, current version is {0}".format(
+                        helm_version
+                    )
+                )
+            else:
+                helm_cmd_common += " --verify=false"
         if not module.check_mode:
             rc, out, err = module.run_helm_command(
                 helm_cmd_common, fails_on_error=False
@@ -211,9 +237,9 @@ def main():
     elif state == "absent":
         plugin_name = module.params.get("plugin_name")
         rc, output, err, command = module.get_helm_plugin_list()
-        out = parse_helm_plugin_list(output=output.splitlines())
+        plugins = parse_helm_plugin_list(output=output.splitlines())
 
-        if not out:
+        if not plugins:
             module.exit_json(
                 failed=False,
                 changed=False,
@@ -224,12 +250,7 @@ def main():
                 rc=rc,
             )
 
-        found = False
-        for line in out:
-            if line[0] == plugin_name:
-                found = True
-                break
-        if not found:
+        if all(plugin["name"] != plugin_name for plugin in plugins):
             module.exit_json(
                 failed=False,
                 changed=False,
@@ -267,9 +288,9 @@ def main():
     elif state == "latest":
         plugin_name = module.params.get("plugin_name")
         rc, output, err, command = module.get_helm_plugin_list()
-        out = parse_helm_plugin_list(output=output.splitlines())
+        plugins = parse_helm_plugin_list(output=output.splitlines())
 
-        if not out:
+        if not plugins:
             module.exit_json(
                 failed=False,
                 changed=False,
@@ -280,12 +301,7 @@ def main():
                 rc=rc,
             )
 
-        found = False
-        for line in out:
-            if line[0] == plugin_name:
-                found = True
-                break
-        if not found:
+        if all(plugin["name"] != plugin_name for plugin in plugins):
             module.exit_json(
                 failed=False,
                 changed=False,

@@ -21,7 +21,7 @@ description:
   - There are options for unpacking the chart after download.
 
 requirements:
-  - "helm >= 3.0, <4.0.0 (https://github.com/helm/helm/releases)"
+  - "helm >= 3.0.0 (https://github.com/helm/helm/releases)"
 
 options:
   chart_ref:
@@ -372,7 +372,7 @@ def main():
         mutually_exclusive=[("chart_version", "chart_devel")],
     )
 
-    # Validate Helm version >=3.0.0,<4.0.0
+    # Validate Helm version >=3.0.0
     module.validate_helm_version()
 
     helm_version = module.get_helm_version()

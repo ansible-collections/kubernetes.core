@@ -1,4 +1,0 @@
----
-dependencies:
-  - remove_namespace
-  - install_helm

@@ -455,9 +455,9 @@ def test_module_get_helm_set_values_args(set_values, expected):
         ("3.17.0", False),
         ("2.9.0", True),
         ("2.17.0", True),
-        ("4.0.0", True),
-        ("4.1.0", True),
-        ("5.0.0", True),
+        ("4.0.0", False),
+        ("4.1.0", False),
+        ("5.0.0", False),
     ],
 )
 def test_module_validate_helm_version(_ansible_helm_module, helm_version, should_fail):
@@ -469,8 +469,10 @@ def test_module_validate_helm_version(_ansible_helm_module, helm_version, should
             _ansible_helm_module.validate_helm_version()
         _ansible_helm_module.fail_json.assert_called_once()
         call_args = _ansible_helm_module.fail_json.call_args
-        assert "Helm version must be >=3.0.0,<4.0.0" in call_args[1]["msg"]
-        assert helm_version in call_args[1]["msg"]
+        assert (
+            f"Helm version must be >= 3.0.0, current version is {helm_version}"
+            == call_args[1]["msg"]
+        )
     else:
         _ansible_helm_module.validate_helm_version()
         _ansible_helm_module.fail_json.assert_not_called()

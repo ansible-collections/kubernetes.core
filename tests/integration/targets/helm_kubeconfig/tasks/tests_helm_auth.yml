@@ -5,16 +5,6 @@
     suffix: .helm
   register: _dir
 
-- name: Install helm binary
-  block:
-    - name: "Install {{ test_helm_version }}"
-      include_role:
-        name: install_helm
-      vars:
-        helm_version: "{{ test_helm_version }}"
-
-  when: test_helm_version is defined
-
 - set_fact:
     saved_kubeconfig_path: "{{ _dir.path }}/config"
 
@@ -44,6 +34,7 @@
         ca_cert: "{{ test_ca_cert | default(omit) }}"
         state: present
         plugin_path: https://github.com/hydeenoble/helm-subenv
+        verify: false
       register: plugin
 
     - assert:
