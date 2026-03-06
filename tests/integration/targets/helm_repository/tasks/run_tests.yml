@@ -1,0 +1,105 @@
+---
+- name: "Install helm version {{ helm_version }}"
+  ansible.builtin.include_role:
+    name: install_helm
+
+- name: "Ensure test_helm_repo doesn't exist"
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    state: absent
+
+- name: Add test_helm_repo chart repository
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    repo_url: "{{ chart_test_repo }}"
+  register: repository
+
+- name: Assert that test_helm_repo repository is added
+  assert:
+    that:
+      - repository is changed
+      - '"--insecure-skip-tls-verify" not in repository.command'
+
+- name: Check idempotency
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    repo_url: "{{ chart_test_repo }}"
+  register: repository
+
+- name: Assert idempotency
+  assert:
+    that:
+      - repository is not changed
+
+- name: Failed to add repository with the same name
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    repo_url: "https://other-charts.url"
+  register: repository_errors
+  ignore_errors: true
+
+- name: Assert that adding repository with the same name failed
+  assert:
+    that:
+      - repository_errors is failed
+
+- name: Succesfully add repository with the same name when forcing
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    repo_url: "{{ chart_test_repo }}"
+    force: true
+  register: repository
+
+- name: Assert that test_helm_repo repository is changed
+  assert:
+    that:
+      - repository is changed
+
+- name: Remove test_helm_repo chart repository
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    state: absent
+  register: repository
+
+- name: Assert that test_helm_repo repository is removed
+  assert:
+    that:
+      - repository is changed
+
+- name: Check idempotency after remove
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    state: absent
+  register: repository
+
+- name: Assert idempotency
+  assert:
+    that:
+      - repository is not changed
+
+- name: Add test_helm_repo chart repository as insecure
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    repo_url: "{{ chart_test_repo }}"
+    insecure_skip_tls_verify: true
+  register: repository
+
+- name: Assert that repository added and flag set
+  assert:
+    that:
+      - repository is changed
+      - '"--insecure-skip-tls-verify" in repository.command'
+
+- name: Clean test_helm_repo chart repository
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo
+    state: absent

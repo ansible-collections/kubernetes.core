@@ -5,7 +5,7 @@
     name: test
     chart_ref: "{{ chart_test }}"
     namespace: "helm-test"
-  ignore_errors: yes
+  ignore_errors: true
   register: helm_missing_binary
 
 - name: Assert that helm is not installed

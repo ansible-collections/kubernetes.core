@@ -1,3 +1,5 @@
 ---
-helm_binary: "/tmp/helm/{{ ansible_system | lower }}-amd64/helm"
 helm_namespace: helm-set-values
+helm_versions:
+  - v3.10.3
+  - v4.0.0

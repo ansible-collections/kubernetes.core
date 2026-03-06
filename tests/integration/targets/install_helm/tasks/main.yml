@@ -4,12 +4,27 @@
     path: "{{ helm_install_path }}"
     state: directory
 
-- name: Unarchive Helm binary
-  unarchive:
-    src: "https://get.helm.sh/{{ helm_archive_name | default(helm_default_archive_name) }}"
-    dest: "{{ helm_install_path }}"
-    remote_src: yes
-  retries: 10
-  delay: 5
-  register: result
-  until: result is not failed
+- ansible.builtin.set_fact:
+    os_path: "{{ lookup('env', 'PATH') }}"
+
+- name: Download the Helm install script
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-{{ major_version }}"
+    dest: /tmp/get_helm.sh
+    mode: '0700'
+  vars:
+    major_version: "{{ helm_version | split('.') | first | replace('v', '') }}"
+
+- name: Run the install script (helm version = {{ helm_version }})
+  ansible.builtin.command: /tmp/get_helm.sh
+  environment:
+    DESIRED_VERSION: "{{ helm_version }}"
+    HELM_INSTALL_DIR: "{{ helm_install_path }}"
+    PATH: "{{ os_path }}:{{ helm_install_path }}"
+    VERIFY_CHECKSUM: "false"
+  register: helm_install_result
+  changed_when: "'is already at the latest version' not in helm_install_result.stdout"
+
+- name: Save Helm binary path for later use
+  ansible.builtin.set_fact:
+    helm_binary: "{{ helm_install_path }}/helm"
