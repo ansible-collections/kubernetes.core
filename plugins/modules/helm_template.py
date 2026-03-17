@@ -21,6 +21,10 @@ author:
 description:
   - Render chart templates to an output directory or as text of concatenated yaml documents.
 
+requirements:
+  - "helm >= 3.0.0 (https://github.com/helm/helm/releases)"
+  - "yaml (https://pypi.org/project/PyYAML/)"
+
 options:
   binary_path:
     description:
@@ -347,7 +351,7 @@ def main():
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
 
-    # Validate Helm version >=3.0.0,<4.0.0
+    # Validate Helm version >=3.0.0
     module.validate_helm_version()
 
     helm_cmd = module.get_helm_binary()

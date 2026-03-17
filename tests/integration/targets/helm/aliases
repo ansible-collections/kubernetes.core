@@ -1,4 +1,1 @@
-time=100
-helm_info
-helm_repository
-helm_template
+disabled # used by test targets helm_vX_XX_XX

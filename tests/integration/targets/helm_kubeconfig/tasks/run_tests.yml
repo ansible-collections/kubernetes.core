@@ -1,0 +1,15 @@
+---
+- name: Run tests with helm version "{{ helm_version }}"
+  block:
+    - name: "Install Helm"
+      ansible.builtin.include_role:
+        name: install_helm
+
+    - name: Test helm with in-memory kubeconfig
+      ansible.builtin.include_tasks: "from_in_memory_kubeconfig.yml"
+
+    - name: Test helm with custom kubeconfig and validate_certs=false
+      include_tasks: "from_kubeconfig_with_validate_certs.yml"
+
+    - name: Test helm with custom kubeconfig and ca_cert
+      include_tasks: "from_kubeconfig_with_cacert.yml"

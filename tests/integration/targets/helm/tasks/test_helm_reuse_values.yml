@@ -38,6 +38,21 @@
           - '"--reuse-values=True" not in install.command'
           - release_value["status"]["release_values"] == chart_release_values
 
+    - name: Retrieve release password
+      kubernetes.core.k8s_info:
+        namespace: "{{ helm_namespace }}"
+        kind: Secret
+        name: test-redis
+      register: redis_secret
+
+    - ansible.builtin.set_fact:
+        chart_reuse_values: "{{ chart_reuse_values | combine(redis_global_password) }}"
+      vars:
+        redis_global_password:
+          global:
+            redis:
+              password: "{{ redis_secret.resources.0.data['redis-password'] | b64decode }}"
+
     - name: Upgrade chart using reuse_values=true
       helm:
         binary_path: "{{ helm_binary }}"

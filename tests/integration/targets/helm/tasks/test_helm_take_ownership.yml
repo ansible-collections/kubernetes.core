@@ -19,6 +19,20 @@
           - install is changed
           - '"--take-ownership" not in install.command'
 
+    # We need to provide the actual redis password otherwise the update command
+    # will fail with the following:
+    # Error: execution error at (redis/templates/replicas/application.yaml:55:35):
+    # PASSWORDS ERROR: You must provide your current passwords when upgrading the release.
+    #              Note that even after reinstallation, old credentials may be needed as they may be kept in persistent volume claims.
+    #              Further information can be obtained at https://docs.bitnami.com/general/how-to/troubleshoot-helm-chart-issues/#credential-errors-while-upgrading-chart-releases
+    # 'global.redis.password' must not be empty, please add '--set global.redis.password=$REDIS_PASSWORD' to the command. To get the current value:
+    - name: Retrieve release password
+      kubernetes.core.k8s_info:
+        namespace: "{{ helm_namespace }}"
+        kind: Secret
+        name: test-take-ownership-redis
+      register: redis_secret
+
     - name: Upgrade chart (take-onwership flag set)
       helm:
         binary_path: "{{ helm_binary }}"
@@ -29,6 +43,9 @@
         values:
           commonLabels:
             take-onwership: "set"
+          global:
+            redis:
+              password: "{{ redis_secret.resources.0.data['redis-password'] | b64decode }}"
       register: upgrade
       ignore_errors: true
 
@@ -55,6 +72,9 @@
         values:
           commonLabels:
             take-onwership: "not-set"
+          global:
+            redis:
+              password: "{{ redis_secret.resources.0.data['redis-password'] | b64decode }}"
       register: upgrade
       ignore_errors: true
 

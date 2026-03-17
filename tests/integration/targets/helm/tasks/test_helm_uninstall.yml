@@ -31,26 +31,18 @@
   - name: assert warning has been raised
     assert:
       that:
-      - uninstall.warnings
+      - uninstall.warnings is defined
+      - '"helm uninstall support option --wait for helm release >= 3.7.0" in uninstall.warnings'
 
-  - name: Create temp directory
-    tempfile:
-      state: directory
-      suffix: .test
-    register: _result
-
-  - set_fact:
-      helm_tmp_dir: "{{ _result.path }}"
-
-  - name: Unarchive Helm binary
-    unarchive:
-      src: 'https://get.helm.sh/helm-v3.7.0-linux-amd64.tar.gz'
-      dest: "{{ helm_tmp_dir }}"
-      remote_src: yes
+  - name: Install Helm v4
+    ansible.builtin.include_role:
+      name: install_helm
+    vars:
+      helm_version: v4.0.0
 
   - name: Install chart
     helm:
-      binary_path: "{{ helm_tmp_dir }}/linux-amd64/helm"
+      binary_path: "{{ helm_binary }}"
       name: "{{ chart_name }}"
       chart_ref: "{{ chart_source }}"
       namespace: "{{ helm_namespace }}"
@@ -59,7 +51,7 @@
   - name: uninstall chart again using recent version
     helm:
       state: absent
-      binary_path: "{{ helm_tmp_dir }}/linux-amd64/helm"
+      binary_path: "{{ helm_binary }}"
       name: "{{ chart_name }}"
       namespace: "{{ helm_namespace }}"
       wait: yes
@@ -96,12 +88,6 @@
       - _info.status is undefined
 
   always:
-  - name: Delete temp directory
-    file:
-      path: "{{ helm_tmp_dir }}"
-      state: absent
-    ignore_errors: true
-
   - name: Remove namespace
     k8s:
       kind: Namespace

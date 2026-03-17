@@ -9,25 +9,25 @@ chart_test_version: 4.2.4
 chart_test_version_local_path: 1.32.0
 chart_test_version_upgrade: 4.2.5
 chart_test_version_upgrade_local_path: 1.33.0
-chart_test_repo: "https://kubernetes.github.io/ingress-nginx"
+chart_test_repo: "https://stenic.github.io/k8status/"
 chart_test_git_repo: "http://github.com/helm/charts.git"
 chart_test_values:
   revisionHistoryLimit: 0
   myValue: "changed"
 
 test_namespace:
-  - "helm-test-crds"
-  - "helm-uninstall"
-  - "helm-read-envvars"
-  - "helm-dep-update"
-  - "helm-local-path-001"
-  - "helm-local-path-002"
-  - "helm-local-path-003"
-  - "helm-from-repository"
-  - "helm-from-url"
-  - "helm-reuse-values"
-  - "helm-chart-with-space-into-name"
-  - "helm-reset-then-reuse-values"
-  - "helm-insecure"
-  - "helm-test-take-ownership"
-  - "helm-skip-schema-validation"
+  - "helm-test-crds-{{ helm_version | replace('.', '-') }}"
+  - "helm-uninstall-{{ helm_version | replace('.', '-') }}"
+  - "helm-read-envvars-{{ helm_version | replace('.', '-') }}"
+  - "helm-dep-update-{{ helm_version | replace('.', '-') }}"
+  - "helm-local-path-001-{{ helm_version | replace('.', '-') }}"
+  - "helm-local-path-002-{{ helm_version | replace('.', '-') }}"
+  - "helm-local-path-003-{{ helm_version | replace('.', '-') }}"
+  - "helm-from-repository-{{ helm_version | replace('.', '-') }}"
+  - "helm-from-url-{{ helm_version | replace('.', '-') }}"
+  - "helm-reuse-values-{{ helm_version | replace('.', '-') }}"
+  - "helm-chart-with-space-into-name-{{ helm_version | replace('.', '-') }}"
+  - "helm-reset-then-reuse-values-{{ helm_version | replace('.', '-') }}"
+  - "helm-insecure-{{ helm_version | replace('.', '-') }}"
+  - "helm-test-take-ownership-{{ helm_version | replace('.', '-') }}"
+  - "helm-skip-schema-validation-{{ helm_version | replace('.', '-') }}"
