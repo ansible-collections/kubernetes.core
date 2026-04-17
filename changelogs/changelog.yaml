@@ -1027,15 +1027,15 @@ releases:
     changes:
       bugfixes:
       - module_utils/k8s/service - fix issue when trying to delete resource using
-        `delete_options` and `check_mode=true` (https://github.com/ansible-collections/kubernetes.core/issues/892).
+        ``delete_options`` and ``check_mode=true`` (https://github.com/ansible-collections/kubernetes.core/issues/892).
       minor_changes:
-      - Bump version of ansible-lint to 25.1.2 (https://github.com/ansible-collections/kubernetes.core/pull/919).
+      - Bump version of ``ansible-lint`` to 25.1.2 (https://github.com/ansible-collections/kubernetes.core/pull/919).
       - action/k8s_info - update templating mechanism with changes from ``ansible-core
         2.19`` (https://github.com/ansible-collections/kubernetes.core/pull/888).
-      - helm - add reset_then_reuse_values support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
+      - helm - add ``reset_then_reuse_values`` support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
       - helm - add support for ``insecure_skip_tls_verify`` option to helm and helm_repository(https://github.com/ansible-collections/kubernetes.core/issues/694).
       release_summary: This release includes minor changes, bug fixes and also bumps
-        ansible-lint version to ``25.1.2``.
+        ``ansible-lint`` version to ``25.1.2``.
     fragments:
     - 20250324-k8s_info-templating.yaml
     - 5.3.0.yml
@@ -1062,7 +1062,7 @@ releases:
     changes:
       bugfixes:
       - Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
-      - Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
+      - Update the ``k8s_cp`` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
       - module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
       release_summary: This release includes bugfixes for k8s service field handling,
         k8s_cp init containers support, and removes deprecated ansible.module_utils.six
@@ -1086,9 +1086,9 @@ releases:
       bugfixes:
       - module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
       minor_changes:
-      - Module helm_registry_auth do not support idempotency with `helm >= 3.18.0`
-        (https://github.com/ansible-collections/kubernetes.core/pull/946)
-      - Module k8s_json_patch - Add support for `hidden_fields` (https://github.com/ansible-collections/kubernetes.core/pull/964).
+      - Module ``helm_registry_auth`` does not support idempotency with `helm >= 3.18.0`
+        (https://github.com/ansible-collections/kubernetes.core/pull/946).
+      - Module k8s_json_patch - Add support for ``hidden_fields`` (https://github.com/ansible-collections/kubernetes.core/pull/964).
       - helm - Parameter plain_http added for working with insecure OCI registries
         (https://github.com/ansible-collections/kubernetes.core/pull/934).
       - helm - Parameter take_ownership added (https://github.com/ansible-collections/kubernetes.core/pull/957).
@@ -1173,3 +1173,32 @@ releases:
     - 20260108-fix-sanity-failures.yml
     - 6-3-0.yaml
     release_date: '2026-02-03'
+  6.4.0:
+    changes:
+      bugfixes:
+      - Helm - Allow taking ownership of existing Kubernetes resources on the first
+        installation of a Helm release. Previously, the ``take_ownership`` parameter
+        was always disabled during the initial install, preventing resource adoption
+        (https://github.com/ansible-collections/kubernetes.core/pull/1034).
+      minor_changes:
+      - helm_info - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+      - helm_plugin - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+      - helm_plugin_info - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+      - helm_pull - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+      - helm_registry_auth - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+      - helm_registry_auth - add new option plain_http to allow insecure http connection
+        when running ``helm registry login`` (https://github.com/ansible-collections/kubernetes.core/pull/1090).
+      - helm_repository - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+      - k8s_drain - Add support for ``check_mode`` (https://github.com/ansible-collections/kubernetes.core/pull/1086).
+      - k8s_drain - Convert module warnings into informational displays when users
+        explicitly request the deletion of unmanaged pods, pods with local storage,
+        or those managed by a ``DaemonSet`` (https://github.com/ansible-collections/kubernetes.core/issues/1037).
+      release_summary: This release comes with a Helm bugfix as well as some minor
+        changes such as ``k8s_drain`` support for check mode and Helm v4 support for
+        ``helm_plugin`` and other related modules.
+    fragments:
+    - 20251224-take-ownership-helm-initialization.yaml
+    - 20260203-k8s_drain-warning-fixes.yaml
+    - 20260213-support-helm-v4-for-helm-plugin-modules.yaml
+    - release-6-4-0.yml
+    release_date: '2026-04-21'

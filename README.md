@@ -103,7 +103,7 @@ You can also include it in a `requirements.yml` file and install it via `ansible
 ---
 collections:
   - name: kubernetes.core
-    version: 6.3.0
+    version: 6.4.0
 ```
 
 ### Installing the Kubernetes Python Library
