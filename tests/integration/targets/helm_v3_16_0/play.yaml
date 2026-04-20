@@ -1,4 +1,4 @@
-- name: Run tests for Helm v4.0.0
+- name: Run tests for Helm v3.16.0
   hosts: all
   connection: local
   gather_facts: true
