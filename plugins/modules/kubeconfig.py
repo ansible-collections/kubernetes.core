@@ -1,0 +1,496 @@
+#!/usr/bin/python
+#
+# Copyright (c) Ansible Project
+# GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+DOCUMENTATION = r"""
+---
+module: kubeconfig
+
+short_description: Generate, update, and optionally write Kubernetes kubeconfig files
+
+version_added: "1.0.0"
+
+author: "Youssef Khalid Ali (@YoussefKhalidAli)"
+
+description:
+  - Build, update, and manage Kubernetes kubeconfig files using structured input.
+  - Supports loading an existing kubeconfig file and merging clusters, users, and contexts.
+  - Can optionally write the resulting kubeconfig to a destination path.
+  - Ensures idempotent behavior by only updating files when changes occur.
+
+requirements:
+  - "python >= 3.6"
+  - "PyYAML >= 5.1"
+
+notes:
+  - Input data is merged by resource name (cluster, user, context).
+  - If a resource with the same name exists, it will be replaced by the new definition.
+  - This can be used to move kubeconfig files to a different location with different content.
+  - This module does not validate cluster connectivity or authentication.
+  - The module supports C(check_mode) and will not write files when enabled.
+  - The structure follows standard Kubernetes kubeconfig format as defined in the Kubernetes documentation.
+  - Tokens and sensitive data should be protected using ansible-vault or environment variables.
+
+options:
+  path:
+    description:
+      - Path to an existing kubeconfig file to load and merge from.
+      - If the file does not exist, a new kubeconfig will be created.
+      - This becomes the default destination if O(dest) is not specified.
+    type: str
+    required: true
+
+  dest:
+    description:
+      - Destination path where the final kubeconfig should be written.
+      - If not specified, the kubeconfig will be saved to O(path).
+      - Allows copying and modifying a kubeconfig to a new location.
+    type: str
+    required: false
+
+  clusters:
+    description:
+      - List of cluster definitions to merge into the kubeconfig.
+      - Each cluster is identified by its C(name).
+    type: list
+    elements: dict
+    required: false
+    default: []
+    suboptions:
+      name:
+        description:
+          - Unique name identifier for the cluster.
+        type: str
+        required: true
+      behavior:
+        description:
+          - How to handle merging if a cluster with this name already exists.
+          - C(merge) - Update only the specified fields, preserve others (default).
+          - C(replace) - Replace the entire cluster definition.
+          - C(keep) - Keep existing cluster, skip this entry.
+        type: str
+        choices: ['merge', 'replace', 'keep']
+        default: merge
+      cluster:
+        description:
+          - Cluster configuration details.
+        type: dict
+        required: true
+        suboptions:
+          server:
+            description:
+              - Kubernetes API server URL (e.g., C(https://k8s.example.com:6443)).
+            type: str
+            required: true
+          certificate-authority:
+            description:
+              - Path to a CA certificate file for validating the API server certificate.
+            type: str
+          certificate-authority-data:
+            description:
+              - Base64 encoded CA certificate data.
+              - Use this instead of C(certificate-authority) for embedded certificates.
+            type: str
+          insecure-skip-tls-verify:
+            description:
+              - If true, the server's certificate will not be validated.
+            type: bool
+          proxy-url:
+            description:
+              - Optional proxy URL for cluster connections.
+            type: str
+          tls-server-name:
+            description:
+              - Server name to use for server certificate validation.
+            type: str
+
+  users:
+    description:
+      - List of user authentication configurations.
+      - Each user is identified by its C(name).
+      - Users with the same name will replace existing entries.
+    type: list
+    elements: dict
+    required: false
+    default: []
+    suboptions:
+      name:
+        description:
+          - Unique name identifier for the user.
+        type: str
+        required: true
+      behavior:
+        description:
+          - How to handle merging if a user with this name already exists.
+          - C(merge) - Update only the specified fields, preserve others (default).
+          - C(replace) - Replace the entire user definition.
+          - C(keep) - Keep existing user, skip this entry.
+        type: str
+        choices: ['merge', 'replace', 'keep']
+        default: merge
+      user:
+        description:
+          - User authentication configuration.
+        type: dict
+        required: true
+        suboptions:
+          token:
+            description:
+              - Bearer token for authentication.
+            type: str
+          username:
+            description:
+              - Username for basic authentication.
+            type: str
+          password:
+            description:
+              - Password for basic authentication.
+            type: str
+          client-certificate:
+            description:
+              - Path to client certificate file.
+              - Used for certificate-based authentication.
+            type: str
+          client-key:
+            description:
+              - Path to client private key file.
+              - Must be provided with C(client-certificate).
+            type: str
+          client-certificate-data:
+            description:
+              - Base64 encoded client certificate.
+              - Use instead of C(client-certificate) for embedded certificates.
+            type: str
+          client-key-data:
+            description:
+              - Base64 encoded client private key.
+              - Use instead of C(client-key) for embedded keys.
+            type: str
+          auth-provider:
+            description:
+              - Authentication provider configuration (e.g., for GCP, Azure).
+            type: dict
+          exec:
+            description:
+              - Exec-based credential plugin configuration.
+              - Used for external authentication providers.
+            type: dict
+
+  contexts:
+    description:
+      - List of context definitions linking users and clusters.
+      - Each context is identified by its C(name).
+      - Contexts with the same name will replace existing entries.
+    type: list
+    elements: dict
+    required: false
+    default: []
+    suboptions:
+      name:
+        description:
+          - Unique name identifier for the context.
+        type: str
+        required: true
+      behavior:
+        description:
+          - How to handle merging if a context with this name already exists.
+          - C(merge) - Update only the specified fields, preserve others (default).
+          - C(replace) - Replace the entire context definition.
+          - C(keep) - Keep existing context, skip this entry.
+        type: str
+        choices: ['merge', 'replace', 'keep']
+        default: merge
+      context:
+        description:
+          - Context configuration linking cluster and user.
+        type: dict
+        required: true
+        suboptions:
+          cluster:
+            description:
+              - Name of the cluster to use (must match a cluster name in O(clusters)).
+            type: str
+            required: true
+          user:
+            description:
+              - Name of the user to authenticate as (must match a user name in O(users)).
+            type: str
+            required: true
+          namespace:
+            description:
+              - Default namespace to use for this context.
+              - If not specified, defaults to C(default).
+            type: str
+
+  preferences:
+    description:
+      - Kubeconfig preferences.
+      - Used for client-side settings like color output, default editor, etc.
+    type: dict
+    required: false
+    default: {}
+
+  current_context:
+    description:
+      - Name of the context to set as current/active.
+      - This context will be used by default when using kubectl.
+      - Must match one of the context names defined in O(contexts).
+    type: str
+    required: false
+
+seealso:
+  - name: Kubernetes kubeconfig documentation
+    description: Official Kubernetes documentation for kubeconfig files
+    link: https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/
+  - name: kubectl config documentation
+    description: kubectl commands for working with kubeconfig files
+    link: https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/
+"""
+
+EXAMPLES = r"""
+# Create a new kubeconfig file with a single cluster
+- name: Create basic kubeconfig
+  kubernetes.core.kubeconfig:
+    path: /home/user/.kube/config
+    clusters:
+      - name: production-cluster
+        cluster:
+          server: https://prod.k8s.example.com:6443
+          certificate-authority-data: LS0tLS1CRUdJTi...
+    users:
+      - name: admin-user
+        user:
+          token: eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9...
+    contexts:
+      - name: prod-admin
+        context:
+          cluster: production-cluster
+          user: admin-user
+          namespace: production
+    current_context: prod-admin
+
+- name: Copy and modify kubeconfig
+  kubernetes.core.kubeconfig:
+    path: /home/user/.kube/config
+    dest: /home/user/.kube/config-backup
+    clusters:
+      - name: new-cluster
+        cluster:
+          server: https://new.example.com:6443
+
+- name: Switch current context
+  kubernetes.core.kubeconfig:
+    path: ~/.kube/config
+    current_context: prod-context
+
+- name: Update user credentials
+  kubernetes.core.kubeconfig:
+    path: ~/.kube/config
+    users:
+      - name: admin-user
+        user:
+          token: "{{ new_admin_token }}"
+"""
+
+RETURN = r"""
+kubeconfig:
+  description: The complete kubeconfig data structure.
+  type: dict
+  returned: always
+
+dest:
+  description: The path where the kubeconfig was written.
+  type: str
+  returned: always
+  sample: /home/user/.kube/config
+"""
+
+from ansible.module_utils.basic import AnsibleModule
+
+import os
+import hashlib
+import traceback
+
+try:
+    import yaml
+
+    IMP_YAML = True
+    IMP_YAML_ERR = None
+except ImportError:
+    IMP_YAML = False
+    IMP_YAML_ERR = traceback.format_exc()
+
+
+def load_yaml_file(path):
+    if not IMP_YAML:
+        raise Exception(f"PyYAML is required:\n{IMP_YAML_ERR}")
+
+    if not path or not os.path.exists(path):
+        return {}
+
+    with open(path, "r") as f:
+        return yaml.safe_load(f) or {}
+
+
+def deep_merge(base, updates):
+    result = base.copy()
+
+    for key, value in updates.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+
+    return result
+
+
+def merge_by_name(existing, new):
+
+    # Build dict of existing resources keyed by name
+    merged = {}
+    for item in existing:
+        if isinstance(item, dict) and "name" in item:
+            merged[item["name"]] = item
+
+    # Process new resources
+    for item in new:
+        if not isinstance(item, dict) or "name" not in item:
+            continue
+
+        name = item["name"]
+        behavior = item.get("behavior", "merge")
+
+        item_copy = {k: v for k, v in item.items() if k != "behavior"}
+
+        if name in merged:
+            # Entry exists - apply behavior
+            if behavior == "keep":
+                continue
+            elif behavior == "replace":
+                merged[name] = item_copy
+            else:
+                result = {"name": name}
+
+                for key in ["cluster", "user", "context"]:
+                    if key in merged[name] or key in item_copy:
+                        existing_config = merged[name].get(key, {})
+                        new_config = item_copy.get(key, {})
+                        result[key] = deep_merge(existing_config, new_config)
+
+                for key in merged[name]:
+                    if key not in ["name", "cluster", "user", "context"]:
+                        result[key] = merged[name][key]
+
+                for key in item_copy:
+                    if (
+                        key not in ["name", "cluster", "user", "context"]
+                        and key not in result
+                    ):
+                        result[key] = item_copy[key]
+
+                merged[name] = result
+        else:
+            merged[name] = item_copy
+
+    return list(merged.values())
+
+
+def hash_data(data):
+    """Generate SHA-256 hash for idempotency checking."""
+    return hashlib.sha256(yaml.safe_dump(data, sort_keys=True).encode()).hexdigest()
+
+
+def write_file(dest, data):
+    if not dest:
+        return False
+
+    with open(dest, "w") as f:
+        yaml.safe_dump(data, f, sort_keys=False)
+
+    return True
+
+
+def run_module():
+    module_args = dict(
+        path=dict(type="str", required=True),
+        dest=dict(type="str", required=False),
+        clusters=dict(type="list", elements="dict", required=False, default=[]),
+        users=dict(type="list", elements="dict", required=False, default=[]),
+        contexts=dict(type="list", elements="dict", required=False, default=[]),
+        preferences=dict(type="dict", required=False, default={}),
+        current_context=dict(type="str", required=False),
+    )
+
+    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
+
+    path = module.params["path"]
+    dest = module.params["dest"] or path
+
+    clusters_input = module.params["clusters"]
+    users_input = module.params["users"]
+    contexts_input = module.params["contexts"]
+
+    preferences = module.params["preferences"]
+    current_context = module.params["current_context"]
+
+    # Load existing kubeconfig
+    try:
+        existing = load_yaml_file(path) if path else {}
+    except Exception as e:
+        module.fail_json(msg=f"Failed to load existing kubeconfig: {str(e)}")
+
+    clusters = merge_by_name(existing.get("clusters", []), clusters_input)
+    users = merge_by_name(existing.get("users", []), users_input)
+    contexts = merge_by_name(existing.get("contexts", []), contexts_input)
+
+    # Build final kubeconfig
+    kubeconfig = {
+        "apiVersion": "v1",
+        "kind": "Config",
+        "preferences": preferences or existing.get("preferences", {}),
+        "clusters": clusters,
+        "users": users,
+        "contexts": contexts,
+        "current-context": current_context or existing.get("current-context") or "",
+    }
+
+    changed = False
+    old_data = {}
+
+    if os.path.exists(dest):
+        try:
+            with open(dest, "r") as f:
+                old_data = yaml.safe_load(f) or {}
+        except Exception as e:
+            module.fail_json(msg=f"Failed to read destination file: {str(e)}")
+
+    old_hash = hash_data(old_data)
+    new_hash = hash_data(kubeconfig)
+
+    if old_hash != new_hash:
+        if not module.check_mode:
+            try:
+                write_file(dest, kubeconfig)
+            except Exception as e:
+                module.fail_json(msg=f"Failed to write kubeconfig: {str(e)}")
+        changed = True
+
+    module.exit_json(
+        changed=changed,
+        kubeconfig=kubeconfig,
+        dest=dest,
+        msg=(
+            "Kubeconfig file has been updated."
+            if changed
+            else "Kubeconfig file is already up to date."
+        ),
+    )
+
+
+def main():
+    run_module()
+
+
+if __name__ == "__main__":
+    main()

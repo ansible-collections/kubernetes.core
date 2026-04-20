@@ -1,0 +1,122 @@
+---
+- name: Set test variables
+  set_fact:
+    test_config_path: /tmp/test-kubeconfig
+    test_cluster_name: test-cluster
+    test_user_name: test-user
+    test_context_name: test-context
+
+# Test 1: Create new kubeconfig
+- name: Create new kubeconfig file
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: "{{ test_cluster_name }}"
+        cluster:
+          server: https://test.example.com:6443
+          insecure-skip-tls-verify: true
+    users:
+      - name: "{{ test_user_name }}"
+        user:
+          token: test-token-123
+    contexts:
+      - name: "{{ test_context_name }}"
+        context:
+          cluster: "{{ test_cluster_name }}"
+          user: "{{ test_user_name }}"
+          namespace: default
+    current_context: "{{ test_context_name }}"
+  register: create_result
+
+- name: Verify file was created
+  assert:
+    that:
+      - create_result is changed
+      - create_result.kubeconfig.clusters | length == 1
+      - create_result.kubeconfig['current-context'] == test_context_name
+
+# Test 2: Idempotency check
+- name: Run same configuration again
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: "{{ test_cluster_name }}"
+        cluster:
+          server: https://test.example.com:6443
+          insecure-skip-tls-verify: true
+    users:
+      - name: "{{ test_user_name }}"
+        user:
+          token: test-token-123
+    contexts:
+      - name: "{{ test_context_name }}"
+        context:
+          cluster: "{{ test_cluster_name }}"
+          user: "{{ test_user_name }}"
+          namespace: default
+    current_context: "{{ test_context_name }}"
+  register: idempotent_result
+
+- name: Verify idempotency
+  assert:
+    that:
+      - idempotent_result is not changed
+
+# Test 3: Merge new cluster
+- name: Add second cluster
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: cluster-2
+        cluster:
+          server: https://cluster2.example.com:6443
+    users:
+      - name: user-2
+        user:
+          token: token-2
+    contexts:
+      - name: context-2
+        context:
+          cluster: cluster-2
+          user: user-2
+  register: merge_result
+
+- name: Verify merge
+  assert:
+    that:
+      - merge_result is changed
+      - merge_result.kubeconfig.clusters | length == 2
+
+# Test 4: Update existing entry
+- name: Update cluster server
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: "{{ test_cluster_name }}"
+        cluster:
+          server: https://updated.example.com:6443
+          insecure-skip-tls-verify: true
+  register: update_result
+
+- name: Verify update
+  assert:
+    that:
+      - update_result is changed
+      - update_result.kubeconfig.clusters[0].cluster.server == "https://updated.example.com:6443"
+
+# Test 5: Check mode
+- name: Test check mode
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: check-mode-cluster
+        cluster:
+          server: https://check.example.com:6443
+  check_mode: true
+  register: check_mode_result
+
+- name: Verify check mode didn't write
+  assert:
+    that:
+      - check_mode_result is changed
+      - check_mode_result.kubeconfig.clusters | length == 3 # Includes new cluster in output
