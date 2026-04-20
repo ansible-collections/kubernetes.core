@@ -9,7 +9,7 @@ module: kubeconfig
 
 short_description: Generate, update, and optionally write Kubernetes kubeconfig files
 
-version_added: "1.0.0"
+version_added: "6.5.0"
 
 author: "Youssef Khalid Ali (@YoussefKhalidAli)"
 
@@ -20,7 +20,6 @@ description:
   - Ensures idempotent behavior by only updating files when changes occur.
 
 requirements:
-  - "python >= 3.6"
   - "PyYAML >= 5.1"
 
 notes:
