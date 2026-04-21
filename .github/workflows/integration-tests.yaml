@@ -49,7 +49,6 @@ jobs:
     if: ${{ needs.splitter.outputs.test_targets != '' }}
     env:
       source: "./source"
-      cloud_common: "./cloudcommon"
       ansible_posix: "./ansible_posix"
       community_general: "./community_general"
     strategy:
@@ -60,7 +59,6 @@ jobs:
         python-version:
           - "3.12"
         enable-turbo-mode:
-          - true
           - false
         workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
     name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}-enable_turbo=${{ matrix.enable-turbo-mode }}"
@@ -106,13 +104,6 @@ jobs:
           install_python_dependencies: true
           source_path: ${{ env.source }}
 
-      - name: checkout ansible-collections/cloud.common
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
-        with:
-          repository: ansible-collections/cloud.common
-          path: ${{ env.cloud_common }}
-          ref: main
-
       - name: checkout ansible-collections/ansible.posix
         uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
         with:
@@ -126,12 +117,6 @@ jobs:
           repository: ansible-collections/community.general
           path: ${{ env.community_general }}
           ref: main
-
-      - name: install cloud.common collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: true
-          source_path: ${{ env.cloud_common }}
 
       - name: install ansible.posix collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
