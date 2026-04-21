@@ -10,7 +10,7 @@ v6.4.0
 Release Summary
 ---------------
 
-This release comes with a Helm bugfix as well as some minor changes such as ``k8s_drain`` support for check mode and Helm v4 support for ``helm_plugin`` and other related modules.
+This release adds Helm v4 compatibility across the Helm modules and improves ``k8s_drain`` with check mode. When you explicitly allow evicting unmanaged pods, pods with local storage, or pods managed by a ``DaemonSet``, those cases are reported as informational output instead of module warnings.
 
 Minor Changes
 -------------
