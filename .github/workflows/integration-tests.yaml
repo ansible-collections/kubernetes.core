@@ -55,13 +55,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ansible-version:
-          - milestone
+        ansible-version: ["2.18", "milestone"]
+        enable-turbo-mode: [true, false]
+        exclude:
+          - ansible-version: "milestone"
+            enable-turbo-mode: true
         python-version:
           - "3.12"
-        enable-turbo-mode:
-          - true
-          - false
         workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
     name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}-enable_turbo=${{ matrix.enable-turbo-mode }}"
     steps:
@@ -107,6 +107,7 @@ jobs:
           source_path: ${{ env.source }}
 
       - name: checkout ansible-collections/cloud.common
+        if: ${{ matrix.enable-turbo-mode == true }}
         uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
         with:
           repository: ansible-collections/cloud.common
@@ -128,6 +129,7 @@ jobs:
           ref: main
 
       - name: install cloud.common collection
+        if: ${{ matrix.enable-turbo-mode == true }}
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
