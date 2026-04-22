@@ -55,7 +55,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ansible-version: ["2.18", "milestone"]
+        # Ref must match a branch/tag on github.com/ansible/ansible (e.g. stable-2.18, not 2.18).
+        ansible-version: ["stable-2.18", "milestone"]
         enable-turbo-mode: [true, false]
         exclude:
           - ansible-version: "milestone"
