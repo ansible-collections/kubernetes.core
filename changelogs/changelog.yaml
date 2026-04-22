@@ -1202,4 +1202,4 @@ releases:
     - 20260203-k8s_drain-warning-fixes.yaml
     - 20260213-support-helm-v4-for-helm-plugin-modules.yaml
     - release-6-4-0.yml
-    release_date: '2026-04-21'
+    release_date: '2026-04-22'
