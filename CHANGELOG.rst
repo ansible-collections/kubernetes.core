@@ -4,6 +4,32 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v6.4.0
+======
+
+Release Summary
+---------------
+
+This release adds Helm v4 compatibility across the Helm modules and improves ``k8s_drain`` with check mode. When you explicitly allow evicting unmanaged pods, pods with local storage, or pods managed by a ``DaemonSet``, those cases are reported as informational output instead of module warnings.
+
+Minor Changes
+-------------
+
+- helm_info - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+- helm_plugin - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+- helm_plugin_info - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+- helm_pull - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+- helm_registry_auth - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+- helm_registry_auth - add new option plain_http to allow insecure http connection when running ``helm registry login`` (https://github.com/ansible-collections/kubernetes.core/pull/1090).
+- helm_repository - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
+- k8s_drain - Add support for ``check_mode`` (https://github.com/ansible-collections/kubernetes.core/pull/1086).
+- k8s_drain - Convert module warnings into informational displays when users explicitly request the deletion of unmanaged pods, pods with local storage, or those managed by a `DaemonSet` (https://github.com/ansible-collections/kubernetes.core/issues/1037).
+
+Bugfixes
+--------
+
+- Helm - Allow taking ownership of existing Kubernetes resources on the first installation of a Helm release. Previously, the ``take_ownership`` parameter was always disabled during the initial install, preventing resource adoption (https://github.com/ansible-collections/kubernetes.core/pull/1034).
+
 v6.3.0
 ======
 
@@ -158,7 +184,7 @@ This release updates the ``helm_registry_auth`` module to match the behavior of 
 Minor Changes
 -------------
 
-- Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946)
+- Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946).
 
 v5.3.0
 ======
