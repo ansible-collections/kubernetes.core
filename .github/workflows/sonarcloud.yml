@@ -1,0 +1,58 @@
+---
+# SonarCloud analysis for kubernetes.core
+# Org secret is not available to workflows triggered by PRs from forks; this job
+# runs on push to main/stable-* and on pull requests from the same repository only.
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - main
+      - stable-*
+  pull_request:
+    branches:
+      - main
+      - stable-*
+
+permissions:
+  contents: read
+
+jobs:
+  sonarqube:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible (ansible-test)
+        run: pip install --upgrade pip && pip install ansible-core
+
+      - name: Unit tests with coverage
+        run: ansible-test units --venv --coverage --python 3.12 --requirements
+
+      - name: Coverage combine and XML for Sonar
+        run: |
+          ansible-test coverage combine --venv --python 3.12 --requirements
+          ansible-test coverage xml --venv --python 3.12 --requirements
+
+      - name: Copy coverage report to repo root
+        run: |
+          set -euo pipefail
+          ls -la tests/output/reports/
+          xml=$(find tests/output/reports -maxdepth 1 -name '*.xml' ! -name '*powershell*' | head -1)
+          test -n "$xml"
+          cp "$xml" coverage.xml
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}
