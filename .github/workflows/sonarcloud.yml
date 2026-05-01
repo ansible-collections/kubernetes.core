@@ -1,7 +1,11 @@
 ---
 # SonarCloud analysis for kubernetes.core
-# Org secret is not available to workflows triggered by PRs from forks; this job
-# runs on push to main/stable-* and on pull requests from the same repository only.
+#
+# Uses the same-repo + default-branch push model: GitHub does not expose org secrets to workflows
+# from fork PRs (see https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+# This job is gated so the Sonar token is never available in untrusted fork contexts. A follow-up
+# workflow triggered by workflow_run + artifacts is an alternative if the org later requires Sonar
+# with coverage on fork PRs (see https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run).
 name: SonarCloud
 
 on:
@@ -13,9 +17,11 @@ on:
     branches:
       - main
       - stable-*
+  workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   sonarqube:

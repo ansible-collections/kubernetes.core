@@ -6,6 +6,24 @@ This repository hosts the `kubernetes.core` (formerly known as `community.kubern
 
 The collection includes a variety of Ansible content to help automate the management of applications in Kubernetes and OpenShift clusters, as well as the provisioning and maintenance of clusters themselves.
 
+## SonarCloud (code quality)
+
+Static analysis runs on [SonarCloud](https://sonarcloud.io) using `sonar-project.properties` and
+`.github/workflows/sonarcloud.yml`. Coverage shown in Sonar comes from unit-test coverage exported as
+`coverage.xml` at the repository root during CI.
+
+The SonarCloud project key must match `sonar.projectKey` (`ansible-collections_kubernetes.core`). Adding
+or renaming the project is coordinated via Ansible Collections maintainers.
+
+GitHub does not expose organization secrets to workflows for pull requests opened from forks. The
+Sonar job therefore only runs on pushes to this repository’s branches and on pull requests where the
+head branch is on `ansible-collections/kubernetes.core` (not from forks). That matches GitHub’s
+documented behavior for [secrets in Actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+
+If the project later needs Sonar with coverage on **fork** PRs, maintainers typically add a separate
+trusted job after a workflow that uploads coverage artifacts, using GitHub’s `workflow_run` event.
+See [workflow_run (GitHub Docs)](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run).
+
 ## Communication
 
 * Join the Ansible forum:
