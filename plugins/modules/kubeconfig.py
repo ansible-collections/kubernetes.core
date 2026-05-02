@@ -315,6 +315,7 @@ dest:
 import os
 import traceback
 
+from ansible.module_utils.common.text.converters import to_native
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     extract_sensitive_values_from_kubeconfig,
@@ -362,10 +363,16 @@ def run_module():
     # Load existing kubeconfig
     try:
         if not IMP_YAML:
-            module.fail_json(msg=missing_required_lib("pyyaml"))
+            module.fail_json(
+                msg=missing_required_lib("pyyaml"),
+                exception=IMP_YAML_ERR,
+            )
         existing = load_yaml_file(path) if path else {}
     except Exception as e:
-        module.fail_json(msg=f"Failed to load existing kubeconfig: {str(e)}")
+        module.fail_json(
+            msg="Failed to load existing kubeconfig: %s" % to_native(e),
+            exception=traceback.format_exc(),
+        )
 
     clusters = merge_by_name(existing.get("clusters", []), clusters_input)
     users = merge_by_name(existing.get("users", []), users_input)
@@ -390,7 +397,10 @@ def run_module():
             with open(dest, "r") as f:
                 old_data = yaml.safe_load(f) or {}
         except Exception as e:
-            module.fail_json(msg=f"Failed to read destination file: {str(e)}")
+            module.fail_json(
+                msg="Failed to read destination file: %s" % to_native(e),
+                exception=traceback.format_exc(),
+            )
 
     old_hash = hash_data(old_data)
     new_hash = hash_data(kubeconfig)
@@ -400,14 +410,17 @@ def run_module():
             try:
                 write_file(dest, kubeconfig)
             except Exception as e:
-                module.fail_json(msg=f"Failed to write kubeconfig: {str(e)}")
+                module.fail_json(
+                    msg="Failed to write kubeconfig: %s" % to_native(e),
+                    exception=traceback.format_exc(),
+                )
         changed = True
 
     if isinstance(kubeconfig, dict):
         module.no_log_values.update(
             extract_sensitive_values_from_kubeconfig(kubeconfig)
         )
-        
+
     module.exit_json(
         changed=changed,
         kubeconfig=kubeconfig,
