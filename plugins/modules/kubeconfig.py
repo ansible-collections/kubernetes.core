@@ -316,6 +316,9 @@ import os
 import traceback
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
+    extract_sensitive_values_from_kubeconfig,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.kubeconfig import (
     hash_data,
     load_yaml_file,
@@ -400,6 +403,11 @@ def run_module():
                 module.fail_json(msg=f"Failed to write kubeconfig: {str(e)}")
         changed = True
 
+    if isinstance(kubeconfig, dict):
+        module.no_log_values.update(
+            extract_sensitive_values_from_kubeconfig(kubeconfig)
+        )
+        
     module.exit_json(
         changed=changed,
         kubeconfig=kubeconfig,
