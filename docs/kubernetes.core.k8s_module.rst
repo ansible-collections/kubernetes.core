@@ -1087,6 +1087,22 @@ Parameters
                         <div>Ignored if <code>wait</code> is not set.</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>subresource</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue"></div>
+                </td>
+                <td>
+                        <div>Provide the <code>subresource</code> to run your definition against.</div>
+                </td>
+            </tr>
     </table>
     <br/>
 
@@ -1275,7 +1291,22 @@ Examples
         kind: Deployment
         delete_all: true
 
-
+    # Approve a CSR using the approval <code>subresource</code> option.
+    - kubernetes.core.k8s:
+        subresource: approval
+        definition:
+          apiVersion: certificates.k8s.io/v1
+          kind: certificatesigningrequests
+          metadata:
+            name: testuser
+          status:
+            conditions:
+            - lastTransitionTime: "2025-07-31T16:00:00Z"
+              lastUpdateTime: "2025-07-31T16:00:00Z"
+              message: Approved by Ansible
+              reason: Approved
+              status: "True"
+              type: Approved
 
 Return Values
 -------------

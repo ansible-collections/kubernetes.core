@@ -136,6 +136,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     kind = definition.get("kind")
     api_version = definition.get("apiVersion")
     hidden_fields = params.get("hidden_fields")
+    subresource = params.get("subresource")
 
     result = {"changed": False, "result": {}}
     instance = {}
@@ -144,7 +145,20 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
     resource = svc.find_resource(kind, api_version, fail=True)
     definition["kind"] = resource.kind
     definition["apiVersion"] = resource.group_version
-    existing = svc.retrieve(resource, definition)
+
+    if subresource and subresource is not None:
+        if subresource not in resource.subresources.keys():
+            raise CoreException(
+                "The resource {resource} doesn't support the subresource {subresource}".format(
+                    resource=resource.kind,
+                    subresource=subresource,
+                )
+            )
+
+        existing = svc.retrieve(resource.subresources[subresource], definition)
+        resource = resource.subresources[subresource]
+    else:
+        existing = svc.retrieve(resource, definition)
 
     if state == "absent":
         if exists(existing) and existing.kind.endswith("List"):
