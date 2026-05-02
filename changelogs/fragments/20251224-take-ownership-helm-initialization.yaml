@@ -1,2 +1,0 @@
-bugfixes:
-  - Helm - Allow taking ownership of existing Kubernetes resources on the first installation of a Helm release. Previously, the ``take_ownership`` parameter was always disabled during the initial install, preventing resource adoption (https://github.com/ansible-collections/kubernetes.core/pull/1034).
