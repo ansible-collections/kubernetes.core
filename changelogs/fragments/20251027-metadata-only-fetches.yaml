@@ -1,0 +1,2 @@
+minor_changes:
+  - k8s_info - Support for metadata-only fetches in k8s_info module (https://github.com/ansible-collections/kubernetes.core/pull/1030)
