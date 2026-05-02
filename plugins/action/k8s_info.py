@@ -327,6 +327,7 @@ class ActionModule(ActionBase):
 
     def run(self, tmp=None, task_vars=None):
         """handler for k8s options"""
+        self._supports_async = True
         if task_vars is None:
             task_vars = dict()
 
@@ -359,7 +360,7 @@ class ActionModule(ActionBase):
                 # src is on remote node
                 result.update(
                     self._execute_module(
-                        module_name=self._task.action, task_vars=task_vars
+                        module_name=self._task.action, task_vars=task_vars, wrap_async=self._task.async_val
                     )
                 )
                 return self._ensure_invocation(result)
@@ -391,10 +392,12 @@ class ActionModule(ActionBase):
             module_name=self._task.action,
             module_args=new_module_args,
             task_vars=task_vars,
+            wrap_async=self._task.async_val
         )
 
         # Delete tmp path
-        self._remove_tmp_path(self._connection._shell.tmpdir)
+        if not self._task.async_val:
+            self._remove_tmp_path(self._connection._shell.tmpdir)
 
         result.update(module_return)
 
