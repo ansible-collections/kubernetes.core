@@ -24,7 +24,11 @@ requirements:
 
 notes:
   - Input data is merged by resource name (cluster, user, context).
-  - If a resource with the same name exists, it will be replaced by the new definition.
+  - Updates under O(clusters), O(users), and O(contexts) are matched by C(name) against the kubeconfig loaded from O(path).
+  - For an existing C(name), each entry's C(behavior) suboption controls the update.
+  - The default is V(merge), which merges nested C(cluster), C(user), and C(context) data so unspecified keys are preserved.
+  - With V(replace), the previous entry for that name is dropped and only the new definition is used.
+  - With V(keep), the existing entry is left unchanged.
   - This can be used to move kubeconfig files to a different location with different content.
   - This module does not validate cluster connectivity or authentication.
   - The module supports C(check_mode) and will not write files when enabled.
@@ -52,6 +56,8 @@ options:
     description:
       - List of cluster definitions to merge into the kubeconfig.
       - Each cluster is identified by its C(name).
+      - When C(name) matches an existing cluster, the default C(behavior) is V(merge).
+      - See the C(behavior) suboption for V(replace) and V(keep).
     type: list
     elements: dict
     required: false
@@ -108,7 +114,8 @@ options:
     description:
       - List of user authentication configurations.
       - Each user is identified by its C(name).
-      - Users with the same name will replace existing entries.
+      - When C(name) matches an existing user, the default C(behavior) is V(merge).
+      - See the C(behavior) suboption for V(replace) and V(keep).
     type: list
     elements: dict
     required: false
@@ -180,7 +187,8 @@ options:
     description:
       - List of context definitions linking users and clusters.
       - Each context is identified by its C(name).
-      - Contexts with the same name will replace existing entries.
+      - When C(name) matches an existing context, the default C(behavior) is V(merge).
+      - See the C(behavior) suboption for V(replace) and V(keep).
     type: list
     elements: dict
     required: false
