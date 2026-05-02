@@ -7,10 +7,10 @@ __metaclass__ = type
 import yaml
 
 from ansible_collections.kubernetes.core.plugins.module_utils.kubeconfig import (
-    load_yaml_file,
     deep_merge,
-    merge_by_name,
     hash_data,
+    load_yaml_file,
+    merge_by_name,
     write_file,
 )
 

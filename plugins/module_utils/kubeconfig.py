@@ -5,9 +5,9 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import hashlib
 import os
 import traceback
-import hashlib
 
 try:
     import yaml

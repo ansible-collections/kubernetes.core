@@ -304,16 +304,16 @@ dest:
   returned: always
   sample: /home/user/.kube/config
 """
+import os
+import traceback
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.kubeconfig import (
+    hash_data,
     load_yaml_file,
     merge_by_name,
-    hash_data,
     write_file,
 )
-import os
-import traceback
 
 try:
     import yaml
