@@ -28,6 +28,9 @@ jobs:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      # Pin ansible-test behavior; bump when raising supported ansible-core (see meta/runtime.yml).
+      ANSIBLE_CORE_VERSION: "2.19.5"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +43,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install Ansible (ansible-test)
-        run: pip install --upgrade pip && pip install ansible-core
+        run: |
+          pip install --upgrade pip
+          pip install "ansible-core==${ANSIBLE_CORE_VERSION}"
 
       - name: Unit tests with coverage
         run: ansible-test units --venv --coverage --python 3.12 --requirements
@@ -59,6 +64,7 @@ jobs:
           cp "$xml" coverage.xml
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        # Same pinned version as ansible-collections/amazon.aws sonarcloud.yml
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
         env:
           SONAR_TOKEN: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}
