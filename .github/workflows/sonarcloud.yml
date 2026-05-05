@@ -1,0 +1,70 @@
+---
+# SonarCloud analysis for kubernetes.core
+#
+# Uses the same-repo + default-branch push model: GitHub does not expose org secrets to workflows
+# from fork PRs (see https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+# This job is gated so the Sonar token is never available in untrusted fork contexts. A follow-up
+# workflow triggered by workflow_run + artifacts is an alternative if the org later requires Sonar
+# with coverage on fork PRs (see https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run).
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - main
+      - stable-*
+  pull_request:
+    branches:
+      - main
+      - stable-*
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sonarqube:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      # Pin ansible-test behavior; bump when raising supported ansible-core (see meta/runtime.yml).
+      ANSIBLE_CORE_VERSION: "2.19.5"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible (ansible-test)
+        run: |
+          pip install --upgrade pip
+          pip install "ansible-core==${ANSIBLE_CORE_VERSION}"
+
+      - name: Unit tests with coverage
+        run: ansible-test units --venv --coverage --python 3.12 --requirements
+
+      - name: Coverage combine and XML for Sonar
+        run: |
+          ansible-test coverage combine --venv --python 3.12 --requirements
+          ansible-test coverage xml --venv --python 3.12 --requirements
+
+      - name: Copy coverage report to repo root
+        run: |
+          set -euo pipefail
+          ls -la tests/output/reports/
+          xml=$(find tests/output/reports -maxdepth 1 -name '*.xml' ! -name '*powershell*' | head -1)
+          test -n "$xml"
+          cp "$xml" coverage.xml
+
+      - name: SonarCloud Scan
+        # Same pinned version as ansible-collections/amazon.aws sonarcloud.yml
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
+        env:
+          SONAR_TOKEN: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}
