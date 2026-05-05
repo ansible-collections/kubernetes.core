@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import yaml
-
 from ansible_collections.kubernetes.core.plugins.module_utils.kubeconfig import (
     deep_merge,
     hash_data,
