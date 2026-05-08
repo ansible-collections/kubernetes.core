@@ -141,6 +141,39 @@ def test_merge_by_name_keep_behavior_preserves_existing():
     assert result[0]["cluster"]["server"] == "https://old.com"
 
 
+def test_merge_by_name_remove_behavior_removes_existing_entry():
+    existing = [{"name": "cluster-a", "cluster": {"server": "https://a.com"}}]
+    new = [{"name": "cluster-a", "behavior": "remove"}]
+    result = merge_by_name(existing, new)
+    assert result == []
+
+
+def test_merge_by_name_remove_behavior_only_removes_target_entry():
+    existing = [
+        {"name": "cluster-a", "cluster": {"server": "https://a.com"}},
+        {"name": "cluster-b", "cluster": {"server": "https://b.com"}},
+    ]
+    new = [{"name": "cluster-a", "behavior": "remove"}]
+    result = merge_by_name(existing, new)
+    assert len(result) == 1
+    assert result[0]["name"] == "cluster-b"
+
+
+def test_merge_by_name_remove_behavior_silently_skips_nonexistent_entry():
+    existing = [{"name": "cluster-a", "cluster": {"server": "https://a.com"}}]
+    new = [{"name": "cluster-nonexistent", "behavior": "remove"}]
+    result = merge_by_name(existing, new)
+    assert len(result) == 1
+    assert result[0]["name"] == "cluster-a"
+
+
+def test_merge_by_name_remove_behavior_on_empty_existing():
+    existing = []
+    new = [{"name": "cluster-a", "behavior": "remove"}]
+    result = merge_by_name(existing, new)
+    assert result == []
+
+
 def test_merge_by_name_behavior_key_not_in_output():
     existing = []
     new = [
