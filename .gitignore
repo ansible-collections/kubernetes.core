@@ -25,3 +25,6 @@ tests/integration/*-*.yml
 
 # VS Code settings
 .vscode/
+
+# Root coverage report for SonarCloud (generated locally or in CI)
+/coverage.xml
