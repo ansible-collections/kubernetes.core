@@ -302,6 +302,8 @@ def main():
 
     repo_name = module.params.get("repo_name")
     repo_url = module.params.get("repo_url")
+    if repo_url:
+        repo_url = repo_url.rstrip("/")
     repo_username = module.params.get("repo_username")
     repo_password = module.params.get("repo_password")
     repo_state = module.params.get("repo_state")
