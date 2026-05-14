@@ -1,0 +1,2 @@
+bugfixes:
+  - helm_repository - correct handling of repository URLs with trailing slashes (https://github.com/ansible-collections/kubernetes.core/pull/1121).
