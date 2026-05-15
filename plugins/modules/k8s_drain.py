@@ -200,7 +200,7 @@ def format_dynamic_api_exc(exc):
         return "%s Reason: %s" % (exc.status, exc.reason)
 
 
-def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):  
+def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
     k8s_kind_mirror = "kubernetes.io/config.mirror"
     daemonSet, unmanaged, mirror, localStorage, to_delete = [], [], [], [], []
     for pod in pods:
@@ -215,9 +215,12 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
             continue
 
         # Check replicated Pod
-        has_local_storage = bool(pod.spec.volumes and any(vol.empty_dir for vol in pod.spec.volumes))
-        is_daemonset_managed = any(owner.kind == "DaemonSet" for owner in owner_ref or [])
-        
+        owner_ref = pod.metadata.owner_references or []
+        has_local_storage = bool(
+            pod.spec.volumes and any(vol.empty_dir for vol in pod.spec.volumes)
+        )
+        is_daemonset_managed = any(owner.kind == "DaemonSet" for owner in owner_ref)
+
         if is_daemonset_managed:
             daemonSet.append((pod.metadata.namespace, pod.metadata.name))
         elif has_local_storage:
