@@ -28,6 +28,10 @@ jobs:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # ansible-test only runs from a path under ansible_collections/<namespace>/<collection>/
+    defaults:
+      run:
+        working-directory: ansible_collections/kubernetes/core
     env:
       # Pin ansible-test behavior; bump when raising supported ansible-core (see meta/runtime.yml).
       ANSIBLE_CORE_VERSION: "2.19.5"
