@@ -29,6 +29,7 @@ notes:
   - The default is V(merge), which merges nested C(cluster), C(user), and C(context) data so unspecified keys are preserved.
   - With V(replace), the previous entry for that name is dropped and only the new definition is used.
   - With V(keep), the existing entry is left unchanged.
+  - With V(remove), the existing entry is deleted from the kubeconfig entirely. If no entry with that name exists, the operation is silently skipped.
   - This can be used to move kubeconfig files to a different location with different content.
   - This module does not validate cluster connectivity or authentication.
   - The module supports C(check_mode) and will not write files when enabled.
@@ -57,7 +58,7 @@ options:
       - List of cluster definitions to merge into the kubeconfig.
       - Each cluster is identified by its C(name).
       - When C(name) matches an existing cluster, the default C(behavior) is V(merge).
-      - See the C(behavior) suboption for V(replace) and V(keep).
+      - See the C(behavior) suboption for V(replace), V(keep), and V(remove).
     type: list
     elements: dict
     required: false
@@ -74,14 +75,15 @@ options:
           - C(merge) - Update only the specified fields, preserve others (default).
           - C(replace) - Replace the entire cluster definition.
           - C(keep) - Keep existing cluster, skip this entry.
+          - C(remove) - Remove the cluster entry entirely. Silently skipped if the entry does not exist.
         type: str
-        choices: ['merge', 'replace', 'keep']
+        choices: ['merge', 'replace', 'keep', 'remove']
         default: merge
       cluster:
         description:
           - Cluster configuration details.
+          - Not required when C(behavior) is V(remove).
         type: dict
-        required: true
         suboptions:
           server:
             description:
@@ -115,7 +117,7 @@ options:
       - List of user authentication configurations.
       - Each user is identified by its C(name).
       - When C(name) matches an existing user, the default C(behavior) is V(merge).
-      - See the C(behavior) suboption for V(replace) and V(keep).
+      - See the C(behavior) suboption for V(replace), V(keep), and V(remove).
     type: list
     elements: dict
     required: false
@@ -132,14 +134,15 @@ options:
           - C(merge) - Update only the specified fields, preserve others (default).
           - C(replace) - Replace the entire user definition.
           - C(keep) - Keep existing user, skip this entry.
+          - C(remove) - Remove the user entry entirely. Silently skipped if the entry does not exist.
         type: str
-        choices: ['merge', 'replace', 'keep']
+        choices: ['merge', 'replace', 'keep', 'remove']
         default: merge
       user:
         description:
           - User authentication configuration.
+          - Not required when C(behavior) is V(remove).
         type: dict
-        required: true
         suboptions:
           token:
             description:
@@ -188,7 +191,7 @@ options:
       - List of context definitions linking users and clusters.
       - Each context is identified by its C(name).
       - When C(name) matches an existing context, the default C(behavior) is V(merge).
-      - See the C(behavior) suboption for V(replace) and V(keep).
+      - See the C(behavior) suboption for V(replace), V(keep), and V(remove).
     type: list
     elements: dict
     required: false
@@ -205,14 +208,15 @@ options:
           - C(merge) - Update only the specified fields, preserve others (default).
           - C(replace) - Replace the entire context definition.
           - C(keep) - Keep existing context, skip this entry.
+          - C(remove) - Remove the context entry entirely. Silently skipped if the entry does not exist.
         type: str
-        choices: ['merge', 'replace', 'keep']
+        choices: ['merge', 'replace', 'keep', 'remove']
         default: merge
       context:
         description:
           - Context configuration linking cluster and user.
+          - Not required when C(behavior) is V(remove).
         type: dict
-        required: true
         suboptions:
           cluster:
             description:
@@ -277,27 +281,72 @@ EXAMPLES = r"""
           namespace: production
     current_context: prod-admin
 
-- name: Copy and modify kubeconfig
+- name: Add a second cluster to an existing kubeconfig without touching other entries
   kubernetes.core.kubeconfig:
     path: /home/user/.kube/config
-    dest: /home/user/.kube/config-backup
     clusters:
-      - name: new-cluster
+      - name: staging-cluster
         cluster:
-          server: https://new.example.com:6443
+          server: https://staging.k8s.example.com:6443
+          insecure-skip-tls-verify: true
+    users:
+      - name: staging-user
+        user:
+          client-certificate: /path/to/staging.crt
+          client-key: /path/to/staging.key
+    contexts:
+      - name: staging-admin
+        context:
+          cluster: staging-cluster
+          user: staging-user
+          namespace: staging
 
-- name: Switch current context
+- name: Update only the token for an existing user, preserving all other user fields
   kubernetes.core.kubeconfig:
-    path: ~/.kube/config
-    current_context: prod-context
-
-- name: Update user credentials
-  kubernetes.core.kubeconfig:
-    path: ~/.kube/config
+    path: /home/user/.kube/config
     users:
       - name: admin-user
+        behavior: merge
         user:
           token: "{{ new_admin_token }}"
+
+- name: Replace a cluster definition entirely.
+  kubernetes.core.kubeconfig:
+    path: /home/user/.kube/config
+    clusters:
+      - name: production-cluster
+        behavior: replace
+        cluster:
+          server: https://new-prod.k8s.example.com:6443
+          certificate-authority-data: LS0tLS1CRUdJTi...
+
+- name: Remove a decommissioned cluster, user, and context
+  kubernetes.core.kubeconfig:
+    path: /home/user/.kube/config
+    clusters:
+      - name: old-cluster
+        behavior: remove
+    users:
+      - name: old-user
+        behavior: remove
+    contexts:
+      - name: old-context
+        behavior: remove
+
+- name: Switch the active context
+  kubernetes.core.kubeconfig:
+    path: /home/user/.kube/config
+    current_context: staging-admin
+
+- name: Copy a kubeconfig to a new location with an additional cluster merged in
+  kubernetes.core.kubeconfig:
+    path: /home/user/.kube/config
+    dest: /home/user/.kube/config-ci
+    clusters:
+      - name: ci-cluster
+        cluster:
+          server: https://ci.k8s.example.com:6443
+          insecure-skip-tls-verify: true
 """
 
 RETURN = r"""

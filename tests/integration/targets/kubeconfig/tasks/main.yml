@@ -102,7 +102,7 @@
   assert:
     that:
       - update_result is changed
-      - update_result.kubeconfig.clusters[0].cluster.server == "https://updated.example.com:6443"
+      - update_result.kubeconfig.clusters | selectattr('name', 'equalto', test_cluster_name) | map(attribute='cluster') | map(attribute='server') | first == "https://updated.example.com:6443"
 
 # Test 5: Check mode
 - name: Test check mode
@@ -115,8 +115,72 @@
   check_mode: true
   register: check_mode_result
 
-- name: Verify check mode didn't write
+- name: Verify check mode reports change but does not write
   assert:
     that:
       - check_mode_result is changed
-      - check_mode_result.kubeconfig.clusters | length == 3 # Includes new cluster in output
+      - check_mode_result.kubeconfig.clusters | length == 3
+
+- name: Verify check mode cluster was not actually written to disk
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+  register: after_check_mode
+
+- name: Confirm check-mode-cluster is absent from disk
+  assert:
+    that:
+      - after_check_mode.kubeconfig.clusters | selectattr('name', 'equalto', 'check-mode-cluster') | list | length == 0
+
+# Test 6: Remove behavior
+- name: Remove cluster-2, user-2, and context-2
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: cluster-2
+        behavior: remove
+    users:
+      - name: user-2
+        behavior: remove
+    contexts:
+      - name: context-2
+        behavior: remove
+  register: remove_result
+
+- name: Verify entries were removed
+  assert:
+    that:
+      - remove_result is changed
+      - remove_result.kubeconfig.clusters | selectattr('name', 'equalto', 'cluster-2') | list | length == 0
+      - remove_result.kubeconfig.users | selectattr('name', 'equalto', 'user-2') | list | length == 0
+      - remove_result.kubeconfig.contexts | selectattr('name', 'equalto', 'context-2') | list | length == 0
+
+# Test 7: Remove behavior is idempotent when entry does not exist
+- name: Remove already-absent entry
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: cluster-2
+        behavior: remove
+  register: remove_idempotent_result
+
+- name: Verify no change when removing nonexistent entry
+  assert:
+    that:
+      - remove_idempotent_result is not changed
+
+# Test 8: Keep behavior protects existing entry
+- name: Attempt to overwrite protected cluster
+  kubernetes.core.kubeconfig:
+    path: "{{ test_config_path }}"
+    clusters:
+      - name: "{{ test_cluster_name }}"
+        behavior: keep
+        cluster:
+          server: https://should-not-apply.example.com:6443
+  register: keep_result
+
+- name: Verify keep behavior left existing entry unchanged
+  assert:
+    that:
+      - keep_result is not changed
+      - keep_result.kubeconfig.clusters | selectattr('name', 'equalto', test_cluster_name) | map(attribute='cluster') | map(attribute='server') | first == "https://updated.example.com:6443"

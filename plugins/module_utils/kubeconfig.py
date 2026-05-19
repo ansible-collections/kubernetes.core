@@ -53,6 +53,8 @@ def merge_by_name(existing, new):
         if name in merged:
             if behavior == "keep":
                 continue
+            elif behavior == "remove":
+                del merged[name]
             elif behavior == "replace":
                 merged[name] = item_copy
             else:
@@ -73,6 +75,8 @@ def merge_by_name(existing, new):
                         result[key] = item_copy[key]
                 merged[name] = result
         else:
+            if behavior == "remove":
+                continue
             merged[name] = item_copy
 
     return list(merged.values())
