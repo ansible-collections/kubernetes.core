@@ -1,70 +1,68 @@
----
-# SonarCloud analysis for kubernetes.core
+## SonarCloud scan (reusable)
 #
-# Uses the same-repo + default-branch push model: GitHub does not expose org secrets to workflows
-# from fork PRs (see https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
-# This job is gated so the Sonar token is never available in untrusted fork contexts. A follow-up
-# workflow triggered by workflow_run + artifacts is an alternative if the org later requires Sonar
-# with coverage on fork PRs (see https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run).
+# Invoked from **all_green** after the aggregate gate and **coverage** succeed. Uses the **caller's**
+# **pull_request** / **push** event so **actions/checkout** can use **github.event.pull_request.head.sha**
+# on PRs (Sonar-compliant). Not triggered by **workflow_run** + **workflow_run.head_sha** checkout.
+
+---
 name: SonarCloud
 
 on:
-  push:
-    branches:
-      - main
-      - stable-*
-  pull_request:
-    branches:
-      - main
-      - stable-*
-  workflow_dispatch:
+  workflow_call:
+    secrets:
+      ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT:
+        required: true
 
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
-  sonarqube:
-    name: SonarCloud Scan
+  scan:
+    name: SonarCloud scan
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    env:
-      # Pin ansible-test behavior; bump when raising supported ansible-core (see meta/runtime.yml).
-      ANSIBLE_CORE_VERSION: "2.19.5"
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+          show-progress: false
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
         with:
-          python-version: "3.12"
+          name: coverage
+          path: .
 
-      - name: Install Ansible (ansible-test)
+      - name: Set coverage report paths
         run: |
-          pip install --upgrade pip
-          pip install "ansible-core==${ANSIBLE_CORE_VERSION}"
+          coverage_files=$(find . -name "coverage*.xml" -type f 2>/dev/null | tr '\n' ',' | sed 's/,$//')
+          echo "Found coverage files: ${coverage_files:-none}"
+          echo "COVERAGE_PATHS=${coverage_files}" >> "$GITHUB_ENV"
 
-      - name: Unit tests with coverage
-        run: ansible-test units --venv --coverage --python 3.12 --requirements
-
-      - name: Coverage combine and XML for Sonar
+      - name: Prepare SonarCloud args
+        env:
+          COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || '' }}
+          PR_HEAD_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || '' }}
+          PR_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || '' }}
         run: |
-          ansible-test coverage combine --venv --python 3.12 --requirements
-          ansible-test coverage xml --venv --python 3.12 --requirements
-
-      - name: Copy coverage report to repo root
-        run: |
-          set -euo pipefail
-          ls -la tests/output/reports/
-          xml=$(find tests/output/reports -maxdepth 1 -name '*.xml' ! -name '*powershell*' | head -1)
-          test -n "$xml"
-          cp "$xml" coverage.xml
+          SONAR_ARGS="-Dsonar.scm.revision=\"${COMMIT_SHA}\""
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            SONAR_ARGS="${SONAR_ARGS} -Dsonar.pullrequest.key=${PR_NUMBER}"
+            SONAR_ARGS="${SONAR_ARGS} -Dsonar.pullrequest.branch=${PR_HEAD_REF}"
+            SONAR_ARGS="${SONAR_ARGS} -Dsonar.pullrequest.base=${PR_BASE_REF}"
+          fi
+          if [[ -n "${COVERAGE_PATHS:-}" ]]; then
+            SONAR_ARGS="${SONAR_ARGS} -Dsonar.python.coverage.reportPaths=${COVERAGE_PATHS}"
+          fi
+          echo "SONAR_ARGS=${SONAR_ARGS}" >> "$GITHUB_ENV"
 
       - name: SonarCloud Scan
-        # Same pinned version as ansible-collections/amazon.aws sonarcloud.yml
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
         env:
           SONAR_TOKEN: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}
+        with:
+          args: ${{ env.SONAR_ARGS }}
