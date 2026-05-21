@@ -182,7 +182,9 @@ For documentation on how to use individual modules and other content included in
 
 ## Ansible Turbo Mode Tech Preview
 
-The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection. By default, this feature is disabled. To enable Turbo mode for modules, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. For example:
+> **Note:** Ansible Turbo mode is supported only with ``ansible-core`` versions **lower than 2.19**. Starting from ``ansible-core`` 2.19, the ``cloud.common`` collection is no longer supported, and therefore Ansible Turbo mode is also not supported in ``kubernetes.core``. If ``ENABLE_TURBO_MODE`` is set to ``1`` (or any truthy value) with ``ansible-core >= 2.19.0``, it may lead to fails.
+
+The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection (requires `ansible-core < 2.19`). By default, this feature is disabled. To enable Turbo mode for modules, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. For example:
 
 ```yaml
 ---
