@@ -57,6 +57,11 @@ def _create_temp_file(content=""):
     return name
 
 
+def _assert_configuration(actual, expected):
+    for key, value in expected.items():
+        assert getattr(actual, key) == value
+
+
 def test_create_auth_spec_ssl_no_options():
     module = MagicMock()
     module.params = {}
@@ -138,13 +143,14 @@ def test_load_kube_config_from_file_path():
     auth = {"kubeconfig": config_file, "context": "simple_token"}
     actual_configuration = _create_configuration(auth)
 
-    expected_configuration = {
-        "host": TEST_HOST,
-        "kubeconfig": config_file,
-        "context": "simple_token",
-    }
-
-    assert expected_configuration.items() <= actual_configuration.__dict__.items()
+    _assert_configuration(
+        actual_configuration,
+        {
+            "host": TEST_HOST,
+            "kubeconfig": config_file,
+            "context": "simple_token",
+        },
+    )
     _remove_temp_file()
 
 
@@ -152,13 +158,14 @@ def test_load_kube_config_from_dict():
     auth_spec = {"kubeconfig": TEST_KUBE_CONFIG, "context": "simple_token"}
     actual_configuration = _create_configuration(auth_spec)
 
-    expected_configuration = {
-        "host": TEST_HOST,
-        "kubeconfig": TEST_KUBE_CONFIG,
-        "context": "simple_token",
-    }
-
-    assert expected_configuration.items() <= actual_configuration.__dict__.items()
+    _assert_configuration(
+        actual_configuration,
+        {
+            "host": TEST_HOST,
+            "kubeconfig": TEST_KUBE_CONFIG,
+            "context": "simple_token",
+        },
+    )
     _remove_temp_file()
 
 
