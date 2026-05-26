@@ -1,3 +1,11 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=bugs)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+
 # Kubernetes Collection for Ansible
 
 This repository hosts the `kubernetes.core` (formerly known as `community.kubernetes`) Ansible Collection.
@@ -262,6 +270,10 @@ For the latest supported versions, refer to the release notes below.
 
 If you encounter issues or have questions, you can submit a support request through the following channels:
  - GitHub Issues: Report bugs, request features, or ask questions by opening an issue in the [GitHub repository](https://github.com/ansible-collections/kubernetes.core/).
+
+## Related Information
+
+* [SonarCloud integration](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/SONARCLOUD.md)
 
 ## Release Notes
 
