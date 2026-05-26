@@ -22,7 +22,7 @@ Click on the name of a plugin or module to view that content's documentation:
 ### Connection plugins
 Name | Description
 --- | ---
-[kubernetes.core.kubectl](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
+[kubernetes.core.kubectl](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kubectl_connection.rst)|Execute tasks in pods running on Kubernetes.
 
 ### K8s filter plugins
 Name | Description
@@ -32,32 +32,32 @@ kubernetes.core.k8s_config_resource_name|Generate resource name for the given re
 ### Lookup plugins
 Name | Description
 --- | ---
-[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_lookup.rst)|Query the K8s API
-[kubernetes.core.kustomize](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.kustomize_lookup.rst)|Build a set of kubernetes resources using a 'kustomization.yaml' file.
+[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_lookup.rst)|Query the K8s API
+[kubernetes.core.kustomize](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kustomize_lookup.rst)|Build a set of kubernetes resources using a 'kustomization.yaml' file.
 
 ### Modules
 Name | Description
 --- | ---
-[kubernetes.core.helm](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_module.rst)|Manages Kubernetes packages with the Helm package manager
-[kubernetes.core.helm_info](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_info_module.rst)|Get information from Helm package deployed inside the cluster
-[kubernetes.core.helm_plugin](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_plugin_module.rst)|Manage Helm plugins
-[kubernetes.core.helm_plugin_info](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_plugin_info_module.rst)|Gather information about Helm plugins
-[kubernetes.core.helm_pull](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_pull_module.rst)|download a chart from a repository and (optionally) unpack it in local directory.
-[kubernetes.core.helm_registry_auth](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_registry_auth_module.rst)|Helm registry authentication module
-[kubernetes.core.helm_repository](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_repository_module.rst)|Manage Helm repositories.
-[kubernetes.core.helm_template](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.helm_template_module.rst)|Render chart templates
-[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_module.rst)|Manage Kubernetes (K8s) objects
-[kubernetes.core.k8s_cluster_info](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_cluster_info_module.rst)|Describe Kubernetes (K8s) cluster, APIs available and their respective versions
-[kubernetes.core.k8s_cp](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_cp_module.rst)|Copy files and directories to and from pod.
-[kubernetes.core.k8s_drain](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_drain_module.rst)|Drain, Cordon, or Uncordon node in k8s cluster
-[kubernetes.core.k8s_exec](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_exec_module.rst)|Execute command in Pod
-[kubernetes.core.k8s_info](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_info_module.rst)|Describe Kubernetes (K8s) objects
-[kubernetes.core.k8s_json_patch](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_json_patch_module.rst)|Apply JSON patch operations to existing objects
-[kubernetes.core.k8s_log](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_log_module.rst)|Fetch logs from Kubernetes resources
-[kubernetes.core.k8s_rollback](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
-[kubernetes.core.k8s_scale](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
-[kubernetes.core.k8s_service](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_service_module.rst)|Manage Services on Kubernetes
-[kubernetes.core.k8s_taint](https://github.com/ansible-collections/kubernetes.core/blob/stable-6/docs/kubernetes.core.k8s_taint_module.rst)|Taint a node in a Kubernetes/OpenShift cluster
+[kubernetes.core.helm](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_module.rst)|Manages Kubernetes packages with the Helm package manager
+[kubernetes.core.helm_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_info_module.rst)|Get information from Helm package deployed inside the cluster
+[kubernetes.core.helm_plugin](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_module.rst)|Manage Helm plugins
+[kubernetes.core.helm_plugin_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_plugin_info_module.rst)|Gather information about Helm plugins
+[kubernetes.core.helm_pull](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_pull_module.rst)|download a chart from a repository and (optionally) unpack it in local directory.
+[kubernetes.core.helm_registry_auth](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_registry_auth_module.rst)|Helm registry authentication module
+[kubernetes.core.helm_repository](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_repository_module.rst)|Manage Helm repositories.
+[kubernetes.core.helm_template](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.helm_template_module.rst)|Render chart templates
+[kubernetes.core.k8s](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_module.rst)|Manage Kubernetes (K8s) objects
+[kubernetes.core.k8s_cluster_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_cluster_info_module.rst)|Describe Kubernetes (K8s) cluster, APIs available and their respective versions
+[kubernetes.core.k8s_cp](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_cp_module.rst)|Copy files and directories to and from pod.
+[kubernetes.core.k8s_drain](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_drain_module.rst)|Drain, Cordon, or Uncordon node in k8s cluster
+[kubernetes.core.k8s_exec](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_exec_module.rst)|Execute command in Pod
+[kubernetes.core.k8s_info](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_info_module.rst)|Describe Kubernetes (K8s) objects
+[kubernetes.core.k8s_json_patch](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_json_patch_module.rst)|Apply JSON patch operations to existing objects
+[kubernetes.core.k8s_log](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_log_module.rst)|Fetch logs from Kubernetes resources
+[kubernetes.core.k8s_rollback](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_rollback_module.rst)|Rollback Kubernetes (K8S) Deployments and DaemonSets
+[kubernetes.core.k8s_scale](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
+[kubernetes.core.k8s_service](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_service_module.rst)|Manage Services on Kubernetes
+[kubernetes.core.k8s_taint](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_taint_module.rst)|Taint a node in a Kubernetes/OpenShift cluster
 
 <!--end collection content-->
 
