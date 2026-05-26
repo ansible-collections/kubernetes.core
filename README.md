@@ -1,3 +1,11 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=bugs)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ansible-collections_kubernetes.core&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ansible-collections_kubernetes.core)
+
 # Kubernetes Collection for Ansible
 
 This repository hosts the `kubernetes.core` (formerly known as `community.kubernetes`) Ansible Collection.
@@ -5,46 +13,6 @@ This repository hosts the `kubernetes.core` (formerly known as `community.kubern
 ## Description
 
 The collection includes a variety of Ansible content to help automate the management of applications in Kubernetes and OpenShift clusters, as well as the provisioning and maintenance of clusters themselves.
-
-## Communication
-
-* Join the Ansible forum:
-  * [Get Help](https://forum.ansible.com/c/help/6): get help or help others.
-  * [Posts tagged with 'kubernetes'](https://forum.ansible.com/tag/kubernetes): subscribe to participate in collection-related conversations.
-  * [Social Spaces](https://forum.ansible.com/c/chat/4): gather and interact with fellow enthusiasts.
-  * [News & Announcements](https://forum.ansible.com/c/news/5): track project-wide announcements including social events.
-
-* The Ansible [Bullhorn newsletter](https://docs.ansible.com/ansible/devel/community/communication.html#the-bullhorn): used to announce releases and important changes.
-
-For more information about communication, see the [Ansible communication guide](https://docs.ansible.com/ansible/devel/community/communication.html).
-
-## Requirements
-
-<!--start requires_ansible-->
-## Ansible Version Compatibility
-
-This collection has been tested against following Ansible versions: **>=2.15.0**.
-
-For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
-fully qualified collection name (for example, `cisco.ios.ios`).
-Plugins and modules within a collection may be tested with only specific Ansible versions.
-A collection may contain metadata that identifies these versions.
-PEP440 is the schema used to describe the versions of Ansible.
-<!--end requires_ansible-->
-
-### Helm Version Compatibility
-
-Helm modules in this collection are compatible with Helm v3.x and are not yet compatible with Helm v4. Individual modules and their parameters may support a more specific range of Helm versions.
-
-### Python Support
-
-* Collection supports 3.9+
-
-Note: Python2 is deprecated from [1st January 2020](https://www.python.org/doc/sunset-python-2/). Please switch to Python3.
-
-### Kubernetes Version Support
-
-This collection supports Kubernetes versions >= 1.24.
 
 ### Included Content
 
@@ -98,6 +66,34 @@ Name | Description
 
 <!--end collection content-->
 
+## Requirements
+
+<!--start requires_ansible-->
+### Ansible version compatibility
+
+This collection has been tested against the following Ansible versions: **>=2.15.0**.
+
+For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
+fully qualified collection name (for example, `cisco.ios.ios`).
+Plugins and modules within a collection may be tested with only specific Ansible versions.
+A collection may contain metadata that identifies these versions.
+PEP440 is the schema used to describe the versions of Ansible.
+<!--end requires_ansible-->
+
+### Helm Version Compatibility
+
+Helm modules in this collection are compatible with Helm v3.x and are not yet compatible with Helm v4. Individual modules and their parameters may support a more specific range of Helm versions.
+
+### Python Support
+
+* Collection supports 3.9+
+
+Note: Python2 is deprecated from [1st January 2020](https://www.python.org/doc/sunset-python-2/). Please switch to Python3.
+
+### Kubernetes Version Support
+
+This collection supports Kubernetes versions >= 1.24.
+
 ## Installation
 
 Before using the Kubernetes collection, you need to install it with the Ansible Galaxy CLI:
@@ -117,7 +113,9 @@ collections:
 
 Content in this collection requires the [Kubernetes Python client](https://pypi.org/project/kubernetes/) to interact with Kubernetes' APIs. You can install it with:
 
-    pip3 install kubernetes
+```bash
+pip3 install kubernetes
+```
 
 ## Use Cases
 
@@ -205,12 +203,6 @@ defined in the playbook using `environment` keyword as above, you must set it us
 
 Please read more about Ansible Turbo mode - [here](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/ansible_turbo_mode.rst).
 
-## Contributing to this Collection
-
-If you want to develop new content for this collection or improve what's already here, the easiest way to work on the collection is to clone it into one of the configured [`COLLECTIONS_PATHS`](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths), and work on it there.
-
-See [Contributing to kubernetes.core](CONTRIBUTING.md).
-
 ## Testing
 
 [![Linters](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/linters.yaml?label=linters)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/linters.yaml) [![Integration tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/integration-tests.yaml?label=integration%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/integration-tests.yaml) [![Sanity tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/sanity-tests.yaml?label=sanity%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/sanity-tests.yaml) [![Unit tests](https://img.shields.io/github/actions/workflow/status/ansible-collections/kubernetes.core/unit-tests.yaml?label=unit%20tests)](https://github.com/ansible-collections/kubernetes.core/actions/workflows/unit-tests.yaml) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/kubernetes.core)](https://app.codecov.io/gh/ansible-collections/kubernetes.core)
@@ -232,7 +224,40 @@ There are also integration tests in the `molecule` directory which are meant to 
     kind create cluster
     make test-molecule
 
-## Publishing New Versions
+## Contributing to this Collection
+
+If you want to develop new content for this collection or improve what is already here, clone the Git repository into one of the configured [`COLLECTIONS_PATHS`](https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths) and work on it there.
+
+See [Contributing to kubernetes.core](https://github.com/ansible-collections/kubernetes.core/blob/stable-5/CONTRIBUTING.md).
+
+Join the Ansible community:
+
+* [Get Help](https://forum.ansible.com/c/help/6)
+* [Posts tagged with 'kubernetes'](https://forum.ansible.com/tag/kubernetes)
+* [Social Spaces](https://forum.ansible.com/c/chat/4)
+* [News & Announcements](https://forum.ansible.com/c/news/5)
+
+The Ansible [Bullhorn newsletter](https://docs.ansible.com/ansible/devel/community/communication.html#the-bullhorn) announces releases and important changes. For more information, see the [Ansible communication guide](https://docs.ansible.com/ansible/devel/community/communication.html).
+
+### Code of Conduct
+
+This project follows the [Ansible Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html). If you encounter abusive behavior, see the [policy violations](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html#policy-violations) section for how to raise a complaint.
+
+## Support
+
+As Red Hat Ansible Certified Content, this collection is entitled to support through the Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner. If a support case cannot be opened with Red Hat and the collection has been obtained either from Galaxy or GitHub, there may be community help available on the [Ansible Forum](https://forum.ansible.com/).
+
+> **Note:** The `stable-4` branch (all `4.x.y` releases) is no longer supported. No backports or releases are performed on `stable-4`.
+
+We announce releases and important changes through Ansible's [The Bullhorn newsletter](https://github.com/ansible/community/wiki/News#the-bullhorn). Subscribe via [this link](https://eepurl.com/gZmiEP).
+
+We take part in the global quarterly [Ansible Contributor Summit](https://github.com/ansible/community/wiki/Contributor-Summit). Track The Bullhorn and join when announced.
+
+For the latest supported versions, see [Release Notes and Roadmap](https://github.com/ansible-collections/kubernetes.core/blob/stable-5/README.md#release-notes-and-roadmap).
+
+Report bugs, request features, or ask questions by opening an issue in the [GitHub repository](https://github.com/ansible-collections/kubernetes.core/).
+
+## Release Notes and Roadmap
 
 Releases are automatically built and pushed to Ansible Galaxy for any new tag. Before tagging a release, make sure to do the following:
 
@@ -249,37 +274,24 @@ Releases are automatically built and pushed to Ansible Galaxy for any new tag. B
 
 After the version is published, verify it exists on the [Kubernetes Collection Galaxy page](https://galaxy.ansible.com/kubernetes/core).
 
-The process for uploading a supported release to Automation Hub is documented separately.
+The process for [uploading a supported release to Automation Hub](https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.1/html/uploading_content_to_red_hat_automation_hub/proc-upload-collection) is documented separately.
 
-## Support
+## Related Information
 
-<!--List available communication channels. In addition to channels specific to your collection, we also recommend to use the following ones.-->
+* [Using Ansible collections](https://docs.ansible.com/ansible/devel/user_guide/collections_using.html)
+* [Ansible communication guide](https://docs.ansible.com/ansible/devel/community/communication.html)
+* [Continuous integration (CI) overview](https://github.com/ansible-collections/kubernetes.core/blob/stable-5/CI.md)
+* [SonarCloud integration](https://github.com/ansible-collections/kubernetes.core/blob/stable-5/SONARCLOUD.md)
+* [Ansible Turbo mode (tech preview)](https://github.com/ansible-collections/kubernetes.core/blob/stable-5/docs/ansible_turbo_mode.rst)
 
-> **Note:** The `stable-4` branch, which handles all `4.x.y` releases of this collection, is no longer supported. This means that no backports nor releases will be performed on the `stable-4` branch.
-
-We announce releases and important changes through Ansible's [The Bullhorn newsletter](https://github.com/ansible/community/wiki/News#the-bullhorn). Be sure you are [subscribed](https://eepurl.com/gZmiEP).
-
-We take part in the global quarterly [Ansible Contributor Summit](https://github.com/ansible/community/wiki/Contributor-Summit) virtually or in-person. Track [The Bullhorn newsletter](https://eepurl.com/gZmiEP) and join us.
-
-For more information about communication, refer to the [Ansible Communication guide](https://docs.ansible.com/ansible/devel/community/communication.html).
-
-For the latest supported versions, refer to the release notes below.
-
-If you encounter issues or have questions, you can submit a support request through the following channels:
- - GitHub Issues: Report bugs, request features, or ask questions by opening an issue in the [GitHub repository](https://github.com/ansible-collections/kubernetes.core/).
-
-## Release Notes
-
-See the [raw generated changelog](https://github.com/ansible-collections/kubernetes.core/blob/main/CHANGELOG.rst).
-
-## Code of Conduct
+### Code of conduct
 
 We follow the [Ansible Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html) in all our interactions within this project.
 
 If you encounter abusive behavior, please refer to the [policy violations](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html#policy-violations) section of the Code for information on how to raise a complaint.
 
-## License
+## License Information
 
 GNU General Public License v3.0 or later
 
-See LICENSE to see the full text.
+See [LICENSE](https://github.com/ansible-collections/kubernetes.core/blob/stable-5/LICENSE) to see the full text.
