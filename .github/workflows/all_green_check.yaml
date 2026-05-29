@@ -1,0 +1,142 @@
+---
+name: all_green
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+on: # yamllint disable-line rule:truthy
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - main
+      - stable-*
+  push:
+    branches:
+      - main
+      - stable-*
+
+jobs:
+  linters:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/linters.yaml
+
+  sanity:
+    uses: ./.github/workflows/sanity-tests.yaml
+
+  units:
+    uses: ./.github/workflows/unit-tests.yaml
+
+  coverage:
+    name: Unit test coverage
+    runs-on: ubuntu-latest
+    needs:
+      - sanity
+      - units
+    env:
+      # stable-5 is tested against ansible-core stable-2.18 (see integration-tests.yaml).
+      ANSIBLE_CORE_REF: "stable-2.18"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible (ansible-test)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "https://github.com/ansible/ansible/archive/${ANSIBLE_CORE_REF}.tar.gz"
+
+      - name: Run unit tests with coverage
+        run: ansible-test units --venv --coverage --python 3.12 --requirements
+
+      - name: Combine and emit coverage XML
+        run: |
+          ansible-test coverage combine --venv --python 3.12 --requirements
+          ansible-test coverage xml --venv --python 3.12 --requirements
+
+      - name: Prepare coverage.xml for SonarCloud
+        run: |
+          set -euo pipefail
+          mkdir -p "${GITHUB_WORKSPACE}"
+          xml=$(find tests/output/reports -maxdepth 1 -name '*.xml' ! -name '*powershell*' | head -1)
+          test -n "${xml}"
+          cp "${xml}" "${GITHUB_WORKSPACE}/coverage.xml"
+          # Strip workspace prefix so Sonar sees repo-relative paths (same idea as amazon.aws path rewrite)
+          sed -i "s#${GITHUB_WORKSPACE}/##g" "${GITHUB_WORKSPACE}/coverage.xml"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: ${{ github.workspace }}/coverage.xml
+
+  all_green:
+    if: ${{ always() }}
+    needs:
+      - linters
+      - sanity
+      - units
+      - coverage
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          python -c "
+          import sys
+
+          required = ['sanity', 'units', 'coverage']
+          if '${{ github.event_name }}' == 'pull_request':
+              required = ['linters', 'sanity', 'units', 'coverage']
+          results = {
+              'linters': '${{ needs.linters.result }}',
+              'sanity': '${{ needs.sanity.result }}',
+              'units': '${{ needs.units.result }}',
+              'coverage': '${{ needs.coverage.result }}',
+          }
+
+          for name in required:
+              if results[name] == 'failure':
+                  print(f'all_green: required job failed: {name} results={results}', file=sys.stderr)
+                  sys.exit(1)
+
+          # cancel-in-progress superseded this run; do not fail (newer run is authoritative)
+          if any(v == 'cancelled' for v in results.values()):
+              print(
+                  'all_green: one or more jobs cancelled (usually concurrency); skipping strict gate.',
+                  results,
+              )
+              sys.exit(0)
+
+          not_ok = [j for j in required if results[j] != 'success']
+          if not_ok:
+              print(f'all_green: required jobs not success: {not_ok} results={results}', file=sys.stderr)
+              sys.exit(1)
+
+          for job, status in results.items():
+              if job not in required and status not in ('success', 'skipped'):
+                  print(f'all_green: unexpected {job}={status} results={results}', file=sys.stderr)
+                  sys.exit(1)
+
+          print('all_green OK', results)
+          "
+
+  sonarcloud:
+    name: SonarCloud scan
+    needs:
+      - all_green
+      - coverage
+    if: >-
+      ${{ needs.all_green.result == 'success'
+      && secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT != ''
+      && (github.event_name == 'push'
+      || (github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository)) }}
+    uses: ./.github/workflows/sonarcloud.yml
+    secrets:
+      ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}
