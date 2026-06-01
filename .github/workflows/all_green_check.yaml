@@ -2,7 +2,7 @@
 name: all_green
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 on: # yamllint disable-line rule:truthy
@@ -33,9 +33,6 @@ jobs:
   coverage:
     name: Unit test coverage
     runs-on: ubuntu-latest
-    needs:
-      - sanity
-      - units
     env:
       ANSIBLE_CORE_VERSION: "2.19.5"
     steps:
@@ -63,18 +60,29 @@ jobs:
       - name: Prepare coverage.xml for SonarCloud
         run: |
           set -euo pipefail
-          mkdir -p "${GITHUB_WORKSPACE}"
           xml=$(find tests/output/reports -maxdepth 1 -name '*.xml' ! -name '*powershell*' | head -1)
-          test -n "${xml}"
+          if [[ -z "${xml}" ]]; then
+            echo "::error::coverage XML not found under tests/output/reports"
+            exit 1
+          fi
           cp "${xml}" "${GITHUB_WORKSPACE}/coverage.xml"
-          # Strip workspace prefix so Sonar sees repo-relative paths (same idea as amazon.aws path rewrite)
+          # Strip workspace prefix so Sonar sees repo-relative paths
           sed -i "s#${GITHUB_WORKSPACE}/##g" "${GITHUB_WORKSPACE}/coverage.xml"
+          # ansible-test reports paths under ansible_collections/<namespace>/<name>/; strip for sonar.sources=.
+          sed -i 's#ansible_collections/kubernetes/core/##g' "${GITHUB_WORKSPACE}/coverage.xml"
+          if ! grep -q '<coverage' "${GITHUB_WORKSPACE}/coverage.xml"; then
+            echo "::error::coverage.xml does not look like Cobertura XML"
+            exit 1
+          fi
+          test -s "${GITHUB_WORKSPACE}/coverage.xml"
+          echo "Prepared $(wc -c < "${GITHUB_WORKSPACE}/coverage.xml") byte coverage.xml for SonarCloud"
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: ${{ github.workspace }}/coverage.xml
+          if-no-files-found: error
 
   all_green:
     if: ${{ always() }}
@@ -124,18 +132,3 @@ jobs:
 
           print('all_green OK', results)
           "
-
-  sonarcloud:
-    name: SonarCloud scan
-    needs:
-      - all_green
-      - coverage
-    if: >-
-      ${{ needs.all_green.result == 'success'
-      && secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT != ''
-      && (github.event_name == 'push'
-      || (github.event_name == 'pull_request'
-      && github.event.pull_request.head.repo.full_name == github.repository)) }}
-    uses: ./.github/workflows/sonarcloud.yml
-    secrets:
-      ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}

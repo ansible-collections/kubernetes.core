@@ -6,26 +6,24 @@ Dashboard:
 
 ## CI integration
 
-Sonar analysis is implemented in **[.github/workflows/sonarcloud.yml](.github/workflows/sonarcloud.yml)** as a **reusable workflow** (`on: workflow_call` only). It is **not** triggered by `workflow_run`.
+Sonar analysis is implemented in **[.github/workflows/sonarcloud.yml](.github/workflows/sonarcloud.yml)**, triggered by **`workflow_run`** when the **`all_green`** workflow completes successfully (same pattern as [ansible-collections/amazon.aws](https://github.com/ansible-collections/amazon.aws)).
 
-**[.github/workflows/all_green_check.yaml](.github/workflows/all_green_check.yaml)** runs **linters** (on pull requests), **sanity**, **units**, and **coverage**, passes the aggregate **`all_green`** gate, then calls **`sonarcloud.yml`** via a **`sonarcloud`** job when the conditions below are met. The **coverage** job uploads a **`coverage`** artifact; the Sonar job downloads it in the **same** workflow run.
+**[.github/workflows/all_green_check.yaml](.github/workflows/all_green_check.yaml)** runs **linters** (on pull requests), **sanity**, **units**, and an independent **coverage** job, then passes the aggregate **`all_green`** gate. The **coverage** job uploads a **`coverage`** artifact; **[sonarcloud.yml](.github/workflows/sonarcloud.yml)** downloads it from that run via **`dawidd6/action-download-artifact`** and passes **`sonar.python.coverage.reportPaths`** to the scanner.
 
-The caller runs on **`pull_request`** or **`push`**, so the reusable workflow inherits that **`github.event`**. **`actions/checkout`** uses **`github.event.pull_request.head.sha`** on pull requests and **`github.sha`** on push (Sonar-friendly checkout). PR parameters (**`sonar.pullrequest.*`**) are taken from **`github.event.pull_request`** (no `gh` API calls in **`sonarcloud.yml`**).
-
-The scan step uses **`SonarSource/sonarqube-scan-action`** (pinned SHA in the workflow file) with **`sonar.python.coverage.reportPaths`** set from any **`coverage*.xml`** files found under the workspace after the artifact download. The overall flow (coverage in CI, then Sonar with XML) follows the same idea as [ansible-collections/amazon.aws#2871](https://github.com/ansible-collections/amazon.aws/pull/2871), using **`workflow_call`** from **`all_green`** instead of a separate **`workflow_run`** finalize workflow.
+The scan step uses **`SonarSource/sonarqube-scan-action`** (pinned SHA in the workflow file). PR parameters (**`sonar.pullrequest.*`**) are resolved with **`gh`** when the triggering event was a pull request.
 
 Workflow files:
 
-- [.github/workflows/all_green_check.yaml](.github/workflows/all_green_check.yaml) -- **`all_green`** gate, **coverage** artifact upload, and **`sonarcloud`** job (**`uses: ./.github/workflows/sonarcloud.yml`**, passing only **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`**) after **`all_green`** and **`coverage`** succeed, gated for **`push`** and same-repo **`pull_request`** when that secret is set.
-- [.github/workflows/sonarcloud.yml](.github/workflows/sonarcloud.yml) -- **`scan`** job: checkout, download **`coverage`**, **`SONAR_ARGS`**, SonarCloud scan.
+- [.github/workflows/all_green_check.yaml](.github/workflows/all_green_check.yaml) — **`all_green`** gate and **coverage** artifact upload (coverage runs independently of sanity/units so XML is produced even when the matrix is still running).
+- [.github/workflows/sonarcloud.yml](.github/workflows/sonarcloud.yml) — **`finalize`** job on **`workflow_run`** (`all_green`): checkout **`head_sha`**, download **`coverage*`**, **`SONAR_ARGS`**, SonarCloud scan.
 
 Scanner configuration lives in [sonar-project.properties](sonar-project.properties).
 
-The **coverage** job (in **`all_green`**) uses **`ansible-test`** (`units --coverage`, then **`coverage combine`** / **`coverage xml`**), then writes **`coverage.xml`** with workspace paths normalized for Sonar. **`pytest-cov`** is listed in **`tests/unit/requirements.txt`** for parity and any direct pytest runs; **`ansible-test`** still owns the coverage data used in CI.
+The **coverage** job uses **`ansible-test`** (`units --coverage`, then **`coverage combine`** / **`coverage xml`**), writes **`coverage.xml`** at the repo root, and rewrites paths (workspace prefix and **`ansible_collections/kubernetes/core/`**) so they match **`sonar.sources=.`**. **`pytest-cov`** is listed in **`tests/unit/requirements.txt`** for parity; **`ansible-test`** owns the XML used in CI.
 
-**`sonarcloud.yml`** declares a required secret **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`** and **`permissions: contents: read`**, **`pull-requests: read`**.
+**`sonarcloud.yml`** needs **`permissions: actions: read`** for artifact download and uses org secret **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`**.
 
-Org secrets and fork PR behavior follow GitHub's [secrets in Actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) documentation. The **`sonarcloud`** job is **`if:`**-gated so the org token is not used for fork-head checkouts; fork PRs still run **`all_green`** for CI without running Sonar.
+Fork PRs still run **`all_green`** for CI; Sonar is skipped when **`head_repository`** is not this repository (fork-head PRs). Same-repo PRs and upstream **`push`** events run Sonar after **`all_green`** succeeds.
 
 ## Branch protection (repository settings)
 
