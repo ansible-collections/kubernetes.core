@@ -180,6 +180,12 @@ options:
         It will wait for as long as I(wait_timeout). This feature requires helm>=3.7.0. Added in version 2.3.0.
     default: False
     type: bool
+  wait_for_jobs:
+    description:
+      - When I(release_state) is set to C(present), and I(wait) is set to C(True), wait until all jobs are in a
+        completed state before marking the release as successful. Added in version 6.5.0.
+    default: False
+    type: bool
   wait_timeout:
     description:
       - Timeout when wait option is enabled (helm2 is a number of seconds, helm3 is a duration).
@@ -354,6 +360,7 @@ EXAMPLES = r"""
     release_namespace: default
     force: True
     wait: True
+    wait_for_jobs: True
     replace: True
     update_repo_cache: True
     disable_hook: True
@@ -570,6 +577,7 @@ def deploy(
     release_values,
     chart_name,
     wait,
+    wait_for_jobs,
     wait_timeout,
     disable_hook,
     force,
@@ -622,6 +630,8 @@ def deploy(
 
     if wait:
         deploy_command += " --wait"
+        if wait_for_jobs:
+            deploy_command += " --wait-for-jobs"
         if wait_timeout is not None:
             deploy_command += " --timeout " + wait_timeout
 
@@ -890,6 +900,7 @@ def argument_spec():
             force=dict(type="bool", default=False),
             purge=dict(type="bool", default=True),
             wait=dict(type="bool", default=False),
+            wait_for_jobs=dict(type="bool", default=False),
             wait_timeout=dict(type="str"),
             timeout=dict(type="str"),
             atomic=dict(type="bool", default=False),
@@ -952,6 +963,7 @@ def main():
     force = module.params.get("force")
     purge = module.params.get("purge")
     wait = module.params.get("wait")
+    wait_for_jobs = module.params.get("wait_for_jobs")
     wait_timeout = module.params.get("wait_timeout")
     atomic = module.params.get("atomic")
     create_namespace = module.params.get("create_namespace")
@@ -1077,6 +1089,7 @@ def main():
                 release_values,
                 chart_ref,
                 wait,
+                wait_for_jobs,
                 wait_timeout,
                 disable_hook,
                 False,
@@ -1161,6 +1174,7 @@ def main():
                     release_values,
                     chart_ref,
                     wait,
+                    wait_for_jobs,
                     wait_timeout,
                     disable_hook,
                     force,
