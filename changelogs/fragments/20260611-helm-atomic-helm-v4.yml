@@ -1,0 +1,2 @@
+bugfixes:
+  - helm - use the ``--rollback-on-failure`` flag instead of the deprecated/removed ``--atomic`` flag when ``atomic=true`` is used with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1144).
