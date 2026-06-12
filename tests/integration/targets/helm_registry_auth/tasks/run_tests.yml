@@ -28,7 +28,9 @@
       register: _helm_registry_auth_correct
 
     - name: Assert that the registry is logged in
-      # Helm binary prints the message to stderr, refence: https://github.com/helm/helm/issues/13464
+      # Helm < 4.2.1 prints success messages to stderr (https://github.com/helm/helm/issues/13464),
+      # Helm >= 4.2.1 moves them to stdout (https://github.com/helm/helm/pull/32056).
+      # Check both streams to stay version-agnostic.
       assert:
         that:
           - "'Login Succeeded' in _helm_registry_auth_correct.stdout_lines + _helm_registry_auth_correct.stderr_lines"
@@ -43,9 +45,11 @@
       failed_when: _save_chart.rc != 0
 
     - name: Assert that the chart is saved
-      # Helm binary prints the message to stderr, refence: https://github.com/helm/helm/issues/13464
+      # Helm < 4.2.1 prints success messages to stderr (https://github.com/helm/helm/issues/13464),
+      # Helm >= 4.2.1 moves them to stdout (https://github.com/helm/helm/pull/32056).
+      # Check both streams to stay version-agnostic.
       assert:
-        that: "'Pushed: localhost:' + registry_port | string + '/test/k8s-monitoring' in _save_chart.stderr"
+        that: "'Pushed: localhost:' + registry_port | string + '/test/k8s-monitoring' in _save_chart.stdout + _save_chart.stderr"
 
     - name: Test logout
       helm_registry_auth:
@@ -55,9 +59,11 @@
       register: _helm_registry_auth_logout
 
     - name: Assert logout
-      # Helm binary prints the message to stderr
+      # Helm < 4.2.1 prints success messages to stderr (https://github.com/helm/helm/issues/13464),
+      # Helm >= 4.2.1 moves them to stdout (https://github.com/helm/helm/pull/32056).
+      # Check both streams to stay version-agnostic.
       assert:
-        that: "'Removing login credentials' in _helm_registry_auth_logout.stderr"
+        that: "'Removing login credentials' in _helm_registry_auth_logout.stdout + _helm_registry_auth_logout.stderr"
 
     - name: Ensure that not able to push to the registry
       ansible.builtin.shell: >-
