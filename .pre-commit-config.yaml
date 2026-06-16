@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: block-ide-config-files
+        name: Block .claude/ and .vscode/ files
+        entry: .git-hooks/block-ide-files.sh
+        language: script
+        pass_filenames: false
+        always_run: true
