@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Block commits containing .claude/ or .vscode/ files
 
 if git diff --cached --name-only | grep -qE "^\.claude/|^\.vscode/"; then
