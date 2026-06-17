@@ -1,9 +1,6 @@
 repos:
-  - repo: local
+  - repo: https://github.com/ansible/cloud-content-ci-automation
+    rev: precommit_hook
     hooks:
-      - id: block-ide-config-files
-        name: Block .claude/ and .vscode/ files
-        entry: .git-hooks/block-ide-files.sh
-        language: script
-        pass_filenames: false
-        always_run: true
+      - id: block-ide-ai-files
+    always_run: true
