@@ -56,6 +56,14 @@ options:
     type: bool
     default: true
     version_added: 6.4.0
+  keyring:
+    description:
+      - Location of public keys used for verification
+      - This option requires helm version >= 4.0.0
+      - Used with I(state=present).
+    type: path
+    required: false
+    version_added: 6.5.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -153,6 +161,10 @@ def argument_spec():
                 type="bool",
                 default=True,
             ),
+            keyring=dict(
+                type="path",
+                required=False,
+            )
         )
     )
     return arg_spec
@@ -187,6 +199,7 @@ def main():
         helm_cmd_common += " install %s" % module.params.get("plugin_path")
         plugin_version = module.params.get("plugin_version")
         verify = module.params.get("verify")
+        keyring = module.params.get("keyring")
         if plugin_version is not None:
             helm_cmd_common += " --version=%s" % plugin_version
         if not verify:
@@ -199,6 +212,15 @@ def main():
                 )
             else:
                 helm_cmd_common += " --verify=false"
+        if keyring is not None:
+            if LooseVersion(helm_version) < LooseVersion("4.0.0"):
+                module.warn(
+                    "verify parameter requires helm >= 4.0.0, current version is {0}".format(
+                        helm_version
+                    )
+                )
+            else:
+                helm_cmd_common += " --keyring=" + keyring
         if not module.check_mode:
             rc, out, err = module.run_helm_command(
                 helm_cmd_common, fails_on_error=False
