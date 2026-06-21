@@ -1,3 +1,3 @@
 ---
 minor_changes:
-  - helm_plugin - add ``--keyring`` argument to allow changing the keyring default location (https://github.com/ansible-collections/kubernetes.core/pull/1150)
+  - helm_plugin - add ``--keyring`` argument to allow changing the keyring default location. The option is only accepted with ``state=present`` (the ``helm plugin install`` subcommand), as that is the only implemented subcommand that supports ``--keyring`` (https://github.com/ansible-collections/kubernetes.core/pull/1150).

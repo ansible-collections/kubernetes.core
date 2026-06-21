@@ -58,9 +58,9 @@ options:
     version_added: 6.4.0
   keyring:
     description:
-      - Location of public keys used for verification
-      - This option requires helm version >= 4.0.0
-      - Used with I(state=present).
+      - Location of public keys used for verification.
+      - Only valid with C(state=present), which maps to the C(helm plugin install) subcommand.
+      - This option requires helm version >= 4.0.0.
     type: path
     required: false
     version_added: 6.5.0
@@ -193,6 +193,15 @@ def main():
 
     state = module.params.get("state")
 
+    # The ``--keyring`` flag is only supported by the ``install``, ``verify`` and
+    # ``package`` plugin subcommands. Of those, this module only implements
+    # ``install`` (state=present), so reject ``keyring`` for any other state.
+    if module.params.get("keyring") is not None and state != "present":
+        module.fail_json(
+            msg="The 'keyring' option is only supported with state=present "
+            "(the 'helm plugin install' subcommand)."
+        )
+
     helm_cmd_common = module.get_helm_binary() + " plugin"
 
     if state == "present":
@@ -202,8 +211,9 @@ def main():
         keyring = module.params.get("keyring")
         if plugin_version is not None:
             helm_cmd_common += " --version=%s" % plugin_version
-        if not verify:
+        if not verify or keyring is not None:
             helm_version = module.get_helm_version()
+        if not verify:
             if LooseVersion(helm_version) < LooseVersion("4.0.0"):
                 module.warn(
                     "verify parameter requires helm >= 4.0.0, current version is {0}".format(
@@ -215,7 +225,7 @@ def main():
         if keyring is not None:
             if LooseVersion(helm_version) < LooseVersion("4.0.0"):
                 module.warn(
-                    "verify parameter requires helm >= 4.0.0, current version is {0}".format(
+                    "keyring parameter requires helm >= 4.0.0, current version is {0}".format(
                         helm_version
                     )
                 )
