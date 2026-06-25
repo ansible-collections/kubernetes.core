@@ -106,17 +106,23 @@ EXAMPLES = r"""
 RETURN = r"""
 stdout:
   type: str
-  description: Full C(helm) command stdout, in case you want to display it or examine the event log
+  description:
+    - Full C(helm) command stdout, in case you want to display it or examine the event log.
+    - As of Helm 4.2.1 success messages such as C(Login Succeeded) are printed to stdout
+      (see U(https://github.com/helm/helm/pull/32056)). On earlier versions they are printed to stderr.
   returned: always
-stout_lines:
+  sample: 'Login Succeeded\n'
+stdout_lines:
   type: list
   description: Full C(helm) command stdout, in case you want to display it or examine the event log
   returned: always
 stderr:
   type: str
-  description: >-
-    Full C(helm) command stderr, in case you want to display it or examine the event log.
-    Please be note that helm binnary may print messages to stderr even if the command is successful.
+  description:
+    - Full C(helm) command stderr, in case you want to display it or examine the event log.
+    - Please note that the helm binary may print messages to stderr even if the command is successful.
+    - On Helm versions earlier than 4.2.1, success messages such as C(Login Succeeded) are printed
+      here; as of Helm 4.2.1 they are printed to stdout (see U(https://github.com/helm/helm/pull/32056)).
   returned: always
   sample: 'Login Succeeded\n'
 stderr_lines:

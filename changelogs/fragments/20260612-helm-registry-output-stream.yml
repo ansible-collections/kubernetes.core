@@ -1,0 +1,2 @@
+minor_changes:
+  - helm_registry_auth - document that, as of Helm 4.2.1, registry success messages such as ``Login Succeeded`` are printed to stdout instead of stderr (https://github.com/ansible-collections/kubernetes.core/pull/1147).
