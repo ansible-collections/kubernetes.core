@@ -104,12 +104,23 @@ jobs:
                   print(f'all_green: required job failed: {name} results={results}', file=sys.stderr)
                   sys.exit(1)
 
-          # cancel-in-progress superseded this run; do not fail (newer run is authoritative)
-          if any(v == 'cancelled' for v in results.values()):
+          cancelled_required = [n for n in required if results[n] == 'cancelled']
+          if cancelled_required:
+              # Benign only when parent cancel-in-progress superseded the whole run.
+              # Partial cancellation (e.g. sibling concurrency collision) must fail.
+              still_ran = [n for n in required if results[n] not in ('cancelled', 'skipped')]
+              if still_ran:
+                  print(
+                      f'all_green: required jobs cancelled but others completed: '
+                      f'cancelled={cancelled_required} still_ran={still_ran} results={results}',
+                      file=sys.stderr,
+                  )
+                  sys.exit(1)
               print(
-                  'all_green: one or more jobs cancelled (usually concurrency); skipping strict gate.',
+                  'all_green: all required jobs cancelled or skipped (superseded run); '
+                  'skipping strict gate.',
                   results,
-              )
+                )
               sys.exit(0)
 
           not_ok = [j for j in required if results[j] != 'success']

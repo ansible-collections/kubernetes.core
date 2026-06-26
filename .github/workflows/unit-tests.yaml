@@ -1,6 +1,6 @@
 name: Unit tests
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: unit-tests-${{ github.ref }}
   cancel-in-progress: true
 
 on:
