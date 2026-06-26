@@ -2,7 +2,7 @@
 name: all_green
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 on: # yamllint disable-line rule:truthy
