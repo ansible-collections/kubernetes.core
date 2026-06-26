@@ -1,14 +1,6 @@
 name: Unit tests
-concurrency:
-  group: unit-tests-${{ github.ref }}
-  cancel-in-progress: true
 
-on:
-  workflow_call:
-  pull_request:
-    branches:
-      - main
-      - stable-*
+on: [workflow_call]
 
 jobs:
   unit-source:
