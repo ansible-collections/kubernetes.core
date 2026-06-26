@@ -15,7 +15,7 @@ The following tests run on every pull request:
 | [Sanity](.github/workflows/sanity-tests.yaml) | Runs ansible sanity checks | See compatibility table below | devel, stable-2.18, stable-2.19, stable-2.20 |
 | [Unit tests](.github/workflows/unit-tests.yaml) | Executes unit test cases | See compatibility table below | devel, stable-2.16, stable-2.17, stable-2.18, stable-2.19, stable-2.20 |
 | [Integration](.github/workflows/integration-tests.yaml) | Executes integration test suites using KinD cluster (split across 8 jobs, tests with Turbo mode enabled/disabled) | 3.12 | milestone |
-| [all_green](.github/workflows/all_green_check.yaml) | Linters (PR only), sanity, units, coverage XML, aggregate gate, and SonarCloud scan (same-repo PR / push when org secret is set) | (see jobs) | (see jobs) |
+| [all_green](.github/workflows/all_green_check.yaml) | Linters (PR only), sanity, units, coverage XML, aggregate gate, and SonarCloud scan (same-repo PR / push only) | (see jobs) | (see jobs) |
 
 **Note:** Integration tests require a KinD (Kubernetes in Docker) cluster and test both with Turbo mode enabled and disabled.
 
@@ -34,4 +34,4 @@ These are outlined in the collection's [tox.ini](tox.ini) file (`envlist`) and G
 
 ## SonarCloud
 
-SonarCloud analysis runs from **[`all_green_check.yaml`](.github/workflows/all_green_check.yaml)** via the **`sonarcloud`** job, which calls **[`sonarcloud.yml`](.github/workflows/sonarcloud.yml)** (**`workflow_call`**) after the **`all_green`** gate and **coverage** succeed. The reusable workflow checks out the PR head or push SHA, downloads the **`coverage`** artifact, and runs the pinned **SonarSource** scan action. Same-repo **`pull_request`** and **`push`** only (fork PRs skip Sonar when the org secret is unavailable). Details: [SONARCLOUD.md](SONARCLOUD.md).
+SonarCloud analysis runs from **[`all_green_check.yaml`](.github/workflows/all_green_check.yaml)** via the **`sonarcloud`** job, which calls **[`sonarcloud.yml`](.github/workflows/sonarcloud.yml)** (**`workflow_call`**) after the **`all_green`** gate and **coverage** succeed. The reusable workflow checks out the PR head or push SHA, downloads the **`coverage`** artifact, and runs the pinned **SonarSource** scan action. Same-repo **`pull_request`** and **`push`** only (fork PRs are excluded by the job **`if:`** gate). Details: [SONARCLOUD.md](SONARCLOUD.md).
