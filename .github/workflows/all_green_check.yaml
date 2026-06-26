@@ -52,7 +52,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ansible-compat
           python -m pip install https://github.com/ansible/ansible/archive/stable-2.19.tar.gz
-          python -m pip install -r tests/unit/requirements.txt
+          python -m pip install -r requirements.txt -r tests/unit/requirements.txt pytest-ansible mock
           python -m pytest tests/unit \
             --cov=plugins \
             --cov-report=xml:coverage.xml \
