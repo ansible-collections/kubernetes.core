@@ -16,7 +16,7 @@ The scan step uses **`SonarSource/sonarqube-scan-action`** (pinned SHA in the wo
 
 Workflow files:
 
-- [.github/workflows/all_green_check.yaml](.github/workflows/all_green_check.yaml) -- **`all_green`** gate, **coverage** artifact upload, and **`sonarcloud`** job (**`uses: ./.github/workflows/sonarcloud.yml`**, passing only **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`**) after **`all_green`** and **`coverage`** succeed, gated for **`push`** and same-repo **`pull_request`** when that secret is set.
+- [.github/workflows/all_green_check.yaml](.github/workflows/all_green_check.yaml) -- **`all_green`** gate, **coverage** artifact upload, and **`sonarcloud`** job (**`uses: ./.github/workflows/sonarcloud.yml`**, passing only **`ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT`**) after **`all_green`** and **`coverage`** succeed, gated for **`push`** and same-repo **`pull_request`** only.
 - [.github/workflows/sonarcloud.yml](.github/workflows/sonarcloud.yml) -- **`scan`** job: checkout, download **`coverage`**, **`SONAR_ARGS`**, SonarCloud scan.
 
 Scanner configuration lives in [sonar-project.properties](sonar-project.properties).
