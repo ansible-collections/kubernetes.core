@@ -52,11 +52,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ansible-compat
           python -m pip install https://github.com/ansible/ansible/archive/stable-2.19.tar.gz
-          python -m pip install -r requirements.txt -r tests/unit/requirements.txt pytest-ansible mock
-          python -m pytest tests/unit \
-            --cov=plugins \
-            --cov-report=xml:coverage.xml \
+          # Same deps as the units matrix (build_install_collection); do not use
+          # tests/unit/requirements.txt — its kubernetes pin breaks test_core.py.
+          python -m pip install -r requirements.txt -r test-requirements.txt
+          python -m coverage run --source=plugins -m pytest tests/unit \
             --ansible-host-pattern localhost
+          python -m coverage xml -o coverage.xml
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
