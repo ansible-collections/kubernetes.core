@@ -64,7 +64,7 @@ jobs:
         python-version:
           - "3.12"
         workflow-id: ${{ fromJson(needs.splitter.outputs.test_jobs) }}
-    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}-${{ matrix.workflow-id }}-enable_turbo=${{ matrix.enable-turbo-mode }}"
+    name: Integration tests
     steps:
       - name: Read target
         id: read-targets
