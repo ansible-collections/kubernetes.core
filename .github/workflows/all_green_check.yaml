@@ -33,49 +33,37 @@ jobs:
   coverage:
     name: Unit test coverage
     runs-on: ubuntu-latest
-    needs:
-      - sanity
-      - units
-    env:
-      # stable-5 is tested against ansible-core stable-2.18 (see integration-tests.yaml).
-      ANSIBLE_CORE_REF: "stable-2.18"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: ansible_collections/kubernetes/core
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install Ansible (ansible-test)
+      - name: Run unit tests with coverage
+        working-directory: ansible_collections/kubernetes/core
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "https://github.com/ansible/ansible/archive/${ANSIBLE_CORE_REF}.tar.gz"
-
-      - name: Run unit tests with coverage
-        run: ansible-test units --venv --coverage --python 3.12 --requirements
-
-      - name: Combine and emit coverage XML
-        run: |
-          ansible-test coverage combine --venv --python 3.12 --requirements
-          ansible-test coverage xml --venv --python 3.12 --requirements
-
-      - name: Prepare coverage.xml for SonarCloud
-        run: |
-          set -euo pipefail
-          mkdir -p "${GITHUB_WORKSPACE}"
-          xml=$(find tests/output/reports -maxdepth 1 -name '*.xml' ! -name '*powershell*' | head -1)
-          test -n "${xml}"
-          cp "${xml}" "${GITHUB_WORKSPACE}/coverage.xml"
-          # Strip workspace prefix so Sonar sees repo-relative paths (same idea as amazon.aws path rewrite)
-          sed -i "s#${GITHUB_WORKSPACE}/##g" "${GITHUB_WORKSPACE}/coverage.xml"
+          python -m pip install ansible-compat
+          python -m pip install https://github.com/ansible/ansible/archive/stable-2.19.tar.gz
+          # Same deps as the units matrix (build_install_collection); do not use
+          # tests/unit/requirements.txt — its kubernetes pin breaks test_core.py.
+          python -m pip install -r requirements.txt -r test-requirements.txt
+          python -m coverage run --source=plugins -m pytest tests/unit \
+            --ansible-host-pattern localhost
+          python -m coverage xml -o coverage.xml
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: ${{ github.workspace }}/coverage.xml
+          path: ansible_collections/kubernetes/core/coverage.xml
 
   all_green:
     if: ${{ always() }}
@@ -88,8 +76,6 @@ jobs:
     steps:
       - run: |
           python -c "
-          import sys
-
           required = ['sanity', 'units', 'coverage']
           if '${{ github.event_name }}' == 'pull_request':
               required = ['linters', 'sanity', 'units', 'coverage']
@@ -99,43 +85,7 @@ jobs:
               'units': '${{ needs.units.result }}',
               'coverage': '${{ needs.coverage.result }}',
           }
-
-          for name in required:
-              if results[name] == 'failure':
-                  print(f'all_green: required job failed: {name} results={results}', file=sys.stderr)
-                  sys.exit(1)
-
-          # cancel-in-progress superseded this run; do not fail (newer run is authoritative)
-          if any(v == 'cancelled' for v in results.values()):
-              print(
-                  'all_green: one or more jobs cancelled (usually concurrency); skipping strict gate.',
-                  results,
-              )
-              sys.exit(0)
-
-          not_ok = [j for j in required if results[j] != 'success']
-          if not_ok:
-              print(f'all_green: required jobs not success: {not_ok} results={results}', file=sys.stderr)
-              sys.exit(1)
-
-          for job, status in results.items():
-              if job not in required and status not in ('success', 'skipped'):
-                  print(f'all_green: unexpected {job}={status} results={results}', file=sys.stderr)
-                  sys.exit(1)
-
-          print('all_green OK', results)
+          ok = all(results[j] == 'success' for j in required)
+          skipped_ok = all(results[j] in ('success', 'skipped') for j in results)
+          assert ok and skipped_ok, f'required={required} results={results}'
           "
-
-  sonarcloud:
-    name: SonarCloud scan
-    needs:
-      - all_green
-      - coverage
-    if: >-
-      ${{ needs.all_green.result == 'success'
-      && (github.event_name == 'push'
-      || (github.event_name == 'pull_request'
-      && github.event.pull_request.head.repo.full_name == github.repository)) }}
-    uses: ./.github/workflows/sonarcloud.yml
-    secrets:
-      ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT: ${{ secrets.ANSIBLE_COLLECTIONS_ORG_SONAR_TOKEN_CICD_BOT }}
