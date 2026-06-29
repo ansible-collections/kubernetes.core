@@ -197,8 +197,8 @@ def main():
     # ``package`` plugin subcommands. Of those, this module only implements
     # ``install`` (state=present), so reject ``keyring`` for any other state.
     if module.params.get("keyring") is not None and state != "present":
-        module.fail_json(
-            msg="The 'keyring' option is only supported with state=present "
+        module.warn(
+            "The 'keyring' option is only supported with state=present "
             "(the 'helm plugin install' subcommand)."
         )
 
