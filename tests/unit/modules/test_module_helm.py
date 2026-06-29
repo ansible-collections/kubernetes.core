@@ -591,9 +591,7 @@ class TestForceFlagHelmVersion(unittest.TestCase):
         with patch.object(
             AnsibleHelmModule, "get_helm_version", return_value=helm_version
         ):
-            with patch.object(
-                basic.AnsibleModule, "run_command"
-            ) as mock_run_command:
+            with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
                 mock_run_command.return_value = (0, "deployed", "")
                 try:
                     helm.main()
@@ -634,9 +632,7 @@ class TestForceFlagHelmVersion(unittest.TestCase):
         )
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info)
-        with patch.object(
-            AnsibleHelmModule, "get_helm_version", return_value="3.10.0"
-        ):
+        with patch.object(AnsibleHelmModule, "get_helm_version", return_value="3.10.0"):
             with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
                 mock_run_command.return_value = (0, "deployed", "")
                 with self.assertRaises(AnsibleFailJson):
@@ -665,9 +661,7 @@ class TestForceFlagHelmVersion(unittest.TestCase):
         )
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info)
-        with patch.object(
-            AnsibleHelmModule, "get_helm_version", return_value="3.10.0"
-        ):
+        with patch.object(AnsibleHelmModule, "get_helm_version", return_value="3.10.0"):
             with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
                 mock_run_command.return_value = (0, "deployed", "")
                 with self.assertRaises(AnsibleFailJson):
@@ -685,9 +679,7 @@ class TestForceFlagHelmVersion(unittest.TestCase):
         )
         helm.get_release_status = MagicMock(return_value=None)
         helm.fetch_chart_info = MagicMock(return_value=self.chart_info)
-        with patch.object(
-            AnsibleHelmModule, "get_helm_version", return_value="4.0.0"
-        ):
+        with patch.object(AnsibleHelmModule, "get_helm_version", return_value="4.0.0"):
             with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
                 mock_run_command.return_value = (0, "deployed", "")
                 with self.assertRaises(AnsibleFailJson):
