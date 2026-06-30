@@ -20,6 +20,10 @@ on: # yamllint disable-line rule:truthy
       - stable-*
 
 jobs:
+  security-check:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/security-check.yaml
+
   linters:
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/linters.yaml
@@ -68,6 +72,7 @@ jobs:
   all_green:
     if: ${{ always() }}
     needs:
+      - security-check
       - linters
       - sanity
       - units
@@ -78,8 +83,9 @@ jobs:
           python -c "
           required = ['sanity', 'units', 'coverage']
           if '${{ github.event_name }}' == 'pull_request':
-              required = ['linters', 'sanity', 'units', 'coverage']
+              required = ['security-check', 'linters', 'sanity', 'units', 'coverage']
           results = {
+              'security-check': '${{ needs.security-check.result }}',
               'linters': '${{ needs.linters.result }}',
               'sanity': '${{ needs.sanity.result }}',
               'units': '${{ needs.units.result }}',
