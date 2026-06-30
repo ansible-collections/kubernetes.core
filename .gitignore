@@ -23,8 +23,9 @@ tests/integration/targets/*/*.tgz
 tests/integration/inventory
 tests/integration/*-*.yml
 
-# VS Code settings
+# IDE and editor settings
 .vscode/
+.claude/
 
 # Root coverage report for SonarCloud (generated locally or in CI)
 /coverage.xml
