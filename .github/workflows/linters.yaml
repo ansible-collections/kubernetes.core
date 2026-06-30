@@ -1,17 +1,7 @@
 ---
 name: Linters
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
-on:
-  workflow_call:
-  pull_request:
-    branches:
-      - main
-      - stable-*
-    tags:
-      - '*'
+on: [workflow_call]
 
 jobs:
   linters:
