@@ -66,6 +66,20 @@ After installation, you can update documentation
 
 Review the changes and create a pull request using updated files.
 
+### Pre-Commit Hooks
+
+To prevent accidental commits of local configuration and IDE files (specifically `.vscode/` and `.claude/`), this repository utilizes the `pre-commit` framework. 
+
+Please set up the hooks locally before making your first commit:
+
+```bash
+# Install the pre-commit tool
+pip install pre-commit
+
+# Register the hooks with Git
+pre-commit install
+```
+
 ### Code of Conduct
 The `kubernetes.core` collection follows the Ansible project's
 [Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html).
