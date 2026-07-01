@@ -165,6 +165,13 @@ options:
   force:
     description:
       - Helm option to force reinstall, ignore on new install.
+      - With Helm v4 this performs a client-side replacement. Helm v4 deprecated
+        C(--force) (split into C(--force-replace) and C(--force-conflicts)) and
+        enables server-side apply by default, so for Helm v4 the module emits
+        C(--server-side=false --force-replace) to preserve the Helm v3 behaviour.
+        With Helm v3 the C(--force) flag is used. The O(force) option works the
+        same way regardless of the installed Helm version.
+      - Mutually exclusive with O(server_side) and O(force_conflicts).
     default: False
     type: bool
   purge:
@@ -197,6 +204,27 @@ options:
       - If set, the installation process deletes the installation on failure.
     type: bool
     default: False
+  server_side:
+    description:
+      - Control Helm v4 server-side apply when installing or upgrading a release.
+      - Maps to the C(--server-side) flag, which accepts C(true), C(false) or C(auto).
+      - This option requires Helm v4 and is mutually exclusive with O(force).
+    type: str
+    choices:
+      - "auto"
+      - "true"
+      - "false"
+    version_added: 6.5.0
+  force_conflicts:
+    description:
+      - When server-side apply is enabled (the Helm v4 default), force changes
+        against conflicts instead of failing.
+      - Maps to the C(--force-conflicts) flag.
+      - This option requires Helm v4, cannot be combined with O(server_side=false),
+        and is mutually exclusive with O(force).
+    type: bool
+    default: False
+    version_added: 6.5.0
   create_namespace:
     description:
       - Create the release namespace if not present.
@@ -590,6 +618,8 @@ def deploy(
     plain_http=False,
     take_ownership=False,
     skip_schema_validation=False,
+    server_side=None,
+    force_conflicts=False,
 ):
     """
     Install/upgrade/rollback release chart
@@ -631,8 +661,38 @@ def deploy(
     if timeout:
         deploy_command += " --timeout " + timeout
 
+    if server_side is not None:
+        if not module.is_helm_v4():
+            module.fail_json(
+                msg="server_side requires helm >= 4.0.0, current version is {0}".format(
+                    module.get_helm_version()
+                )
+            )
+        deploy_command += " --server-side=" + server_side
+
+    if force_conflicts:
+        if not module.is_helm_v4():
+            module.fail_json(
+                msg="force_conflicts requires helm >= 4.0.0, current version is {0}".format(
+                    module.get_helm_version()
+                )
+            )
+        if server_side == "false":
+            module.fail_json(
+                msg="force_conflicts requires server-side apply to be enabled and cannot be used with server_side=false"
+            )
+        deploy_command += " --force-conflicts"
+
     if force:
-        deploy_command += " --force"
+        # Helm v4 deprecated '--force' (split into '--force-replace' and
+        # '--force-conflicts') and enables server-side apply by default, which is
+        # incompatible with '--force-replace'. Emit the version-appropriate flags,
+        # disabling server-side apply on v4 to preserve the v3 client-side
+        # replacement behaviour. 'force' is mutually exclusive with 'server_side'.
+        if module.is_helm_v4():
+            deploy_command += " --server-side=false --force-replace"
+        else:
+            deploy_command += " --force"
 
     if replace:
         deploy_command += " --replace"
@@ -893,6 +953,8 @@ def argument_spec():
             wait_timeout=dict(type="str"),
             timeout=dict(type="str"),
             atomic=dict(type="bool", default=False),
+            server_side=dict(type="str", choices=["auto", "true", "false"]),
+            force_conflicts=dict(type="bool", default=False),
             create_namespace=dict(type="bool", default=False),
             post_renderer=dict(type="str"),
             replace=dict(type="bool", default=False),
@@ -925,6 +987,8 @@ def main():
             ("context", "ca_cert"),
             ("replace", "history_max"),
             ("wait_timeout", "timeout"),
+            ("force", "server_side"),
+            ("force", "force_conflicts"),
         ],
         supports_check_mode=True,
     )
@@ -954,6 +1018,8 @@ def main():
     wait = module.params.get("wait")
     wait_timeout = module.params.get("wait_timeout")
     atomic = module.params.get("atomic")
+    server_side = module.params.get("server_side")
+    force_conflicts = module.params.get("force_conflicts")
     create_namespace = module.params.get("create_namespace")
     post_renderer = module.params.get("post_renderer")
     replace = module.params.get("replace")
@@ -1082,6 +1148,8 @@ def main():
                 False,
                 values_files=values_files,
                 atomic=atomic,
+                server_side=server_side,
+                force_conflicts=force_conflicts,
                 create_namespace=create_namespace,
                 post_renderer=post_renderer,
                 replace=replace,
@@ -1166,6 +1234,8 @@ def main():
                     force,
                     values_files=values_files,
                     atomic=atomic,
+                    server_side=server_side,
+                    force_conflicts=force_conflicts,
                     create_namespace=create_namespace,
                     post_renderer=post_renderer,
                     replace=replace,
