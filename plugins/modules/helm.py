@@ -202,6 +202,9 @@ options:
   atomic:
     description:
       - If set, the installation process deletes the installation on failure.
+      - With Helm v4 this is translated to the C(--rollback-on-failure) flag, since
+        C(--atomic) was renamed; with Helm v3 the C(--atomic) flag is used. The
+        O(atomic) option works the same way regardless of the installed Helm version.
     type: bool
     default: False
   server_side:
@@ -656,7 +659,13 @@ def deploy(
             deploy_command += " --timeout " + wait_timeout
 
     if atomic:
-        deploy_command += " --atomic"
+        # Helm v4 renamed '--atomic' to '--rollback-on-failure'. The old flag is
+        # deprecated on 'helm upgrade' and removed from 'helm install', so always
+        # emit the version-appropriate flag.
+        if module.is_helm_v4():
+            deploy_command += " --rollback-on-failure"
+        else:
+            deploy_command += " --atomic"
 
     if timeout:
         deploy_command += " --timeout " + timeout
