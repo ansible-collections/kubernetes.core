@@ -164,7 +164,7 @@ def argument_spec():
             keyring=dict(
                 type="path",
                 required=False,
-            )
+            ),
         )
     )
     return arg_spec
