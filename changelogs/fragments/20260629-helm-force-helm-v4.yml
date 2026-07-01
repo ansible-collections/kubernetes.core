@@ -1,0 +1,4 @@
+minor_changes:
+  - helm - add the ``server_side`` and ``force_conflicts`` options to control Helm v4 server-side apply when installing or upgrading a release (https://github.com/ansible-collections/kubernetes.core/pull/1164).
+bugfixes:
+  - helm - use ``--server-side=false --force-replace`` instead of the deprecated/removed ``--force`` flag when ``force=true`` is used with Helm v4, preserving the Helm v3 client-side replacement behaviour and avoiding the server-side apply conflict (https://github.com/ansible-collections/kubernetes.core/pull/1164).
