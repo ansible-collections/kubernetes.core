@@ -56,6 +56,14 @@ options:
     type: bool
     default: true
     version_added: 6.4.0
+  keyring:
+    description:
+      - Location of public keys used for verification.
+      - Only valid with C(state=present), which maps to the C(helm plugin install) subcommand.
+      - This option requires helm version >= 4.0.0.
+    type: path
+    required: false
+    version_added: 6.5.0
 extends_documentation_fragment:
   - kubernetes.core.helm_common_options
 """
@@ -153,6 +161,10 @@ def argument_spec():
                 type="bool",
                 default=True,
             ),
+            keyring=dict(
+                type="path",
+                required=False,
+            ),
         )
     )
     return arg_spec
@@ -181,16 +193,28 @@ def main():
 
     state = module.params.get("state")
 
+    # The ``--keyring`` flag is only supported by the ``install``, ``verify`` and
+    # ``package`` plugin subcommands. Of those, this module only implements
+    # ``install`` (state=present); using ``keyring`` with other states emits a
+    # warning and the option is not passed to Helm.
+    if module.params.get("keyring") is not None and state != "present":
+        module.warn(
+            "The 'keyring' option is only supported with state=present "
+            "(the 'helm plugin install' subcommand)."
+        )
+
     helm_cmd_common = module.get_helm_binary() + " plugin"
 
     if state == "present":
         helm_cmd_common += " install %s" % module.params.get("plugin_path")
         plugin_version = module.params.get("plugin_version")
         verify = module.params.get("verify")
+        keyring = module.params.get("keyring")
         if plugin_version is not None:
             helm_cmd_common += " --version=%s" % plugin_version
-        if not verify:
+        if not verify or keyring is not None:
             helm_version = module.get_helm_version()
+        if not verify:
             if LooseVersion(helm_version) < LooseVersion("4.0.0"):
                 module.warn(
                     "verify parameter requires helm >= 4.0.0, current version is {0}".format(
@@ -199,6 +223,15 @@ def main():
                 )
             else:
                 helm_cmd_common += " --verify=false"
+        if keyring is not None:
+            if LooseVersion(helm_version) < LooseVersion("4.0.0"):
+                module.warn(
+                    "keyring parameter requires helm >= 4.0.0, current version is {0}".format(
+                        helm_version
+                    )
+                )
+            else:
+                helm_cmd_common += " --keyring=" + keyring
         if not module.check_mode:
             rc, out, err = module.run_helm_command(
                 helm_cmd_common, fails_on_error=False
