@@ -1,0 +1,17 @@
+---
+name: Security Check
+
+on: [workflow_call]
+
+jobs:
+  security-check:
+    name: Block unsafe directories
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for blocked directories
+        uses: ansible/cloud-content-ci-automation/.github/actions/security_check_directories@74b5fe870e1d5346c5fcea332b97a6fb26f1ad8a
