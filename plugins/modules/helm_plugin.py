@@ -195,7 +195,8 @@ def main():
 
     # The ``--keyring`` flag is only supported by the ``install``, ``verify`` and
     # ``package`` plugin subcommands. Of those, this module only implements
-    # ``install`` (state=present), so reject ``keyring`` for any other state.
+    # ``install`` (state=present); using ``keyring`` with other states emits a
+    # warning and the option is not passed to Helm.
     if module.params.get("keyring") is not None and state != "present":
         module.warn(
             "The 'keyring' option is only supported with state=present "
