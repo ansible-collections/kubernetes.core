@@ -1,0 +1,2 @@
+trivial:
+  - ci - add security check workflow to block PRs containing ``.claude/`` or ``.vscode/`` directories (https://github.com/ansible-collections/kubernetes.core/pull/1173).
