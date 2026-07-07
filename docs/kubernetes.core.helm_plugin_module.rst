@@ -123,6 +123,24 @@ Parameters
             <tr>
                 <td colspan="1">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>keyring</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">path</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.5.0</div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Location of public keys used for verification.</div>
+                        <div>Only valid with <code>state=present</code>, which maps to the <code>helm plugin install</code> subcommand.</div>
+                        <div>This option requires helm version &gt;= 4.0.0.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>kubeconfig</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
