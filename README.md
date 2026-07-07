@@ -58,13 +58,14 @@ Name | Description
 [kubernetes.core.k8s_scale](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_scale_module.rst)|Set a new size for a Deployment, ReplicaSet, Replication Controller, or Job.
 [kubernetes.core.k8s_service](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_service_module.rst)|Manage Services on Kubernetes
 [kubernetes.core.k8s_taint](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.k8s_taint_module.rst)|Taint a node in a Kubernetes/OpenShift cluster
+[kubernetes.core.kubeconfig](https://github.com/ansible-collections/kubernetes.core/blob/main/docs/kubernetes.core.kubeconfig_module.rst)|Generate, update, and optionally write Kubernetes kubeconfig files
 
 <!--end collection content-->
 
 ## Requirements
 
 <!--start requires_ansible-->
-### Ansible version compatibility
+## Ansible version compatibility
 
 This collection has been tested against the following Ansible versions: **>=2.16.0**.
 

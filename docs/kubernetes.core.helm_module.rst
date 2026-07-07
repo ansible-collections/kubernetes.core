@@ -73,6 +73,7 @@ Parameters
                 </td>
                 <td>
                         <div>If set, the installation process deletes the installation on failure.</div>
+                        <div>With Helm v4 this is translated to the <code>--rollback-on-failure</code> flag, since <code>--atomic</code> was renamed; with Helm v3 the <code>--atomic</code> flag is used. The O(atomic) option works the same way regardless of the installed Helm version.</div>
                 </td>
             </tr>
             <tr>
@@ -254,6 +255,30 @@ Parameters
                 </td>
                 <td>
                         <div>Helm option to force reinstall, ignore on new install.</div>
+                        <div>With Helm v4 this performs a client-side replacement. Helm v4 deprecated <code>--force</code> (split into <code>--force-replace</code> and <code>--force-conflicts</code>) and enables server-side apply by default, so for Helm v4 the module emits <code>--server-side=false --force-replace</code> to preserve the Helm v3 behaviour. With Helm v3 the <code>--force</code> flag is used. The O(force) option works the same way regardless of the installed Helm version.</div>
+                        <div>Mutually exclusive with O(server_side) and O(force_conflicts).</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>force_conflicts</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.5.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>When server-side apply is enabled (the Helm v4 default), force changes against conflicts instead of failing.</div>
+                        <div>Maps to the <code>--force-conflicts</code> flag.</div>
+                        <div>This option requires Helm v4, cannot be combined with O(server_side=false), and is mutually exclusive with O(force).</div>
                 </td>
             </tr>
             <tr>
@@ -540,6 +565,29 @@ Parameters
                 <td>
                         <div>When upgrading package, specifies wether to reuse the last release&#x27;s values and merge in any overrides from parameters <em>release_values</em>, <em>values_files</em> or <em>set_values</em>.</div>
                         <div>If <em>reset_values</em> is set to <code>True</code>, this is ignored.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>server_side</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.5.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>auto</li>
+                                    <li>true</li>
+                                    <li>false</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Control Helm v4 server-side apply when installing or upgrading a release.</div>
+                        <div>Maps to the <code>--server-side</code> flag, which accepts <code>true</code>, <code>false</code> or <code>auto</code>.</div>
+                        <div>This option requires Helm v4 and is mutually exclusive with O(force).</div>
                 </td>
             </tr>
             <tr>
