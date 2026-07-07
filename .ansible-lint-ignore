@@ -4,3 +4,5 @@ plugins/connection/kubectl.py no-changed-when
 # false positive result
 plugins/connection/kubectl.py var-naming[no-reserved]
 plugins/connection/kubectl.py jinja[invalid]
+# collection EE metadata is not an ansible-builder definition file
+meta/execution-environment.yml schema[execution-environment]
