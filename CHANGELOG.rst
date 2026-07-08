@@ -114,7 +114,7 @@ Bugfixes
 --------
 
 - Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
-- Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
+- Update the ``k8s_cp`` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
 
 v6.1.0
 ======

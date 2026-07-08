@@ -1114,7 +1114,7 @@ releases:
     changes:
       bugfixes:
       - Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
-      - Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
+      - Update the ``k8s_cp`` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
       minor_changes:
       - Add support of skip-schema-validation in ``helm`` module (https://github.com/ansible-collections/kubernetes.core/pull/995)
       - kustomize - Add support of local environ (https://github.com/ansible-collections/kubernetes.core/pull/786).
