@@ -4,6 +4,21 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v5.4.3
+======
+
+Release Summary
+---------------
+
+This release contains bugfixes such as improved idempotency for helm repository URLs with trailing slashes.
+
+Bugfixes
+--------
+
+- ee - Add ``meta/execution-environment.yml`` to decouple ansible-builder EE builds from the ``openshift-clients`` system dependency declared in ``bindep.txt``, which is not available in standard UBI repositories and caused builds to fail with ``No package matches 'openshift-clients'`` (https://github.com/ansible-collections/kubernetes.core/issues/1141).
+- helm_repository - Correct handling of repository URLs with trailing slashes (https://github.com/ansible-collections/kubernetes.core/pull/1121).
+- k8s_drain - Fix logic for handling pods with local storage to correctly check for ``empty_dir`` volumes in replicated pods and pods managed by DaemonSets (https://github.com/ansible-collections/kubernetes.core/pull/1095).
+
 v5.4.2
 ======
 
@@ -15,8 +30,8 @@ This release includes bugfixes such as replacing the passing of ``warnings`` to 
 Minor Changes
 -------------
 
-- helm - add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
-- helm_info - add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+- helm - Add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+- helm_info - Add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
 
 Deprecated Features
 -------------------
@@ -65,7 +80,7 @@ This release updates the ``helm_registry_auth`` module to match the behavior of 
 Minor Changes
 -------------
 
-- Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946)
+- Module ``helm_registry_auth`` does not support idempotency with ``helm >= 3.18.0`` (https://github.com/ansible-collections/kubernetes.core/pull/946).
 
 v5.3.0
 ======
@@ -78,15 +93,15 @@ This release includes minor changes, bug fixes and also bumps ``ansible-lint`` v
 Minor Changes
 -------------
 
-- Bump version of ``ansible-lint`` to 25.1.2 (https://github.com/ansible-collections/kubernetes.core/pull/919).
 - action/k8s_info - update templating mechanism with changes from ``ansible-core 2.19`` (https://github.com/ansible-collections/kubernetes.core/pull/888).
 - helm - add ``reset_then_reuse_values`` support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/803).
-- helm - add support for ``insecure_skip_tls_verify`` option to helm and helm_repository(https://github.com/ansible-collections/kubernetes.core/issues/694).
+- helm - add support for ``insecure_skip_tls_verify`` option to helm and ``helm_repository`` (https://github.com/ansible-collections/kubernetes.core/issues/694).
+- kubernetes.core - Bump version of ``ansible-lint`` to ``25.1.2`` (https://github.com/ansible-collections/kubernetes.core/pull/919).
 
 Bugfixes
 --------
 
-- module_utils/k8s/service - fix issue when trying to delete resource using ``delete_options`` and ``check_mode=true`` (https://github.com/ansible-collections/kubernetes.core/issues/892).
+- module_utils/k8s/service - fix issue when trying to delete resource using `delete_options` and `check_mode=true` (https://github.com/ansible-collections/kubernetes.core/issues/892).
 
 v5.2.0
 ======
