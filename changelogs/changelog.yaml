@@ -1250,4 +1250,4 @@ releases:
     - description: Generate, update, and optionally write Kubernetes kubeconfig files
       name: kubeconfig
       namespace: ''
-    release_date: '2026-07-07'
+    release_date: '2026-07-08'
