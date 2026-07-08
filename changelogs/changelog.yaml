@@ -1136,4 +1136,4 @@ releases:
     - 20260506-improve_idempotency_for_helm_repository.yaml
     - 5-4-3.yml
     - fix-openshift-clients-ee-dependency.yaml
-    release_date: '2026-07-07'
+    release_date: '2026-07-08'
