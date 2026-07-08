@@ -1114,7 +1114,7 @@ releases:
     changes:
       bugfixes:
       - Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
-      - Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
+      - Update the ``k8s_cp`` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
       minor_changes:
       - Add support of skip-schema-validation in ``helm`` module (https://github.com/ansible-collections/kubernetes.core/pull/995)
       - kustomize - Add support of local environ (https://github.com/ansible-collections/kubernetes.core/pull/786).
@@ -1203,3 +1203,51 @@ releases:
     - 20260213-support-helm-v4-for-helm-plugin-modules.yaml
     - release-6-4-0.yml
     release_date: '2026-04-22'
+  6.5.0:
+    changes:
+      bugfixes:
+      - ee - added ``meta/execution-environment.yml`` to decouple ansible-builder
+        EE builds from the ``openshift-clients`` system dependency declared in ``bindep.txt``,
+        which is not available in standard UBI repositories and caused builds to fail
+        with ``No package matches 'openshift-clients'`` (https://github.com/ansible-collections/kubernetes.core/issues/1141).
+      - helm - use ``--server-side=false --force-replace`` instead of the deprecated/removed
+        ``--force`` flag when ``force=true`` is used with Helm v4, preserving the
+        Helm v3 client-side replacement behaviour and avoiding the server-side apply
+        conflict (https://github.com/ansible-collections/kubernetes.core/pull/1164).
+      - helm - use the ``--rollback-on-failure`` flag instead of the deprecated/removed
+        ``--atomic`` flag when ``atomic=true`` is used with Helm v4 (https://github.com/ansible-collections/kubernetes.core/pull/1144).
+      - helm_repository - correct handling of repository URLs with trailing slashes
+        (https://github.com/ansible-collections/kubernetes.core/pull/1121).
+      - k8s_drain - Fix logic for handling pods with local storage to correctly check
+        for empty_dir volumes in replicated pods and pods managed by DaemonSets (https://github.com/ansible-collections/kubernetes.core/pull/1095).
+      minor_changes:
+      - helm - add the ``server_side`` and ``force_conflicts`` options to control
+        Helm v4 server-side apply when installing or upgrading a release (https://github.com/ansible-collections/kubernetes.core/pull/1164).
+      - helm_plugin - add ``--keyring`` argument to allow changing the keyring default
+        location. The option is only accepted with ``state=present`` (the ``helm plugin
+        install`` subcommand), as that is the only implemented subcommand that supports
+        ``--keyring`` (https://github.com/ansible-collections/kubernetes.core/pull/1150).
+      - helm_registry_auth - document that, as of Helm 4.2.1, registry success messages
+        such as ``Login Succeeded`` are printed to stdout instead of stderr (https://github.com/ansible-collections/kubernetes.core/pull/1147).
+      - kubeconfig - add ``remove`` value to the ``behavior`` option, allowing entries
+        to be deleted from the kubeconfig file by name (https://github.com/ansible-collections/kubernetes.core/pull/1123).
+      release_summary: This release implements minor changes and bug fixes such as
+        a new ``remove`` value to the ``behavior`` option of the ``kubeconfig`` module,
+        allowing entries to be deleted from the kubeconfig file by name, as well as
+        Helm v4 compatibility across the Helm modules.
+    fragments:
+    - 1123-kubeconfig-remove-behavior.yml
+    - 1173-security-check-workflow.yml
+    - 20260306-k8s_drain-delete-logic-fixes-for-daemonsets.yaml
+    - 20260506-improve_idempotency_for_helm_repository.yaml
+    - 20260611-helm-atomic-helm-v4.yml
+    - 20260612-helm-registry-output-stream.yml
+    - 20260620-add-plugin-keyring-option.yaml
+    - 20260629-helm-force-helm-v4.yml
+    - 6-5-0.yml
+    - fix-openshift-clients-ee-dependency.yaml
+    modules:
+    - description: Generate, update, and optionally write Kubernetes kubeconfig files
+      name: kubeconfig
+      namespace: ''
+    release_date: '2026-07-08'
