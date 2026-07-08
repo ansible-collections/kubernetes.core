@@ -1097,13 +1097,13 @@ releases:
         be removed in a release after 2027-01-08. Use ``status.release_values`` instead
         (https://github.com/ansible-collections/kubernetes.core/pull/1056).
       minor_changes:
-      - helm - added ``release_values`` key to ``status`` return value that can be
+      - helm - Add ``release_values`` key to ``status`` return value that can be
         accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
-      - helm_info - added ``release_values`` key to ``status`` return value that can
+      - helm_info - Add ``release_values`` key to ``status`` return value that can
         be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
-      release_summary: This release includes various bugfixes such as replacing the
-        passing of ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` as well
-        as security updates for selectively redacting sensitive information from kubeconfig.
+      release_summary: This release includes bugfixes such as replacing the passing of ``warnings`` to ``exit_json``
+        with ``AnsibleModule.warn`` as well as a security update for selectively redacting sensitive information
+        from kubeconfig, and adds a new ``release_values`` key to the ``status`` return value.
       security_fixes:
       - Selectively redact sensitive info from kubeconfig instead of applying blanket
         ``no_log=True`` (https://github.com/ansible-collections/kubernetes.core/pull/1014).

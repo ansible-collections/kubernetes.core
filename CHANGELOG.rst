@@ -25,13 +25,13 @@ v5.4.2
 Release Summary
 ---------------
 
-This release includes various bugfixes such as replacing the passing of ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` as well as security updates for selectively redacting sensitive information from kubeconfig.
+This release includes bugfixes such as replacing the passing of ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` as well as a security update for selectively redacting sensitive information from kubeconfig.
 
 Minor Changes
 -------------
 
-- helm - added ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
-- helm_info - added ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+- helm - Add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+- helm_info - Add ``release_values`` key to ``status`` return value that can be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
 
 Deprecated Features
 -------------------
