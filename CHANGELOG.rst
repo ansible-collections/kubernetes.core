@@ -4,6 +4,36 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v6.5.0
+======
+
+Release Summary
+---------------
+
+This release implements minor changes and bug fixes such as a new ``remove`` value to the ``behavior`` option of the ``kubeconfig`` module, allowing entries to be deleted from the kubeconfig file by name, as well as Helm v4 compatibility across the Helm modules.
+
+Minor Changes
+-------------
+
+- helm - add the ``server_side`` and ``force_conflicts`` options to control Helm v4 server-side apply when installing or upgrading a release (https://github.com/ansible-collections/kubernetes.core/pull/1164).
+- helm_plugin - add ``--keyring`` argument to allow changing the keyring default location. The option is only accepted with ``state=present`` (the ``helm plugin install`` subcommand), as that is the only implemented subcommand that supports ``--keyring`` (https://github.com/ansible-collections/kubernetes.core/pull/1150).
+- helm_registry_auth - document that, as of Helm 4.2.1, registry success messages such as ``Login Succeeded`` are printed to stdout instead of stderr (https://github.com/ansible-collections/kubernetes.core/pull/1147).
+- kubeconfig - add ``remove`` value to the ``behavior`` option, allowing entries to be deleted from the kubeconfig file by name (https://github.com/ansible-collections/kubernetes.core/pull/1123).
+
+Bugfixes
+--------
+
+- ee - added ``meta/execution-environment.yml`` to decouple ansible-builder EE builds from the ``openshift-clients`` system dependency declared in ``bindep.txt``, which is not available in standard UBI repositories and caused builds to fail with ``No package matches 'openshift-clients'`` (https://github.com/ansible-collections/kubernetes.core/issues/1141).
+- helm - use ``--server-side=false --force-replace`` instead of the deprecated/removed ``--force`` flag when ``force=true`` is used with Helm v4, preserving the Helm v3 client-side replacement behaviour and avoiding the server-side apply conflict (https://github.com/ansible-collections/kubernetes.core/pull/1164).
+- helm - use the ``--rollback-on-failure`` flag instead of the deprecated/removed ``--atomic`` flag when ``atomic=true`` is used with Helm v4 (https://github.com/ansible-collections/kubernetes.core/pull/1144).
+- helm_repository - correct handling of repository URLs with trailing slashes (https://github.com/ansible-collections/kubernetes.core/pull/1121).
+- k8s_drain - Fix logic for handling pods with local storage to correctly check for empty_dir volumes in replicated pods and pods managed by DaemonSets (https://github.com/ansible-collections/kubernetes.core/pull/1095).
+
+New Modules
+-----------
+
+- kubeconfig - Generate, update, and optionally write Kubernetes kubeconfig files
+
 v6.4.0
 ======
 
@@ -23,7 +53,7 @@ Minor Changes
 - helm_registry_auth - add new option plain_http to allow insecure http connection when running ``helm registry login`` (https://github.com/ansible-collections/kubernetes.core/pull/1090).
 - helm_repository - Ensure compatibility with Helm v4 (https://github.com/ansible-collections/kubernetes.core/issues/1038).
 - k8s_drain - Add support for ``check_mode`` (https://github.com/ansible-collections/kubernetes.core/pull/1086).
-- k8s_drain - Convert module warnings into informational displays when users explicitly request the deletion of unmanaged pods, pods with local storage, or those managed by a `DaemonSet` (https://github.com/ansible-collections/kubernetes.core/issues/1037).
+- k8s_drain - Convert module warnings into informational displays when users explicitly request the deletion of unmanaged pods, pods with local storage, or those managed by a ``DaemonSet`` (https://github.com/ansible-collections/kubernetes.core/issues/1037).
 
 Bugfixes
 --------
@@ -97,8 +127,8 @@ This release adds ``plain_http`` and ``take_ownership`` parameters for helm modu
 Minor Changes
 -------------
 
-- Module helm_registry_auth do not support idempotency with `helm >= 3.18.0` (https://github.com/ansible-collections/kubernetes.core/pull/946)
-- Module k8s_json_patch - Add support for `hidden_fields` (https://github.com/ansible-collections/kubernetes.core/pull/964).
+- Module ``helm_registry_auth`` does not support idempotency with `helm >= 3.18.0` (https://github.com/ansible-collections/kubernetes.core/pull/946).
+- Module k8s_json_patch - Add support for ``hidden_fields`` (https://github.com/ansible-collections/kubernetes.core/pull/964).
 - helm - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
 - helm - Parameter take_ownership added (https://github.com/ansible-collections/kubernetes.core/pull/957).
 - helm_pull - Parameter plain_http added for working with insecure OCI registries (https://github.com/ansible-collections/kubernetes.core/pull/934).
@@ -185,7 +215,7 @@ Bugfixes
 --------
 
 - Remove ``ansible.module_utils.six`` imports to avoid warnings (https://github.com/ansible-collections/kubernetes.core/pull/998).
-- Update the `k8s_cp` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
+- Update the ``k8s_cp`` module to also work for init containers (https://github.com/ansible-collections/kubernetes.core/pull/971).
 - module_utils/k8s/service - hide fields first before creating diffs (https://github.com/ansible-collections/kubernetes.core/pull/915).
 
 v5.4.0
