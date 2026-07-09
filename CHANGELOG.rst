@@ -4,6 +4,19 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v5.4.4
+======
+
+Release Summary
+---------------
+
+This release corrects the documented and enforced minimum ``ansible-core`` version to ``>=2.16.0``.
+
+Bugfixes
+--------
+
+- meta - Update ``requires_ansible`` in ``runtime.yml`` and README to ``>=2.16.0`` to match the actual minimum supported ``ansible-core`` version (https://github.com/ansible-collections/kubernetes.core/pull/1193).
+
 v5.4.3
 ======
 

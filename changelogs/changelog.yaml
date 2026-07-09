@@ -1137,3 +1137,9 @@ releases:
     - 5-4-3.yml
     - fix-openshift-clients-ee-dependency.yaml
     release_date: '2026-07-08'
+  5.4.4:
+    changes:
+      bugfixes:
+      - meta - Update ``requires_ansible`` in ``runtime.yml`` and README to ``>=2.16.0`` to match the actual minimum supported ``ansible-core`` version (https://github.com/ansible-collections/kubernetes.core/pull/1193).
+      release_summary: This release corrects the documented and enforced minimum ``ansible-core`` version to ``>=2.16.0``.
+    release_date: '2026-07-09'
