@@ -788,3 +788,77 @@ class TestAtomicFlagHelmVersion(unittest.TestCase):
         assert " install " in command
         assert "--rollback-on-failure" in command
         assert "--atomic" not in command
+
+
+class TestInstallOnlyOption(unittest.TestCase):
+    def setUp(self):
+        self.mock_module_helper = patch.multiple(
+            basic.AnsibleModule,
+            exit_json=exit_json,
+            fail_json=fail_json,
+            get_bin_path=get_bin_path,
+        )
+        self.mock_module_helper.start()
+        self.addCleanup(self.mock_module_helper.stop)
+
+        self.chart_info = {
+            "apiVersion": "v2",
+            "appVersion": "default",
+            "description": "A chart used in molecule tests",
+            "name": "test-chart",
+            "type": "application",
+            "version": "0.1.0",
+        }
+
+    def test_install_only_skips_upgrade_when_already_installed(self):
+        set_module_args(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "/tmp/path",
+                "install_only": True,
+            }
+        )
+        helm.get_release_status = MagicMock(
+            return_value={
+                "status": "deployed",
+                "chart": "test-chart-9.9.9",
+                "app_version": "other",
+                "values": {},
+                "release_values": {},
+            }
+        )
+        helm.fetch_chart_info = MagicMock(return_value=self.chart_info)
+        with patch.object(
+            AnsibleHelmModule, "get_helm_version", return_value="3.10.0"
+        ):
+            with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
+                mock_run_command.return_value = (0, "deployed", "")
+                with self.assertRaises(AnsibleExitJson) as result:
+                    helm.main()
+        helm.fetch_chart_info.assert_not_called()
+        assert result.exception.args[0]["changed"] is False
+
+    def test_install_only_still_installs_when_not_present(self):
+        set_module_args(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "/tmp/path",
+                "install_only": True,
+            }
+        )
+        helm.get_release_status = MagicMock(return_value=None)
+        helm.fetch_chart_info = MagicMock(return_value=self.chart_info)
+        with patch.object(
+            AnsibleHelmModule, "get_helm_version", return_value="3.10.0"
+        ):
+            with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
+                mock_run_command.return_value = (0, "deployed", "")
+                with self.assertRaises(AnsibleExitJson) as result:
+                    helm.main()
+        assert (
+            result.exception.args[0]["command"]
+            == "/usr/bin/helm upgrade -i --reset-values test '/tmp/path'"
+        )
+        assert result.exception.args[0]["changed"] is True

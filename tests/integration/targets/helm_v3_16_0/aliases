@@ -2,3 +2,5 @@ helm
 helm_template
 helm_info
 helm_repository
+needs/target/helm
+needs/target/install_helm

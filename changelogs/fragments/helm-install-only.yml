@@ -1,0 +1,2 @@
+minor_changes:
+  - helm - add the ``install_only`` option to install a chart only when it is not already present, without ever upgrading or downgrading an existing release.

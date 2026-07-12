@@ -82,6 +82,13 @@ options:
     default: present
     aliases: [ state ]
     type: str
+  install_only:
+    description:
+      - When the release is already installed, do not upgrade or downgrade it.
+      - Only performs the initial install when the release is not present, and leaves an existing release untouched.
+    default: False
+    type: bool
+    version_added: 7.0.0
   release_values:
     description:
         - Value to pass to chart.
@@ -329,6 +336,14 @@ EXAMPLES = r"""
     release_namespace: monitoring
     values_files:
       - /path/to/values.yaml
+
+- name: Deploy Grafana chart only if not already installed, never upgrade or downgrade it
+  kubernetes.core.helm:
+    name: test
+    chart_ref: stable/grafana
+    chart_version: 5.0.12
+    release_namespace: monitoring
+    install_only: true
 
 - name: Remove test release and waiting suppression ending
   kubernetes.core.helm:
@@ -952,6 +967,7 @@ def argument_spec():
             release_state=dict(
                 default="present", choices=["present", "absent"], aliases=["state"]
             ),
+            install_only=dict(type="bool", default=False),
             release_values=dict(type="dict", default={}, aliases=["values"]),
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
@@ -1016,6 +1032,7 @@ def main():
     dependency_update = module.params.get("dependency_update")
     release_name = module.params.get("release_name")
     release_state = module.params.get("release_state")
+    install_only = module.params.get("install_only")
     release_values = module.params.get("release_values")
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
@@ -1099,138 +1116,58 @@ def main():
             )
             changed = True
     elif release_state == "present":
-        if chart_version is not None:
-            helm_cmd += " --version=" + chart_version
-
-        if chart_repo_url is not None:
-            helm_cmd += " --repo=" + chart_repo_url
-
-        # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
-        chart_info = fetch_chart_info(
-            module, helm_cmd, chart_ref, insecure_skip_tls_verify, plain_http
-        )
-
-        if dependency_update:
-            if chart_info.get("dependencies"):
-                # Can't use '--dependency-update' with 'helm upgrade' that is the
-                # default chart install method, so if chart_repo_url is defined
-                # we can't use the dependency update command. But, in the near future
-                # we can get rid of this method and use only '--dependency-update'
-                # option. Please see https://github.com/helm/helm/pull/8810
-                if not chart_repo_url and not re.fullmatch(
-                    r"^http[s]*://[\w.:/?&=-]+$", chart_ref
-                ):
-                    run_dep_update(module, chart_ref)
-
-                    # To not add --dependency-update option in the deploy function
-                    dependency_update = False
-                else:
-                    module.warn(
-                        "This is a not stable feature with 'chart_repo_url'. Please consider to use dependency update with on-disk charts"
-                    )
-                    if not replace:
-                        msg_fail = (
-                            "'--dependency-update' hasn't been supported yet with 'helm upgrade'. "
-                            "Please use 'helm install' instead by adding 'replace' option"
-                        )
-                        module.fail_json(msg=msg_fail)
-            else:
-                module.warn(
-                    "There is no dependencies block defined in Chart.yaml. Dependency update will not be performed. "
-                    "Please consider add dependencies block or disable dependency_update to remove this warning."
-                )
-
-        set_value_args = None
-        if set_values:
-            set_value_args = module.get_helm_set_values_args(set_values)
-
-        if release_status is None:  # Not installed
-            helm_cmd = deploy(
-                module,
-                helm_cmd,
-                release_name,
-                release_values,
-                chart_ref,
-                wait,
-                wait_timeout,
-                disable_hook,
-                False,
-                values_files=values_files,
-                atomic=atomic,
-                server_side=server_side,
-                force_conflicts=force_conflicts,
-                create_namespace=create_namespace,
-                post_renderer=post_renderer,
-                replace=replace,
-                dependency_update=dependency_update,
-                skip_crds=skip_crds,
-                history_max=history_max,
-                timeout=timeout,
-                set_value_args=set_value_args,
-                reuse_values=reuse_values,
-                reset_values=reset_values,
-                reset_then_reuse_values=reset_then_reuse_values,
-                insecure_skip_tls_verify=insecure_skip_tls_verify,
-                plain_http=plain_http,
-                take_ownership=take_ownership,
-                skip_schema_validation=skip_schema_validation,
+        if install_only and release_status is not None:
+            module.warn(
+                "Release '%s' is already installed and 'install_only' is set to True. "
+                "Skipping upgrade/downgrade." % release_name
             )
-            changed = True
-
         else:
-            helm_diff_version = get_plugin_version("diff")
-            helm_version_compatible = module.is_helm_version_compatible_with_helm_diff(
-                helm_diff_version
+            if chart_version is not None:
+                helm_cmd += " --version=" + chart_version
+
+            if chart_repo_url is not None:
+                helm_cmd += " --repo=" + chart_repo_url
+
+            # Fetch chart info to have real version and real name for chart_ref from archive, folder or url
+            chart_info = fetch_chart_info(
+                module, helm_cmd, chart_ref, insecure_skip_tls_verify, plain_http
             )
-            if (
-                helm_diff_version
-                and helm_version_compatible
-                and (
-                    not chart_repo_url
-                    or (
-                        chart_repo_url
-                        and LooseVersion(helm_diff_version) >= LooseVersion("3.4.1")
-                    )
-                )
-            ):
-                would_change, prepared = helmdiff_check(
-                    module,
-                    release_name,
-                    chart_ref,
-                    release_values,
-                    values_files,
-                    chart_version,
-                    replace,
-                    chart_repo_url,
-                    post_renderer,
-                    set_value_args,
-                    reuse_values=reuse_values,
-                    reset_values=reset_values,
-                    reset_then_reuse_values=reset_then_reuse_values,
-                    insecure_skip_tls_verify=insecure_skip_tls_verify,
-                    plain_http=plain_http,
-                    skip_schema_validation=skip_schema_validation,
-                )
-                if would_change and module._diff:
-                    opt_result["diff"] = {"prepared": prepared}
-            else:
-                if helm_diff_version and not helm_version_compatible:
-                    module.warn(
-                        "Idempotency checks are currently disabled due to a version mismatch."
-                        f" Helm version {module.get_helm_version()} requires helm-diff >= 3.14.0,"
-                        f" but the environment is currently running {helm_diff_version}."
-                        " Please align the plugin versions to restore standard behavior."
-                    )
+
+            if dependency_update:
+                if chart_info.get("dependencies"):
+                    # Can't use '--dependency-update' with 'helm upgrade' that is the
+                    # default chart install method, so if chart_repo_url is defined
+                    # we can't use the dependency update command. But, in the near future
+                    # we can get rid of this method and use only '--dependency-update'
+                    # option. Please see https://github.com/helm/helm/pull/8810
+                    if not chart_repo_url and not re.fullmatch(
+                        r"^http[s]*://[\w.:/?&=-]+$", chart_ref
+                    ):
+                        run_dep_update(module, chart_ref)
+
+                        # To not add --dependency-update option in the deploy function
+                        dependency_update = False
+                    else:
+                        module.warn(
+                            "This is a not stable feature with 'chart_repo_url'. Please consider to use dependency update with on-disk charts"
+                        )
+                        if not replace:
+                            msg_fail = (
+                                "'--dependency-update' hasn't been supported yet with 'helm upgrade'. "
+                                "Please use 'helm install' instead by adding 'replace' option"
+                            )
+                            module.fail_json(msg=msg_fail)
                 else:
                     module.warn(
-                        "The default idempotency check can fail to report changes in certain cases. "
-                        "Install helm diff >= 3.4.1 for better results."
+                        "There is no dependencies block defined in Chart.yaml. Dependency update will not be performed. "
+                        "Please consider add dependencies block or disable dependency_update to remove this warning."
                     )
-                would_change = default_check(
-                    release_status, chart_info, release_values, values_files
-                )
 
-            if force or would_change:
+            set_value_args = None
+            if set_values:
+                set_value_args = module.get_helm_set_values_args(set_values)
+
+            if release_status is None:  # Not installed
                 helm_cmd = deploy(
                     module,
                     helm_cmd,
@@ -1240,7 +1177,7 @@ def main():
                     wait,
                     wait_timeout,
                     disable_hook,
-                    force,
+                    False,
                     values_files=values_files,
                     atomic=atomic,
                     server_side=server_side,
@@ -1248,10 +1185,10 @@ def main():
                     create_namespace=create_namespace,
                     post_renderer=post_renderer,
                     replace=replace,
+                    dependency_update=dependency_update,
                     skip_crds=skip_crds,
                     history_max=history_max,
                     timeout=timeout,
-                    dependency_update=dependency_update,
                     set_value_args=set_value_args,
                     reuse_values=reuse_values,
                     reset_values=reset_values,
@@ -1262,6 +1199,92 @@ def main():
                     skip_schema_validation=skip_schema_validation,
                 )
                 changed = True
+
+            else:
+                helm_diff_version = get_plugin_version("diff")
+                helm_version_compatible = module.is_helm_version_compatible_with_helm_diff(
+                    helm_diff_version
+                )
+                if (
+                    helm_diff_version
+                    and helm_version_compatible
+                    and (
+                        not chart_repo_url
+                        or (
+                            chart_repo_url
+                            and LooseVersion(helm_diff_version) >= LooseVersion("3.4.1")
+                        )
+                    )
+                ):
+                    would_change, prepared = helmdiff_check(
+                        module,
+                        release_name,
+                        chart_ref,
+                        release_values,
+                        values_files,
+                        chart_version,
+                        replace,
+                        chart_repo_url,
+                        post_renderer,
+                        set_value_args,
+                        reuse_values=reuse_values,
+                        reset_values=reset_values,
+                        reset_then_reuse_values=reset_then_reuse_values,
+                        insecure_skip_tls_verify=insecure_skip_tls_verify,
+                        plain_http=plain_http,
+                        skip_schema_validation=skip_schema_validation,
+                    )
+                    if would_change and module._diff:
+                        opt_result["diff"] = {"prepared": prepared}
+                else:
+                    if helm_diff_version and not helm_version_compatible:
+                        module.warn(
+                            "Idempotency checks are currently disabled due to a version mismatch."
+                            f" Helm version {module.get_helm_version()} requires helm-diff >= 3.14.0,"
+                            f" but the environment is currently running {helm_diff_version}."
+                            " Please align the plugin versions to restore standard behavior."
+                        )
+                    else:
+                        module.warn(
+                            "The default idempotency check can fail to report changes in certain cases. "
+                            "Install helm diff >= 3.4.1 for better results."
+                        )
+                    would_change = default_check(
+                        release_status, chart_info, release_values, values_files
+                    )
+
+                if force or would_change:
+                    helm_cmd = deploy(
+                        module,
+                        helm_cmd,
+                        release_name,
+                        release_values,
+                        chart_ref,
+                        wait,
+                        wait_timeout,
+                        disable_hook,
+                        force,
+                        values_files=values_files,
+                        atomic=atomic,
+                        server_side=server_side,
+                        force_conflicts=force_conflicts,
+                        create_namespace=create_namespace,
+                        post_renderer=post_renderer,
+                        replace=replace,
+                        skip_crds=skip_crds,
+                        history_max=history_max,
+                        timeout=timeout,
+                        dependency_update=dependency_update,
+                        set_value_args=set_value_args,
+                        reuse_values=reuse_values,
+                        reset_values=reset_values,
+                        reset_then_reuse_values=reset_then_reuse_values,
+                        insecure_skip_tls_verify=insecure_skip_tls_verify,
+                        plain_http=plain_http,
+                        take_ownership=take_ownership,
+                        skip_schema_validation=skip_schema_validation,
+                    )
+                    changed = True
 
     if module.check_mode:
         check_status = {
