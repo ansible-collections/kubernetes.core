@@ -153,6 +153,16 @@ Breaking Changes / Porting Guide
 - Remove deprecated ``k8s`` invetory plugin (https://github.com/ansible-collections/kubernetes.core/pull/867).
 - Remove support for ``ansible-core<2.16`` (https://github.com/ansible-collections/kubernetes.core/pull/867).
 
+v5.4.4
+======
+
+This release corrects the documented and enforced minimum ``ansible-core`` version to ``>=2.16.0``.
+
+Bugfixes
+--------
+
+- meta - Update ``requires_ansible`` in ``runtime.yml`` and README to ``>=2.16.0`` to match the actual minimum supported ``ansible-core`` version (https://github.com/ansible-collections/kubernetes.core/pull/1193).
+
 v5.4.3
 ======
 
