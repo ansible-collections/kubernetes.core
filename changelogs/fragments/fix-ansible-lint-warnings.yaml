@@ -1,0 +1,3 @@
+trivial:
+  - kubectl connection plugin - added ``changed_when: false`` to example ``ansible.builtin.command`` tasks to resolve ansible-lint ``no-changed-when`` warnings.
+  - ee - added ``version: 3`` to ``meta/execution-environment.yml`` to resolve ansible-lint ``schema[execution-environment]`` warning.
