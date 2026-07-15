@@ -68,7 +68,8 @@ options:
     default: false
   kube_version:
     description:
-      - Kubernetes version used for Capabilities
+      - Kubernetes version used for Capabilities.BuildVersion when rendering templates.
+      - Accepts semantic version format with or without 'v' prefix (e.g., "1.28.0" or "v1.28.0").
     required: false
     type: str
   output_dir:
