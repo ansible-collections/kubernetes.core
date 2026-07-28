@@ -1,4 +1,4 @@
 ---
 minor_changes:
   - Remove the remaining ``ansible.module_utils.six`` import to avoid deprecation
-    warnings, replacing it with the Python standard library equivalent.
+    warnings, replacing it with the Python standard library equivalent (https://github.com/ansible-collections/kubernetes.core/pull/1197).
