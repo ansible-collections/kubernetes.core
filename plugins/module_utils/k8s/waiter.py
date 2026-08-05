@@ -47,6 +47,18 @@ def pod_ready(pod: ResourceInstance) -> bool:
     )
 
 
+def job_complete(job: ResourceInstance) -> bool:
+    return bool(
+        job.status
+        and job.status.conditions
+        and any(
+            condition["type"] in ("Complete", "Failed")
+            and boolean(condition["status"], strict=False)
+            for condition in job.status.conditions
+        )
+    )
+
+
 def daemonset_ready(daemonset: ResourceInstance) -> bool:
     return bool(
         daemonset.status
@@ -89,18 +101,18 @@ def custom_condition(condition: Dict, resource: ResourceInstance) -> bool:
     if not matches:
         return False
     # There should never be more than one condition of a specific type
-    match: ResourceField = matches[0]
-    if match.status == "Unknown":
-        if match.status == condition["status"]:
+    match_condition: ResourceField = matches[0]
+    if match_condition.status == "Unknown":
+        if match_condition.status == condition["status"]:
             if "reason" not in condition:
                 return True
             if condition["reason"]:
-                return match.reason == condition["reason"]
+                return match_condition.reason == condition["reason"]
         return False
-    status = True if match.status == "True" else False
+    status = True if match_condition.status == "True" else False
     if status == boolean(condition["status"], strict=False):
         if condition.get("reason"):
-            return match.reason == condition["reason"]
+            return match_condition.reason == condition["reason"]
         return True
     return False
 
@@ -143,6 +155,7 @@ RESOURCE_PREDICATES = {
     "DaemonSet": daemonset_ready,
     "Deployment": deployment_ready,
     "Pod": pod_ready,
+    "Job": job_complete,
     "StatefulSet": statefulset_ready,
     "ClusterOperator": cluster_operator_ready,
 }
