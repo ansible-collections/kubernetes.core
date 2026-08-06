@@ -61,7 +61,7 @@ options:
       - It can significantly reduce the size of the response from the API server.
     type: bool
     default: false
-    version_added: 6.3.0
+    version_added: 6.6.0
 
 extends_documentation_fragment:
   - kubernetes.core.k8s_auth_options
