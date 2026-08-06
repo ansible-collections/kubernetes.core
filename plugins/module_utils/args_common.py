@@ -145,9 +145,9 @@ DELETE_OPTS_ARG_SPEC = {
     },
 }
 
-METADATA_ONLY_HEADERS_SPEC = dict(
-    accept=dict(type="str"),
-)
+METADATA_ONLY_HEADERS_SPEC = {
+    "accept": {"type": "str"},
+}
 
 METADATA_ONLY_HEADER_VALUES = {
     "partial_object": (

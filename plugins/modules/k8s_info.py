@@ -194,8 +194,8 @@ from ansible_collections.kubernetes.core.plugins.module_utils.ansiblemodule impo
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.args_common import (
     AUTH_ARG_SPEC,
-    METADATA_ONLY_HEADERS_SPEC,
     METADATA_ONLY_HEADER_VALUES,
+    METADATA_ONLY_HEADERS_SPEC,
     WAIT_ARG_SPEC,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
@@ -233,16 +233,16 @@ def argspec():
     args = copy.deepcopy(AUTH_ARG_SPEC)
     args.update(WAIT_ARG_SPEC)
     args.update(
-        dict(
-            kind=dict(required=True),
-            api_version=dict(default="v1", aliases=["api", "version"]),
-            name=dict(),
-            namespace=dict(),
-            label_selectors=dict(type="list", elements="str", default=[]),
-            field_selectors=dict(type="list", elements="str", default=[]),
-            hidden_fields=dict(type="list", elements="str"),
-            metadata_only=dict(type="bool", default=False),
-        )
+        {
+            "kind": {"required": True},
+            "api_version": {"default": "v1", "aliases": ["api", "version"]},
+            "name": {},
+            "namespace": {},
+            "label_selectors": {"type": "list", "elements": "str", "default": []},
+            "field_selectors": {"type": "list", "elements": "str", "default": []},
+            "hidden_fields": {"type": "list", "elements": "str"},
+            "metadata_only": {"type": "bool", "default": False},
+        }
     )
     return args
 
@@ -256,11 +256,11 @@ def main():
     if module.params["metadata_only"]:
         metadata_only_headers = copy.deepcopy(METADATA_ONLY_HEADERS_SPEC)
         metadata_only_headers.update(
-            dict(accept=METADATA_ONLY_HEADER_VALUES["partial_object_list"])
+            {"accept": METADATA_ONLY_HEADER_VALUES["partial_object_list"]}
         )
         if module.params["name"]:
             metadata_only_headers.update(
-                dict(accept=METADATA_ONLY_HEADER_VALUES["partial_object"])
+                {"accept": METADATA_ONLY_HEADER_VALUES["partial_object"]}
             )
 
     try:
