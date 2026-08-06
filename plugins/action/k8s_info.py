@@ -329,6 +329,13 @@ class ActionModule(ActionBase):
                 "a string or dict expected, but got %s instead" % type(kubeconfig)
             )
 
+    @staticmethod
+    def _fail_with_error(result, error):
+        result["failed"] = True
+        result["msg"] = to_text(error)
+        result["exception"] = traceback.format_exc()
+        return result
+
     def run(self, tmp=None, task_vars=None):
         """handler for k8s options"""
         if task_vars is None:
@@ -350,10 +357,7 @@ class ActionModule(ActionBase):
             try:
                 self.get_kubeconfig(kubeconfig, remote_transport, new_module_args)
             except AnsibleError as e:
-                result["failed"] = True
-                result["msg"] = to_text(e)
-                result["exception"] = traceback.format_exc()
-                return result
+                return self._fail_with_error(result, e)
 
         # find the file in the expected search path
         src = self._task.args.get("src", None)
@@ -373,10 +377,7 @@ class ActionModule(ActionBase):
                 # find in expected paths
                 src = self._find_needle("files", src)
             except AnsibleError as e:
-                result["failed"] = True
-                result["msg"] = to_text(e)
-                result["exception"] = traceback.format_exc()
-                return result
+                return self._fail_with_error(result, e)
 
         if src:
             new_module_args["src"] = src
