@@ -967,9 +967,17 @@ def argument_spec():
             "chart_ref": {"type": "path"},
             "chart_repo_url": {"type": "str"},
             "chart_version": {"type": "str"},
-            "dependency_update": {"type": "bool", "default": False, "aliases": ["dep_up"]},
+            "dependency_update": {
+                "type": "bool",
+                "default": False,
+                "aliases": ["dep_up"],
+            },
             "release_name": {"type": "str", "required": True, "aliases": ["name"]},
-            "release_namespace": {"type": "str", "required": True, "aliases": ["namespace"]},
+            "release_namespace": {
+                "type": "str",
+                "required": True,
+                "aliases": ["namespace"],
+            },
             "release_state": {
                 "default": "present",
                 "choices": ["present", "absent"],
