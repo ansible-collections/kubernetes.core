@@ -8,7 +8,7 @@ from io import BytesIO
 
 import ansible.module_utils.basic
 import pytest
-from ansible.module_utils.common._collections_compat import MutableMapping
+from collections.abc import MutableMapping
 from ansible.module_utils.common.text.converters import to_bytes
 
 
