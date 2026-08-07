@@ -70,6 +70,12 @@ options:
     required: false
     type: bool
     default: false
+  kube_version:
+    description:
+      - Kubernetes version used for Capabilities.BuildVersion when rendering templates.
+      - Accepts semantic version format with or without 'v' prefix (e.g., "1.28.0" or "v1.28.0").
+    required: false
+    type: str
   output_dir:
     description:
       - Output directory where templates will be written.
@@ -249,6 +255,7 @@ def template(
     release_values=None,
     values_files=None,
     include_crds=False,
+    kube_version=None,
     set_values=None,
     plain_http=False,
 ):
@@ -300,6 +307,9 @@ def template(
     if include_crds:
         cmd += " --include-crds"
 
+    if kube_version:
+        cmd += " --kube-version=" + kube_version
+
     if set_values:
         cmd += " " + set_values
 
@@ -316,6 +326,7 @@ def main():
             dependency_update=dict(type="bool", default=False, aliases=["dep_up"]),
             disable_hook=dict(type="bool", default=False),
             include_crds=dict(type="bool", default=False),
+            kube_version=dict(type="str"),
             release_name=dict(type="str", aliases=["name"]),
             output_dir=dict(type="path"),
             insecure_registry=dict(type="bool", default=False),
@@ -337,6 +348,7 @@ def main():
     dependency_update = module.params.get("dependency_update")
     disable_hook = module.params.get("disable_hook")
     include_crds = module.params.get("include_crds")
+    kube_version = module.params.get("kube_version")
     release_name = module.params.get("release_name")
     output_dir = module.params.get("output_dir")
     insecure_registry = module.params.get("insecure_registry")
@@ -388,6 +400,7 @@ def main():
         show_only=show_only,
         values_files=values_files,
         include_crds=include_crds,
+        kube_version=kube_version,
         set_values=set_values_args,
         plain_http=plain_http,
     )
