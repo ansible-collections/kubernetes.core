@@ -190,7 +190,10 @@ options:
   wait_for_jobs:
     description:
       - When I(release_state) is set to C(present), and I(wait) is set to C(True), wait until all jobs are in a
-        completed state before marking the release as successful. Added in version 6.5.0.
+        completed state before marking the release as successful.
+      - Ignored when used without O(wait).
+      - Requires Helm >= 3.5.0
+   version_added: 6.6.0
     default: False
     type: bool
   wait_timeout:
