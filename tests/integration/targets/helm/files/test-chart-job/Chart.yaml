@@ -1,0 +1,6 @@
+apiVersion: v2
+name: test-chart-job
+description: A chart with a Job for testing wait_for_jobs
+type: application
+version: 0.1.0
+appVersion: "default"

@@ -1,0 +1,59 @@
+---
+- name: Test helm wait_for_jobs
+  vars:
+    helm_namespace: "{{ test_namespace[15] }}"
+    chart_local: "{{ role_path }}/files/test-chart-job"
+  block:
+
+    - name: Install chart with wait and wait_for_jobs
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_local }}"
+        release_name: test-wait-for-jobs
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: true
+        wait: true
+        wait_for_jobs: true
+        wait_timeout: "120s"
+      register: install
+      ignore_errors: true
+
+    - name: Validate wait_for_jobs with helm >= 3.5.0 works
+      assert:
+        that:
+          - install is changed
+          - "'--wait' in install.command"
+          - "'--wait-for-jobs' in install.command"
+      when: "helm_version is ansible.builtin.version('v3.5.0', '>=')"
+
+    - name: Validate wait_for_jobs with helm < 3.5.0 fails
+      assert:
+        that:
+          - install is failed
+          - "'wait_for_jobs requires helm >= 3.5.0' in install.msg"
+      when: "helm_version is ansible.builtin.version('v3.5.0', '<')"
+
+    - name: Install chart with wait_for_jobs but without wait
+      helm:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_local }}"
+        release_name: test-wait-for-jobs-no-wait
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: true
+        wait_for_jobs: true
+      register: install_no_wait
+
+    - name: Validate wait_for_jobs is ignored without wait
+      assert:
+        that:
+          - install_no_wait is changed
+          - "'--wait-for-jobs' not in install_no_wait.command"
+          - "'--wait' not in install_no_wait.command"
+
+  always:
+    - name: Remove helm namespace
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_namespace }}"
+        state: absent

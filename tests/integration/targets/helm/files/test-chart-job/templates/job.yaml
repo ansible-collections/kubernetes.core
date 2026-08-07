@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-job"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+        - name: test
+          image: "busybox:1.37"
+          command: ["sh", "-c", "echo done"]
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+              ephemeral-storage: "16Mi"
+            limits:
+              memory: "64Mi"
