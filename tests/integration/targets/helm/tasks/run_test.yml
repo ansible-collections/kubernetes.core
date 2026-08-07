@@ -49,6 +49,9 @@
     - name: Test helm skip_schema_validation
       include_tasks: test_skip_schema_validation.yml
 
+    - name: Test helm wait_for_jobs
+      include_tasks: test_helm_wait_for_jobs.yml
+
   always:
     - name: Remove helm-diff plugin
       helm_plugin:
