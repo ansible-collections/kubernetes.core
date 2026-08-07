@@ -963,45 +963,49 @@ def default_check(release_status, chart_info, values=None, values_files=None):
 def argument_spec():
     arg_spec = copy.deepcopy(HELM_AUTH_ARG_SPEC)
     arg_spec.update(
-        dict(
-            chart_ref=dict(type="path"),
-            chart_repo_url=dict(type="str"),
-            chart_version=dict(type="str"),
-            dependency_update=dict(type="bool", default=False, aliases=["dep_up"]),
-            release_name=dict(type="str", required=True, aliases=["name"]),
-            release_namespace=dict(type="str", required=True, aliases=["namespace"]),
-            release_state=dict(
-                default="present", choices=["present", "absent"], aliases=["state"]
-            ),
-            release_values=dict(type="dict", default={}, aliases=["values"]),
-            values_files=dict(type="list", default=[], elements="str"),
-            update_repo_cache=dict(type="bool", default=False),
-            disable_hook=dict(type="bool", default=False),
-            force=dict(type="bool", default=False),
-            purge=dict(type="bool", default=True),
-            wait=dict(type="bool", default=False),
-            wait_for_jobs=dict(type="bool", default=False),
-            wait_timeout=dict(type="str"),
-            timeout=dict(type="str"),
-            atomic=dict(type="bool", default=False),
-            server_side=dict(type="str", choices=["auto", "true", "false"]),
-            force_conflicts=dict(type="bool", default=False),
-            create_namespace=dict(type="bool", default=False),
-            post_renderer=dict(type="str"),
-            replace=dict(type="bool", default=False),
-            skip_crds=dict(type="bool", default=False),
-            history_max=dict(type="int"),
-            set_values=dict(type="list", elements="dict"),
-            reuse_values=dict(type="bool"),
-            reset_values=dict(type="bool", default=True),
-            reset_then_reuse_values=dict(type="bool", default=False),
-            insecure_skip_tls_verify=dict(
-                type="bool", default=False, aliases=["skip_tls_certs_check"]
-            ),
-            plain_http=dict(type="bool", default=False),
-            take_ownership=dict(type="bool", default=False),
-            skip_schema_validation=dict(type="bool", default=False),
-        )
+        {
+            "chart_ref": {"type": "path"},
+            "chart_repo_url": {"type": "str"},
+            "chart_version": {"type": "str"},
+            "dependency_update": {"type": "bool", "default": False, "aliases": ["dep_up"]},
+            "release_name": {"type": "str", "required": True, "aliases": ["name"]},
+            "release_namespace": {"type": "str", "required": True, "aliases": ["namespace"]},
+            "release_state": {
+                "default": "present",
+                "choices": ["present", "absent"],
+                "aliases": ["state"],
+            },
+            "release_values": {"type": "dict", "default": {}, "aliases": ["values"]},
+            "values_files": {"type": "list", "default": [], "elements": "str"},
+            "update_repo_cache": {"type": "bool", "default": False},
+            "disable_hook": {"type": "bool", "default": False},
+            "force": {"type": "bool", "default": False},
+            "purge": {"type": "bool", "default": True},
+            "wait": {"type": "bool", "default": False},
+            "wait_for_jobs": {"type": "bool", "default": False},
+            "wait_timeout": {"type": "str"},
+            "timeout": {"type": "str"},
+            "atomic": {"type": "bool", "default": False},
+            "server_side": {"type": "str", "choices": ["auto", "true", "false"]},
+            "force_conflicts": {"type": "bool", "default": False},
+            "create_namespace": {"type": "bool", "default": False},
+            "post_renderer": {"type": "str"},
+            "replace": {"type": "bool", "default": False},
+            "skip_crds": {"type": "bool", "default": False},
+            "history_max": {"type": "int"},
+            "set_values": {"type": "list", "elements": "dict"},
+            "reuse_values": {"type": "bool"},
+            "reset_values": {"type": "bool", "default": True},
+            "reset_then_reuse_values": {"type": "bool", "default": False},
+            "insecure_skip_tls_verify": {
+                "type": "bool",
+                "default": False,
+                "aliases": ["skip_tls_certs_check"],
+            },
+            "plain_http": {"type": "bool", "default": False},
+            "take_ownership": {"type": "bool", "default": False},
+            "skip_schema_validation": {"type": "bool", "default": False},
+        }
     )
     return arg_spec
 
