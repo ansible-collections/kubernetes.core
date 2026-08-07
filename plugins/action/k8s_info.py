@@ -35,7 +35,11 @@ def _from_yaml_to_definition(buffer):
         import yaml
     except ImportError:
         raise AnsibleError("Failed to import the required Python library (PyYAML).")
-    return list(yaml.safe_load_all(buffer))
+
+    # Handle empty template output
+    if buffer is None:
+        return []
+    return [doc for doc in yaml.safe_load_all(buffer) if doc is not None]
 
 
 ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
@@ -380,10 +384,15 @@ class ActionModule(ActionBase):
         template = self._task.args.get("template", None)
         if template:
             self.load_template(template, new_module_args, task_vars)
+            # If template rendered to empty definition, return early with no changes
+            if not new_module_args.get("definition"):
+                result["changed"] = False
+                return self._ensure_invocation(result)
 
         local_path = self._task.args.get("local_path")
         state = self._task.args.get("state", None)
-        if local_path and state == "to_pod" and not remote_transport:
+        is_local_pod_upload = local_path and state == "to_pod" and not remote_transport
+        if is_local_pod_upload:
             new_module_args["local_path"] = self.get_file_realpath(local_path)
 
         # Execute the k8s_* module.
