@@ -167,6 +167,20 @@ modified_def["metadata"]["labels"]["environment"] = "testing"
             (definition, []),
             {"changed": True, "method": "create", "result": definition},
         ),
+        (
+            "create",
+            {"create_only": True},
+            modified_def,
+            (modified_def, []),
+            {"changed": False, "method": "create", "result": modified_def},
+        ),
+        (
+            "create",
+            {"create_only": True},
+            {},
+            (definition, []),
+            {"changed": True, "method": "create", "result": definition},
+        ),
     ],
 )
 def test_perform_action(action, params, existing, instance_warnings, expected):
