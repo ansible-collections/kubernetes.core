@@ -181,6 +181,7 @@ def _create_headers(module=None, **kwargs):
     header_map = {
         "impersonate_user": "Impersonate-User",
         "impersonate_groups": "Impersonate-Group",
+        "accept": "Accept",
     }
 
     headers = {}
