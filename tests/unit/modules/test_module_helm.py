@@ -788,3 +788,119 @@ class TestAtomicFlagHelmVersion(unittest.TestCase):
         assert " install " in command
         assert "--rollback-on-failure" in command
         assert "--atomic" not in command
+
+
+class TestCleanupOnFail(unittest.TestCase):
+    """'--cleanup-on-fail' is upgrade-only and unchanged in Helm v4 (issue #1198)."""
+
+    def setUp(self):
+        self.mock_module_helper = patch.multiple(
+            basic.AnsibleModule,
+            exit_json=exit_json,
+            fail_json=fail_json,
+            get_bin_path=get_bin_path,
+        )
+        self.mock_module_helper.start()
+        self.addCleanup(self.mock_module_helper.stop)
+
+        self.chart_info = {
+            "apiVersion": "v2",
+            "appVersion": "default",
+            "description": "A chart used in molecule tests",
+            "name": "test-chart",
+            "type": "application",
+            "version": "0.1.0",
+        }
+
+    def _run_with_version(self, args, helm_version):
+        set_module_args(args)
+        helm.get_release_status = MagicMock(return_value=None)
+        helm.fetch_chart_info = MagicMock(return_value=self.chart_info)
+        with patch.object(
+            helm.AnsibleHelmModule, "get_helm_version", return_value=helm_version
+        ):
+            with patch.object(basic.AnsibleModule, "run_command") as mock_run_command:
+                mock_run_command.return_value = (0, "configuration updated", "")
+                with self.assertRaises(AnsibleExitJson) as result:
+                    helm.main()
+        return result.exception.args[0]["command"]
+
+    def test_cleanup_on_fail_not_set_by_default(self):
+        command = self._run_with_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+            },
+            "3.17.0",
+        )
+        assert "--cleanup-on-fail" not in command
+
+    def test_cleanup_on_fail_on_helm_v3(self):
+        # '--cleanup-on-fail' exists since helm 3.0.0, the module-wide minimum.
+        command = self._run_with_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "cleanup_on_fail": True,
+            },
+            "3.0.0",
+        )
+        assert " upgrade -i" in command
+        assert "--cleanup-on-fail" in command
+
+    def test_cleanup_on_fail_keeps_same_flag_on_helm_v4(self):
+        # Unlike '--atomic', the flag was not renamed in Helm v4.
+        command = self._run_with_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "cleanup_on_fail": True,
+            },
+            "4.0.0",
+        )
+        assert "--cleanup-on-fail" in command
+
+    def test_cleanup_on_fail_combines_with_atomic_on_helm_v3(self):
+        command = self._run_with_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "atomic": True,
+                "cleanup_on_fail": True,
+            },
+            "3.17.0",
+        )
+        assert "--atomic" in command
+        assert "--cleanup-on-fail" in command
+
+    def test_cleanup_on_fail_combines_with_atomic_on_helm_v4(self):
+        command = self._run_with_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "atomic": True,
+                "cleanup_on_fail": True,
+            },
+            "4.0.0",
+        )
+        assert "--rollback-on-failure" in command
+        assert "--cleanup-on-fail" in command
+
+    def test_cleanup_on_fail_with_replace_fails(self):
+        # 'replace' deploys via 'helm install', which has no '--cleanup-on-fail'.
+        with self.assertRaises(AnsibleFailJson):
+            self._run_with_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "cleanup_on_fail": True,
+                    "replace": True,
+                },
+                "3.17.0",
+            )

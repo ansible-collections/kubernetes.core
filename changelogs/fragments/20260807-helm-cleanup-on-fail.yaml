@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - helm - add the ``cleanup_on_fail`` option, mapping to the ``--cleanup-on-fail`` flag, to allow deletion of new resources created during a failed upgrade. It complements ``atomic`` and can be combined with it, but cannot be used with ``replace``, since that deploys through ``helm install`` which does not accept the flag (https://github.com/ansible-collections/kubernetes.core/pull/1206).
