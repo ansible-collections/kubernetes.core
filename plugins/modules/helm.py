@@ -665,6 +665,14 @@ def deploy(
         deploy_command += " --wait"
         if wait_for_jobs:
             deploy_command += " --wait-for-jobs"
+            if LooseVersion(helm_version) < LooseVersion("3.5.0"):
+                module.fail_json(
+                    msg="wait_for_jobs requires helm >= 3.5.0, current version is {0}".format(
+                    helm_version
+                    )
+                )
+            else:
+                deploy_command += "  --wait-for-jobs"
         if wait_timeout is not None:
             deploy_command += " --timeout " + wait_timeout
 
