@@ -6,8 +6,12 @@ spec:
   backoffLimit: 0
   template:
     spec:
+      automountServiceAccountToken: false
       restartPolicy: Never
       containers:
         - name: test
           image: "busybox"
           command: ["sh", "-c", "echo done"]
+          resources:
+            limits:
+              memory: "64Mi"
