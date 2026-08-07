@@ -193,7 +193,7 @@ options:
         completed state before marking the release as successful.
       - Ignored when used without O(wait).
       - Requires Helm >= 3.5.0
-   version_added: 6.6.0
+    version_added: 6.6.0
     default: False
     type: bool
   wait_timeout:
@@ -667,15 +667,15 @@ def deploy(
     if wait:
         deploy_command += " --wait"
         if wait_for_jobs:
-            deploy_command += " --wait-for-jobs"
+            helm_version = module.get_helm_version()
             if LooseVersion(helm_version) < LooseVersion("3.5.0"):
                 module.fail_json(
                     msg="wait_for_jobs requires helm >= 3.5.0, current version is {0}".format(
-                    helm_version
+                        helm_version
                     )
                 )
             else:
-                deploy_command += "  --wait-for-jobs"
+                deploy_command += " --wait-for-jobs"
         if wait_timeout is not None:
             deploy_command += " --timeout " + wait_timeout
 
