@@ -1,0 +1,5 @@
+---
+minor_changes:
+  - k8s - Avoid direct access to ``Templar.environment`` when rendering the ``template``
+    parameter, which is deprecated in ansible-core 2.19 and removed in 2.23
+    (https://github.com/ansible-collections/kubernetes.core/issues/1208).

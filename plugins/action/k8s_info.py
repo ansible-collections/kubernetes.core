@@ -44,6 +44,19 @@ def _from_yaml_to_definition(buffer):
 
 ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
 
+# Jinja2 environment options accepted by the 'template' parameter. Kept as a static
+# tuple rather than probing Templar.environment, direct access to which is deprecated
+# in ansible-core 2.19 and removed in 2.23.
+TEMPLATE_ENVIRONMENT_OPTIONS = (
+    "newline_sequence",
+    "variable_start_string",
+    "variable_end_string",
+    "block_start_string",
+    "block_end_string",
+    "trim_blocks",
+    "lstrip_blocks",
+)
+
 
 class ActionModule(ActionBase):
     TRANSFERS_FILES = True
@@ -221,15 +234,7 @@ class ActionModule(ActionBase):
 
         default_environment = {}
         if trust_as_template is None:
-            for key in (
-                "newline_sequence",
-                "variable_start_string",
-                "variable_end_string",
-                "block_start_string",
-                "block_end_string",
-                "trim_blocks",
-                "lstrip_blocks",
-            ):
+            for key in TEMPLATE_ENVIRONMENT_OPTIONS:
                 if hasattr(self._templar.environment, key):
                     default_environment[key] = getattr(self._templar.environment, key)
         for template_item in template_params:
@@ -250,7 +255,7 @@ class ActionModule(ActionBase):
                 temp_vars = copy.deepcopy(task_vars)
                 overrides = {}
                 for key, value in template_item.items():
-                    if hasattr(self._templar.environment, key):
+                    if key in TEMPLATE_ENVIRONMENT_OPTIONS:
                         if value is not None:
                             overrides[key] = value
                             if trust_as_template is None:
