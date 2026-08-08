@@ -160,6 +160,29 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>cleanup_on_fail</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.6.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Allow deletion of new resources created during a failed upgrade.</div>
+                        <div>Maps to the <code>--cleanup-on-fail</code> flag, which is available since helm 3.0.0 and was not renamed in Helm v4.</div>
+                        <div>Complements O(atomic) rather than replacing it, and the two can be combined so that a rollback also drops resources orphaned by the failed upgrade.</div>
+                        <div>Helm only accepts this flag on <code>helm upgrade</code>, so it cannot be used together with O(replace), which deploys through <code>helm install</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>context</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
