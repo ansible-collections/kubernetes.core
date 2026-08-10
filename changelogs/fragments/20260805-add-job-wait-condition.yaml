@@ -1,0 +1,4 @@
+---
+minor_changes:
+  - "waiter - Add ``job_complete`` predicate to support waiting for Job resources
+    to reach ``Complete`` or ``Failed`` condition (https://github.com/ansible-collections/kubernetes.core/issues/1201)."
