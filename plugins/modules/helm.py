@@ -207,6 +207,18 @@ options:
         O(atomic) option works the same way regardless of the installed Helm version.
     type: bool
     default: False
+  cleanup_on_fail:
+    description:
+      - Allow deletion of new resources created during a failed upgrade.
+      - Maps to the C(--cleanup-on-fail) flag, which is available since helm 3.0.0 and
+        was not renamed in Helm v4.
+      - Complements O(atomic) rather than replacing it, and the two can be combined so
+        that a rollback also drops resources orphaned by the failed upgrade.
+      - Helm only accepts this flag on C(helm upgrade), so it cannot be used together
+        with O(replace), which deploys through C(helm install).
+    type: bool
+    default: False
+    version_added: 6.6.0
   server_side:
     description:
       - Control Helm v4 server-side apply when installing or upgrading a release.
@@ -607,6 +619,7 @@ def deploy(
     values_files,
     history_max,
     atomic=False,
+    cleanup_on_fail=False,
     create_namespace=False,
     replace=False,
     post_renderer=None,
@@ -666,6 +679,17 @@ def deploy(
             deploy_command += " --rollback-on-failure"
         else:
             deploy_command += " --atomic"
+
+    if cleanup_on_fail:
+        # '--cleanup-on-fail' is only accepted by 'helm upgrade', so it cannot be
+        # combined with 'replace', which deploys through 'helm install'. The flag
+        # exists since helm 3.0.0 and kept its name in v4, so no version gate is
+        # needed on top of the module-wide helm >= 3.0.0 requirement.
+        if replace:
+            module.fail_json(
+                msg="cleanup_on_fail is only supported by 'helm upgrade' and cannot be used with replace=true"
+            )
+        deploy_command += " --cleanup-on-fail"
 
     if timeout:
         deploy_command += " --timeout " + timeout
@@ -962,6 +986,7 @@ def argument_spec():
             wait_timeout=dict(type="str"),
             timeout=dict(type="str"),
             atomic=dict(type="bool", default=False),
+            cleanup_on_fail=dict(type="bool", default=False),
             server_side=dict(type="str", choices=["auto", "true", "false"]),
             force_conflicts=dict(type="bool", default=False),
             create_namespace=dict(type="bool", default=False),
@@ -1027,6 +1052,7 @@ def main():
     wait = module.params.get("wait")
     wait_timeout = module.params.get("wait_timeout")
     atomic = module.params.get("atomic")
+    cleanup_on_fail = module.params.get("cleanup_on_fail")
     server_side = module.params.get("server_side")
     force_conflicts = module.params.get("force_conflicts")
     create_namespace = module.params.get("create_namespace")
@@ -1157,6 +1183,7 @@ def main():
                 False,
                 values_files=values_files,
                 atomic=atomic,
+                cleanup_on_fail=cleanup_on_fail,
                 server_side=server_side,
                 force_conflicts=force_conflicts,
                 create_namespace=create_namespace,
@@ -1243,6 +1270,7 @@ def main():
                     force,
                     values_files=values_files,
                     atomic=atomic,
+                    cleanup_on_fail=cleanup_on_fail,
                     server_side=server_side,
                     force_conflicts=force_conflicts,
                     create_namespace=create_namespace,
