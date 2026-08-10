@@ -859,6 +859,7 @@ class TestCleanupOnFail(unittest.TestCase):
             "3.17.0",
         )
         assert "--atomic" in command
+        assert "--rollback-on-failure" not in command
         assert "--cleanup-on-fail" in command
 
     def test_cleanup_on_fail_combines_with_atomic_on_helm_v4(self):
@@ -873,6 +874,7 @@ class TestCleanupOnFail(unittest.TestCase):
             "4.0.0",
         )
         assert "--rollback-on-failure" in command
+        assert "--atomic" not in command
         assert "--cleanup-on-fail" in command
 
     def test_cleanup_on_fail_with_replace_fails(self):
