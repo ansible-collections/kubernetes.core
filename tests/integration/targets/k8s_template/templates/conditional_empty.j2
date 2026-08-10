@@ -1,0 +1,12 @@
+{% for item in items %}
+{% if item.enabled %}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ item.name }}"
+  namespace: "{{ k8s_pod_namespace }}"
+data:
+  key: value
+{% endif %}
+{% endfor %}
