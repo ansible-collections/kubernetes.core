@@ -31,3 +31,4 @@ test_namespace:
   - "helm-insecure-{{ helm_version | replace('.', '-') }}"
   - "helm-test-take-ownership-{{ helm_version | replace('.', '-') }}"
   - "helm-skip-schema-validation-{{ helm_version | replace('.', '-') }}"
+  - "helm-wait-for-jobs-{{ helm_version | replace('.', '-') }}"
