@@ -1,0 +1,5 @@
+---
+minor_changes:
+  - "helm - Add ``wait_for_jobs`` option to wait for all Jobs to complete before
+    marking a Helm release as successful. Requires Helm >= 3.5.0
+    (https://github.com/ansible-collections/kubernetes.core/pull/1140)."
