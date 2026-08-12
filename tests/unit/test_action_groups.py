@@ -1,4 +1,4 @@
-# Copyright: (c) 2026, Ansible Project
+# Copyright (c) 2026 Yuriy Novostavskiy
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -8,9 +8,15 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# permissions and limitations under the License.
+#
+# This file is licensed permissively rather than under the collection's
+# GPL-3.0-or-later because it lives outside plugins/ and imports no
+# GPL-licensed code: membership is read statically with ast, so nothing from
+# ansible-core or plugins/ is imported. See the collection requirements,
+# "Licensing" section.
 
 # Guards the action groups declared in meta/runtime.yml.
 #
@@ -35,10 +41,10 @@ COLLECTION_ROOT = os.path.dirname(
 MODULES_DIR = os.path.join(COLLECTION_ROOT, "plugins", "modules")
 RUNTIME_YML = os.path.join(COLLECTION_ROOT, "meta", "runtime.yml")
 
-# action group -> (module_utils file that defines the shared spec, constant name)
+# action group -> the module_utils file defining its shared spec, and the constant name
 SHARED_ARG_SPECS = {
-    "k8s": ("args_common", "AUTH_ARG_SPEC"),
-    "helm": ("helm_args_common", "HELM_AUTH_ARG_SPEC"),
+    "k8s": {"module_utils": "args_common", "constant": "AUTH_ARG_SPEC"},
+    "helm": {"module_utils": "helm_args_common", "constant": "HELM_AUTH_ARG_SPEC"},
 }
 
 # Modules that intentionally stay out of the groups, with the reason. Listed
@@ -66,8 +72,10 @@ def _shared_specs_used_by(module_name):
     with open(path, "rb") as handle:
         tree = ast.parse(handle.read(), filename=path)
 
-    wanted = {constant: group for group, (_, constant) in SHARED_ARG_SPECS.items()}
-    modules_of_interest = {source for source, _ in SHARED_ARG_SPECS.values()}
+    group_of_constant = {
+        spec["constant"]: group for group, spec in SHARED_ARG_SPECS.items()
+    }
+    modules_of_interest = {spec["module_utils"] for spec in SHARED_ARG_SPECS.values()}
 
     used = set()
     for node in ast.walk(tree):
@@ -76,8 +84,8 @@ def _shared_specs_used_by(module_name):
         if node.module.rsplit(".", 1)[-1] not in modules_of_interest:
             continue
         for alias in node.names:
-            if alias.name in wanted:
-                used.add(wanted[alias.name])
+            if alias.name in group_of_constant:
+                used.add(group_of_constant[alias.name])
     return used
 
 
@@ -106,7 +114,7 @@ def test_action_group_members_exist(action_groups, group):
 
 @pytest.mark.parametrize("group", sorted(SHARED_ARG_SPECS))
 def test_action_group_matches_shared_arg_spec_users(action_groups, group):
-    _, constant = SHARED_ARG_SPECS[group]
+    constant = SHARED_ARG_SPECS[group]["constant"]
     declared = set(action_groups[group])
     actual = {name for name in _module_names() if group in _shared_specs_used_by(name)}
 
