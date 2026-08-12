@@ -42,6 +42,71 @@ Basic authentication is also supported using the ``username`` and ``password`` o
 
 To disable SSL certificate verification, set ``verify_ssl`` to false.
 
+Sharing options across tasks with action groups
+===============================================
+
+Repeating the same authentication options on every task gets verbose quickly. The collection
+defines two `action groups <https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_module_defaults.html#module-defaults-groups>`_
+so you can set them once with ``module_defaults``:
+
+``kubernetes.core.k8s``
+    Modules that talk to the Kubernetes API and accept the standard authentication options
+    (``kubeconfig``, ``context``, ``host``, ``api_key``, ``validate_certs``, and so on):
+    ``k8s``, ``k8s_cluster_info``, ``k8s_cp``, ``k8s_drain``, ``k8s_exec``, ``k8s_info``,
+    ``k8s_json_patch``, ``k8s_log``, ``k8s_rollback``, ``k8s_scale``, ``k8s_service``, and
+    ``k8s_taint``.
+
+``kubernetes.core.helm``
+    Modules that shell out to the ``helm`` binary and accept its shared authentication
+    options (``binary_path``, ``kubeconfig``, ``context``, ``host``, ``api_key``,
+    ``ca_cert``, ``validate_certs``): ``helm``, ``helm_info``, ``helm_plugin``,
+    ``helm_plugin_info``, and ``helm_repository``.
+
+Prefix the group name with ``group/`` to use it:
+
+.. code-block:: yaml
+
+    - hosts: localhost
+      module_defaults:
+        group/kubernetes.core.k8s:
+          kubeconfig: /path/to/kubeconfig
+          context: staging
+      tasks:
+        - name: Create a namespace
+          kubernetes.core.k8s:
+            definition:
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: testing
+
+        - name: Read it back
+          kubernetes.core.k8s_info:
+            kind: Namespace
+            name: testing
+
+Both tasks pick up ``kubeconfig`` and ``context`` without repeating them, and an option set
+on an individual task still wins over the group default.
+
+.. note::
+
+   Always write the group name fully qualified as ``group/kubernetes.core.k8s``. A bare
+   ``group/k8s`` refers to the legacy ``k8s`` group that ansible-core defined back when the
+   Kubernetes modules shipped in core itself. The two are not the same group, and the legacy
+   one does not cover the modules in this collection.
+
+Some modules are deliberately **not** in these groups because they do not accept the shared
+authentication options, and including them would make ``module_defaults`` fail for everyone
+using the group:
+
+- ``helm_pull`` and ``helm_template`` accept only ``binary_path``.
+- ``helm_registry_auth`` accepts ``binary_path`` and its own ``host``, which is an OCI
+  registry URL rather than a Kubernetes API server.
+- ``kubeconfig`` writes a kubeconfig file locally and takes no cluster connection options.
+
+Pass options to those modules directly, or give them their own per-module ``module_defaults``
+entry.
+
 Reporting an issue
 ==================
 
