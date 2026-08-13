@@ -4,6 +4,9 @@
 username: testuser
 password: testpassword
 wrong_password: 'WrongPassword'
+# Use the helm binary installed by the install_helm role rather than the one
+# shipped with the CI image, whose version is outside of our control.
+helm_binary: "/tmp/helm/{{ ansible_system | lower }}-amd64/helm"
 registry_name: oci_registry
 registry_port: 5000
 test_chart: https://github.com/grafana/helm-charts/releases/download/k8s-monitoring-1.6.8/k8s-monitoring-1.6.8.tgz
