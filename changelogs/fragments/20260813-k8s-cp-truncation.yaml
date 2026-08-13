@@ -1,0 +1,26 @@
+---
+bugfixes:
+  - k8s_cp - Fix silent truncation when copying to a pod. The module closed the
+    exec connection immediately after writing the last chunk of the tar archive,
+    which killed the remote ``tar`` before it had finished extracting, and never
+    checked the process exit status, so a partial copy was reported as a success.
+    The archive is now bounded with ``head -c`` so ``tar`` gets a clean EOF and
+    exits on its own, and the module waits for that exit and fails on a non-zero
+    status
+    (https://github.com/ansible-collections/kubernetes.core/issues/776).
+
+minor_changes:
+  - k8s_cp - Add the ``copy_timeout`` option (default 300 seconds) bounding how
+    long the module will spend streaming an archive to a pod and waiting for the
+    remote ``tar`` to finish, so that a stalled copy fails instead of hanging
+    indefinitely
+    (https://github.com/ansible-collections/kubernetes.core/issues/621).
+  - k8s_cp - Stream the tar archive to the pod chunk by chunk instead of building
+    the whole archive in memory first, which cuts peak memory use when copying
+    large files
+    (https://github.com/ansible-collections/kubernetes.core/issues/776).
+  - k8s_cp - When copying to a pod, the module now also uses ``/bin/sh`` and
+    ``head`` in the container, when present, to confirm the copy completed.
+    Containers without them keep the previous behaviour and get a warning that
+    completion could not be verified
+    (https://github.com/ansible-collections/kubernetes.core/issues/776).
