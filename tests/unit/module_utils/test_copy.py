@@ -156,7 +156,8 @@ def test_waits_for_tar_to_exit_before_closing():
     )
 
     assert error["status"] == "Success"
-    assert stdout == [] and stderr == []
+    assert stdout == []
+    assert stderr == []
     # Whole archive sent, in CHUNK_SIZE pieces.
     assert len(response.written) == 3
     assert sum(len(c) for c in response.written) == 3 * K8SCopyToPod.CHUNK_SIZE
