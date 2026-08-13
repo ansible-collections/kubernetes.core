@@ -207,7 +207,9 @@ def test_drain_honours_copy_timeout(monkeypatch):
 
     # Time only moves past the deadline once the archive has been sent, so the
     # timeout is exercised in the drain loop rather than the write loop.
-    monkeypatch.setattr("time.monotonic", lambda: 10**6 if response.writes_done else 0)
+    monkeypatch.setattr(
+        "time.monotonic", lambda: 10**6 if response.writes_done else 0
+    )
 
     with pytest.raises(FakeModuleFailure) as exc:
         stream_archive(copier, response, K8SCopyToPod.CHUNK_SIZE)
