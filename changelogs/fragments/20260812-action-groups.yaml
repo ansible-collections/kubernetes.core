@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - meta - Add ``helm_plugin`` and ``helm_plugin_info`` to the ``helm`` action group, and ``k8s_taint`` to the ``k8s`` action group, so that ``module_defaults`` set on those groups applies to them (https://github.com/ansible-collections/kubernetes.core/pull/1216).
