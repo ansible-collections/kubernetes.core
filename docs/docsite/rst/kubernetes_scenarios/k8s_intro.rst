@@ -71,6 +71,10 @@ Prefix the group name with ``group/`` to use it:
         group/kubernetes.core.k8s:
           kubeconfig: /path/to/kubeconfig
           context: staging
+        group/kubernetes.core.helm:
+          binary_path: /path/to/helm
+          kubeconfig: /path/to/kubeconfig
+          context: staging
       tasks:
         - name: Create a namespace
           kubernetes.core.k8s:
@@ -78,15 +82,32 @@ Prefix the group name with ``group/`` to use it:
               apiVersion: v1
               kind: Namespace
               metadata:
-                name: testing
+                name: monitoring
 
         - name: Read it back
           kubernetes.core.k8s_info:
             kind: Namespace
-            name: testing
+            name: monitoring
 
-Both tasks pick up ``kubeconfig`` and ``context`` without repeating them, and an option set
-on an individual task still wins over the group default.
+        - name: Add the prometheus chart repository
+          kubernetes.core.helm_repository:
+            name: prometheus-community
+            repo_url: https://prometheus-community.github.io/helm-charts
+
+        - name: Deploy the kube-prometheus-stack chart
+          kubernetes.core.helm:
+            name: kube-prometheus-stack
+            chart_ref: prometheus-community/kube-prometheus-stack
+            release_namespace: monitoring
+
+        - name: Collect the releases in that namespace
+          kubernetes.core.helm_info:
+            name: kube-prometheus-stack
+            release_namespace: monitoring
+
+Every task picks up ``kubeconfig`` and ``context`` from its group without repeating them, the
+``helm`` modules additionally pick up ``binary_path``, and an option set on an individual task
+still wins over the group default.
 
 .. note::
 
