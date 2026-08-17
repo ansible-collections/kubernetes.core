@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: test-chart-plus-version-configmap
 data:
-  myValue: {{ default "test" .Values.myValue }}
+  myValue: test
