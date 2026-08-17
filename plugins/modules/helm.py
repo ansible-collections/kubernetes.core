@@ -513,6 +513,7 @@ from ansible.module_utils.basic import missing_required_lib
 from ansible_collections.kubernetes.core.plugins.module_utils.helm import (
     AnsibleHelmModule,
     parse_helm_plugin_list,
+    strip_registry_progress,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.helm_args_common import (
     HELM_AUTH_ARG_SPEC,
@@ -603,7 +604,7 @@ def fetch_chart_info(
 
     rc, out, err = module.run_helm_command(inspect_command)
 
-    return yaml.safe_load(out)
+    return yaml.safe_load(strip_registry_progress(out))
 
 
 def deploy(
