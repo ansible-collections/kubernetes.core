@@ -1,0 +1,20 @@
+---
+# Helm >= 4.2.1 is required for this test to be meaningful: that is the release which
+# moved the OCI registry progress messages from stderr to stdout (helm/helm#32056).
+helm_oci_version: v4.2.4
+
+helm_oci_namespace: helm-oci-registry-progress
+test_namespace: "{{ helm_oci_namespace }}"
+
+# Matches the registry stood up by the setup_helm_registry role.
+helm_oci_registry: "localhost:6035"
+helm_oci_registry_username: testuser
+helm_oci_registry_password: 'pass123!'
+helm_oci_repo_path: testing
+
+helm_oci_chart_name: test-chart-plus-version
+# '+' is not allowed in an OCI tag, so Helm stores this as '1.0.0_build.1'.
+helm_oci_chart_version: 1.0.0+build.1
+# A version without build metadata, to cover the case where the progress messages
+# happen to be valid YAML and so corrupt the parsed output silently.
+helm_oci_chart_version_plain: 1.0.1
