@@ -890,3 +890,170 @@ class TestCleanupOnFail(unittest.TestCase):
                 },
                 "3.17.0",
             )
+
+
+class TestValueReuseOptions(unittest.TestCase):
+    """reset_values wins over reuse_values, and both are upgrade-only (issue #1229)."""
+
+    def setUp(self):
+        patch_ansible_module(self)
+
+    def test_reuse_values_alone_is_overridden_by_the_reset_values_default(self):
+        # What the pre-fix example in the docs produced: helm ignores '--reuse-values'.
+        command = deploy_command_for_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "reuse_values": True,
+            },
+            "3.17.0",
+        )
+        assert "--reset-values" in command
+        assert "--reuse-values=True" in command
+
+    def test_reuse_values_with_reset_values_disabled(self):
+        command = deploy_command_for_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "reuse_values": True,
+                "reset_values": False,
+            },
+            "3.17.0",
+        )
+        assert "--reset-values" not in command
+        assert "--reuse-values=True" in command
+
+    def test_reset_then_reuse_values_with_reset_values_disabled(self):
+        command = deploy_command_for_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "reset_then_reuse_values": True,
+                "reset_values": False,
+            },
+            "3.17.0",
+        )
+        assert "--reset-values" not in command
+        assert "--reset-then-reuse-values" in command
+
+    def test_reuse_values_with_replace_fails(self):
+        # 'replace' deploys via 'helm install', which has no '--reuse-values'.
+        with self.assertRaises(AnsibleFailJson):
+            deploy_command_for_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "reuse_values": True,
+                    "replace": True,
+                },
+                "3.17.0",
+            )
+
+    def test_reuse_values_false_with_replace_fails(self):
+        # Even 'reuse_values: false' used to emit '--reuse-values=False' on install.
+        with self.assertRaises(AnsibleFailJson):
+            deploy_command_for_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "reuse_values": False,
+                    "replace": True,
+                },
+                "3.17.0",
+            )
+
+    def test_reset_then_reuse_values_with_replace_fails(self):
+        with self.assertRaises(AnsibleFailJson):
+            deploy_command_for_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "reset_then_reuse_values": True,
+                    "replace": True,
+                },
+                "3.17.0",
+            )
+
+    def test_replace_alone_keeps_working(self):
+        command = deploy_command_for_version(
+            {
+                "release_name": "test",
+                "release_namespace": "test",
+                "chart_ref": "chart1",
+                "replace": True,
+            },
+            "3.17.0",
+        )
+        assert " install" in command
+        assert "--reuse-values" not in command
+        assert "--reset-values" not in command
+
+    def test_reuse_values_alone_warns(self):
+        with patch.object(basic.AnsibleModule, "warn") as mock_warn:
+            deploy_command_for_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "reuse_values": True,
+                },
+                "3.17.0",
+            )
+        warnings = [call.args[0] for call in mock_warn.call_args_list]
+        assert any("reuse_values is ignored" in warning for warning in warnings)
+
+    def test_reset_then_reuse_values_alone_warns(self):
+        with patch.object(basic.AnsibleModule, "warn") as mock_warn:
+            deploy_command_for_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "reset_then_reuse_values": True,
+                },
+                "3.17.0",
+            )
+        warnings = [call.args[0] for call in mock_warn.call_args_list]
+        assert any(
+            "reset_then_reuse_values is ignored" in warning for warning in warnings
+        )
+
+    def test_reset_then_reuse_values_warns_when_reuse_values_wins(self):
+        with patch.object(basic.AnsibleModule, "warn") as mock_warn:
+            deploy_command_for_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "reuse_values": True,
+                    "reset_then_reuse_values": True,
+                    "reset_values": False,
+                },
+                "3.17.0",
+            )
+        warnings = [call.args[0] for call in mock_warn.call_args_list]
+        assert any(
+            "reset_then_reuse_values is ignored because reuse_values is true" in warning
+            for warning in warnings
+        )
+
+    def test_no_warning_when_options_are_combined_correctly(self):
+        with patch.object(basic.AnsibleModule, "warn") as mock_warn:
+            deploy_command_for_version(
+                {
+                    "release_name": "test",
+                    "release_namespace": "test",
+                    "chart_ref": "chart1",
+                    "reuse_values": True,
+                    "reset_values": False,
+                },
+                "3.17.0",
+            )
+        assert mock_warn.call_args_list == []

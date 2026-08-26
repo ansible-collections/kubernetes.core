@@ -1,0 +1,5 @@
+---
+bugfixes:
+  - helm - do not pass the upgrade-only ``--reuse-values`` and ``--reset-then-reuse-values`` flags to ``helm install``. Combining ``reuse_values`` or ``reset_then_reuse_values`` with ``replace`` produced an invalid command that helm rejected with ``unknown flag``, and is now reported as a module failure instead (https://github.com/ansible-collections/kubernetes.core/pull/1230).
+minor_changes:
+  - helm - warn when ``reuse_values`` or ``reset_then_reuse_values`` is requested but helm will ignore it, which happens by default because ``reset_values`` defaults to ``true``. Documentation and the examples now spell out that ``reset_values`` has to be set to ``false`` for either option to take effect (https://github.com/ansible-collections/kubernetes.core/pull/1230).
