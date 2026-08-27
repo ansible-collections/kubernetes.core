@@ -66,7 +66,14 @@ class FakeWSClient:
     consuming the archive and exiting.
     """
 
-    def __init__(self, close_after=2, error=SUCCESS, stderr=None, drop_after=None):
+    def __init__(
+        self,
+        close_after=2,
+        error=SUCCESS,
+        stderr=None,
+        drop_after=None,
+        stderr_early=False,
+    ):
         self.written = []
         self.closed = False
         self._open = True
@@ -75,6 +82,7 @@ class FakeWSClient:
         self._error = error
         self._pending_stderr = stderr
         self._drop_after = drop_after
+        self._stderr_early = stderr_early
         self.writes_done = False
 
     def is_open(self):
@@ -99,8 +107,8 @@ class FakeWSClient:
 
     def peek_stderr(self):
         # tar only complains once it has started extracting, i.e. after the
-        # whole archive has been handed over.
-        if not self.writes_done:
+        # whole archive has been handed over, unless it failed outright.
+        if not (self.writes_done or self._stderr_early):
             return ""
         return self._pending_stderr or ""
 
@@ -176,6 +184,22 @@ def test_partial_write_is_not_reported_as_success():
     assert "the remote file is incomplete" in exc.value.kwargs["msg"]
     assert len(response.written) == 2
     assert response.closed
+
+
+def test_early_close_reports_what_tar_said():
+    """The remote error must not be masked by the generic truncation message."""
+    copier = make_copier()
+    response = FakeWSClient(
+        drop_after=2,
+        stderr="tar: /etc/foo: Cannot open: Read-only file system",
+        stderr_early=True,
+    )
+
+    with pytest.raises(FakeModuleFailure) as exc:
+        stream_archive(copier, response, 5 * K8SCopyToPod.CHUNK_SIZE)
+
+    assert "the remote file is incomplete" in exc.value.kwargs["msg"]
+    assert "Read-only file system" in exc.value.kwargs["msg"]
 
 
 def test_non_zero_tar_exit_is_surfaced():
