@@ -312,7 +312,14 @@ class K8SCopyToPod(K8SCopy):
         if self.named_temp_file:
             self.named_temp_file.close()
 
-    def _fail(self, response, msg, **kwargs):
+    def _fail(self, response, msg, stderr=(), **kwargs):
+        """Fail, keeping whatever the remote already wrote to stderr.
+
+        An early close or a stall is usually the symptom, not the cause: tar
+        has typically said why on stderr first.
+        """
+        if stderr:
+            msg = "{0}: {1}".format(msg, "".join(stderr))
         response.close()
         self.close_temp_file()
         self.module.fail_json(
@@ -392,32 +399,26 @@ class K8SCopyToPod(K8SCopy):
             if response.peek_stderr():
                 stderr.append(response.read_stderr().rstrip("\n"))
 
-        def fail(msg):
-            """Fail, keeping whatever the remote already wrote to stderr.
-
-            An early close or a stall is usually the symptom, not the cause:
-            tar has typically said why on stderr first.
-            """
-            if stderr:
-                msg = "{0}: {1}".format(msg, "".join(stderr))
-            self._fail(response, msg)
-
         deadline = time.monotonic() + self.copy_timeout
 
         chunk = tar_buffer.read(self.CHUNK_SIZE)
         while chunk:
             if not response.is_open():
-                fail(
+                self._fail(
+                    response,
                     "connection to Pod {0}/{1} closed before the whole archive was"
                     " sent, the remote file is incomplete".format(
                         self.namespace, self.name
-                    )
+                    ),
+                    stderr,
                 )
             if time.monotonic() > deadline:
-                fail(
+                self._fail(
+                    response,
                     "timed out after {0}s sending the archive to Pod {1}/{2}".format(
                         self.copy_timeout, self.namespace, self.name
-                    )
+                    ),
+                    stderr,
                 )
             # Non-blocking, keeps the receive buffer clear while we write.
             drain(0)
@@ -435,9 +436,11 @@ class K8SCopyToPod(K8SCopy):
         # exit, and have its status reported on the error channel.
         while response.is_open():
             if time.monotonic() > deadline:
-                fail(
+                self._fail(
+                    response,
                     "timed out after {0}s waiting for tar to finish extracting on Pod"
-                    " {1}/{2}".format(self.copy_timeout, self.namespace, self.name)
+                    " {1}/{2}".format(self.copy_timeout, self.namespace, self.name),
+                    stderr,
                 )
             drain(1)
 
