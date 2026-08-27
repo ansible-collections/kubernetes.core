@@ -25,7 +25,6 @@ __metaclass__ = type
 import io
 
 import pytest
-
 from ansible_collections.kubernetes.core.plugins.module_utils.copy import K8SCopyToPod
 
 ERROR_CHANNEL = 3
