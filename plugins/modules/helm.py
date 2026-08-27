@@ -643,7 +643,7 @@ def validate_value_options(
     """
     Check the value-reuse options against each other and against 'replace'.
 
-    'helm install' accepts neither '--reuse-values' nor '--reset-then-reuse-values', so
+    'helm install' does not accept '--reuse-values' or '--reset-then-reuse-values', so
     combining either with 'replace' can only ever produce an invalid command: fail early
     with a message naming the option instead of letting helm report an unknown flag.
 
