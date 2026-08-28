@@ -52,6 +52,11 @@ options:
     - If set to C(yes), and I(state) is C(present), an existing object will be replaced.
     type: bool
     default: no
+  create_only:
+    description:
+    - If set to C(yes), an object will be created if it doesn't exist, no objects will be updated.
+    type: bool
+    default: no
   merge_type:
     description:
     - Whether to override the default patch merge approach with a specific type. By default, the strategic
@@ -230,6 +235,19 @@ EXAMPLES = r"""
           targetPort: 8000
           name: port-8000-tcp
           port: 8000
+
+- name: Create a Secret but do not update existing
+  kubernetes.core.k8s:
+    state: present
+    create_only: yes
+    definition:
+      kind: Secret
+      metadata:
+        name: passwords
+        namespace: testing
+      data:
+        admin: "{{ lookup('community.general.random_string', length=12, base64=true) }}"
+        database: "{{ lookup('community.general.random_string', length=12, base64=true) }}"
 
 - name: Remove an existing Service object
   kubernetes.core.k8s:
@@ -510,6 +528,7 @@ def argspec():
         default="present", choices=["present", "absent", "patched"]
     )
     argument_spec["force"] = dict(type="bool", default=False)
+    argument_spec["create_only"] = dict(type="bool", default=False)
     argument_spec["label_selectors"] = dict(type="list", elements="str")
     argument_spec["generate_name"] = dict()
     argument_spec["server_side_apply"] = dict(
