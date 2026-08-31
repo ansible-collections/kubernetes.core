@@ -1,5 +1,3 @@
 ---
 helm_namespace: helm-set-values
-helm_versions:
-  - v3.10.3
-  - v4.0.0
+helm_binary: helm

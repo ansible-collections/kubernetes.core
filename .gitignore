@@ -16,7 +16,7 @@ tests/integration/cloud-config-*
 .ansible
 
 # Helm charts
-tests/integration/*-chart-*.tgz
+tests/integration/*.tgz
 tests/integration/targets/*/*.tgz
 
 # ansible-test generated file

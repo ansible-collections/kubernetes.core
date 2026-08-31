@@ -1,8 +1,3 @@
 ---
 - name: Run tests
-  include_tasks: run_tests.yml
-  loop_control:
-    loop_var: helm_version
-  with_items:
-    - "v3.17.0"
-    - "v4.0.0"
+  ansible.builtin.include_tasks: run_tests.yml

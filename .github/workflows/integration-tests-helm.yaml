@@ -1,0 +1,200 @@
+name: Integration tests Helm
+
+concurrency:
+  group: integration-tests-helm-${{ github.head_ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+
+jobs:
+  splitter:
+    env:
+      source_dir: "./source"
+    runs-on: ubuntu-latest
+    outputs:
+      helm_targets: ${{ steps.select-targets.outputs.targets }}
+    steps:
+      - name: Checkout the collection repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ${{ env.source_dir }}
+          fetch-depth: "0"
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: list changes for pull request
+        id: splitter
+        uses: ansible-network/github_actions/.github/actions/ansible_test_splitter@4678c74a7d712d55e663c88f66eec6d9c3642550
+        with:
+          collections_to_test: ${{ env.source_dir }}
+          total_jobs: 8
+
+      - name: Select Helm targets
+        id: select-targets
+        run: |
+          import os, json
+          with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
+            data = os.environ.get("ALL_TEST_TARGETS")
+            targets = []
+            for target in data.split(";"):
+              targets.extend([v for v in target.split(':', maxsplit=1)[1].split(',') if v.startswith('helm')])
+            fh.write(f'targets={json.dumps(targets)}\n')
+        shell: python
+        env:
+          ALL_TEST_TARGETS: ${{ steps.splitter.outputs.test_targets }}
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs:
+      - splitter
+    if: ${{ needs.splitter.outputs.helm_targets != '' && needs.splitter.outputs.helm_targets != '[]' }}
+    env:
+      source: "./source"
+      ansible_posix: "./ansible_posix"
+      community_general: "./community_general"
+      ansible-version: "milestone"
+      python-version: "3.13"
+    strategy:
+      fail-fast: false
+      matrix:
+        # Ref must match a branch/tag on github.com/ansible/ansible (e.g. stable-2.18, not 2.18).
+        helm-version:
+          - v3.0.0
+          - v3.1.0
+          - v3.8.0
+          - v3.10.3
+          - v3.15.4
+          - v3.16.0
+          - v3.17.0
+          - v4.0.0
+          - v4.2.1
+          - latest
+        ansible_test_target: ${{ fromJson(needs.splitter.outputs.helm_targets) }}
+        exclude:
+          # helm_registry_auth requires Helm >= 3.8.0
+          - ansible_test_target: "helm_registry_auth"
+            helm-version: "v3.0.0"
+          - ansible_test_target: "helm_registry_auth"
+            helm-version: "v3.1.0"
+          - ansible_test_target: "helm_registry_auth"
+            helm-version: "v3.8.0"
+          - ansible_test_target: "helm_registry_auth"
+            helm-version: "v3.10.3"
+          - ansible_test_target: "helm_registry_auth"
+            helm-version: "v3.15.4"
+          - ansible_test_target: "helm_registry_auth"
+            helm-version: "v3.16.0"
+          # helm install/upgrade --create-namespace requires helm >= 3.2.0
+          - ansible_test_target: "helm_diff"
+            helm-version: "v3.0.0"
+          - ansible_test_target: "helm_diff"
+            helm-version: "v3.1.0"
+          - ansible_test_target: "helm_diff"
+            helm-version: "v3.8.0"
+          - ansible_test_target: "helm_diff"
+            helm-version: "v3.10.3"
+          # UPGRADE FAILED: conflict occurred while applying object helm-diff/test-chart-another-configmap /v1
+          - ansible_test_target: "helm_diff"
+            helm-version: "v4.0.0"
+          - ansible_test_target: "helm_repository"
+            helm-version: "v3.0.0"
+          - ansible_test_target: "helm_repository"
+            helm-version: "v3.1.0"
+          - ansible_test_target: "helm_kubeconfig"
+            helm-version: "v3.0.0"
+          - ansible_test_target: "helm_kubeconfig"
+            helm-version: "v3.1.0"
+          - ansible_test_target: "helm_set_values"
+            helm-version: "v3.0.0"
+          - ansible_test_target: "helm_set_values"
+            helm-version: "v3.1.0"
+          - ansible_test_target: "helm_set_values"
+            helm-version: "v3.8.0"
+          - ansible_test_target: "helm"
+            helm-version: "v3.0.0"
+          - ansible_test_target: "helm"
+            helm-version: "v3.1.0"
+    name: "${{ matrix.ansible_test_target }}-${{ matrix.helm-version }}"
+    steps:
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: ${{ env.source }}
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.python-version }}
+
+      # install ansible
+      - name: Install ansible-core (${{ env.ansible-version }})
+        run: >-
+          python3 -m pip install
+          https://github.com/ansible/ansible/archive/${{ env.ansible-version }}.tar.gz
+          --disable-pip-version-check
+        shell: bash
+
+      - name: Build and install collection
+        id: install-src
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@4678c74a7d712d55e663c88f66eec6d9c3642550
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.source }}
+
+      - name: checkout ansible-collections/ansible.posix
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@4678c74a7d712d55e663c88f66eec6d9c3642550
+        with:
+          repository: ansible-collections/ansible.posix
+          path: ${{ env.ansible_posix }}
+          ref: main
+
+      - name: checkout ansible-collections/community.general
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@4678c74a7d712d55e663c88f66eec6d9c3642550
+        with:
+          repository: ansible-collections/community.general
+          path: ${{ env.community_general }}
+          ref: main
+
+      - name: install ansible.posix collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@4678c74a7d712d55e663c88f66eec6d9c3642550 # main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.ansible_posix }}
+
+      - name: install community.general collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@4678c74a7d712d55e663c88f66eec6d9c3642550
+        with:
+          install_python_dependencies: false
+          source_path: ${{ env.community_general }}
+
+      - name: create kubernetes cluster
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
+        with:
+          node_image: "kindest/node:v1.29.2"
+
+      - name: "Install Helm version ${{ matrix.helm-version }}"
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: '${{ matrix.helm-version }}'
+
+      - name: Verify Helm Installation
+        run: helm version
+
+      - name: Run integration tests
+        uses: ansible-network/github_actions/.github/actions/ansible_test_integration@4678c74a7d712d55e663c88f66eec6d9c3642550
+        with:
+          collection_path: ${{ steps.install-src.outputs.collection_path }}
+          python_version: ${{ env.python-version }}
+          ansible_version: ${{ env.ansible-version }}
+          ansible_test_targets: ${{ matrix.ansible_test_target }}

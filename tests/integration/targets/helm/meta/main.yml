@@ -1,3 +1,5 @@
 ---
+dependencies:
+  - setup_helm_version
 collections:
   - kubernetes.core

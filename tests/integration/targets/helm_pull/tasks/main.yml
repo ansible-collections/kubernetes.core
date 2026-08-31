@@ -1,101 +1,83 @@
 ---
-- name: Define helm versions to test
-  set_fact:
-    helm_versions:
-      - 3.8.0
-      - 3.1.0
-      - 3.0.0
-      - 4.0.0
-
 - block:
     - name: Create temp directory for helm tests
-      tempfile:
+      ansible.builtin.tempfile:
         state: directory
       register: tmpdir
 
     - name: Set temp directory fact
-      set_fact:
+      ansible.builtin.set_fact:
         temp_dir: "{{ tmpdir.path }}"
 
-    - set_fact:
-        destination: "{{ temp_dir }}"
-
-    - name: Install Helm versions
-      ansible.builtin.include_role:
-        name: install_helm
-      loop: "{{ helm_versions }}"
-      vars:
-        helm_version: "v{{ item }}"
-        helm_install_path: "{{ temp_dir }}/{{ item }}"
-
     # Testing helm pull with helm version == 3.0.0
-    - block:
+    - name: Run test with helm version '3.0.0'
+      when: helm_version | string is ansible.builtin.version('3.0.0', "==")
+      block:
         - name: Download chart using chart_ssl_cert_file
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_ssl_cert_file: ssl_cert_file
           ignore_errors: true
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter chart_ssl_cert_file requires helm >= 3.1.0, current version is 3.0.0"
 
         - name: Download chart using chart_ssl_key_file
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_ssl_key_file: ssl_key_file
           ignore_errors: true
           check_mode: true
           register: _result
 
         - name: assert that module failed with proper message
-          assert:
+          ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter chart_ssl_key_file requires helm >= 3.1.0, current version is 3.0.0"
 
         - name: Download chart using chart_ca_cert
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_ca_cert: ca_cert_file
           ignore_errors: true
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter chart_ca_cert requires helm >= 3.1.0, current version is 3.0.0"
 
-      vars:
-        helm_path: "{{ temp_dir }}/3.0.0/helm"
-
     # Testing helm pull with helm version == 3.1.0
-    - block:
+    - name: Run test with helm version '3.1.0'
+      when: helm_version | string is ansible.builtin.version('3.1.0', "==")
+      block:
         - name: Download chart using chart_ssl_cert_file, chart_ca_cert, chart_ssl_key_file
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_ssl_cert_file: ssl_cert_file
             chart_ssl_key_file: ssl_key_file
             chart_ca_cert: ca_cert_file
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.assert:
             that:
               - _result is changed
               - '"--ca-file ca_cert_file" in _result.command'
@@ -104,32 +86,31 @@
 
         - name: Download chart using skip_tls_certs_check
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             skip_tls_certs_check: true
           ignore_errors: true
           check_mode: true
           register: _result
 
-        - name: assert that module failed with proper message
-          assert:
+        - name: Assert that module failed with proper message
+          ansible.builtin.assert:
             that:
               - _result is failed
               - _result.msg == "Parameter skip_tls_certs_check requires helm >= 3.3.0, current version is 3.1.0"
 
-      vars:
-        helm_path: "{{ temp_dir }}/3.1.0/helm"
-
     # Testing helm pull with helm version == 3.8.0
-    - block:
+    - name: Run test with helm version '3.8.0'
+      when: helm_version | string is ansible.builtin.version('3.8.0', "==")
+      block:
         # Test options chart_version, verify, pass-credentials, provenance, untar_chart
         # skip_tls_certs_check, repo_url, repo_username, repo_password
         - name: Testing chart version
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: redis
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_version: "0.2.1"
             verify_chart: true
             pass_credentials: true
@@ -143,7 +124,8 @@
           check_mode: true
           register: _result
 
-        - assert:
+        - name: Validate module results
+          ansible.builtin.assert:
             that:
               - _result is changed
               - '"--version 0.2.1" in _result.command'
@@ -160,18 +142,18 @@
 
         - name: Download chart using chart_ref
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: https://github.com/grafana/helm-charts/releases/download/grafana-5.6.0/grafana-5.6.0.tgz
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
           register: _result
 
         - name: Check chart on local filesystem
-          stat:
-            path: "{{ destination }}/grafana-5.6.0.tgz"
+          ansible.builtin.stat:
+            path: "{{ temp_dir }}/grafana-5.6.0.tgz"
           register: _chart
 
         - name: Validate that chart was downloaded
-          assert:
+          ansible.builtin.assert:
             that:
               - _result is changed
               - _chart.stat.exists
@@ -179,19 +161,19 @@
 
         - name: Download chart using untar_chart
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             untar_chart: true
           register: _result
 
         - name: Check chart on local filesystem
-          stat:
-            path: "{{ destination }}/redis"
+          ansible.builtin.stat:
+            path: "{{ temp_dir }}/redis"
           register: _chart
 
         - name: Validate that chart was downloaded
-          assert:
+          ansible.builtin.assert:
             that:
               - _result is changed
               - _chart.stat.exists
@@ -200,22 +182,22 @@
         # Test idempotency with tarred chart
         - name: Download chart with version (first time)
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_version: "24.1.0"
           register: _result_first
 
         - name: Download chart with version (second time - should be idempotent)
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_version: "24.1.0"
           register: _result_second
 
         - name: Validate idempotency for tarred chart
-          assert:
+          ansible.builtin.assert:
             that:
               - _result_first is changed
               - _result_second is not changed
@@ -223,81 +205,77 @@
         # Test force parameter with tarred chart
         - name: Download chart with force=true (should always download)
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
-            destination: "{{ destination }}"
+            destination: "{{ temp_dir }}"
             chart_version: "24.1.0"
             force: true
           register: _result_force
 
         - name: Validate force parameter causes download
-          assert:
+          ansible.builtin.assert:
             that:
               - _result_force is changed
 
         # Test idempotency with untarred chart in the separate folder
         - name: Create separate directory for untar test under {{ temp_dir }}
           ansible.builtin.file:
-            path: "{{ destination }}/untar_test"
+            path: "{{ temp_dir }}/untar_test"
             state: directory
             mode: '0755'
 
         - name: Download and untar chart (first time)
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
-            destination: "{{ destination }}/untar_test"
+            destination: "{{ temp_dir }}/untar_test"
             chart_version: "24.0.0"
             untar_chart: true
           register: _result_untar_first
 
         - name: Download and untar chart (second time - should be idempotent)
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
-            destination: "{{ destination }}/untar_test"
+            destination: "{{ temp_dir }}/untar_test"
             chart_version: "24.0.0"
             untar_chart: true
           register: _result_untar_second
 
         - name: Validate idempotency for untarred chart
-          assert:
+          ansible.builtin.assert:
             that:
               - _result_untar_first is changed
               - _result_untar_second is not changed
 
         - name: Download and untar chart with force=true (should remove existing directory and re-extract)
           helm_pull:
-            binary_path: "{{ helm_path }}"
+            binary_path: "{{ helm_binary }}"
             chart_ref: "oci://registry-1.docker.io/bitnamicharts/redis"
-            destination: "{{ destination }}/untar_test"
+            destination: "{{ temp_dir }}/untar_test"
             chart_version: "24.0.0"
             untar_chart: true
             force: true
           register: _result_untar_force
 
         - name: Validate first force extraction works
-          assert:
+          ansible.builtin.assert:
             that:
               - _result_untar_force is changed
 
         - name: Verify chart directory still exists after force re-extraction
-          stat:
-            path: "{{ destination }}/untar_test/redis"
+          ansible.builtin.stat:
+            path: "{{ temp_dir }}/untar_test/redis"
           register: _chart_after_force
 
         - name: Validate chart directory exists
-          assert:
+          ansible.builtin.assert:
             that:
               - _chart_after_force.stat.exists
               - _chart_after_force.stat.isdir
 
-      vars:
-        helm_path: "{{ temp_dir }}/3.8.0/helm"
-
-
   always:
     - name: Delete temp directory
-      file:
+      ansible.builtin.file:
         state: absent
         path: "{{ temp_dir }}"
