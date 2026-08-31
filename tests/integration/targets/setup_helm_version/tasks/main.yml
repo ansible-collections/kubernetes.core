@@ -1,0 +1,9 @@
+---
+- name: Read version for current helm binary
+  test_helm_read_version:
+    binary_path: "{{ setup_helm_version_binary_path | default(omit) }}"
+  register: result
+
+- name: Set helm version
+  ansible.builtin.set_fact:
+    helm_version: "{{ result.helm_version }}"

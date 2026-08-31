@@ -27,7 +27,7 @@
       register: install_chart
 
     - name: Assert that chart is installed
-      assert:
+      ansible.builtin.assert:
         that:
           - install_chart is changed
           - install_chart.status.status | lower == 'deployed'
@@ -40,7 +40,7 @@
       register: chart_info
 
     - name: Assert that Chart is installed (using helm_info)
-      assert:
+      ansible.builtin.assert:
         that:
           - chart_info.status.status | lower == 'deployed'
 

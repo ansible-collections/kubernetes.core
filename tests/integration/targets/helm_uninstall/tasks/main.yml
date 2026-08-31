@@ -1,0 +1,92 @@
+- vars:
+    chart_source: "https://github.com/kubernetes/kube-state-metrics/releases/download/kube-state-metrics-helm-chart-2.13.3/kube-state-metrics-2.13.3.tgz"
+    chart_name: "test-wait-uninstall"
+    chart_name_pending: "test-uninstall-pending-release"
+  block:
+
+  - name: Install chart
+    helm:
+      binary_path: "{{ helm_binary }}"
+      name: "{{ chart_name }}"
+      chart_ref: "{{ chart_source }}"
+      namespace: "{{ helm_namespace }}"
+      create_namespace: true
+
+  - name: Delete chart with wait
+    helm:
+      state: absent
+      binary_path: "{{ helm_binary }}"
+      name: "{{ chart_name }}"
+      namespace: "{{ helm_namespace }}"
+      wait: true
+    register: uninstall
+
+  - name: Assert warning has been raised
+    ansible.builtin.assert:
+      that:
+      - uninstall.warnings is defined
+      - '"helm uninstall support option --wait for helm release >= 3.7.0" in uninstall.warnings'
+    when: helm_version | string is ansible.builtin.version('3.7.0', '<')
+
+  - when: helm_version | string is ansible.builtin.version('4.0.0', '<')
+    block:
+    - name: Install Helm v4
+      ansible.builtin.include_role:
+        name: setup_helm
+      vars:
+        setup_helm_version: v4.0.0
+
+    - name: Install chart
+      helm:
+        binary_path: "{{ setup_helm_binary_path }}"
+        name: "{{ chart_name }}"
+        chart_ref: "{{ chart_source }}"
+        namespace: "{{ helm_namespace }}"
+        create_namespace: true
+
+    - name: Uninstall chart again using recent version
+      helm:
+        state: absent
+        binary_path: "{{ setup_helm_binary_path }}"
+        name: "{{ chart_name }}"
+        namespace: "{{ helm_namespace }}"
+        wait: true
+      register: uninstall
+
+    # Test uninstall chart release with 'pending-install' status
+    - name: Create chart release with 'pending-install' status
+      helm_test_pending:
+        binary_path: "{{ setup_helm_binary_path }}"
+        chart_ref: "{{ chart_source }}"
+        chart_release: "{{ chart_name_pending }}"
+        chart_release_namespace: "{{ helm_namespace }}"
+
+    - name: Uninstall chart release with 'pending-install' status
+      helm:
+        binary_path: "{{ setup_helm_binary_path }}"
+        release_name: "{{ chart_name_pending }}"
+        namespace: "{{ helm_namespace }}"
+        release_state: absent
+      register: _uninstall
+
+    - name: Get Helm release details
+      helm_info:
+        binary_path: "{{ setup_helm_binary_path }}"
+        release_namespace: "{{ helm_namespace }}"
+        release_state: pending
+        release_name: "{{ chart_name_pending }}"
+      register: _info
+
+    - name: Assert release does not exist anymore
+      ansible.builtin.assert:
+        that:
+        - _uninstall is changed
+        - _info.status is undefined
+
+  always:
+  - name: Remove namespace
+    k8s:
+      kind: Namespace
+      name: "{{ helm_namespace }}"
+      state: absent
+    ignore_errors: true
