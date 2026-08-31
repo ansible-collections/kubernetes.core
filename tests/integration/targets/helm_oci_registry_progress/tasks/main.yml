@@ -12,15 +12,12 @@
 # messages. Without the fix, the helm task below fails with
 # "could not find expected ':'".
 - name: Test OCI charts whose version contains build metadata
+# Helm >= 4.2.1 is required for this test to be meaningful: that is the release which
+# moved the OCI registry progress messages from stderr to stdout (helm/helm#32056).
+  when: helm_version | string is ansible.builtin.version('4.2.1', '>=')
   vars:
     chart_ref: "oci://{{ helm_oci_registry }}/{{ helm_oci_repo_path }}/{{ helm_oci_chart_name }}"
   block:
-    - name: "Install Helm {{ helm_oci_version }}"
-      ansible.builtin.include_role:
-        name: install_helm
-      vars:
-        helm_version: "{{ helm_oci_version }}"
-
     - name: Create temporary directory to hold the chart
       ansible.builtin.tempfile:
         state: directory

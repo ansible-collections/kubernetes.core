@@ -1,0 +1,5 @@
+---
+helm_binary: helm
+setup_helm_version_binary_path: "{{ helm_binary }}"
+chart_test_oci: "oci://registry-1.docker.io/bitnamicharts/redis"
+test_namespace: helm-plain-http
