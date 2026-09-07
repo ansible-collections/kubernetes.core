@@ -135,8 +135,9 @@ options:
       - When upgrading package, specifies whether to reuse the last release's values and merge in any overrides from parameters O(release_values),
         O(values_files) or O(set_values).
       - Helm ignores this when C(--reset-values) is passed. Since O(reset_values) defaults to V(true), it has to be set to V(false)
-        for this option to take any effect. The module warns when the combination makes this option a no-op.
-      - C(helm install) does not accept C(--reuse-values), so this option cannot be used together with O(replace).
+        for this option to take any effect.
+      - C(helm install) does not accept C(--reuse-values), so this option is ignored when O(replace) is set.
+      - The module warns whenever one of those combinations makes this option a no-op.
     type: bool
     required: false
     version_added: 3.0.0
@@ -153,9 +154,9 @@ options:
       - When upgrading package, reset the values to the ones built into the chart, apply the last release's values and merge in any overrides from
         parameters O(release_values), O(values_files) or O(set_values).
       - Helm ignores this when C(--reset-values) or C(--reuse-values) is passed. Since O(reset_values) defaults to V(true), it has to be
-        set to V(false), and O(reuse_values) left unset or V(false), for this option to take any effect. The module warns when the
-        combination makes this option a no-op.
-      - C(helm install) does not accept C(--reset-then-reuse-values), so this option cannot be used together with O(replace).
+        set to V(false), and O(reuse_values) left unset or V(false), for this option to take any effect.
+      - C(helm install) does not accept C(--reset-then-reuse-values), so this option is ignored when O(replace) is set.
+      - The module warns whenever one of those combinations makes this option a no-op.
       - This feature requires helm diff >= 3.9.12.
     type: bool
     required: false
@@ -643,15 +644,15 @@ def validate_value_options(
     """
     Check the value-reuse options against each other and against 'replace'.
 
-    'helm install' does not accept '--reuse-values' or '--reset-then-reuse-values', so
-    combining either with 'replace' can only ever produce an invalid command: fail early
-    with a message naming the option instead of letting helm report an unknown flag.
+    'helm install' accepts none of these flags, so 'replace' drops all three. The rest
+    are precedence rules helm applies silently: '--reset-values' wins over
+    '--reuse-values', and both win over '--reset-then-reuse-values'. Since 'reset_values'
+    defaults to true, requesting either of the other two on its own is a no-op.
 
-    The remaining conflicts are precedence rules helm applies silently: '--reset-values'
-    wins over '--reuse-values', and both win over '--reset-then-reuse-values'. Since
-    'reset_values' defaults to true, requesting either of the other two on its own is a
-    no-op. Only warn about that, so playbooks relying on the current behaviour keep
-    working.
+    Warn rather than fail throughout. Every one of these combinations is accepted by
+    playbooks today: 'reuse_values' has existed since 3.0.0, and a release that is
+    already converged never reaches deploy(), so the invalid command was never built.
+    Failing here would turn tasks that pass today into tasks that fail.
     """
     if replace:
         for name, requested in (
@@ -659,10 +660,9 @@ def validate_value_options(
             ("reset_then_reuse_values", reset_then_reuse_values),
         ):
             if requested:
-                module.fail_json(
-                    msg="{0} is only supported by 'helm upgrade' and cannot be used with replace=true".format(
-                        name
-                    )
+                module.warn(
+                    "{0} is ignored because replace=true deploys through 'helm install',"
+                    " which does not accept the flag.".format(name)
                 )
         return
 
@@ -673,7 +673,7 @@ def validate_value_options(
         ):
             if requested:
                 module.warn(
-                    "{0} is ignored because reset_values is true (the module default). "
+                    "{0} is ignored because reset_values is true. "
                     "Set reset_values=false to make it take effect.".format(name)
                 )
     elif reuse_values and reset_then_reuse_values:
@@ -730,7 +730,7 @@ def deploy(
 
         # '--reset-values', '--reuse-values' and '--reset-then-reuse-values' are all
         # upgrade-only flags, so they must not leak into the 'replace' branch above.
-        # validate_value_options() has already rejected that combination.
+        # validate_value_options() has already warned about that combination.
         if reset_values:
             deploy_command += " --reset-values"
 
