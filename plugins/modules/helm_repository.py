@@ -331,7 +331,7 @@ def main():
                 insecure_skip_tls_verify,
             )
             changed = True
-        elif repository_status["url"] != repo_url:
+        elif repository_status["url"].rstrip("/") != repo_url:
             module.fail_json(
                 msg="Repository already have a repository named {0}".format(repo_name)
             )
