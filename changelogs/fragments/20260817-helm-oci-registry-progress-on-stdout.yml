@@ -1,0 +1,3 @@
+bugfixes:
+  - helm - skip Helm's OCI registry progress messages when parsing the output of ``helm show chart``. As of Helm 4.2.1 these are printed to stdout instead of stderr (https://github.com/helm/helm/pull/32056), which made installing a chart from an OCI registry fail with a YAML scanner error when the chart version contained a ``+`` (https://github.com/ansible-collections/kubernetes.core/pull/1223).
+  - helm_template - strip Helm's OCI registry progress messages from the returned ``stdout``, which is documented to contain only the rendered templates (https://github.com/ansible-collections/kubernetes.core/pull/1223).

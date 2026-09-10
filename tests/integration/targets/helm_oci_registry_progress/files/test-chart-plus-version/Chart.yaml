@@ -1,0 +1,6 @@
+apiVersion: v2
+name: test-chart-plus-version
+description: A chart whose version carries semver build metadata
+type: application
+version: 1.0.0+build.1
+appVersion: "default"
