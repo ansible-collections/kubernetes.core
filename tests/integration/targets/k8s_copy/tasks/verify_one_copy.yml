@@ -1,0 +1,22 @@
+---
+# One iteration of the repeated-copy regression check, see test_copy_repeated.yml
+- name: remove any file left by the previous iteration
+  k8s_exec:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_one_container.name }}'
+    command: 'rm -f /repeated.bin'
+
+- name: "copy file into remote Pod (iteration {{ iteration }})"
+  k8s_cp:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_one_container.name }}'
+    remote_path: /repeated.bin
+    local_path: "{{ test_directory }}/repeated.bin"
+    state: to_pod
+
+- name: "compare local and remote file (iteration {{ iteration }})"
+  kubectl_file_compare:
+    namespace: '{{ copy_namespace }}'
+    pod: '{{ pod_with_one_container.name }}'
+    remote_path: /repeated.bin
+    local_path: "{{ test_directory }}/repeated.bin"

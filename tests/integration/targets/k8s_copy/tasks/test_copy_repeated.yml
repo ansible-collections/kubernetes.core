@@ -1,0 +1,45 @@
+---
+# Regression coverage for
+# https://github.com/ansible-collections/kubernetes.core/issues/776
+#
+# The module used to close the exec connection as soon as the last chunk had
+# been written, which killed the remote tar mid-extract and truncated the file.
+# The failure was timing dependent, so a single copy rarely caught it: repeat
+# the copy and compare every time.
+- name: test repeated copies are never truncated
+  block:
+  - set_fact:
+      test_directory: /tmp/test_k8scp_repeated
+      copy_iterations: 10
+    no_log: true
+
+  - name: create temporary directory for local files
+    ansible.builtin.file:
+      path: "{{ test_directory }}"
+      state: directory
+
+  # Large enough to span several 1MiB write chunks, so the last chunk is not
+  # also the first and the drain actually has something to wait for.
+  - name: create a multi-chunk file
+    ansible.builtin.command:
+      cmd: dd if=/dev/urandom of={{ test_directory }}/repeated.bin bs=1M count=12
+
+  - name: copy the same file repeatedly and verify each time
+    ansible.builtin.include_tasks: verify_one_copy.yml
+    loop: "{{ range(0, copy_iterations) | list }}"
+    loop_control:
+      loop_var: iteration
+
+  always:
+  - name: delete temporary directory created for the test
+    ansible.builtin.file:
+      path: "{{ test_directory }}"
+      state: absent
+    ignore_errors: true
+
+  - name: delete file created on Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: 'rm -f /repeated.bin'
+    ignore_errors: true
