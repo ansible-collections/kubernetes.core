@@ -132,15 +132,19 @@ options:
     version_added: 2.4.0
   reuse_values:
     description:
-      - When upgrading package, specifies wether to reuse the last release's values and merge in any overrides from parameters I(release_values),
-        I(values_files) or I(set_values).
-      - If I(reset_values) is set to C(True), this is ignored.
+      - When upgrading package, specifies whether to reuse the last release's values and merge in any overrides from parameters O(release_values),
+        O(values_files) or O(set_values).
+      - Helm ignores this when C(--reset-values) is passed. Since O(reset_values) defaults to V(true), it has to be set to V(false)
+        for this option to take any effect.
+      - C(helm install) does not accept C(--reuse-values), so this option is ignored when O(replace) is set.
+      - The module warns whenever one of those combinations makes this option a no-op.
     type: bool
     required: false
     version_added: 3.0.0
   reset_values:
     description:
       - When upgrading package, reset the values to the ones built into the chart.
+      - Defaults to V(true), which makes helm ignore O(reuse_values) and O(reset_then_reuse_values). Set it to V(false) to use either of them.
     type: bool
     required: false
     default: True
@@ -149,7 +153,10 @@ options:
     description:
       - When upgrading package, reset the values to the ones built into the chart, apply the last release's values and merge in any overrides from
         parameters O(release_values), O(values_files) or O(set_values).
-      - If O(reset_values) or O(reuse_values) is set to V(True), this is ignored.
+      - Helm ignores this when C(--reset-values) or C(--reuse-values) is passed. Since O(reset_values) defaults to V(true), it has to be
+        set to V(false), and O(reuse_values) left unset or V(false), for this option to take any effect.
+      - C(helm install) does not accept C(--reset-then-reuse-values), so this option is ignored when O(replace) is set.
+      - The module warns whenever one of those combinations makes this option a no-op.
       - This feature requires helm diff >= 3.9.12.
     type: bool
     required: false
@@ -426,15 +433,30 @@ EXAMPLES = r"""
         enabled: True
 
 # Deploy latest version
+# 'reset_values' defaults to true and helm ignores '--reuse-values' when it is set,
+# so it has to be turned off explicitly.
 - name: Deploy latest version of Grafana chart using reuse_values
   kubernetes.core.helm:
     name: test
     chart_ref: stable/grafana
     release_namespace: monitoring
     reuse_values: true
+    reset_values: false
     values:
       replicas: 2
       version: 3e8ec0b2dffa40fb97d5342e4af887de95faa8c61a62480dd7f8aa03dffcf533
+
+# Same for 'reset_then_reuse_values', which helm ignores when either
+# '--reset-values' or '--reuse-values' is set.
+- name: Deploy latest version of Grafana chart using reset_then_reuse_values
+  kubernetes.core.helm:
+    name: test
+    chart_ref: stable/grafana
+    release_namespace: monitoring
+    reset_then_reuse_values: true
+    reset_values: false
+    values:
+      replicas: 2
 """
 
 RETURN = r"""
@@ -616,6 +638,51 @@ def fetch_chart_info(
     return yaml.safe_load(out)
 
 
+def validate_value_options(
+    module, replace, reuse_values, reset_values, reset_then_reuse_values
+):
+    """
+    Check the value-reuse options against each other and against 'replace'.
+
+    'helm install' accepts none of these flags, so 'replace' drops all three. The rest
+    are precedence rules helm applies silently: '--reset-values' wins over
+    '--reuse-values', and both win over '--reset-then-reuse-values'. Since 'reset_values'
+    defaults to true, requesting either of the other two on its own is a no-op.
+
+    Warn rather than fail throughout. Every one of these combinations is accepted by
+    playbooks today: 'reuse_values' has existed since 3.0.0, and a release that is
+    already converged never reaches deploy(), so the invalid command was never built.
+    Failing here would turn tasks that pass today into tasks that fail.
+    """
+    if replace:
+        for name, requested in (
+            ("reuse_values", reuse_values is not None),
+            ("reset_then_reuse_values", reset_then_reuse_values),
+        ):
+            if requested:
+                module.warn(
+                    "{0} is ignored because replace=true deploys through 'helm install',"
+                    " which does not accept the flag.".format(name)
+                )
+        return
+
+    if reset_values:
+        for name, requested in (
+            ("reuse_values", reuse_values),
+            ("reset_then_reuse_values", reset_then_reuse_values),
+        ):
+            if requested:
+                module.warn(
+                    "{0} is ignored because reset_values is true. "
+                    "Set reset_values=false to make it take effect.".format(name)
+                )
+    elif reuse_values and reset_then_reuse_values:
+        module.warn(
+            "reset_then_reuse_values is ignored because reuse_values is true. "
+            "Set reuse_values=false to make it take effect."
+        )
+
+
 def deploy(
     module,
     command,
@@ -658,24 +725,28 @@ def deploy(
             deploy_command += " --dependency-update"
     else:
         deploy_command = command + " upgrade -i"  # install/upgrade
-        if reset_values:
-            deploy_command += " --reset-values"
         if take_ownership:
             deploy_command += " --take-ownership"
 
-    if reuse_values is not None:
-        deploy_command += " --reuse-values=" + str(reuse_values)
+        # '--reset-values', '--reuse-values' and '--reset-then-reuse-values' are all
+        # upgrade-only flags, so they must not leak into the 'replace' branch above.
+        # validate_value_options() has already warned about that combination.
+        if reset_values:
+            deploy_command += " --reset-values"
 
-    if reset_then_reuse_values:
-        helm_version = module.get_helm_version()
-        if LooseVersion(helm_version) < LooseVersion("3.14.0"):
-            module.fail_json(
-                msg="reset_then_reuse_values requires helm >= 3.14.0, current version is {0}".format(
-                    helm_version
+        if reuse_values is not None:
+            deploy_command += " --reuse-values=" + str(reuse_values)
+
+        if reset_then_reuse_values:
+            helm_version = module.get_helm_version()
+            if LooseVersion(helm_version) < LooseVersion("3.14.0"):
+                module.fail_json(
+                    msg="reset_then_reuse_values requires helm >= 3.14.0, current version is {0}".format(
+                        helm_version
+                    )
                 )
-            )
-        else:
-            deploy_command += " --reset-then-reuse-values"
+            else:
+                deploy_command += " --reset-then-reuse-values"
 
     if wait:
         deploy_command += " --wait"
@@ -910,10 +981,10 @@ def helmdiff_check(
     if set_value_args:
         cmd += " " + set_value_args
 
-    if reuse_values:
+    if not replace and reuse_values:
         cmd += " --reuse-values"
 
-    if reset_then_reuse_values:
+    if not replace and reset_then_reuse_values:
         helm_diff_version = get_plugin_version("diff")
         helm_version = module.get_helm_version()
         fail_msg = ""
@@ -1160,6 +1231,10 @@ def main():
             )
             changed = True
     elif release_state == "present":
+        validate_value_options(
+            module, replace, reuse_values, reset_values, reset_then_reuse_values
+        )
+
         if chart_version is not None:
             helm_cmd += " --version=" + chart_version
 
