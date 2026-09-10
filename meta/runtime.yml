@@ -1,10 +1,17 @@
 ---
 requires_ansible: '>=2.16.0'
 
+# Only modules that accept the shared authentication options belong in these
+# groups: HELM_AUTH_ARG_SPEC for helm, AUTH_ARG_SPEC for k8s. Adding a module
+# that does not accept them makes module_defaults fail for every user of the
+# group. This excludes helm_pull, helm_registry_auth, helm_template and
+# kubeconfig, which only take a subset (or none) of those options.
 action_groups:
   helm:
     - helm
     - helm_info
+    - helm_plugin
+    - helm_plugin_info
     - helm_repository
   k8s:
     - k8s
@@ -18,6 +25,7 @@ action_groups:
     - k8s_rollback
     - k8s_scale
     - k8s_service
+    - k8s_taint
 
 plugin_routing:
   inventory:
