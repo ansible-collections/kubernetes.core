@@ -4,3 +4,5 @@ deprecated_features:
     Use ``timeout`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
   - k8s_exec - the ``return_code`` return value has been deprecated and will be removed in version 7.0.0.
     Use ``rc`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+  - k8s_service - the ``merge_type=json`` option has been deprecated and will be removed in version 7.0.0.
+    Use ``kubernetes.core.k8s_json_patch`` module instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
