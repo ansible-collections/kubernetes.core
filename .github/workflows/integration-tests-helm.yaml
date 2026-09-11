@@ -30,6 +30,7 @@ jobs:
           path: ${{ env.source_dir }}
           fetch-depth: "0"
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: list changes for pull request
         id: splitter
