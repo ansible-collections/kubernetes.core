@@ -55,8 +55,12 @@ jobs:
 
       - name: Display splitter output
         run: |
-          echo "targets => ${{ steps.select-targets.outputs.targets }}"
-          echo "jobs => ${{ steps.select-targets.outputs.jobs }}"
+        env:
+          TARGETS: ${{ steps.select-targets.outputs.targets }}
+          JOBS: ${{ steps.select-targets.outputs.jobs }}
+        run: |
+          echo "targets => $TARGETS"
+          echo "jobs => $JOBS"
         shell: bash
   integration:
     runs-on: ubuntu-latest
