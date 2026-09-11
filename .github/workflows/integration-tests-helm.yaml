@@ -139,9 +139,11 @@ jobs:
 
       # install ansible
       - name: Install ansible-core (${{ env.ansible-version }})
+        env:
+          ANSIBLE_VERSION: ${{ matrix.ansible-version }}
         run: >-
           python3 -m pip install
-          https://github.com/ansible/ansible/archive/${{ env.ansible-version }}.tar.gz
+          https://github.com/ansible/ansible/archive/$ANSIBLE_VERSION.tar.gz
           --disable-pip-version-check
         shell: bash
 
