@@ -61,6 +61,9 @@ jobs:
         enable-turbo-mode: [true, false]
         python-version: ["3.12", "3.13"]
         exclude:
+          # stable-2.18 is used mainly because turbo mode, no reason to test it with turbo mode disabled
+          - ansible-version: "stable-2.18"
+            enable-turbo-mode: false
           # turbo mode is supported only by ansible<2.19
           - ansible-version: "milestone"
             enable-turbo-mode: true
