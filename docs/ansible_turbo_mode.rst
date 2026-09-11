@@ -13,6 +13,13 @@ Following document provides overview of Ansible Turbo mode in ``kubernetes.core`
 
 
 .. warning::
+   Ansible Turbo mode is **deprecated** and will be removed in a future major release
+   (planned for 8.0.0), as it depends on the ``cloud.common`` collection, which is being
+   retired. Setting ``ENABLE_TURBO_MODE`` now emits a deprecation warning; once support is
+   removed, the variable will have no effect. Start planning your migration away from
+   Turbo mode.
+
+.. warning::
    Ansible Turbo mode is supported only with ``ansible-core`` versions **lower than 2.19**.
    Starting from ``ansible-core`` 2.19, the ``cloud.common`` collection is no longer supported,
    and therefore Ansible Turbo mode is also not supported in ``kubernetes.core``.
