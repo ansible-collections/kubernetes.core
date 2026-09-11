@@ -118,7 +118,7 @@ result:
        type: int
        version_added: 2.2.0
      return_code:
-       description: The command status code. This attribute is deprecated and will be removed in a future release. Please use rc instead.
+       description: The command status code. This attribute is deprecated and will be removed in version 7.0.0. Use RV(result.rc) instead.
        type: int
 """
 
@@ -218,6 +218,13 @@ def execute_module(module, client):
         rc = 0
     else:
         rc = int(err["details"]["causes"][0]["message"])
+
+    # Add deprecation warning for return_code return value
+    module.deprecate(
+        "The 'return_code' return value is deprecated and will be removed in version 7.0.0. Use 'rc' instead.",
+        version="7.0.0",
+        collection_name="kubernetes.core",
+    )
 
     module.exit_json(
         # Some command might change environment, but ultimately failing at end
