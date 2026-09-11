@@ -1,6 +1,6 @@
 ---
 - name: Create temporary directory for helm chart
-  tempfile:
+  ansible.builtin.tempfile:
     suffix: .helm
     state: directory
   register: helm_dir
@@ -17,7 +17,8 @@
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
-        plugin_version: 3.9.4
+        verify: false
+        plugin_version: "{{ helm_version | string is ansible.builtin.version('4.0.0', '>=') | ternary('3.14.0', '3.10.0') }}"
 
     - name: Copy test chart
       ansible.builtin.copy:
@@ -50,7 +51,7 @@
       register: helm_upgrade
 
     - name: Ensure task did not reported change
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is not changed
 
@@ -66,7 +67,7 @@
       register: helm_upgrade
 
     - name: Ensure task reported change
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is changed
 

@@ -10,10 +10,11 @@
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
-        plugin_version: 3.9.13
+        verify: false
+        plugin_version: "{{ helm_version | string is ansible.builtin.version('4.0.0', '>=') | ternary('3.14.0', '3.10.0') }}"
 
     - name: Copy test chart
-      copy:
+      ansible.builtin.copy:
         src: "test-chart/"
         dest: "{{ test_chart_ref }}"
 
@@ -26,13 +27,13 @@
         create_namespace: true
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is changed
 
     - name: Modify local chart
-      blockinfile:
-        create: yes
+      ansible.builtin.blockinfile:
+        create: true
         path: "{{ test_chart_ref }}/templates/anothermap.yaml"
         block: !unsafe |
           apiVersion: v1
@@ -55,7 +56,7 @@
     - name: Check if helm diff check is correct
       vars:
         foo_bar_value: "+   foo: bar"
-      assert:
+      ansible.builtin.assert:
         that:
           - foo_bar_value in diff_result.diff.prepared
 
@@ -67,7 +68,7 @@
         chart_ref: "{{ test_chart_ref }}"
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is changed
 
@@ -77,12 +78,12 @@
         name: test-chart
         namespace: "{{ helm_namespace }}"
         chart_ref: "{{ test_chart_ref }}"
-      check_mode: yes
+      check_mode: true
       diff: true
       register: diff_result
 
     - name: Check if no diff in check mode when no change
-      assert:
+      ansible.builtin.assert:
         that:
           - '"diff" not in diff_result'
 
@@ -94,12 +95,12 @@
         chart_ref: "{{ test_chart_ref }}"
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is not changed
 
     - name: Modify values
-      blockinfile:
+      ansible.builtin.blockinfile:
         create: true
         path: "{{ test_chart_ref }}/values.yml"
         block: |
@@ -116,7 +117,7 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is changed
 
@@ -130,7 +131,7 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is not changed
 
@@ -146,7 +147,7 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is changed
 
@@ -162,7 +163,7 @@
           - "{{ test_chart_ref }}/values.yml"
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is not changed
 
@@ -181,7 +182,7 @@
             value_type: string
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is changed
 
@@ -200,7 +201,7 @@
             value_type: string
       register: install
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install is not changed
 
@@ -213,7 +214,7 @@
       ignore_errors: true
 
     - name: Define chart variables
-      set_fact:
+      ansible.builtin.set_fact:
         test_chart_values:
           myValue: 'Some ConfigMap data value'
           myConfigmapName: 'ansible-config-from-url'
@@ -247,7 +248,9 @@
             path: '{{ _tmpd.path }}'
 
     - name: Log into Helm registry
-      ansible.builtin.command: "{{ helm_binary }} registry login -u testuser -p 'pass123!' localhost:6035"
+      ansible.builtin.shell: >-
+        echo 'pass123!' | {{ helm_binary }} registry login -u testuser --password-stdin localhost:6035
+        {{ helm_version | string is ansible.builtin.version("3.18.0", ">=") | ternary('--plain-http', '') }}
 
     - name: Install chart from remote URL
       helm:
@@ -257,6 +260,7 @@
         namespace: "{{ helm_namespace }}"
         name: another-chart
         release_values: "{{ test_chart_values }}"
+        plain_http: "{{ helm_version is ansible.builtin.version('3.13.0', '>=') }}"
 
     - name: Upgrade chart
       helm:
@@ -266,44 +270,49 @@
         namespace: "{{ helm_namespace }}"
         name: another-chart
         release_values: "{{ test_chart_values }}"
+        plain_http: "{{ helm_version is ansible.builtin.version('3.13.0', '>=') }}"
       check_mode: true
       register: _upgrade
 
     - name: Assert that module raised a warning
-      assert:
+      ansible.builtin.assert:
         that:
           - not _upgrade.changed
           - _upgrade.warnings is defined
           - _upgrade.warnings | length == 1
           - _upgrade.warnings[0] == "The default idempotency check can fail to report changes in certain cases. Install helm diff >= 3.4.1 for better results."
 
-    - name: Install helm diff (version=3.4.1)
-      helm_plugin:
-        binary_path: "{{ helm_binary }}"
-        state: present
-        plugin_path: https://github.com/databus23/helm-diff
-        plugin_version: 3.4.1
+    - name: Test helm diff with OCI chart
+      when: helm_version is ansible.builtin.version('3.13.0', '<')
+      block:
+        - name: Install helm diff
+          helm_plugin:
+            binary_path: "{{ helm_binary }}"
+            state: present
+            plugin_path: https://github.com/databus23/helm-diff
+            plugin_version: "{{ (helm_version is ansible.builtin.version('4.0.0', '>=')) | ternary('3.14.0', '3.4.1') }}"
+            verify: false
 
-    - name: Upgrade chart once again
-      helm:
-        binary_path: "{{ helm_binary }}"
-        chart_ref: "{{ test_chart_ref_url }}"
-        chart_version: 0.1.0
-        namespace: "{{ helm_namespace }}"
-        name: another-chart
-        release_values: "{{ test_chart_values }}"
-      check_mode: true
-      register: _upgrade_2
+        - name: Upgrade chart once again
+          helm:
+            binary_path: "{{ helm_binary }}"
+            chart_ref: "{{ test_chart_ref_url }}"
+            chart_version: 0.1.0
+            namespace: "{{ helm_namespace }}"
+            name: another-chart
+            release_values: "{{ test_chart_values }}"
+          check_mode: true
+          register: _upgrade_2
 
-    - name: Assert that module raised a warning
-      assert:
-        that:
-          - _upgrade_2.changed
-          - _upgrade_2.warnings is not defined
+        - name: Assert that module raised a warning
+          ansible.builtin.assert:
+            that:
+              - _upgrade_2.changed
+              - _upgrade_2.warnings is not defined
 
   always:
     - name: Remove chart directory
-      file:
+      ansible.builtin.file:
         path: "{{ test_chart_ref }}"
         state: absent
       ignore_errors: true
@@ -324,6 +333,7 @@
         wait: true
       ignore_errors: true
 
-- include_tasks: reuse_values.yml
+- ansible.builtin.include_tasks: reuse_values.yml
 
-- include_tasks: reset_then_reuse_values.yml
+- ansible.builtin.include_tasks: reset_then_reuse_values.yml
+  when: helm_version | string is ansible.builtin.version('3.8.0', '>')

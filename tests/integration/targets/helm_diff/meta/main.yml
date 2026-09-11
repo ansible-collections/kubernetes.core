@@ -1,5 +1,5 @@
 ---
 dependencies:
   - remove_namespace
-  - install_helm
   - setup_helm_registry
+  - setup_helm_version

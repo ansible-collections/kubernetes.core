@@ -1,7 +1,0 @@
----
-- name: Test helm_registry_auth module
-  hosts: localhost
-  connection: local
-  gather_facts: true
-  roles:
-  - helm_registry_auth

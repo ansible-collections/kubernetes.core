@@ -14,7 +14,7 @@
       register: install
 
     - name: Validate that take-ownership flag is not set
-      assert:
+      ansible.builtin.assert:
         that:
           - install is changed
           - '"--take-ownership" not in install.command'
@@ -50,18 +50,18 @@
       ignore_errors: true
 
     - name: Validate that take-ownership flag IS set if helm version is >= 3.17.0
-      assert:
+      ansible.builtin.assert:
         that:
           - upgrade is changed
           - '"--take-ownership" in upgrade.command'
-      when: '"v3.17.0" <= helm_version'
+      when: helm_version | string is ansible.builtin.version("3.17.0", ">=")
 
     - name: Validate that feature fails for helm < 3.17.0
-      assert:
+      ansible.builtin.assert:
         that:
           - upgrade is failed
           - '"take_ownership requires helm >= 3.17.0" in upgrade.msg'
-      when: 'helm_version < "v3.17.0"'
+      when: helm_version | string is ansible.builtin.version("3.17.0", "<")
 
     - name: Upgrade chart (take-onwership flag not set)
       helm:
@@ -79,18 +79,18 @@
       ignore_errors: true
 
     - name: Validate that take-ownership flag IS set if helm version is >= 3.17.0
-      assert:
+      ansible.builtin.assert:
         that:
           - upgrade is changed
           - '"--take-ownership" not in upgrade.command'
-      when: '"v3.17.0" <= helm_version'
+      when: helm_version | string is ansible.builtin.version("3.17.0", ">=")
 
     - name: Validate that feature fails for helm < 3.17.0
-      assert:
+      ansible.builtin.assert:
         that:
           - upgrade is changed
           - upgrade.msg is not defined
-      when: 'helm_version < "v3.17.0"'
+      when: helm_version | string is ansible.builtin.version("3.17.0", "<")
 
   always:
     - name: Remove helm namespace

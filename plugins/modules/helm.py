@@ -877,7 +877,6 @@ def helmdiff_check(
     reset_values=True,
     reset_then_reuse_values=False,
     insecure_skip_tls_verify=False,
-    plain_http=False,
     skip_schema_validation=False,
 ):
     """
@@ -944,17 +943,6 @@ def helmdiff_check(
             )
         else:
             cmd += " --skip-schema-validation"
-
-    if plain_http:
-        helm_version = module.get_helm_version()
-        if LooseVersion(helm_version) < LooseVersion("3.13.0"):
-            module.fail_json(
-                msg="plain_http requires helm >= 3.13.0, current version is {0}".format(
-                    helm_version
-                )
-            )
-        else:
-            cmd += " --plain-http"
 
     rc, out, err = module.run_helm_command(cmd)
     return (len(out.strip()) > 0, out.strip())
@@ -1271,7 +1259,6 @@ def main():
                     reset_values=reset_values,
                     reset_then_reuse_values=reset_then_reuse_values,
                     insecure_skip_tls_verify=insecure_skip_tls_verify,
-                    plain_http=plain_http,
                     skip_schema_validation=skip_schema_validation,
                 )
                 if would_change and module._diff:

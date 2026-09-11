@@ -1,0 +1,31 @@
+---
+- name: Init Helm folders
+  ansible.builtin.file:
+    path: "{{ helm_install_path }}"
+    state: directory
+
+- name: Set variable os_path
+  ansible.builtin.set_fact:
+    os_path: "{{ lookup('env', 'PATH') }}"
+
+- name: Download the Helm install script
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-{{ major_version }}"
+    dest: /tmp/get_helm.sh
+    mode: '0700'
+  vars:
+    major_version: "{{ setup_helm_version | split('.') | first | replace('v', '') }}"
+
+- name: Run the install script (helm version = {{ setup_helm_version }})
+  ansible.builtin.command: /tmp/get_helm.sh
+  environment:
+    DESIRED_VERSION: "{{ setup_helm_version }}"
+    HELM_INSTALL_DIR: "{{ helm_install_path }}"
+    PATH: "{{ os_path }}:{{ helm_install_path }}"
+    VERIFY_CHECKSUM: "false"
+  register: helm_install_result
+  changed_when: "'is already at the latest version' not in helm_install_result.stdout"
+
+- name: Save Helm binary path for later use
+  ansible.builtin.set_fact:
+    setup_helm_binary_path: "{{ helm_install_path }}/helm"
