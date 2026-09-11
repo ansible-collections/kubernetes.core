@@ -47,7 +47,8 @@ jobs:
             data = os.environ.get("ALL_TEST_TARGETS")
             targets = []
             for target in data.split(";"):
-              targets.extend([v for v in target.split(':', maxsplit=1)[1].split(',') if v.startswith('helm')])
+              if target and ':' in target:
+                targets.extend([v for v in target.split(':', maxsplit=1)[1].split(',') if v.startswith('helm')])
             fh.write(f'targets={json.dumps(targets)}\n')
         shell: python
         env:
