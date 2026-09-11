@@ -14,12 +14,24 @@ except TypeError:
 
 if enable_turbo_mode:
     try:
-        from ansible_collections.cloud.common.plugins.module_utils.turbo.module import (  # noqa: F401
-            AnsibleTurboModule as AnsibleModule,
+        from ansible_collections.cloud.common.plugins.module_utils.turbo.module import (
+            AnsibleTurboModule as _BaseAnsibleModule,
         )
 
-        AnsibleModule.collection_name = "kubernetes.core"
+        _BaseAnsibleModule.collection_name = "kubernetes.core"
     except ImportError:
-        from ansible.module_utils.basic import AnsibleModule  # noqa: F401
+        from ansible.module_utils.basic import AnsibleModule as _BaseAnsibleModule
+
+    class AnsibleModule(_BaseAnsibleModule):
+        def __init__(self, *args, **kwargs):
+            super(AnsibleModule, self).__init__(*args, **kwargs)
+            self.deprecate(
+                "ENABLE_TURBO_MODE is deprecated, as it relies on the cloud.common "
+                "collection which is being retired. Setting this environment "
+                "variable will have no effect once support is removed.",
+                version="8.0.0",
+                collection_name="kubernetes.core",
+            )
+
 else:
     from ansible.module_utils.basic import AnsibleModule  # noqa: F401

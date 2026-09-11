@@ -181,6 +181,8 @@ For documentation on how to use individual modules and other content included in
 
 ## Ansible Turbo Mode Tech Preview
 
+> **Deprecated:** Ansible Turbo mode (`ENABLE_TURBO_MODE`) is deprecated and will be removed in a future major release (planned for 8.0.0), since it depends on the `cloud.common` collection, which is being retired. Setting `ENABLE_TURBO_MODE` will keep emitting a deprecation warning until support is removed, at which point the variable will have no effect.
+
 > **Note:** Ansible Turbo mode is supported only with ``ansible-core`` versions **lower than 2.19**. Starting from ``ansible-core`` 2.19, the ``cloud.common`` collection is no longer supported, and therefore Ansible Turbo mode is also not supported in ``kubernetes.core``. If ``ENABLE_TURBO_MODE`` is set to ``1`` (or any truthy value) with ``ansible-core >= 2.19.0``, it may lead to fails.
 
 The ``kubernetes.core`` collection supports Ansible Turbo mode as a tech preview via the ``cloud.common`` collection (requires `ansible-core < 2.19`). By default, this feature is disabled. To enable Turbo mode for modules, set the environment variable `ENABLE_TURBO_MODE=1` on the managed node. For example:

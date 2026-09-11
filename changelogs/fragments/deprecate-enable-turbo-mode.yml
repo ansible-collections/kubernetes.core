@@ -1,0 +1,4 @@
+deprecated_features:
+  - Ansible Turbo mode (``ENABLE_TURBO_MODE``) has been deprecated and will be removed
+    in release 8.0.0, as it depends on the ``cloud.common`` collection, which is being
+    retired (https://github.com/ansible-collections/kubernetes.core/pull/1242).
