@@ -32,3 +32,5 @@ plugins/modules/k8s_service.py validate-modules:return-syntax-error
 plugins/modules/k8s_taint.py validate-modules:return-syntax-error
 tests/integration/targets/helm_diff/files/test-chart-reuse-values/templates/configmap.yaml yamllint!skip
 tests/integration/targets/helm_diff/files/test-chart-deployment-time/templates/configmap.yaml yamllint!skip
+plugins/modules/helm.py pylint:collection-deprecated-version  # Remove after stable-7 branch is cut (See issue 1239).
+plugins/modules/k8s_exec.py pylint:collection-deprecated-version  # Remove after stable-7 branch is cut (See issue 1239).
