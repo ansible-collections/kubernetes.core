@@ -32,6 +32,53 @@ except ImportError:
     HAS_YAML = False
 
 
+# Helm's registry client writes these progress messages to stdout as of helm 4.2.1
+# (helm/helm#32056); earlier versions sent them to stderr. Anything that parses the
+# stdout of a helm command which may pull from an OCI registry has to skip them.
+# Kept verbatim from helm's pkg/registry/client.go so that a reworded message fails
+# to match, and therefore fails loudly, rather than silently eating real output.
+REGISTRY_PROGRESS_RE = re.compile(r"^(?:Pulled|Pushed|Digest): \S")
+
+REGISTRY_UNDERSCORE_SUFFIX = " contains an underscore.\n"
+
+REGISTRY_UNDERSCORE_MESSAGE = """
+OCI artifact references (e.g. tags) do not support the plus sign (+). To support
+storing semantic versions, Helm adopts the convention of changing plus (+) to
+an underscore (_) in chart version tags when pushing to a registry and back to
+a plus (+) when pulling from a registry.
+"""
+
+REGISTRY_UNDERSCORE_MESSAGE_LINES = len(REGISTRY_UNDERSCORE_MESSAGE.splitlines())
+
+
+def strip_registry_progress(out):
+    """
+    Drop OCI registry progress messages from the front of a helm command's stdout.
+
+    Helm emits 'Pulled:'/'Pushed:' and 'Digest:' lines, followed - when the
+    reference contains an underscore - by a free-text explanation that is not
+    valid YAML. Since helm 4.2.1 these land on stdout ahead of the real output,
+    so 'helm show chart' can no longer be parsed and 'helm template' no longer
+    returns only rendered manifests.
+    """
+    lines = out.splitlines(keepends=True)
+    index = 0
+    while index < len(lines):
+        if REGISTRY_PROGRESS_RE.match(lines[index]):
+            index += 1
+        elif lines[index].endswith(REGISTRY_UNDERSCORE_SUFFIX):
+            # helm prints its registryUnderscoreMessage right after this line, led
+            # by a blank line. Anything else is not a message we know about.
+            start = index + 1
+            end = start + REGISTRY_UNDERSCORE_MESSAGE_LINES
+            if "".join(lines[start:end]) != REGISTRY_UNDERSCORE_MESSAGE:
+                break
+            index = end
+        else:
+            break
+    return "".join(lines[index:])
+
+
 def parse_helm_plugin_list(output=None):
     """
     Parse `helm plugin list`, return list of plugins
