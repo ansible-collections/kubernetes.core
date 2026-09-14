@@ -5,6 +5,7 @@
     namespace: '{{ copy_namespace }}'
     pod: '{{ pod_with_one_container.name }}'
     command: 'rm -f /repeated.bin'
+  ignore_errors: true
 
 - name: "copy file into remote Pod (iteration {{ iteration }})"
   k8s_cp:
