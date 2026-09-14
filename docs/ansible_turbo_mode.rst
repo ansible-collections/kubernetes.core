@@ -24,7 +24,7 @@ Following document provides overview of Ansible Turbo mode in ``kubernetes.core`
    Starting from ``ansible-core`` 2.19, the ``cloud.common`` collection is no longer supported,
    and therefore Ansible Turbo mode is also not supported in ``kubernetes.core``.
    If ``ENABLE_TURBO_MODE`` is set to ``1`` (or any truthy value) with ``ansible-core >= 2.19.0``,
-   it may lead to failures.
+   Turbo mode is ignored and a warning is emitted; modules run without it.
 
 Synopsis
 --------
