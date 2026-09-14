@@ -199,7 +199,7 @@ options:
   wait_timeout:
     description:
       - Timeout when wait option is enabled (helm2 is a number of seconds, helm3 is a duration).
-      - The use of I(wait_timeout) to wait for kubernetes commands to complete has been deprecated and will be removed after 2022-12-01.
+      - The use of I(wait_timeout) to wait for kubernetes commands to complete has been deprecated and will be removed in version 7.0.0. Use O(timeout) instead.
     type: str
   timeout:
     description:
@@ -1060,6 +1060,14 @@ def main():
         ],
         supports_check_mode=True,
     )
+
+    # Add deprecation warning for wait_timeout
+    if module.params.get("wait_timeout") is not None:
+        module.deprecate(
+            "The 'wait_timeout' parameter is deprecated and will be removed in version 7.0.0. Use 'timeout' instead.",
+            version="7.0.0",
+            collection_name="kubernetes.core",
+        )
 
     if not IMP_YAML:
         module.fail_json(msg=missing_required_lib("yaml"), exception=IMP_YAML_ERR)
