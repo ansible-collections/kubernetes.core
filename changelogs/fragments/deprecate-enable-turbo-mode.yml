@@ -1,4 +1,7 @@
+---
 deprecated_features:
-  - Ansible Turbo mode (``ENABLE_TURBO_MODE``) has been deprecated and will be removed
-    in release 8.0.0, as it depends on the ``cloud.common`` collection, which is being
-    retired (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+  - Ansible Turbo mode (``ENABLE_TURBO_MODE``) has been deprecated and will be removed in release 8.0.0, as it depends on the ``cloud.common`` collection, which is being retired (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+bugfixes:
+  - Ansible Turbo mode - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and later, where the ``cloud.common`` collection is not supported, and fall back to the standard ``AnsibleModule`` instead of failing with ``byte indices must be integers or slices, not str`` (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+minor_changes:
+  - k8s lookup - warn when ``ENABLE_TURBO_MODE`` is set but the ``cloud.common`` collection is not installed, instead of silently falling back to the standard lookup base (https://github.com/ansible-collections/kubernetes.core/pull/1242).

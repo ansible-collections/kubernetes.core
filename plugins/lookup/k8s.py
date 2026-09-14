@@ -241,6 +241,10 @@ if enable_turbo_mode:
             TurboLookupBase as LookupBase,
         )
     except ImportError:
+        display.warning(
+            "ENABLE_TURBO_MODE is set but the cloud.common collection is not installed. "
+            "Continuing without Turbo mode."
+        )
         from ansible.plugins.lookup import LookupBase  # noqa: F401
 else:
     from ansible.plugins.lookup import LookupBase  # noqa: F401
