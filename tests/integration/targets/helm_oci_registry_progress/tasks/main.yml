@@ -1,0 +1,158 @@
+---
+# Regression test for https://github.com/ansible-collections/kubernetes.core/issues/1222
+#
+# Helm >= 4.2.1 writes OCI registry progress messages to stdout rather than stderr
+# (helm/helm#32056): 'Pulled:', 'Digest:' and, when the reference contains an
+# underscore, a free-text explanation. Helm rewrites '+' to '_' in OCI tags, so a
+# chart version carrying semver build metadata is what triggers that explanation,
+# which is not valid YAML.
+#
+# The helm module parses the stdout of 'helm show chart', and helm_template returns
+# the stdout of 'helm template' as its documented result, so both have to skip those
+# messages. Without the fix, the helm task below fails with
+# "could not find expected ':'".
+- name: Test OCI charts whose version contains build metadata
+  vars:
+    chart_ref: "oci://{{ helm_oci_registry }}/{{ helm_oci_repo_path }}/{{ helm_oci_chart_name }}"
+  block:
+    - name: "Install Helm {{ helm_oci_version }}"
+      ansible.builtin.include_role:
+        name: install_helm
+      vars:
+        helm_version: "{{ helm_oci_version }}"
+
+    - name: Create temporary directory to hold the chart
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .chart
+      register: _tmpd
+
+    - name: Copy the test chart
+      ansible.builtin.copy:
+        src: "{{ helm_oci_chart_name }}"
+        dest: "{{ _tmpd.path }}/"
+
+    - name: Log into the helm registry
+      ansible.builtin.command: >-
+        {{ helm_binary }} registry login --plain-http
+        -u {{ helm_oci_registry_username }} -p {{ helm_oci_registry_password }}
+        {{ helm_oci_registry }}
+
+    - name: Package and push both chart versions
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - >-
+          {{ helm_binary }} package {{ _tmpd.path }}/{{ helm_oci_chart_name }}
+          --version {{ helm_oci_chart_version }} --destination {{ _tmpd.path }}
+        - >-
+          {{ helm_binary }} package {{ _tmpd.path }}/{{ helm_oci_chart_name }}
+          --version {{ helm_oci_chart_version_plain }} --destination {{ _tmpd.path }}
+        - >-
+          {{ helm_binary }} push --plain-http
+          {{ _tmpd.path }}/{{ helm_oci_chart_name }}-{{ helm_oci_chart_version }}.tgz
+          oci://{{ helm_oci_registry }}/{{ helm_oci_repo_path }}
+        - >-
+          {{ helm_binary }} push --plain-http
+          {{ _tmpd.path }}/{{ helm_oci_chart_name }}-{{ helm_oci_chart_version_plain }}.tgz
+          oci://{{ helm_oci_registry }}/{{ helm_oci_repo_path }}
+      register: _push
+
+    - name: Ensure Helm stored the build metadata version with an underscore
+      ansible.builtin.assert:
+        that:
+          - "'1.0.0_build.1' in (_push.results[2].stdout + _push.results[2].stderr)"
+        fail_msg: >-
+          Expected Helm to rewrite '+' to '_' when pushing the chart tag. Without
+          that rewrite this target no longer covers the case it was written for.
+
+    # helm - the version with build metadata is the case that failed outright.
+    - name: Install the chart from the OCI registry
+      kubernetes.core.helm:
+        binary_path: "{{ helm_binary }}"
+        name: "{{ helm_oci_chart_name }}"
+        chart_ref: "{{ chart_ref }}"
+        chart_version: "{{ helm_oci_chart_version }}"
+        release_namespace: "{{ helm_oci_namespace }}"
+        create_namespace: true
+        plain_http: true
+      register: _install
+
+    - name: Ensure the release reports the chart version verbatim
+      ansible.builtin.assert:
+        that:
+          - _install is changed
+          - _install.status.chart == helm_oci_chart_name ~ '-' ~ helm_oci_chart_version
+
+    - name: Install the same chart again
+      kubernetes.core.helm:
+        binary_path: "{{ helm_binary }}"
+        name: "{{ helm_oci_chart_name }}"
+        chart_ref: "{{ chart_ref }}"
+        chart_version: "{{ helm_oci_chart_version }}"
+        release_namespace: "{{ helm_oci_namespace }}"
+        plain_http: true
+      register: _reinstall
+
+    - name: Ensure the module is idempotent
+      ansible.builtin.assert:
+        that:
+          - _reinstall is not changed
+
+    # helm_template - stdout is documented to hold only the rendered templates. Both
+    # chart versions are checked: the plain one covers the case where the progress
+    # messages are valid YAML and would otherwise be parsed as a manifest.
+    - name: Render the chart from the OCI registry
+      kubernetes.core.helm_template:
+        binary_path: "{{ helm_binary }}"
+        chart_ref: "{{ chart_ref }}"
+        chart_version: "{{ item }}"
+        release_name: "{{ helm_oci_chart_name }}"
+        plain_http: true
+      loop:
+        - "{{ helm_oci_chart_version }}"
+        - "{{ helm_oci_chart_version_plain }}"
+      register: _template
+
+    - name: Ensure stdout holds the rendered manifests and nothing else
+      ansible.builtin.assert:
+        that:
+          - "'Pulled:' not in item.stdout"
+          - "'Digest:' not in item.stdout"
+          - "'contains an underscore' not in item.stdout"
+          - item.stdout.startswith('---')
+          - (item.stdout | from_yaml_all | list | map(attribute='kind') | list) == ['ConfigMap']
+        fail_msg: "helm_template stdout was not only rendered manifests: {{ item.stdout[:200] }}"
+      loop: "{{ _template.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+  always:
+    - name: Uninstall the release
+      kubernetes.core.helm:
+        binary_path: "{{ helm_binary }}"
+        name: "{{ helm_oci_chart_name }}"
+        release_namespace: "{{ helm_oci_namespace }}"
+        state: absent
+      when: helm_binary is defined
+      ignore_errors: true
+
+    - name: Remove the test namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ helm_oci_namespace }}"
+        state: absent
+        wait: true
+      ignore_errors: true
+
+    - name: Log out of the helm registry
+      ansible.builtin.command: "{{ helm_binary }} registry logout {{ helm_oci_registry }}"
+      when: helm_binary is defined
+      ignore_errors: true
+
+    - name: Remove the temporary directory
+      ansible.builtin.file:
+        path: "{{ _tmpd.path }}"
+        state: absent
+      when: _tmpd is defined and _tmpd.path is defined
+      ignore_errors: true
