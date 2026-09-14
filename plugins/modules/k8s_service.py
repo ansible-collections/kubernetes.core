@@ -36,6 +36,7 @@ options:
     - If more than one C(merge_type) is given, the merge_types will be tried in order
     - This defaults to C(['strategic-merge', 'merge']), which is ideal for using the same parameters
       on resource kinds that combine Custom Resources and built-in resources.
+    - I(merge_type=json) has been deprecated and will be removed in version 7.0.0. Use M(kubernetes.core.k8s_json_patch) instead.
     choices:
     - json
     - merge
@@ -250,6 +251,15 @@ def main():
         argument_spec=argspec(),
         supports_check_mode=True,
     )
+
+    # Add deprecation warning for merge_type=json
+    merge_type = module.params.get("merge_type")
+    if merge_type and "json" in merge_type:
+        module.deprecate(
+            "The 'merge_type=json' option is deprecated and will be removed in version 7.0.0. Use the 'kubernetes.core.k8s_json_patch' module instead.",
+            version="7.0.0",
+            collection_name="kubernetes.core",
+        )
 
     try:
         client = get_api_client(module=module)
