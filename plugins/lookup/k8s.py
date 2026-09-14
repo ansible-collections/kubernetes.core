@@ -213,6 +213,7 @@ from collections.abc import KeysView
 
 from ansible.errors import AnsibleError
 from ansible.module_utils.common.validation import check_type_bool
+from ansible.utils.display import Display
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.client import (
     get_api_client,
 )
@@ -220,17 +221,30 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.resource impor
     create_definitions,
 )
 
+display = Display()
+
 try:
     enable_turbo_mode = check_type_bool(os.environ.get("ENABLE_TURBO_MODE"))
 except TypeError:
     enable_turbo_mode = False
 
 if enable_turbo_mode:
+    display.deprecated(
+        "ENABLE_TURBO_MODE is deprecated, as it relies on the cloud.common "
+        "collection which is being retired. Setting this environment "
+        "variable will have no effect once support is removed.",
+        version="8.0.0",
+        collection_name="kubernetes.core",
+    )
     try:
         from ansible_collections.cloud.common.plugins.plugin_utils.turbo.lookup import (
             TurboLookupBase as LookupBase,
         )
     except ImportError:
+        display.warning(
+            "ENABLE_TURBO_MODE is set but the cloud.common collection is not installed. "
+            "Continuing without Turbo mode."
+        )
         from ansible.plugins.lookup import LookupBase  # noqa: F401
 else:
     from ansible.plugins.lookup import LookupBase  # noqa: F401
