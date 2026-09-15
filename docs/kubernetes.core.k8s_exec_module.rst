@@ -481,7 +481,7 @@ Examples
 
 Return Values
 -------------
-Common return values are documented `here <https://docs.ansible.com/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
+Common return values are documented `here <https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
 
 .. raw:: html
 
@@ -535,7 +535,7 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                 </td>
                 <td></td>
                 <td>
-                            <div>The command status code. This attribute is deprecated and will be removed in a future release. Please use rc instead.</div>
+                            <div>The command status code. This attribute is deprecated and will be removed in version 7.0.0. Use RV(result.rc) instead.</div>
                     <br/>
                 </td>
             </tr>

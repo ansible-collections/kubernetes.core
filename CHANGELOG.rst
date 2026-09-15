@@ -4,6 +4,38 @@ Kubernetes Collection Release Notes
 
 .. contents:: Topics
 
+v5.5.0
+======
+
+Release Summary
+---------------
+
+This minor release deprecates Ansible Turbo mode (``ENABLE_TURBO_MODE``), the ``status.values`` return value of the ``helm`` and ``helm_info`` modules, the ``wait_timeout`` parameter of the ``helm`` module, the ``return_code`` return value of the ``k8s_exec`` module, and the ``merge_type=json`` option of the ``k8s_service`` module. It also includes bugfixes for ``helm_repository`` URL comparison and for empty template output handling in ``k8s_info``.
+
+Minor Changes
+-------------
+
+- Remove the remaining ``ansible.module_utils.six`` import to avoid deprecation warnings, replacing it with the Python standard library equivalent (https://github.com/ansible-collections/kubernetes.core/pull/1197).
+- k8s lookup - warn when ``ENABLE_TURBO_MODE`` is set but the ``cloud.common`` collection is not installed, instead of silently falling back to the standard lookup base (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+
+Deprecated Features
+-------------------
+
+- Ansible Turbo mode (``ENABLE_TURBO_MODE``) has been deprecated and will be removed in release 8.0.0, as it depends on the ``cloud.common`` collection, which is being retired (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+- helm - the ``status.values`` return value has been deprecated and will be removed in version 8.0.0. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+- helm - the ``wait_timeout`` parameter has been deprecated and will be removed in version 7.0.0. Use ``timeout`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+- helm_info - the ``status.values`` return value has been deprecated and will be removed in version 8.0.0. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+- k8s_exec - the ``return_code`` return value has been deprecated and will be removed in version 7.0.0. Use ``rc`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+- k8s_service - the ``merge_type=json`` option has been deprecated and will be removed in version 7.0.0. Use ``kubernetes.core.k8s_json_patch`` module instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+
+Bugfixes
+--------
+
+- Ansible Turbo mode - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and later, where the ``cloud.common`` collection is not supported, and fall back to the standard ``AnsibleModule`` instead of failing with ``byte indices must be integers or slices, not str`` (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+- helm_repository - normalize both sides of the repository URL comparison, so that a repository already registered with a trailing slash is recognized as matching instead of failing with ``Repository already have a repository named <name>`` (https://github.com/ansible-collections/kubernetes.core/pull/1236).
+- k8s lookup - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and later, where the ``cloud.common`` collection is not supported. Fall back to the standard ``LookupBase`` instead of failing with a traceback (https://github.com/ansible-collections/kubernetes.core/pull/1253).
+- k8s_info - Handle empty template output gracefully by returning ``changed=false`` instead of failing when Jinja2 template renders to an empty string (https://github.com/ansible-collections/kubernetes.core/issues/1042).
+
 v5.4.4
 ======
 
@@ -30,7 +62,7 @@ Bugfixes
 
 - ee - Add ``meta/execution-environment.yml`` to decouple ansible-builder EE builds from the ``openshift-clients`` system dependency declared in ``bindep.txt``, which is not available in standard UBI repositories and caused builds to fail with ``No package matches 'openshift-clients'`` (https://github.com/ansible-collections/kubernetes.core/issues/1141).
 - helm_repository - Correct handling of repository URLs with trailing slashes (https://github.com/ansible-collections/kubernetes.core/pull/1121).
-- k8s_drain - Fix logic for handling pods with local storage to correctly check for ``empty_dir`` volumes in replicated pods and pods managed by DaemonSets (https://github.com/ansible-collections/kubernetes.core/pull/1095).
+- k8s_drain - Fix logic for handling pods with local storage to correctly check for empty_dir volumes in replicated pods and pods managed by DaemonSets (https://github.com/ansible-collections/kubernetes.core/pull/1095).
 
 v5.4.2
 ======
@@ -38,7 +70,7 @@ v5.4.2
 Release Summary
 ---------------
 
-This release includes bugfixes such as replacing the passing of ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` as well as a security update for selectively redacting sensitive information from kubeconfig.
+This release includes bugfixes such as replacing the passing of ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` as well as a security update for selectively redacting sensitive information from kubeconfig, and adds a new ``release_values`` key to the ``status`` return value.
 
 Minor Changes
 -------------
