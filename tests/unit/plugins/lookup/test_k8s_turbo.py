@@ -16,7 +16,6 @@ class TestK8sTurboMode:
     def cleanup_k8s_module(self):
         """Ensure clean module state before each test."""
         sys.modules.pop("ansible_collections.kubernetes.core.plugins.lookup.k8s", None)
-        yield
 
     @pytest.mark.parametrize("ansible_version", ["2.19.0", "2.21.4"])
     def test_turbo_mode_disabled_on_newer_ansible(self, monkeypatch, ansible_version):
