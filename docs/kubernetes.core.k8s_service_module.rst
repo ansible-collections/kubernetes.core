@@ -247,6 +247,7 @@ Parameters
                         <div>See <a href='https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment'>https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/#use-a-json-merge-patch-to-update-a-deployment</a></div>
                         <div>If more than one <code>merge_type</code> is given, the merge_types will be tried in order</div>
                         <div>This defaults to <code>[&#x27;strategic-merge&#x27;, &#x27;merge&#x27;]</code>, which is ideal for using the same parameters on resource kinds that combine Custom Resources and built-in resources.</div>
+                        <div><em>merge_type=json</em> has been deprecated and will be removed in version 7.0.0. Use <span class='module'>kubernetes.core.k8s_json_patch</span> instead.</div>
                 </td>
             </tr>
             <tr>
@@ -614,7 +615,7 @@ Examples
 
 Return Values
 -------------
-Common return values are documented `here <https://docs.ansible.com/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
+Common return values are documented `here <https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
 
 .. raw:: html
 
