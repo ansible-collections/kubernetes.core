@@ -119,8 +119,8 @@ status:
       returned: always
       description:
         - Dict of Values used to deploy
-        - This return value has been deprecated and will be removed in a release after
-          2027-01-08. Use RV(status.release_values) instead.
+        - This return value has been deprecated and will be removed in version 8.0.0.
+          Use RV(status.release_values) instead.
     release_values:
       type: dict
       returned: always
@@ -213,6 +213,14 @@ def get_release_status(module, release_name, release_state, get_all_values=False
 
     release["release_values"] = module.get_values(release_name, get_all_values)
     release["values"] = release["release_values"]
+
+    # Add deprecation warning for status.values
+    module.deprecate(
+        "The 'status.values' return value is deprecated and will be removed in version 8.0.0. Use 'status.release_values' instead.",
+        version="8.0.0",
+        collection_name="kubernetes.core",
+    )
+
     release["manifest"] = module.get_manifest(release_name)
     release["notes"] = module.get_notes(release_name)
     release["hooks"] = module.get_hooks(release_name)
