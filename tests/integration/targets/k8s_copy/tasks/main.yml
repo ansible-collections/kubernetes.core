@@ -41,6 +41,7 @@
     - include_tasks: test_multi_container_pod.yml
     - include_tasks: test_copy_directory.yml
     - include_tasks: test_copy_large_file.yml
+    - include_tasks: test_copy_repeated.yml
     - include_tasks: test_copy_item_with_space_in_its_name.yml
     - include_tasks: test_init_container_pod.yml
 
