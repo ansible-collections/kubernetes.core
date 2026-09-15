@@ -64,7 +64,9 @@ class TestK8sTurboMode:
                 "ansible_collections.cloud.common.plugins.plugin_utils.turbo.lookup": mock_turbo_lookup,
             },
         ):
-            from ansible_collections.kubernetes.core.plugins.lookup import k8s  # noqa: F401
+            from ansible_collections.kubernetes.core.plugins.lookup import (  # noqa: F401
+                k8s,
+            )
 
             mock_display.deprecated.assert_called()
             assert not mock_display.warning.called
