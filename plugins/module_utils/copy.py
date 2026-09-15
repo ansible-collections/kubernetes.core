@@ -18,7 +18,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import os
+import shlex
 import tarfile
+import time
 from abc import ABCMeta, abstractmethod
 from select import select
 from tempfile import NamedTemporaryFile, TemporaryFile
@@ -296,13 +298,155 @@ class K8SCopyToPod(K8SCopy):
     Copy files/directory from local filesystem into remote Pod
     """
 
+    # Size of the chunks the tar archive is written to stdin with.
+    CHUNK_SIZE = 1024 * 1024
+    SHELL = "/bin/sh"
+
     def __init__(self, module, client):
         super(K8SCopyToPod, self).__init__(module, client)
         self.files_to_copy = list()
+        self.named_temp_file = None
+        self.copy_timeout = module.params.get("copy_timeout")
 
     def close_temp_file(self):
         if self.named_temp_file:
             self.named_temp_file.close()
+
+    def _fail(self, response, msg, stderr=(), **kwargs):
+        """Fail, keeping whatever the remote already wrote to stderr.
+
+        An early close or a stall is usually the symptom, not the cause: tar
+        has typically said why on stderr first.
+        """
+        if stderr:
+            msg = "{0}: {1}".format(msg, "".join(stderr))
+        response.close()
+        self.close_temp_file()
+        self.module.fail_json(
+            msg="Failed to copy local file/directory into Pod: {0}".format(msg),
+            **kwargs,
+        )
+
+    def tar_command(self, dest_file):
+        if self.no_preserve:
+            command = [
+                "tar",
+                "--no-same-permissions",
+                "--no-same-owner",
+                "-xmf",
+                "-",
+            ]
+        else:
+            command = ["tar", "-xmf", "-"]
+
+        if dest_file.startswith("/"):
+            command.extend(["-C", "/"])
+        return command
+
+    def can_bound_stream(self):
+        """Whether the container can run ``sh -c 'head -c ...'``."""
+        error, _out, _err = self._run_from_pod(
+            cmd=[self.SHELL, "-c", "command -v head"]
+        )
+        return (error or {}).get("status") == "Success"
+
+    def remote_command(self, dest_file, archive_size):
+        """Build the command that extracts the archive inside the container.
+
+        The websocket exec protocol the kubernetes client speaks (v4) cannot
+        half-close stdin, so the only EOF the remote process can get is the
+        connection going away. Relying on that races with tar finishing and
+        truncates the file (issue #776), and tar cannot be relied on to stop at
+        the end-of-archive marker either -- busybox tar blocks for EOF.
+
+        Piping through ``head -c`` bounds the stream at the exact archive size,
+        so tar sees a clean EOF, exits on its own, and the API server reports
+        its exit status on the error channel. Only where the container has no
+        shell do we fall back to feeding tar directly, which cannot confirm
+        that the copy completed.
+        """
+        command = self.tar_command(dest_file)
+        if not self.can_bound_stream():
+            self.module.warn(
+                "Container has no '{0}' with 'head', falling back to writing the"
+                " archive straight to tar. The module cannot confirm the copy"
+                " completed; verify the file after copying.".format(self.SHELL)
+            )
+            return command, False
+
+        return [
+            self.SHELL,
+            "-c",
+            "head -c {0} | {1}".format(
+                archive_size, " ".join(shlex.quote(arg) for arg in command)
+            ),
+        ], True
+
+    def _stream_tar_to_pod(self, response, tar_buffer, wait_for_exit):
+        """Feed the archive to the remote extractor and wait for it to finish.
+
+        Writing the last chunk only hands the bytes to the local socket; they
+        still have to cross the API server and reach the container. Closing the
+        connection at that point kills the extractor mid-write and silently
+        truncates the file, which is what issue #776 reports.
+        """
+        stdout, stderr = [], []
+
+        def drain(timeout):
+            response.update(timeout=timeout)
+            if response.peek_stdout():
+                stdout.append(response.read_stdout().rstrip("\n"))
+            if response.peek_stderr():
+                stderr.append(response.read_stderr().rstrip("\n"))
+
+        deadline = time.monotonic() + self.copy_timeout
+
+        chunk = tar_buffer.read(self.CHUNK_SIZE)
+        while chunk:
+            if not response.is_open():
+                self._fail(
+                    response,
+                    "connection to Pod {0}/{1} closed before the whole archive was"
+                    " sent, the remote file is incomplete".format(
+                        self.namespace, self.name
+                    ),
+                    stderr,
+                )
+            if time.monotonic() > deadline:
+                self._fail(
+                    response,
+                    "timed out after {0}s sending the archive to Pod {1}/{2}".format(
+                        self.copy_timeout, self.namespace, self.name
+                    ),
+                    stderr,
+                )
+            # Non-blocking, keeps the receive buffer clear while we write.
+            drain(0)
+            response.write_stdin(chunk)
+            chunk = tar_buffer.read(self.CHUNK_SIZE)
+
+        if not wait_for_exit:
+            # No way to make the extractor exit, so no status to collect: read
+            # whatever it has already said and close, as the module always did.
+            drain(0)
+            response.close()
+            return None, stdout, stderr
+
+        # The archive is on the wire; wait for the extractor to consume it,
+        # exit, and have its status reported on the error channel.
+        while response.is_open():
+            if time.monotonic() > deadline:
+                self._fail(
+                    response,
+                    "timed out after {0}s waiting for tar to finish extracting on Pod"
+                    " {1}/{2}".format(self.copy_timeout, self.namespace, self.name),
+                    stderr,
+                )
+            drain(1)
+
+        error = yaml.safe_load(response.read_channel(ERROR_CHANNEL)) or {}
+        response.close()
+        return error, stdout, stderr
 
     def run(self):
         # remove trailing slash from destination path
@@ -336,65 +480,46 @@ class K8SCopyToPod(K8SCopy):
                 dest_file = os.path.join(dest_file, os.path.basename(src_file))
 
         if not self.check_mode:
-            if self.no_preserve:
-                tar_command = [
-                    "tar",
-                    "--no-same-permissions",
-                    "--no-same-owner",
-                    "-xmf",
-                    "-",
-                ]
-            else:
-                tar_command = ["tar", "-xmf", "-"]
-
-            if dest_file.startswith("/"):
-                tar_command.extend(["-C", "/"])
-
-            response = stream(
-                self.api_instance.connect_get_namespaced_pod_exec,
-                self.name,
-                self.namespace,
-                command=tar_command,
-                stderr=True,
-                stdin=True,
-                stdout=True,
-                tty=False,
-                _preload_content=False,
-                **self.container_arg,
-            )
             with TemporaryFile() as tar_buffer:
+                # Build the archive first: bounding the remote read needs its
+                # exact size.
                 with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
                     tar.add(src_file, dest_file)
+                archive_size = tar_buffer.tell()
                 tar_buffer.seek(0)
-                commands = []
-                # push command in chunk mode
-                size = 1024 * 1024
-                while True:
-                    data = tar_buffer.read(size)
-                    if not data:
-                        break
-                    commands.append(data)
 
-                stderr, stdout = [], []
-                while response.is_open():
-                    if response.peek_stdout():
-                        stdout.append(response.read_stdout().rstrip("\n"))
-                    if response.peek_stderr():
-                        stderr.append(response.read_stderr().rstrip("\n"))
-                    if commands:
-                        cmd = commands.pop(0)
-                        response.write_stdin(cmd)
-                    else:
-                        break
-                response.close()
-                if stderr:
-                    self.close_temp_file()
-                    self.module.fail_json(
-                        command=tar_command,
-                        msg="Failed to copy local file/directory into Pod due to: {0}".format(
-                            "".join(stderr)
-                        ),
+                command, wait_for_exit = self.remote_command(dest_file, archive_size)
+                response = stream(
+                    self.api_instance.connect_get_namespaced_pod_exec,
+                    self.name,
+                    self.namespace,
+                    command=command,
+                    stderr=True,
+                    stdin=True,
+                    stdout=True,
+                    tty=False,
+                    _preload_content=False,
+                    **self.container_arg,
+                )
+                error, stdout, stderr = self._stream_tar_to_pod(
+                    response, tar_buffer, wait_for_exit
+                )
+
+            if error is not None and error.get("status") != "Success":
+                self._fail(
+                    response,
+                    "".join(stderr) or error.get("message", "unknown error"),
+                    command=command,
+                )
+            if error is None and stderr:
+                # Legacy path: no exit status to go on, so any output is fatal.
+                self._fail(response, "".join(stderr), command=command)
+            if stderr:
+                self.module.warn(
+                    "tar wrote to stderr while extracting into Pod {0}/{1}: {2}".format(
+                        self.namespace, self.name, "".join(stderr)
                     )
+                )
             self.close_temp_file()
         if self.content:
             self.module.exit_json(

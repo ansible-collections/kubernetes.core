@@ -143,9 +143,7 @@ def compare_directories(dir1, dir2):
         [len(test.left_only) > 0, len(test.right_only) > 0, len(test.funny_files) > 0]
     ):
         return False
-    (t, mismatch, errors) = filecmp.cmpfiles(
-        dir1, dir2, test.common_files, shallow=False
-    )
+    t, mismatch, errors = filecmp.cmpfiles(dir1, dir2, test.common_files, shallow=False)
     if len(mismatch) > 0 or len(errors) > 0:
         return False
     for common_dir in test.common_dirs:
