@@ -76,9 +76,21 @@ options:
     - This option is ignored when I(content) is set or when I(state) is set to C(from_pod).
     type: bool
     default: False
+  copy_timeout:
+    description:
+    - Maximum time in seconds to spend streaming the archive to the pod and waiting for the remote
+      C(tar) process to finish extracting it.
+    - Raise this when copying large files over a slow connection.
+    - This option is ignored when I(state) is set to C(from_pod).
+    type: int
+    default: 300
+    version_added: 6.6.0
 
 notes:
     - the tar binary is required on the container when copying from local filesystem to pod.
+    - a POSIX shell at C(/bin/sh) and C(head) are also used, when present, to bound the archive
+      sent to the container so that the module can confirm the copy finished. Without them the
+      copy still runs but completion cannot be verified, and a warning is emitted.
     - the (init) container has to be started before you copy files or directories to it.
 """
 
@@ -180,6 +192,7 @@ def argspec():
         "choices": ["to_pod", "from_pod"],
     }
     argument_spec["no_preserve"] = {"type": "bool", "default": False}
+    argument_spec["copy_timeout"] = {"type": "int", "default": 300}
     return argument_spec
 
 
