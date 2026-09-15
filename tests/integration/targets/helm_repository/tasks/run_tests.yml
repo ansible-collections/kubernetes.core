@@ -103,3 +103,81 @@
     binary_path: "{{ helm_binary }}"
     name: test_helm_repo
     state: absent
+
+# https://github.com/ansible-collections/kubernetes.core/issues/1235
+- name: Ensure the trailing slash test repositories don't exist
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - test_helm_repo_slash
+    - test_helm_repo_noslash
+
+- name: Register test_helm_repo_slash directly through helm, keeping the trailing slash
+  ansible.builtin.command: "{{ helm_binary }} repo add test_helm_repo_slash {{ chart_test_repo }}/"
+  changed_when: true
+
+- name: Add test_helm_repo_noslash chart repository without a trailing slash
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo_noslash
+    repo_url: "{{ chart_test_repo }}"
+
+- name: Check idempotency when the stored and the requested URL both have a trailing slash
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo_slash
+    repo_url: "{{ chart_test_repo }}/"
+  register: repository
+
+- name: Assert idempotency when the stored and the requested URL both have a trailing slash
+  assert:
+    that:
+      - repository is not changed
+
+- name: Check idempotency when only the stored URL has a trailing slash
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo_slash
+    repo_url: "{{ chart_test_repo }}"
+  register: repository
+
+- name: Assert idempotency when only the stored URL has a trailing slash
+  assert:
+    that:
+      - repository is not changed
+
+- name: Check idempotency when only the requested URL has a trailing slash
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo_noslash
+    repo_url: "{{ chart_test_repo }}/"
+  register: repository
+
+- name: Assert idempotency when only the requested URL has a trailing slash
+  assert:
+    that:
+      - repository is not changed
+
+- name: Failed to add repository with the same name and a different URL, trailing slash aside
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: test_helm_repo_slash
+    repo_url: "https://other-charts.url/"
+  register: repository_errors
+  ignore_errors: true
+
+- name: Assert that adding repository with the same name and a different URL failed
+  assert:
+    that:
+      - repository_errors is failed
+
+- name: Clean the trailing slash test repositories
+  helm_repository:
+    binary_path: "{{ helm_binary }}"
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - test_helm_repo_slash
+    - test_helm_repo_noslash
