@@ -155,6 +155,25 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>copy_timeout</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.6.0</div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">300</div>
+                </td>
+                <td>
+                        <div>Maximum time in seconds to spend streaming the archive to the pod and waiting for the remote <code>tar</code> process to finish extracting it.</div>
+                        <div>Raise this when copying large files over a slow connection.</div>
+                        <div>This option is ignored when <em>state</em> is set to <code>from_pod</code>.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>host</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -512,6 +531,7 @@ Notes
 
 .. note::
    - the tar binary is required on the container when copying from local filesystem to pod.
+   - a POSIX shell at ``/bin/sh`` and ``head`` are also used, when present, to bound the archive sent to the container so that the module can confirm the copy finished. Without them the copy still runs but completion cannot be verified, and a warning is emitted.
    - the (init) container has to be started before you copy files or directories to it.
    - To avoid SSL certificate validation errors when ``validate_certs`` is *True*, the full certificate chain for the API server must be provided via ``ca_cert`` or in the kubeconfig file.
 
