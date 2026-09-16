@@ -535,7 +535,7 @@ Common return values are documented `here <https://docs.ansible.com/projects/ans
                 </td>
                 <td></td>
                 <td>
-                            <div>The command status code. This attribute is deprecated and will be removed in a future release. Please use rc instead.</div>
+                            <div>The command status code. This attribute is deprecated and will be removed in version 7.0.0. Use RV(result.rc) instead.</div>
                     <br/>
                 </td>
             </tr>
