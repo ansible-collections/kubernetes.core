@@ -545,7 +545,9 @@ Parameters
                 </td>
                 <td>
                         <div>When upgrading package, reset the values to the ones built into the chart, apply the last release&#x27;s values and merge in any overrides from parameters O(release_values), O(values_files) or O(set_values).</div>
-                        <div>If O(reset_values) or O(reuse_values) is set to V(True), this is ignored.</div>
+                        <div>Helm ignores this when <code>--reset-values</code> or <code>--reuse-values</code> is passed. Since O(reset_values) defaults to V(true), it has to be set to V(false), and O(reuse_values) left unset or V(false), for this option to take any effect.</div>
+                        <div><code>helm install</code> does not accept <code>--reset-then-reuse-values</code>, so this option is ignored when O(replace) is set.</div>
+                        <div>The module warns whenever one of those combinations makes this option a no-op.</div>
                         <div>This feature requires helm diff &gt;= 3.9.12.</div>
                 </td>
             </tr>
@@ -567,6 +569,7 @@ Parameters
                 </td>
                 <td>
                         <div>When upgrading package, reset the values to the ones built into the chart.</div>
+                        <div>Defaults to V(true), which makes helm ignore O(reuse_values) and O(reset_then_reuse_values). Set it to V(false) to use either of them.</div>
                 </td>
             </tr>
             <tr>
@@ -586,8 +589,10 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>When upgrading package, specifies wether to reuse the last release&#x27;s values and merge in any overrides from parameters <em>release_values</em>, <em>values_files</em> or <em>set_values</em>.</div>
-                        <div>If <em>reset_values</em> is set to <code>True</code>, this is ignored.</div>
+                        <div>When upgrading package, specifies whether to reuse the last release&#x27;s values and merge in any overrides from parameters O(release_values), O(values_files) or O(set_values).</div>
+                        <div>Helm ignores this when <code>--reset-values</code> is passed. Since O(reset_values) defaults to V(true), it has to be set to V(false) for this option to take any effect.</div>
+                        <div><code>helm install</code> does not accept <code>--reuse-values</code>, so this option is ignored when O(replace) is set.</div>
+                        <div>The module warns whenever one of those combinations makes this option a no-op.</div>
                 </td>
             </tr>
             <tr>
@@ -837,6 +842,28 @@ Parameters
             <tr>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>wait_for_jobs</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                    <div style="font-style: italic; font-size: small; color: darkgreen">added in 6.6.0</div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>When <em>release_state</em> is set to <code>present</code>, and <em>wait</em> is set to <code>True</code>, wait until all jobs are in a completed state before marking the release as successful.</div>
+                        <div>Ignored when used without O(wait).</div>
+                        <div>Requires Helm &gt;= 3.5.0</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>wait_timeout</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -847,7 +874,7 @@ Parameters
                 </td>
                 <td>
                         <div>Timeout when wait option is enabled (helm2 is a number of seconds, helm3 is a duration).</div>
-                        <div>The use of <em>wait_timeout</em> to wait for kubernetes commands to complete has been deprecated and will be removed after 2022-12-01.</div>
+                        <div>The use of <em>wait_timeout</em> to wait for kubernetes commands to complete has been deprecated and will be removed in version 7.0.0. Use O(timeout) instead.</div>
                 </td>
             </tr>
     </table>
@@ -958,6 +985,7 @@ Examples
         release_namespace: default
         force: True
         wait: True
+        wait_for_jobs: True
         replace: True
         update_repo_cache: True
         disable_hook: True
@@ -977,15 +1005,30 @@ Examples
             enabled: True
 
     # Deploy latest version
+    # 'reset_values' defaults to true and helm ignores '--reuse-values' when it is set,
+    # so it has to be turned off explicitly.
     - name: Deploy latest version of Grafana chart using reuse_values
       kubernetes.core.helm:
         name: test
         chart_ref: stable/grafana
         release_namespace: monitoring
         reuse_values: true
+        reset_values: false
         values:
           replicas: 2
           version: 3e8ec0b2dffa40fb97d5342e4af887de95faa8c61a62480dd7f8aa03dffcf533
+
+    # Same for 'reset_then_reuse_values', which helm ignores when either
+    # '--reset-values' or '--reuse-values' is set.
+    - name: Deploy latest version of Grafana chart using reset_then_reuse_values
+      kubernetes.core.helm:
+        name: test
+        chart_ref: stable/grafana
+        release_namespace: monitoring
+        reset_then_reuse_values: true
+        reset_values: false
+        values:
+          replicas: 2
 
 
 
@@ -1175,7 +1218,7 @@ Common return values are documented `here <https://docs.ansible.com/projects/ans
                 <td>always</td>
                 <td>
                             <div>Dict of Values used to deploy.</div>
-                            <div>This return value has been deprecated and will be removed in a release after 2027-01-08. Use RV(status.release_values) instead.</div>
+                            <div>This return value has been deprecated and will be removed in version 8.0.0. Use RV(status.release_values) instead.</div>
                     <br/>
                 </td>
             </tr>
