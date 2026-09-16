@@ -1,5 +1,0 @@
----
-bugfixes:
-  - k8s lookup - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and later, where the ``cloud.common`` collection is not supported.
-    Fall back to the standard ``LookupBase`` instead of failing with a traceback
-    (https://github.com/ansible-collections/kubernetes.core/pull/1253).
