@@ -488,7 +488,7 @@ Common return values are documented `here <https://docs.ansible.com/projects/ans
                 <td>always</td>
                 <td>
                             <div>Dict of Values used to deploy</div>
-                            <div>This return value has been deprecated and will be removed in a release after 2027-01-08. Use RV(status.release_values) instead.</div>
+                            <div>This return value has been deprecated and will be removed in version 8.0.0. Use RV(status.release_values) instead.</div>
                     <br/>
                 </td>
             </tr>

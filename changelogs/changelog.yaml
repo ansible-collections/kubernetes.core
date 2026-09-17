@@ -1320,3 +1320,112 @@ releases:
       name: kubeconfig
       namespace: ''
     release_date: '2026-07-08'
+  6.6.0:
+    changes:
+      bugfixes:
+      - Ansible Turbo mode - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and
+        later, where the ``cloud.common`` collection is not supported, and fall back
+        to the standard ``AnsibleModule`` instead of failing with ``byte indices must
+        be integers or slices, not str`` (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+      - helm - do not pass the upgrade-only ``--reuse-values`` and ``--reset-then-reuse-values``
+        flags to ``helm install``, which rejected them with ``unknown flag`` whenever
+        ``reuse_values`` or ``reset_then_reuse_values`` was combined with ``replace``
+        (https://github.com/ansible-collections/kubernetes.core/pull/1230).
+      - helm - fix the ``reuse_values`` example, which set only ``reuse_values=true``.
+        ``reset_values`` defaults to ``true`` and helm ignores ``--reuse-values``
+        whenever ``--reset-values`` is passed, so following the example reset the
+        release values instead of reusing them (https://github.com/ansible-collections/kubernetes.core/pull/1230).
+      - helm - skip Helm's OCI registry progress messages when parsing the output
+        of ``helm show chart``. As of Helm 4.2.1 these are printed to stdout instead
+        of stderr (https://github.com/helm/helm/pull/32056), which made installing
+        a chart from an OCI registry fail with a YAML scanner error when the chart
+        version contained a ``+`` (https://github.com/ansible-collections/kubernetes.core/pull/1223).
+      - helm_repository - normalize both sides of the repository URL comparison, so
+        that a repository already registered with a trailing slash is recognized as
+        matching instead of failing with ``Repository already have a repository named
+        <name>`` (https://github.com/ansible-collections/kubernetes.core/pull/1236).
+      - helm_template - strip Helm's OCI registry progress messages from the returned
+        ``stdout``, which is documented to contain only the rendered templates (https://github.com/ansible-collections/kubernetes.core/pull/1223).
+      - k8s lookup - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and later,
+        where the ``cloud.common`` collection is not supported. Fall back to the standard
+        ``LookupBase`` instead of failing with a traceback (https://github.com/ansible-collections/kubernetes.core/pull/1253).
+      - k8s_cp - Fix silent truncation when copying to a pod. The module closed the
+        exec connection immediately after writing the last chunk of the tar archive,
+        which killed the remote ``tar`` before it had finished extracting, and never
+        checked the process exit status, so a partial copy was reported as a success.
+        The archive is now bounded with ``head -c`` so ``tar`` gets a clean EOF and
+        exits on its own, and the module waits for that exit and fails on a non-zero
+        status (https://github.com/ansible-collections/kubernetes.core/pull/1217).
+      - k8s_info - Handle empty template output gracefully by returning ``changed=false``
+        instead of failing when Jinja2 template renders to an empty string (https://github.com/ansible-collections/kubernetes.core/issues/1042).
+      deprecated_features:
+      - Ansible Turbo mode (``ENABLE_TURBO_MODE``) has been deprecated and will be
+        removed in release 8.0.0, as it depends on the ``cloud.common`` collection,
+        which is being retired (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+      - helm - the ``status.values`` return value has been deprecated and will be
+        removed in version 8.0.0. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - helm - the ``wait_timeout`` parameter has been deprecated and will be removed
+        in version 7.0.0. Use ``timeout`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - helm_info - the ``status.values`` return value has been deprecated and will
+        be removed in version 8.0.0. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - k8s_exec - the ``return_code`` return value has been deprecated and will be
+        removed in version 7.0.0. Use ``rc`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - k8s_service - the ``merge_type=json`` option has been deprecated and will
+        be removed in version 7.0.0. Use ``kubernetes.core.k8s_json_patch`` module
+        instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      minor_changes:
+      - Remove the remaining ``ansible.module_utils.six`` import to avoid deprecation
+        warnings, replacing it with the Python standard library equivalent (https://github.com/ansible-collections/kubernetes.core/pull/1197).
+      - helm - Add ``wait_for_jobs`` option to wait for all Jobs to complete before
+        marking a Helm release as successful. Requires Helm >= 3.5.0 (https://github.com/ansible-collections/kubernetes.core/pull/1140).
+      - helm - add the ``cleanup_on_fail`` option, mapping to the ``--cleanup-on-fail``
+        flag, to allow deletion of new resources created during a failed upgrade.
+        It complements ``atomic`` and can be combined with it, but cannot be used
+        with ``replace``, since that deploys through ``helm install`` which does not
+        accept the flag (https://github.com/ansible-collections/kubernetes.core/pull/1206).
+      - helm - warn when ``reuse_values`` or ``reset_then_reuse_values`` is requested
+        in a combination helm ignores, which happens by default because ``reset_values``
+        defaults to ``true``, and whenever either is combined with ``replace``. The
+        option descriptions and the examples now state that ``reset_values`` has to
+        be set to ``false`` for either option to take effect (https://github.com/ansible-collections/kubernetes.core/pull/1230).
+      - k8s lookup - warn when ``ENABLE_TURBO_MODE`` is set but the ``cloud.common``
+        collection is not installed, instead of silently falling back to the standard
+        lookup base (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+      - k8s_cp - Add the ``copy_timeout`` option (default 300 seconds) bounding how
+        long the module will spend streaming an archive to a pod and waiting for the
+        remote ``tar`` to finish, so that a stalled copy fails instead of hanging
+        indefinitely (https://github.com/ansible-collections/kubernetes.core/pull/1217).
+      - k8s_cp - Stream the tar archive to the pod chunk by chunk instead of building
+        the whole archive in memory first, which cuts peak memory use when copying
+        large files (https://github.com/ansible-collections/kubernetes.core/pull/1217).
+      - k8s_cp - When copying to a pod, the module now also uses ``/bin/sh`` and ``head``
+        in the container, when present, to confirm the copy completed. Containers
+        without them keep the previous behaviour and get a warning that completion
+        could not be verified (https://github.com/ansible-collections/kubernetes.core/pull/1217).
+      - k8s_info - Support for metadata-only fetches in k8s_info module (https://github.com/ansible-collections/kubernetes.core/pull/1030)
+      - meta - Add ``helm_plugin`` and ``helm_plugin_info`` to the ``helm`` action
+        group, and ``k8s_taint`` to the ``k8s`` action group, so that ``module_defaults``
+        set on those groups applies to them (https://github.com/ansible-collections/kubernetes.core/pull/1216).
+      - use `collections.abc` instead of deprecated `ansible.module_utils.common._collections_compat`
+        (https://github.com/ansible-collections/kubernetes.core/pull/1057).
+      - waiter - Add ``job_complete`` predicate to support waiting for Job resources
+        to reach ``Complete`` or ``Failed`` condition (https://github.com/ansible-collections/kubernetes.core/issues/1201).
+    fragments:
+    - 1253-k8s-lookup-turbo-version-check.yml
+    - 20250108-fix-empty-template-output.yaml
+    - 20251027-metadata-only-fetches.yaml
+    - 20260109-fix-deprecated-calls.yaml
+    - 20260723-remove-module-utils-six.yaml
+    - 20260805-add-job-wait-condition.yaml
+    - 20260807-helm-cleanup-on-fail.yaml
+    - 20260807-helm-wait-for-jobs.yaml
+    - 20260812-action-groups.yaml
+    - 20260813-k8s-cp-truncation.yaml
+    - 20260817-helm-oci-registry-progress-on-stdout.yml
+    - 20260826-helm-value-reuse-options.yaml
+    - 20260908-helm-repository-trailing-slash.yaml
+    - 20260911-deprecate-status-values.yaml
+    - 20260911-update-deprecation-notices.yaml
+    - deprecate-enable-turbo-mode.yml
+    - fix-ansible-lint-warnings.yaml
+    release_date: '2026-09-16'
