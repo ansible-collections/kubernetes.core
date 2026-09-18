@@ -847,7 +847,7 @@ Parameters
                 </td>
                 <td>
                         <div>Timeout when wait option is enabled (helm2 is a number of seconds, helm3 is a duration).</div>
-                        <div>The use of <em>wait_timeout</em> to wait for kubernetes commands to complete has been deprecated and will be removed after 2022-12-01.</div>
+                        <div>The use of <em>wait_timeout</em> to wait for kubernetes commands to complete has been deprecated and will be removed in version 7.0.0. Use O(timeout) instead.</div>
                 </td>
             </tr>
     </table>
@@ -991,6 +991,7 @@ Examples
 
 Return Values
 -------------
+Common return values are documented `here <https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
 Common return values are documented `here <https://docs.ansible.com/projects/ansible/latest/reference_appendices/common_return_values.html#common-return-values>`_, the following are the fields unique to this module:
 
 .. raw:: html
@@ -1175,7 +1176,7 @@ Common return values are documented `here <https://docs.ansible.com/projects/ans
                 <td>always</td>
                 <td>
                             <div>Dict of Values used to deploy.</div>
-                            <div>This return value has been deprecated and will be removed in a release after 2027-01-08. Use RV(status.release_values) instead.</div>
+                            <div>This return value has been deprecated and will be removed in version 8.0.0. Use RV(status.release_values) instead.</div>
                     <br/>
                 </td>
             </tr>

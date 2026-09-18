@@ -1096,13 +1096,14 @@ releases:
         be removed in a release after 2027-01-08. Use ``status.release_values`` instead
         (https://github.com/ansible-collections/kubernetes.core/pull/1056).
       minor_changes:
-      - helm - Add ``release_values`` key to ``status`` return value that can be
-        accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
+      - helm - Add ``release_values`` key to ``status`` return value that can be accessed
+        using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
       - helm_info - Add ``release_values`` key to ``status`` return value that can
         be accessed using Jinja2 dot notation (https://github.com/ansible-collections/kubernetes.core/pull/1056).
-      release_summary: This release includes bugfixes such as replacing the passing of ``warnings`` to ``exit_json``
-        with ``AnsibleModule.warn`` as well as a security update for selectively redacting sensitive information
-        from kubeconfig, and adds a new ``release_values`` key to the ``status`` return value.
+      release_summary: This release includes bugfixes such as replacing the passing
+        of ``warnings`` to ``exit_json`` with ``AnsibleModule.warn`` as well as a
+        security update for selectively redacting sensitive information from kubeconfig,
+        and adds a new ``release_values`` key to the ``status`` return value.
       security_fixes:
       - Selectively redact sensitive info from kubeconfig instead of applying blanket
         ``no_log=True`` (https://github.com/ansible-collections/kubernetes.core/pull/1014).
@@ -1139,9 +1140,65 @@ releases:
   5.4.4:
     changes:
       bugfixes:
-      - meta - Update ``requires_ansible`` in ``runtime.yml`` and README to ``>=2.16.0`` to match the actual minimum supported ``ansible-core`` version (https://github.com/ansible-collections/kubernetes.core/pull/1193).
-      release_summary: This release corrects the documented and enforced minimum ``ansible-core`` version to ``>=2.16.0``.
+      - meta - Update ``requires_ansible`` in ``runtime.yml`` and README to ``>=2.16.0``
+        to match the actual minimum supported ``ansible-core`` version (https://github.com/ansible-collections/kubernetes.core/pull/1193).
+      release_summary: This release corrects the documented and enforced minimum ``ansible-core``
+        version to ``>=2.16.0``.
     release_date: '2026-07-09'
+  5.5.0:
+    changes:
+      bugfixes:
+      - Ansible Turbo mode - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and
+        later, where the ``cloud.common`` collection is not supported, and fall back
+        to the standard ``AnsibleModule`` instead of failing with ``byte indices must
+        be integers or slices, not str`` (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+      - helm_repository - normalize both sides of the repository URL comparison, so
+        that a repository already registered with a trailing slash is recognized as
+        matching instead of failing with ``Repository already have a repository named
+        <name>`` (https://github.com/ansible-collections/kubernetes.core/pull/1236).
+      - k8s lookup - ignore ``ENABLE_TURBO_MODE`` on ansible-core 2.19.0 and later,
+        where the ``cloud.common`` collection is not supported. Fall back to the standard
+        ``LookupBase`` instead of failing with a traceback (https://github.com/ansible-collections/kubernetes.core/pull/1253).
+      - k8s_info - Handle empty template output gracefully by returning ``changed=false``
+        instead of failing when Jinja2 template renders to an empty string (https://github.com/ansible-collections/kubernetes.core/issues/1042).
+      deprecated_features:
+      - Ansible Turbo mode (``ENABLE_TURBO_MODE``) has been deprecated and will be
+        removed in release 8.0.0, as it depends on the ``cloud.common`` collection,
+        which is being retired (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+      - helm - the ``status.values`` return value has been deprecated and will be
+        removed in version 8.0.0. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - helm - the ``wait_timeout`` parameter has been deprecated and will be removed
+        in version 7.0.0. Use ``timeout`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - helm_info - the ``status.values`` return value has been deprecated and will
+        be removed in version 8.0.0. Use ``status.release_values`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - k8s_exec - the ``return_code`` return value has been deprecated and will be
+        removed in version 7.0.0. Use ``rc`` instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      - k8s_service - the ``merge_type=json`` option has been deprecated and will
+        be removed in version 7.0.0. Use ``kubernetes.core.k8s_json_patch`` module
+        instead (https://github.com/ansible-collections/kubernetes.core/issues/1239).
+      minor_changes:
+      - Remove the remaining ``ansible.module_utils.six`` import to avoid deprecation
+        warnings, replacing it with the Python standard library equivalent (https://github.com/ansible-collections/kubernetes.core/pull/1197).
+      - k8s lookup - warn when ``ENABLE_TURBO_MODE`` is set but the ``cloud.common``
+        collection is not installed, instead of silently falling back to the standard
+        lookup base (https://github.com/ansible-collections/kubernetes.core/pull/1242).
+      release_summary: This minor release deprecates Ansible Turbo mode (``ENABLE_TURBO_MODE``),
+        the ``status.values`` return value of the ``helm`` and ``helm_info`` modules,
+        the ``wait_timeout`` parameter of the ``helm`` module, the ``return_code``
+        return value of the ``k8s_exec`` module, and the ``merge_type=json`` option
+        of the ``k8s_service`` module. It also includes bugfixes for ``helm_repository``
+        URL comparison and for empty template output handling in ``k8s_info``.
+    fragments:
+    - 1253-k8s-lookup-turbo-version-check.yml
+    - 20250108-fix-empty-template-output.yaml
+    - 20260723-remove-module-utils-six.yaml
+    - 20260908-helm-repository-trailing-slash.yaml
+    - 20260911-deprecate-status-values.yaml
+    - 20260911-update-deprecation-notices.yaml
+    - 5.5.0.yml
+    - deprecate-enable-turbo-mode.yml
+    - fix-ansible-lint-warnings.yaml
+    release_date: '2026-09-15'
   6.0.0:
     changes:
       breaking_changes:
