@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm_repository - normalize both sides of the repository URL comparison, so that a repository already registered with a trailing slash is recognized as matching instead of failing with ``Repository already have a repository named <name>`` (https://github.com/ansible-collections/kubernetes.core/pull/1236).
