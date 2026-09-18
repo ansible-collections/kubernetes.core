@@ -88,4 +88,3 @@
       name: "{{ helm_namespace }}"
       state: absent
     ignore_errors: true
-  when: helm_version | string is ansible.builtin.version('3.7.0', '<=')

@@ -136,7 +136,7 @@
               - '"--insecure-skip-tls-verify" in _result.command'
               - '"--repo https://charts.bitnami.com/bitnami" in _result.command'
               - '"--username ansible" in _result.command'
-              - '"--password ***" in _result.command'
+              - '"--password " in _result.command' # can be followed by '***' or '$REDACTED$'
               - '"--keyring pubring.gpg" in _result.command'
               - '"Module did not set no_log for pass_credentials" not in _result.stderr'
 

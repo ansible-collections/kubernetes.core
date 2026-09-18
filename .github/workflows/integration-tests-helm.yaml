@@ -15,6 +15,8 @@ on:
     branches:
       - main
       - stable-*
+  
+permissions: {}
 
 jobs:
   splitter:
@@ -23,6 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       helm_targets: ${{ steps.select-targets.outputs.targets }}
+    permissions:
+      pull-requests: read
+      contents: read
     steps:
       - name: Checkout the collection repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,6 +35,7 @@ jobs:
           path: ${{ env.source_dir }}
           fetch-depth: "0"
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: list changes for pull request
         id: splitter
@@ -46,7 +52,8 @@ jobs:
             data = os.environ.get("ALL_TEST_TARGETS")
             targets = []
             for target in data.split(";"):
-              targets.extend([v for v in target.split(':', maxsplit=1)[1].split(',') if v.startswith('helm')])
+              if target and ':' in target:
+                targets.extend([v for v in target.split(':', maxsplit=1)[1].split(',') if v.startswith('helm')])
             fh.write(f'targets={json.dumps(targets)}\n')
         shell: python
         env:
@@ -64,10 +71,11 @@ jobs:
       community_general: "./community_general"
       ansible-version: "milestone"
       python-version: "3.13"
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
-        # Ref must match a branch/tag on github.com/ansible/ansible (e.g. stable-2.18, not 2.18).
         helm-version:
           - v3.0.0
           - v3.1.0
@@ -81,7 +89,7 @@ jobs:
           - latest
         ansible_test_target: ${{ fromJson(needs.splitter.outputs.helm_targets) }}
         exclude:
-          # helm_registry_auth requires Helm >= 3.8.0
+          # helm_registry_auth: only test against recent versions to reduce CI cost
           - ansible_test_target: "helm_registry_auth"
             helm-version: "v3.0.0"
           - ansible_test_target: "helm_registry_auth"
@@ -131,6 +139,7 @@ jobs:
         with:
           path: ${{ env.source }}
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -139,9 +148,11 @@ jobs:
 
       # install ansible
       - name: Install ansible-core (${{ env.ansible-version }})
+        env:
+          ANSIBLE_VERSION: ${{ env.ansible-version }}
         run: >-
           python3 -m pip install
-          https://github.com/ansible/ansible/archive/${{ env.ansible-version }}.tar.gz
+          https://github.com/ansible/ansible/archive/$ANSIBLE_VERSION.tar.gz
           --disable-pip-version-check
         shell: bash
 

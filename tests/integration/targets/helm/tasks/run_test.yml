@@ -25,7 +25,7 @@
 
     - name: Test helm upgrade with reset_then_reuse_values
       ansible.builtin.include_tasks: test_helm_reset_then_reuse_values.yml
-      when: helm_version | string is ansible.builtin.version('3.14.0')
+      when: helm_version | string is ansible.builtin.version('3.14.0', '>=')
 
     - name: Test helm dependency update
       ansible.builtin.include_tasks: test_up_dep.yml
