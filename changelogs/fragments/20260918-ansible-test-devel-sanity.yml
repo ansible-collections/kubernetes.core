@@ -1,0 +1,3 @@
+trivial:
+  - Fix ansible-test sanity failures on ansible-core devel
+    (https://github.com/ansible-collections/kubernetes.core/pull/1268).
