@@ -1,6 +1,6 @@
 ---
 - name: Create temporary directory for helm chart
-  tempfile:
+  ansible.builtin.tempfile:
     suffix: .helm
     state: directory
   register: helm_dir
@@ -16,7 +16,8 @@
         binary_path: "{{ helm_binary }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
-        plugin_version: 3.9.14
+        verify: false
+        plugin_version: "{{ helm_version | string is ansible.builtin.version('4.0.0', '>=') | ternary('3.14.0', '3.10.0') }}"
 
     - name: Copy test chart
       ansible.builtin.copy:
@@ -58,7 +59,7 @@
       register: helm_upgrade
 
     - name: Ensure task did not reported change
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is not changed
 
@@ -75,7 +76,7 @@
       register: helm_upgrade
 
     - name: Ensure task reported change
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is changed
 
@@ -88,19 +89,19 @@
       ignore_errors: true
 
     - name: Delete Helm folders
-      file:
+      ansible.builtin.file:
         path: /tmp/helm/
         state: absent
 
     - name: Install old version of helm
       ansible.builtin.include_role:
-        name: install_helm
+        name: setup_helm
       vars:
-        helm_version: "v3.8.0"
+        setup_helm_version: "v3.8.0"
 
     - name: Upgrade helm release (with reset_then_reuse_values=true)
       kubernetes.core.helm:
-        binary_path: "{{ helm_binary }}"
+        binary_path: "{{ setup_helm_binary_path }}"
         chart_ref: "{{ test_chart_path }}"
         reuse_values: false
         reset_then_reuse_values: true
@@ -112,25 +113,26 @@
       ignore_errors: true
 
     - name: Debug
-      debug:
+      ansible.builtin.debug:
         var: helm_upgrade
 
     - name: Ensure warning for Helm version
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is failed
           - '"reset_then_reuse_values requires helm >= 3.14.0, current version is" in helm_upgrade.msg'
 
     - name: Install helm diff
       helm_plugin:
-        binary_path: "{{ helm_binary }}"
+        binary_path: "{{ setup_helm_binary_path }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
         plugin_version: "3.8.0"
+        verify: false
 
     - name: Upgrade helm release (with reset_then_reuse_values=true)
       kubernetes.core.helm:
-        binary_path: "{{ helm_binary }}"
+        binary_path: "{{ setup_helm_binary_path }}"
         chart_ref: "{{ test_chart_path }}"
         reuse_values: false
         reset_then_reuse_values: true
@@ -142,23 +144,23 @@
       ignore_errors: true
 
     - name: Debug
-      debug:
+      ansible.builtin.debug:
         var: helm_upgrade
 
     - name: Ensure warning for Helm Diff version
-      assert:
+      ansible.builtin.assert:
         that:
           - helm_upgrade is failed
           - '"reset_then_reuse_values requires helm diff >= 3.9.12, current version is" in helm_upgrade.msg'
 
   always:
     - name: Delete Helm folders
-      file:
+      ansible.builtin.file:
         path: /tmp/helm/
         state: absent
 
     - name: Remove temporary directory
-      file:
+      ansible.builtin.file:
         path: "{{ helm_dir.path }}"
         state: absent
       ignore_errors: true

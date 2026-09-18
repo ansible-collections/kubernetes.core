@@ -1,22 +1,14 @@
 ---
 - name: Ensure helm is not installed
-  file:
-    path: "{{ item }}"
+  ansible.builtin.file:
+    path: "/tmp/helm"
     state: absent
-  with_items:
-    - "/tmp/helm"
 
 - name: Check failed if helm is not installed
-  include_tasks: test_helm_not_installed.yml
+  ansible.builtin.include_tasks: test_helm_not_installed.yml
 
-- name: Install Helm v4
-  ansible.builtin.include_role:
-    name: install_helm
-  vars:
-    helm_version: v3.6.0
+- name: Run tests
+  ansible.builtin.include_tasks: run_test.yml
 
 - name: Test helm uninstall
   ansible.builtin.include_tasks: test_helm_uninstall.yml
-
-- name: Run tests
-  include_tasks: run_test.yml
