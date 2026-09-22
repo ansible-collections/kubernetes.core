@@ -1,8 +1,4 @@
 ---
-- name: "Install {{ helm_version }}"
-  include_role:
-    name: install_helm
-
 - block:
     - name: Install env plugin in check mode
       helm_plugin:
@@ -13,7 +9,7 @@
       register: check_install_env
       check_mode: true
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - check_install_env.changed
 
@@ -25,7 +21,7 @@
         verify: false
       register: install_env
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - install_env.changed
 
@@ -34,7 +30,7 @@
         binary_path: "{{ helm_binary }}"
       register: plugin_info
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - plugin_info.plugin_list is defined
 
@@ -46,7 +42,7 @@
         verify: false
       register: install_env
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - not install_env.changed
 
@@ -59,7 +55,7 @@
       register: check_uninstall_env
       check_mode: true
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - check_uninstall_env.changed
 
@@ -70,7 +66,7 @@
         plugin_name: env
       register: uninstall_env
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - uninstall_env.changed
 
@@ -81,7 +77,7 @@
         plugin_name: env
       register: uninstall_env
 
-    - assert:
+    - ansible.builtin.assert:
         that:
           - not uninstall_env.changed
 
@@ -95,7 +91,7 @@
 # https://github.com/ansible-collections/community.kubernetes/issues/399
 - block:
     - name: Copy required plugin files
-      copy:
+      ansible.builtin.copy:
         src: "files/sample_plugin"
         dest: "/tmp/helm_plugin_test/"
 
@@ -107,7 +103,7 @@
       register: sample_plugin_output
 
     - name: Assert that sample_plugin is installed or not
-      assert:
+      ansible.builtin.assert:
         that:
           - sample_plugin_output.changed
 
@@ -117,13 +113,13 @@
       register: r
 
     - name: Set sample_plugin version
-      set_fact:
+      ansible.builtin.set_fact:
         plugin_version: "{{ ( r.plugin_list | selectattr('name', 'equalto', plugin_name) | list )[0].version }}"
       vars:
         plugin_name: "sample_plugin"
 
     - name: Assert if sample_plugin with multiline comment is installed
-      assert:
+      ansible.builtin.assert:
         that:
           - plugin_version == "0.0.1"
   always:
@@ -156,7 +152,7 @@
       register: plugin_list
 
     - name: assert that unittest has been installed with specified version
-      assert:
+      ansible.builtin.assert:
         that:
           - plugin_list.plugin_list[0].version == "1.0.1"
 
@@ -169,7 +165,7 @@
       check_mode: true
 
     - name: Assert that module reported change while running in check mode
-      assert:
+      ansible.builtin.assert:
         that:
           - _update_checkmode.changed
           - '"Updated plugin: unittest" not in _update_checkmode.stdout'
@@ -181,8 +177,8 @@
         state: latest
       register: _update
 
-    - name: assert update was performed
-      assert:
+    - name: Assert update was performed
+      ansible.builtin.assert:
         that:
           - _update.changed
           - '"Updated plugin: unittest" in _update.stdout'

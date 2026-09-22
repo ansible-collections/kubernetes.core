@@ -14,7 +14,7 @@
       register: install
 
     - name: Validate that insecure flag is not set
-      assert:
+      ansible.builtin.assert:
         that:
           - install is changed
           - '"--insecure-skip-tls-verify" not in install.command'
@@ -30,18 +30,18 @@
       ignore_errors: true
 
     - name: Validate that insecure flag IS set if helm version is >= 3.16.0
-      assert:
+      ansible.builtin.assert:
         that:
           - install is changed
           - '"--insecure-skip-tls-verify" in install.command'
-      when: '"v3.16.0" <= helm_version'
+      when: helm_version | string is ansible.builtin.version("3.16.0", ">=")
 
     - name: Validate that feature fails for helm < 3.16.0
-      assert:
+      ansible.builtin.assert:
         that:
           - install is failed
           - '"insecure_skip_tls_verify requires helm >= 3.16.0" in install.msg'
-      when: 'helm_version < "v3.16.0"'
+      when: helm_version | string is ansible.builtin.version("3.16.0", "<")
 
   always:
     - name: Remove helm namespace
