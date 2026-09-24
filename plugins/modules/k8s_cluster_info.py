@@ -178,6 +178,12 @@ def execute_module(module, client):
             if resource.group == ""
             else "/".join([resource.group, resource.group_version.split("/")[-1]])
         )
+
+        kind = getattr(resource, "kind", None)
+        if not kind:
+            module.warn(f"Resource is missing 'kind': {resource}")
+            continue
+
         results[key][resource.kind] = {
             "categories": resource.categories if resource.categories else [],
             "name": resource.name,
