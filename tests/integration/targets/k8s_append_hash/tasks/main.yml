@@ -61,6 +61,126 @@
           - k8s_configmap3 is changed
           - k8s_configmap1.result.metadata.name != k8s_configmap3.result.metadata.name
 
+    - name: Create config map with binaryData
+      k8s:
+        definition:
+          metadata:
+            name: config-map-binary-test
+            namespace: "{{ test_namespace }}"
+          apiVersion: v1
+          kind: ConfigMap
+          binaryData:
+            one.bin: "b25l"
+        append_hash: yes
+      register: k8s_configmap_binary1
+
+    - name: Check configmap with binaryData is created with a hash
+      assert:
+        that:
+          - k8s_configmap_binary1 is changed
+          - k8s_configmap_binary1.result.metadata.name != 'config-map-binary-test'
+          - k8s_configmap_binary1.result.metadata.name[:-10] == 'config-map-binary-test-'
+
+    - name: Recreate same config map with binaryData
+      k8s:
+        definition:
+          metadata:
+            name: config-map-binary-test
+            namespace: "{{ test_namespace }}"
+          apiVersion: v1
+          kind: ConfigMap
+          binaryData:
+            one.bin: "b25l"
+        append_hash: yes
+      register: k8s_configmap_binary2
+
+    - name: Check configmaps with unchanged binaryData produce the same hash
+      assert:
+        that:
+          - k8s_configmap_binary2 is not changed
+          - k8s_configmap_binary1.result.metadata.name == k8s_configmap_binary2.result.metadata.name
+
+    - name: Add key to config map binaryData
+      k8s:
+        definition:
+          metadata:
+            name: config-map-binary-test
+            namespace: "{{ test_namespace }}"
+          apiVersion: v1
+          kind: ConfigMap
+          binaryData:
+            one.bin: "b25l"
+            two.bin: "dHdv"
+        append_hash: yes
+      register: k8s_configmap_binary3
+
+    # https://github.com/ansible-collections/kubernetes.core/issues/666
+    - name: Check configmaps with changed binaryData produce a different hash
+      assert:
+        that:
+          - k8s_configmap_binary3 is changed
+          - k8s_configmap_binary1.result.metadata.name != k8s_configmap_binary3.result.metadata.name
+
+    - name: Create secret with stringData
+      k8s:
+        definition:
+          metadata:
+            name: secret-string-test
+            namespace: "{{ test_namespace }}"
+          apiVersion: v1
+          kind: Secret
+          stringData:
+            one: hello
+        append_hash: yes
+      register: k8s_secret_string1
+
+    - name: Check secret with stringData is created with a hash
+      assert:
+        that:
+          - k8s_secret_string1 is changed
+          - k8s_secret_string1.result.metadata.name != 'secret-string-test'
+          - k8s_secret_string1.result.metadata.name[:-10] == 'secret-string-test-'
+
+    - name: Recreate same secret with stringData
+      k8s:
+        definition:
+          metadata:
+            name: secret-string-test
+            namespace: "{{ test_namespace }}"
+          apiVersion: v1
+          kind: Secret
+          stringData:
+            one: hello
+        append_hash: yes
+      register: k8s_secret_string2
+
+    - name: Check secrets with unchanged stringData produce the same hash
+      assert:
+        that:
+          - k8s_secret_string2 is not changed
+          - k8s_secret_string1.result.metadata.name == k8s_secret_string2.result.metadata.name
+
+    - name: Add key to secret stringData
+      k8s:
+        definition:
+          metadata:
+            name: secret-string-test
+            namespace: "{{ test_namespace }}"
+          apiVersion: v1
+          kind: Secret
+          stringData:
+            one: hello
+            two: world
+        append_hash: yes
+      register: k8s_secret_string3
+
+    # https://github.com/ansible-collections/kubernetes.core/issues/666
+    - name: Check secrets with changed stringData produce a different hash
+      assert:
+        that:
+          - k8s_secret_string3 is changed
+          - k8s_secret_string1.result.metadata.name != k8s_secret_string3.result.metadata.name
+
   always:
     - name: Ensure that namespace is removed
       k8s:
