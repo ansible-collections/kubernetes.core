@@ -155,7 +155,7 @@ jobs:
         env:
           ANSIBLE_VERSION: ${{ env.ansible-version }}
         run: |
-          curl -sSL --retry 5 --retry-delay 10 --retry-all-errors \
+          curl -sSL --proto '=https' --tlsv1.2 --retry 5 --retry-delay 10 --retry-all-errors \
             "https://github.com/ansible/ansible/archive/${ANSIBLE_VERSION}.tar.gz" \
             -o ansible.tar.gz
           python3 -m pip install ./ansible.tar.gz --disable-pip-version-check
@@ -185,7 +185,7 @@ jobs:
       - name: Disable selinux with selinux_please_lie_to_me
         run: |
           python3 -m pip uninstall -y selinux
-          python3 -m pip install selinux_please_lie_to_me
+          python3 -m pip install --only-binary=:all: selinux_please_lie_to_me==1.0.1
         shell: bash
 
       - name: Install python requirements
