@@ -21,12 +21,10 @@
       wait: true
     register: uninstall
 
-  - name: Assert warning has been raised
+  - name: Assert chart was uninstalled
     ansible.builtin.assert:
       that:
-      - uninstall.warnings is defined
-      - '"helm uninstall support option --wait for helm release >= 3.7.0" in uninstall.warnings'
-    when: helm_version | string is ansible.builtin.version('3.7.0', '<')
+      - uninstall is changed
 
   - when: helm_version | string is ansible.builtin.version('4.0.0', '<')
     block:

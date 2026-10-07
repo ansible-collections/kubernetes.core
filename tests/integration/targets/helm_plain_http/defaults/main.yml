@@ -1,5 +1,12 @@
 ---
 helm_binary: helm
 setup_helm_version_binary_path: "{{ helm_binary }}"
-chart_test_oci: "oci://registry-1.docker.io/bitnamicharts/redis"
 test_namespace: helm-plain-http
+
+# Matches the plain-HTTP registry stood up by the setup_helm_registry role.
+registry_host: "localhost:6035"
+registry_username: testuser
+registry_password: 'pass123!'
+registry_repo_path: testing
+chart_name: test-chart-plain-http
+chart_version: "0.1.0"

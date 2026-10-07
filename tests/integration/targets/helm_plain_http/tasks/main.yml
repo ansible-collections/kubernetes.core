@@ -1,88 +1,167 @@
 ---
-- name: Run test for helm
+- name: Test plain_http against a plain-HTTP OCI registry
   vars:
-    tests_should_failed: "{{ helm_version | string is ansible.builtin.version('3.13.0', '<=') }}"
+    plain_http_supported: "{{ helm_version | string is ansible.builtin.version('3.13.0', '>=') }}"
+    chart_ref_oci: "oci://{{ registry_host }}/{{ registry_repo_path }}/{{ chart_name }}"
   block:
-    # helm
-    - name: Run helm with plain_http
+    - name: Create a temporary directory to hold the chart
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: .chart
+      register: _tmpd
+
+    # helm < 3.13.0 cannot talk to a plain-HTTP OCI registry: the modules reject
+    # plain_http before issuing any helm command, so no chart has to be present.
+    - name: Ensure plain_http is rejected on unsupported helm versions
+      when: not (plain_http_supported | bool)
+      block:
+        - name: Attempt helm install with plain_http
+          kubernetes.core.helm:
+            binary_path: "{{ helm_binary }}"
+            chart_ref: "{{ chart_ref_oci }}"
+            chart_version: "{{ chart_version }}"
+            release_name: test-secure
+            release_namespace: "{{ test_namespace }}"
+            create_namespace: true
+            plain_http: true
+          register: install_chart
+          ignore_errors: true
+
+        - name: Ensure helm failed with the version error
+          ansible.builtin.assert:
+            that:
+              - install_chart is failed
+              - '"plain_http requires helm >= 3.13.0" in install_chart.msg'
+
+        - name: Attempt helm_pull with plain_http
+          kubernetes.core.helm_pull:
+            chart_ref: "{{ chart_ref_oci }}"
+            chart_version: "{{ chart_version }}"
+            destination: "{{ _tmpd.path }}"
+            binary_path: "{{ helm_binary }}"
+            plain_http: true
+          register: pull_chart
+          ignore_errors: true
+
+        - name: Ensure helm_pull failed with the version error
+          ansible.builtin.assert:
+            that:
+              - pull_chart is failed
+              - '"plain_http requires helm >= 3.13.0" in pull_chart.msg'
+
+        - name: Attempt helm_template with plain_http
+          kubernetes.core.helm_template:
+            binary_path: "{{ helm_binary }}"
+            chart_ref: "{{ chart_ref_oci }}"
+            chart_version: "{{ chart_version }}"
+            plain_http: true
+          register: template
+          ignore_errors: true
+
+        - name: Ensure helm_template failed with the version error
+          ansible.builtin.assert:
+            that:
+              - template is failed
+              - '"plain_http requires helm >= 3.13.0" in template.msg'
+
+    # helm >= 3.13.0 exercises plain HTTP end to end against the registry stood up
+    # by the setup_helm_registry role, so the assertions prove the flag actually
+    # reaches a plain-HTTP registry rather than just appearing in the command.
+    - name: Exercise plain_http end to end
+      when: plain_http_supported | bool
+      block:
+        - name: Copy the test chart
+          ansible.builtin.copy:
+            src: "{{ chart_name }}"
+            dest: "{{ _tmpd.path }}/"
+
+        - name: Push the chart to the plain-HTTP registry
+          ansible.builtin.include_role:
+            name: push_to_helm_registry
+          vars:
+            chart_local_path: "{{ _tmpd.path }}/{{ chart_name }}"
+            chart_repo_path: "{{ registry_repo_path }}"
+            helm_binary_path: "{{ helm_binary }}"
+
+        - name: Log into the helm registry
+          ansible.builtin.shell: >-
+            echo '{{ registry_password }}' | {{ helm_binary }} registry login
+            -u {{ registry_username }} --password-stdin {{ registry_host }}
+            {{ helm_version | string is ansible.builtin.version('3.18.0', '>=') | ternary('--plain-http', '') }}
+
+        - name: Install the chart over plain HTTP
+          kubernetes.core.helm:
+            binary_path: "{{ helm_binary }}"
+            chart_ref: "{{ chart_ref_oci }}"
+            chart_version: "{{ chart_version }}"
+            release_name: test-secure
+            release_namespace: "{{ test_namespace }}"
+            create_namespace: true
+            plain_http: true
+          register: install_chart
+
+        - name: Ensure the release installed over plain HTTP
+          ansible.builtin.assert:
+            that:
+              - install_chart is changed
+              - '"--plain-http" in install_chart.command'
+
+        - name: Pull the chart over plain HTTP
+          kubernetes.core.helm_pull:
+            chart_ref: "{{ chart_ref_oci }}"
+            chart_version: "{{ chart_version }}"
+            destination: "{{ _tmpd.path }}"
+            binary_path: "{{ helm_binary }}"
+            plain_http: true
+          register: pull_chart
+
+        - name: Ensure the chart was pulled over plain HTTP
+          ansible.builtin.assert:
+            that:
+              - pull_chart is not failed
+              - '"--plain-http" in pull_chart.command'
+
+        - name: Render the chart over plain HTTP
+          kubernetes.core.helm_template:
+            binary_path: "{{ helm_binary }}"
+            chart_ref: "{{ chart_ref_oci }}"
+            chart_version: "{{ chart_version }}"
+            plain_http: true
+          register: template
+
+        - name: Ensure the chart rendered over plain HTTP
+          ansible.builtin.assert:
+            that:
+              - template is not failed
+              - '"--plain-http" in template.command'
+              - "'kind: ConfigMap' in template.stdout"
+
+  always:
+    - name: Uninstall the release
       kubernetes.core.helm:
         binary_path: "{{ helm_binary }}"
-        # chart_ref: "{{ chart_test_oci }}"
-        chart_repo_url: https://charts.bitnami.com/bitnami
-        chart_ref: redis
-        chart_version: '17.0.5'
-        release_values:
-          architecture: standalone
         release_name: test-secure
         release_namespace: "{{ test_namespace }}"
-        create_namespace: true
-        plain_http: true
-      register: install_chart
+        state: absent
+      when: plain_http_supported | bool
       ignore_errors: true
 
-    - name: Ensure module failed as expected
-      ansible.builtin.assert:
-        that:
-          - install_chart is failed
-          - '"plain_http requires helm >= 3.13.0" in install_chart.msg'
-      when: tests_should_failed | bool
-
-    - name: Ensure the result command contains the expected option
-      ansible.builtin.assert:
-        that:
-          - install_chart is not failed
-          - '"--plain-http" in install_chart.command'
-      when: not (tests_should_failed | bool)
-
-    # helm_pull
-    - name: Trying to download helm chart with option plain_http
-      kubernetes.core.helm_pull:
-        # chart_ref: "{{ chart_test_oci }}"
-        chart_repo_url: https://charts.bitnami.com/bitnami
-        chart_ref: redis
-        chart_version: '17.0.5'
-        destination: "{{ playbook_dir }}"
-        binary_path: "{{ helm_binary }}"
-        plain_http: true
-      register: pull_chart
+    - name: Remove the test namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ test_namespace }}"
+        state: absent
+        wait: true
       ignore_errors: true
 
-    - name: Ensure module failed as expected
-      ansible.builtin.assert:
-        that:
-          - pull_chart is failed
-          - '"plain_http requires helm >= 3.13.0" in pull_chart.msg'
-      when: tests_should_failed | bool
-
-    - name: Ensure the result command contains the expected option
-      ansible.builtin.assert:
-        that:
-          - pull_chart is not failed
-          - '"--plain-http" in pull_chart.command'
-      when: not (tests_should_failed | bool)
-
-    # helm_template
-    - name: Test helm render template
-      kubernetes.core.helm_template:
-        binary_path: "{{ helm_binary }}"
-        chart_repo_url: https://charts.bitnami.com/bitnami
-        chart_ref: redis
-        chart_version: '17.0.5'
-        output_dir: "{{ playbook_dir }}"
-        plain_http: true
-      register: template
+    - name: Log out of the helm registry
+      ansible.builtin.command: "{{ helm_binary }} registry logout {{ registry_host }}"
+      when: plain_http_supported | bool
       ignore_errors: true
 
-    - name: Ensure module failed as expected
-      ansible.builtin.assert:
-        that:
-          - template is failed
-          - '"plain_http requires helm >= 3.13.0" in template.msg'
-      when: tests_should_failed | bool
-
-    - name: Ensure the result command contains the expected option
-      ansible.builtin.assert:
-        that:
-          - template is not failed
-          - '"--plain-http" in template.command'
-      when: not (tests_should_failed | bool)
+    - name: Remove the temporary directory
+      ansible.builtin.file:
+        path: "{{ _tmpd.path }}"
+        state: absent
+      ignore_errors: true

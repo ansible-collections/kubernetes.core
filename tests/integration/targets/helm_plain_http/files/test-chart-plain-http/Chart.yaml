@@ -1,0 +1,6 @@
+apiVersion: v2
+name: test-chart-plain-http
+description: A minimal chart used to exercise plain_http against a plain-HTTP OCI registry
+type: application
+version: 0.1.0
+appVersion: "default"
