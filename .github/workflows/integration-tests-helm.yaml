@@ -158,7 +158,7 @@ jobs:
           curl -sSL --proto '=https' --tlsv1.2 --retry 5 --retry-delay 10 --retry-all-errors \
             "https://github.com/ansible/ansible/archive/${ANSIBLE_VERSION}.tar.gz" \
             -o ansible.tar.gz
-          python3 -m pip install ./ansible.tar.gz --disable-pip-version-check
+          python3 -m pip install --disable-pip-version-check ./ansible.tar.gz
           rm ansible.tar.gz
         shell: bash
 
@@ -189,7 +189,7 @@ jobs:
         shell: bash
 
       - name: Install python requirements
-        run: python3 -m pip install -r test-requirements.txt -r requirements.txt
+        run: python3 -m pip install -r requirements.txt -r test-requirements.txt
         shell: bash
         working-directory: ${{ steps.install-src.outputs.collection_path }}
 
