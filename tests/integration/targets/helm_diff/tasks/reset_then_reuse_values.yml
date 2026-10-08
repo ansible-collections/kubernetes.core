@@ -98,10 +98,15 @@
         name: setup_helm
       vars:
         setup_helm_version: "v3.8.0"
+        helm_install_path: "{{ helm_dir.path }}/helm_v3_8_0"
+
+    - name: Set path to helm binary v3.8.0
+      ansible.builtin.set_fact:
+        helm_binary_path_v3_8_0: "{{ helm_dir.path }}/helm_v3_8_0/helm"
 
     - name: Upgrade helm release (with reset_then_reuse_values=true)
       kubernetes.core.helm:
-        binary_path: "{{ setup_helm_binary_path }}"
+        binary_path: "{{ helm_binary_path_v3_8_0 }}"
         chart_ref: "{{ test_chart_path }}"
         reuse_values: false
         reset_then_reuse_values: true
@@ -124,7 +129,7 @@
 
     - name: Install helm diff
       helm_plugin:
-        binary_path: "{{ setup_helm_binary_path }}"
+        binary_path: "{{ helm_binary_path_v3_8_0 }}"
         state: present
         plugin_path: https://github.com/databus23/helm-diff
         plugin_version: "3.8.0"
@@ -132,7 +137,7 @@
 
     - name: Upgrade helm release (with reset_then_reuse_values=true)
       kubernetes.core.helm:
-        binary_path: "{{ setup_helm_binary_path }}"
+        binary_path: "{{ helm_binary_path_v3_8_0 }}"
         chart_ref: "{{ test_chart_path }}"
         reuse_values: false
         reset_then_reuse_values: true

@@ -215,6 +215,8 @@ You can run the collection's test suites with the commands:
     make test-integration
     make test-unit
 
+For instructions on running Helm integration tests locally, see the [integration tests README](https://github.com/ansible-collections/kubernetes.core/blob/main/tests/integration/README.md).
+
 ### Testing with `molecule`
 
 There are also integration tests in the `molecule` directory which are meant to be run against a local Kubernetes cluster, e.g. using [KinD](https://kind.sigs.k8s.io) or [Minikube](https://minikube.sigs.k8s.io). To set up a local cluster using KinD and run Molecule:

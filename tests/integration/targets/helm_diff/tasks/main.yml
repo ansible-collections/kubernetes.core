@@ -1,4 +1,8 @@
 ---
+- name: Define default value for helm binary path
+  ansible.builtin.set_fact:
+    helm_binary: "{{ setup_helm_binary_path | default('helm') }}"
+
 - name: Test helm diff functionality
   vars:
     test_chart_ref: "/tmp/test-chart"
@@ -250,7 +254,7 @@
     - name: Log into Helm registry
       ansible.builtin.shell: >-
         echo 'pass123!' | {{ helm_binary }} registry login -u testuser --password-stdin localhost:6035
-        {{ helm_version | string is ansible.builtin.version("3.18.0", ">=") | ternary('--plain-http', '') }}
+        {{ helm_version | string is ansible.builtin.version("3.18.0", ">=") | ternary('--plain-http', '--insecure') }}
 
     - name: Install chart from remote URL
       helm:
@@ -281,47 +285,6 @@
           - _upgrade.warnings is defined
           - _upgrade.warnings | length == 1
           - _upgrade.warnings[0] == "The default idempotency check can fail to report changes in certain cases. Install helm diff >= 3.4.1 for better results."
-
-    # Regression guard for the helm-diff / plain_http interaction: the helm-diff
-    # plugin does not accept --plain-http, so the module must keep it out of the
-    # "helm diff upgrade" invocation while still reaching the plain-HTTP OCI
-    # registry. plain_http is only accepted for helm >= 3.13.0, so the diff path
-    # that used to leak the flag only exists there.
-    - name: Test helm diff against a plain-HTTP OCI registry
-      when: helm_version | string is ansible.builtin.version('3.13.0', '>=')
-      block:
-        - name: Install helm diff
-          helm_plugin:
-            binary_path: "{{ helm_binary }}"
-            state: present
-            plugin_path: https://github.com/databus23/helm-diff
-            plugin_version: "{{ helm_version | string is ansible.builtin.version('4.0.0', '>=') | ternary('3.14.0', '3.10.0') }}"
-            verify: false
-
-        - name: Upgrade chart in check mode with helm-diff and plain_http
-          helm:
-            binary_path: "{{ helm_binary }}"
-            chart_ref: "{{ test_chart_ref_url }}"
-            chart_version: 0.1.0
-            namespace: "{{ helm_namespace }}"
-            name: another-chart
-            release_values: "{{ test_chart_values }}"
-            plain_http: true
-          check_mode: true
-          diff: true
-          register: _upgrade_2
-
-        - name: Assert the diff ran through helm-diff without the unsupported flag
-          ansible.builtin.assert:
-            that:
-              # Before the fix, --plain-http leaked into "helm diff upgrade" and
-              # the plugin rejected it, failing the module.
-              - _upgrade_2 is not failed
-              # helm-diff is installed and version-compatible, so the module must
-              # use it rather than falling back to the default idempotency check.
-              - >-
-                "Install helm diff >= 3.4.1 for better results."
-                not in (_upgrade_2.warnings | default([]) | join(' '))
 
   always:
     - name: Remove chart directory

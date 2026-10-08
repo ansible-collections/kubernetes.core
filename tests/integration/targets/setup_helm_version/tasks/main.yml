@@ -1,7 +1,7 @@
 ---
 - name: Read version for current helm binary
   test_helm_read_version:
-    binary_path: "{{ setup_helm_version_binary_path | default(omit) }}"
+    binary_path: "{{ setup_helm_binary_path | default('helm') }}"
   register: result
 
 - name: Set helm version
