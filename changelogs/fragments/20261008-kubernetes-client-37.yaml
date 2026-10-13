@@ -1,0 +1,5 @@
+---
+bugfixes:
+  - k8s_exec - import ``core_v1_api`` from ``kubernetes.client.api`` instead of the deprecated ``kubernetes.client.apis`` alias, which no longer exposes the API submodules in the kubernetes Python client 37.0.0, so every task failed with ``name 'core_v1_api' is not defined`` (https://github.com/ansible-collections/kubernetes.core/pull/1274).
+  - k8s_cp - pass the exec ``command`` as a list when probing the container for ``find`` and for a shell. The kubernetes Python client 37.0.0 validates API call arguments and rejects a bare string, so copying a directory from a pod always failed (https://github.com/ansible-collections/kubernetes.core/pull/1274).
+  - k8s_log - extract the API error message when ``ApiException.body`` is a ``str``, as it is in the kubernetes Python client 37.0.0, instead of reporting the whole exception (https://github.com/ansible-collections/kubernetes.core/pull/1274).
