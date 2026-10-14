@@ -44,6 +44,19 @@ def _from_yaml_to_definition(buffer):
 
 ENV_KUBECONFIG_PATH_SEPARATOR = ";" if platform.system() == "Windows" else ":"
 
+# Jinja2 environment options accepted by the 'template' parameter. These are passed
+# to the templar as overrides; Templar.environment is not touched directly, as that
+# is deprecated in ansible-core 2.19 and removed in 2.23.
+TEMPLATE_ENVIRONMENT_OPTIONS = (
+    "newline_sequence",
+    "variable_start_string",
+    "variable_end_string",
+    "block_start_string",
+    "block_end_string",
+    "trim_blocks",
+    "lstrip_blocks",
+)
+
 
 class ActionModule(ActionBase):
     TRANSFERS_FILES = True
@@ -219,19 +232,6 @@ class ActionModule(ActionBase):
         result_template = []
         old_vars = self._templar.available_variables
 
-        default_environment = {}
-        if trust_as_template is None:
-            for key in (
-                "newline_sequence",
-                "variable_start_string",
-                "variable_end_string",
-                "block_start_string",
-                "block_end_string",
-                "trim_blocks",
-                "lstrip_blocks",
-            ):
-                if hasattr(self._templar.environment, key):
-                    default_environment[key] = getattr(self._templar.environment, key)
         for template_item in template_params:
             # We need to convert unescaped sequences to proper escaped sequences for Jinja2
             newline_sequence = template_item["newline_sequence"]
@@ -248,19 +248,11 @@ class ActionModule(ActionBase):
             with self.get_template_data(template_item["path"]) as template_data:
                 # add ansible 'template' vars
                 temp_vars = copy.deepcopy(task_vars)
-                overrides = {}
-                for key, value in template_item.items():
-                    if hasattr(self._templar.environment, key):
-                        if value is not None:
-                            overrides[key] = value
-                            if trust_as_template is None:
-                                setattr(self._templar.environment, key, value)
-                        elif trust_as_template is None:
-                            setattr(
-                                self._templar.environment,
-                                key,
-                                default_environment.get(key),
-                            )
+                overrides = {
+                    key: value
+                    for key, value in template_item.items()
+                    if key in TEMPLATE_ENVIRONMENT_OPTIONS and value is not None
+                }
                 self._templar.available_variables = temp_vars
                 if trust_as_template:
                     template_data = trust_as_template(template_data)
@@ -275,6 +267,7 @@ class ActionModule(ActionBase):
                         template_data,
                         preserve_trailing_newlines=True,
                         escape_backslashes=False,
+                        overrides=overrides,
                     )
                 result_template.extend(_from_yaml_to_definition(result))
         self._templar.available_variables = old_vars
