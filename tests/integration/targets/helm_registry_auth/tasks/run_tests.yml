@@ -1,9 +1,5 @@
 ---
 - block:
-    - name: Install helm versions
-      ansible.builtin.include_role:
-        name: install_helm
-
     # - name: Test the registry with correct credentials to ensure that the registry is running
     #   ansible.builtin.shell: >-
     #     echo {{ password | quote }} | {{ helm_binary }} registry login localhost:{{ registry_port }}
@@ -31,7 +27,7 @@
       # Helm < 4.2.1 prints success messages to stderr (https://github.com/helm/helm/issues/13464),
       # Helm >= 4.2.1 moves them to stdout (https://github.com/helm/helm/pull/32056).
       # Check both streams to stay version-agnostic.
-      assert:
+      ansible.builtin.assert:
         that:
           - "'Login Succeeded' in _helm_registry_auth_correct.stdout_lines + _helm_registry_auth_correct.stderr_lines"
           - password not in _helm_registry_auth_correct.command
@@ -48,7 +44,7 @@
       # Helm < 4.2.1 prints success messages to stderr (https://github.com/helm/helm/issues/13464),
       # Helm >= 4.2.1 moves them to stdout (https://github.com/helm/helm/pull/32056).
       # Check both streams to stay version-agnostic.
-      assert:
+      ansible.builtin.assert:
         that: "'Pushed: localhost:' + registry_port | string + '/test/k8s-monitoring' in _save_chart.stdout + _save_chart.stderr"
 
     - name: Test logout
@@ -62,7 +58,7 @@
       # Helm < 4.2.1 prints success messages to stderr (https://github.com/helm/helm/issues/13464),
       # Helm >= 4.2.1 moves them to stdout (https://github.com/helm/helm/pull/32056).
       # Check both streams to stay version-agnostic.
-      assert:
+      ansible.builtin.assert:
         that: "'Removing login credentials' in _helm_registry_auth_logout.stdout + _helm_registry_auth_logout.stderr"
 
     - name: Ensure that not able to push to the registry
@@ -79,7 +75,7 @@
           - "_save_chart.rc != 0"
 
     - name: Test idempotency of logout with helm < 3.18.0
-      when: helm_version is ansible.builtin.version('v3.18.0', '<')
+      when: helm_version | string is ansible.builtin.version('3.18.0', '<')
       block:
 
         - name: Test logout idempotency
