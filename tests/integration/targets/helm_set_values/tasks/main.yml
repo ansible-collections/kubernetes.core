@@ -1,4 +1,4 @@
-- name: Install helm using set_values parameters
+- name: Install helm chart using set_values parameters
   helm:
     binary_path: "{{ helm_binary }}"
     chart_ref: oci://registry-1.docker.io/bitnamicharts/mariadb
@@ -18,7 +18,7 @@
   register: user_values
 
 - name: Assert that release was created with user-defined variables
-  assert:
+  ansible.builtin.assert:
     that:
     - '"phase" in user_values.status["release_values"]'
     - '"versioned" in user_values.status["release_values"]'
@@ -27,16 +27,15 @@
 
 - block:
   - name: create temporary file to save values in
-    tempfile:
+    ansible.builtin.tempfile:
       suffix: .yml
     register: ymlfile
 
   - ansible.builtin.include_tasks: run_tests.yml
-    loop: "{{ helm_versions }}"
 
   always:
   - name: Delete temporary file
-    file:
+    ansible.builtin.file:
       state: absent
       path: "{{ ymlfile.path }}"
     ignore_errors: true
