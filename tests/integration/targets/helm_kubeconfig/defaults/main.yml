@@ -4,7 +4,4 @@ test_namespace:
   - "helm-in-memory-kubeconfig"
   - "helm-kubeconfig-with-ca-cert"
   - "helm-kubeconfig-with-insecure-skip-tls-verify"
-helm_versions:
-  - v3.10.3
-  - v3.16.4
-  - v4.0.0
+helm_binary: helm
