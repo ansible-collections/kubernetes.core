@@ -92,10 +92,10 @@ def run_module(module) -> None:
 
     for definition in definitions:
         result = {"changed": False, "result": {}}
-        warnings = []
 
         if module.params.get("validate") is not None:
-            warnings = validate(client, module, definition)
+            for warning in validate(client, module, definition):
+                module.warn(warning)
 
         try:
             result = perform_action(svc, definition, module.params)
@@ -109,16 +109,12 @@ def run_module(module) -> None:
             except AttributeError:
                 pass
             error["msg"] = to_native(e)
-            if warnings:
-                error.setdefault("warnings", []).extend(warnings)
 
             if module.params.get("continue_on_error"):
                 result["error"] = error
             else:
                 module.fail_json(**error)
 
-        if warnings:
-            result.setdefault("warnings", []).extend(warnings)
         changed |= result["changed"]
         results.append(result)
 
@@ -177,7 +173,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             result["method"] = "apply"
         elif not existing:
             if state == "patched":
-                result.setdefault("warnings", []).append(
+                svc.module.warn(
                     "resource 'kind={kind},name={name}' was not found but will not be "
                     "created as 'state' parameter has been set to '{state}'".format(
                         kind=kind, name=definition["metadata"].get("name"), state=state
@@ -194,8 +190,8 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             instance, warnings = svc.update(resource, definition, existing)
             result["method"] = "update"
 
-    if warnings:
-        result["warnings"] = warnings
+    for warning in warnings:
+        svc.module.warn(warning)
 
     # If needed, wait and/or create diff
     success = True
@@ -217,7 +213,7 @@ def perform_action(svc, definition: Dict, params: Dict) -> Dict:
             existing = {}
         match, diffs = diff_objects(existing, instance, hidden_fields)
         if match and diffs:
-            result.setdefault("warnings", []).append(
+            svc.module.warn(
                 "No meaningful diff was generated, but the API may not be idempotent "
                 "(only metadata.generation or metadata.resourceVersion were changed)"
             )
