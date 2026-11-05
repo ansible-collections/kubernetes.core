@@ -202,3 +202,19 @@ def test_set_based_requirement():
     assert not LabelSelectorFilter(label_selector).isMatching(prod_definition)
     assert LabelSelectorFilter(label_selector).isMatching(no_label_definition)
     assert not LabelSelectorFilter(label_selector).isMatching(test_definition)
+
+
+def test_set_based_requirement_with_prefixed_and_short_keys():
+    definition = {
+        "metadata": {
+            "labels": {"app.kubernetes.io/name": "web", "a": "x"},
+        },
+    }
+    assert LabelSelectorFilter(["app.kubernetes.io/name in (web)"]).isMatching(
+        definition
+    )
+    assert not LabelSelectorFilter(
+        ["app.kubernetes.io/name notin (web, api)"]
+    ).isMatching(definition)
+    assert LabelSelectorFilter(["a in (x, y)"]).isMatching(definition)
+    assert not LabelSelectorFilter(["a notin (x)"]).isMatching(definition)
