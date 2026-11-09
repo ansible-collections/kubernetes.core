@@ -35,7 +35,7 @@ class Selector(object):
 
     def parse_set_based_requirement(self, data):
         m = re.match(
-            r"( *)([a-z0-9A-Z][a-z0-9A-Z\._-]*[a-z0-9A-Z])( +)(notin|in)( +)\((.*)\)( *)",
+            r"( *)([a-z0-9A-Z](?:[a-z0-9A-Z\./_-]*[a-z0-9A-Z])?)( +)(notin|in)( +)\((.*)\)( *)",
             data,
         )
         if m:

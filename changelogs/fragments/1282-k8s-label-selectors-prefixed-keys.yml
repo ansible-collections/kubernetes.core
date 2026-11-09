@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s - set-based ``label_selectors`` such as ``app.kubernetes.io/name in (web)`` now match when the key has a prefix or is a single character, instead of always filtering the resource out (https://github.com/ansible-collections/kubernetes.core/pull/1282).
