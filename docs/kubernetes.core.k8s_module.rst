@@ -813,7 +813,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Determines if an object should be created, patched, or deleted. When set to <code>present</code>, an object will be created, if it does not already exist. If set to <code>absent</code>, an existing object will be deleted. If set to <code>present</code>, an existing object will be patched, if its attributes differ from those specified using <em>resource_definition</em> or <em>src</em>.</div>
+                        <div>Determines if an object should be created, patched, or deleted. When set to <code>present</code>, an object will be created if it does not already exist, and an existing object will be patched if its attributes differ from those specified using <em>resource_definition</em> or <em>src</em>. If set to <code>absent</code>, an existing object will be deleted.</div>
                         <div><code>patched</code> state is an existing resource that has a given patch applied. If the resource doesn&#x27;t exist, silently skip it (do not raise an error).</div>
                 </td>
             </tr>
