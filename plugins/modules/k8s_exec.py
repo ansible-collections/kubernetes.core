@@ -149,7 +149,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions imp
 )
 
 try:
-    from kubernetes.client.apis import core_v1_api
+    from kubernetes.client.api import core_v1_api
     from kubernetes.client.exceptions import ApiException
     from kubernetes.stream import stream
 except ImportError:

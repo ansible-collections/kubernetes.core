@@ -133,7 +133,7 @@ class K8SCopyFromPod(K8SCopy):
     def pod_shell(self):
         if self._shellname is None:
             for s in ("/bin/sh", "/bin/bash"):
-                error, out, err = self._run_from_pod(s)
+                error, out, err = self._run_from_pod([s])
                 if error.get("status") == "Success":
                     self._shellname = s
                     break
@@ -197,7 +197,7 @@ class K8SCopyFromPod(K8SCopy):
                 echo=self.listfile_with_echo,
             )
             for item in executables:
-                error, out, err = self._run_from_pod(item)
+                error, out, err = self._run_from_pod([item])
                 if error.get("status") == "Success":
                     return executables.get(item)(self.remote_path)
 
