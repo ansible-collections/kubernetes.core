@@ -1,6 +1,9 @@
 ---
 profile: production
 
+warn_list:
+  - no-log-password
+
 exclude_paths:
   - .ansible/
   - .github/
