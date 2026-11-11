@@ -1,0 +1,8 @@
+---
+- connection: local
+  gather_facts: false
+  hosts: localhost
+  environment:
+    K8S_AUTH_KUBECONFIG: "{{ lookup('ansible.builtin.env', 'K8S_AUTH_KUBECONFIG', default='~/.kube/config') }}"
+  roles:
+  - k8s_subresource

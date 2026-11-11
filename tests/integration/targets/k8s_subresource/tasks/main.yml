@@ -1,0 +1,61 @@
+---
+- name: Create a CSR
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: certificates.k8s.io/v1
+      kind: CertificateSigningRequest
+      metadata:
+        name: testuser
+      spec:
+        request: '{{ lookup("create_dummy_csr", "testuser") | b64encode }}'
+        signerName: kubernetes.io/kube-apiserver-client
+        usages:
+          - client auth
+    wait: yes
+
+- block:
+    - name: Get the date_time
+      ansible.builtin.setup:
+        gather_subset: date_time
+
+    - name: Set CSR condition fact
+      ansible.builtin.set_fact:
+        csr_approval_condition:
+          - lastUpdateTime: "{{ ansible_date_time.iso8601 }}"
+            lastTransitionTime: "{{ ansible_date_time.iso8601 }}"
+            message: Approval testing
+            reason: Approved
+            status: "True"
+            type: Approved
+
+    - name: Approve the CSR
+      kubernetes.core.k8s:
+        subresource: approval
+        definition:
+          apiVersion: certificates.k8s.io/v1
+          kind: certificatesigningrequests
+          metadata:
+            name: testuser
+          status:
+            conditions: "{{ csr_approval_condition }}"
+        wait: yes
+
+    - name: Get the CSR info
+      kubernetes.core.k8s_info:
+        api_version: certificates.k8s.io/v1
+        kind: certificatesigningrequests
+        name: testuser
+      register: csr_check
+
+    - name: assert that the CSR is approved
+      ansible.builtin.assert:
+        that:
+          - csr_check.resources.0.status.conditions.0 == csr_approval_condition.0
+
+  always:
+    - name: Remove the CSR
+      kubernetes.core.k8s:
+        api_version: certificates.k8s.io/v1
+        kind: certificatesigningrequests
+        name: testuser
+        state: absent
