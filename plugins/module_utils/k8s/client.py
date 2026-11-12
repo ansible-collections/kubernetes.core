@@ -15,6 +15,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    api_connection_error,
 )
 
 try:
@@ -201,6 +202,28 @@ def _create_headers(module=None, **kwargs):
     return headers
 
 
+def _get_request_timeout(module=None, **kwargs) -> Optional[float]:
+    if module and module.params.get("request_timeout") is not None:
+        value = module.params.get("request_timeout")
+    elif kwargs.get("request_timeout") is not None:
+        value = kwargs.get("request_timeout")
+    else:
+        value = os.getenv("K8S_AUTH_REQUEST_TIMEOUT") or None
+    if value is None:
+        return None
+    try:
+        timeout = float(value)
+    except (TypeError, ValueError):
+        timeout = None
+    if timeout is None or timeout <= 0:
+        raise CoreException(
+            "request_timeout must be a positive number of seconds, got {0!r}".format(
+                value
+            )
+        )
+    return timeout
+
+
 def _configuration_digest(configuration, **kwargs) -> str:
     m = hashlib.sha256()
     for k in AUTH_ARG_MAP:
@@ -252,11 +275,13 @@ def cache(func):
 
 
 @cache
-def create_api_client(configuration, **headers):
+def create_api_client(configuration, request_timeout=None, **headers):
     client = kubernetes.client.ApiClient(configuration)
     for header, value in headers.items():
         _set_header(client, header, value)
-    return k8sdynamicclient.K8SDynamicClient(client, discoverer=LazyDiscoverer)
+    return k8sdynamicclient.K8SDynamicClient(
+        client, discoverer=LazyDiscoverer, request_timeout=request_timeout
+    )
 
 
 class K8SClient:
@@ -346,13 +371,19 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
     if auth_spec.get("no_proxy"):
         requires("kubernetes", "19.15.0", "to use the no_proxy feature")
 
+    request_timeout = _get_request_timeout(module, **kwargs)
+
     try:
         configuration = _create_configuration(auth_spec)
         headers = _create_headers(module, **kwargs)
-        client = create_api_client(configuration, **headers)
+        client = create_api_client(
+            configuration, request_timeout=request_timeout, **headers
+        )
     except kubernetes.config.ConfigException as e:
         msg = "Could not create API client: {0}".format(e)
         raise CoreException(msg) from e
+    except urllib3.exceptions.HTTPError as e:
+        raise api_connection_error(e) from e
 
     dry_run = False
     if module and module.server_side_dry_run:

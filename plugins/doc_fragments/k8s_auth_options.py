@@ -132,6 +132,18 @@ options:
     type: list
     elements: str
     version_added: 2.3.0
+  request_timeout:
+    description:
+    - Timeout in seconds for requests sent to the API server, used both for opening the connection
+      and for waiting on each read of the response.
+    - Without it the Kubernetes client waits as long as the operating system allows, so a task can hang
+      for minutes when the API server is unreachable.
+    - The client retries a failed connection a few times, so a task can take a small multiple of this value
+      before it fails.
+    - Watch requests are not affected, they keep their own timeout.
+    - Can also be specified via K8S_AUTH_REQUEST_TIMEOUT environment variable.
+    type: float
+    version_added: 6.7.0
 notes:
   - "To avoid SSL certificate validation errors when C(validate_certs) is I(True), the full
     certificate chain for the API server must be provided via C(ca_cert) or in the

@@ -1,0 +1,5 @@
+---
+minor_changes:
+  - k8s modules - add the ``request_timeout`` option, also read from the ``K8S_AUTH_REQUEST_TIMEOUT`` environment variable, to set a timeout in seconds for requests to the Kubernetes API server. Without it a task could hang for minutes when the API server did not answer. Watch requests keep their own timeout (https://github.com/ansible-collections/kubernetes.core/pull/1281).
+bugfixes:
+  - k8s modules - fail with a ``Could not connect to the API server`` message, or ``Timed out waiting for the API server`` when the request timed out, instead of a module traceback when the API server cannot be reached while the client is created or a resource is looked up (https://github.com/ansible-collections/kubernetes.core/pull/1281).

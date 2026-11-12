@@ -5,3 +5,4 @@
     - api-server-caching
     - discovery
     - metadata-only-fetches
+    - request-timeout

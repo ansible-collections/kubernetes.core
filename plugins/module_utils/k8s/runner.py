@@ -105,7 +105,7 @@ def run_module(module) -> None:
             except AttributeError:
                 error = {}
             try:
-                error["reason"] = e.__cause__.reason
+                error["reason"] = to_native(e.__cause__.reason)
             except AttributeError:
                 pass
             error["msg"] = to_native(e)
