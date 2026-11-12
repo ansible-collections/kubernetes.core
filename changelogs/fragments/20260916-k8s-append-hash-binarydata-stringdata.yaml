@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - k8s - fix ``append_hash`` so that the generated name suffix changes when a ConfigMap's ``binaryData`` or a Secret's ``stringData`` content changes. Previously only the ``data`` field was taken into account, so two ConfigMaps (or Secrets) that differed only in ``binaryData`` (or ``stringData``) got the same generated name, preventing dependent workloads from detecting the change and rolling out (https://github.com/ansible-collections/kubernetes.core/issues/666).
