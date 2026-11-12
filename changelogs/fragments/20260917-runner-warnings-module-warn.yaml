@@ -1,0 +1,4 @@
+---
+bugfixes:
+  - k8s, k8s_service - emit warnings through ``AnsibleModule.warn`` instead of putting them in the result dict that is unpacked into ``exit_json``/``fail_json``. Passing ``warnings`` that way is deprecated since ansible-core 2.19 and will be removed in 2.23, so every run that produced a warning (for example the "No meaningful diff was generated" hint, warnings returned by the Kubernetes API, or ``validate`` findings) also emitted a deprecation warning (https://github.com/ansible-collections/kubernetes.core/pull/1267).
+  - k8s - warnings raised while processing a multi-document manifest are now shown to the user. They were previously nested under ``result.results[*].warnings``, where ansible-core never picked them up, so they were silently dropped whenever more than one resource was processed (https://github.com/ansible-collections/kubernetes.core/pull/1267).
