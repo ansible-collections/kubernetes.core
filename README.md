@@ -271,7 +271,7 @@ Releases are automatically built and pushed to Ansible Galaxy for any new tag. B
      1. The `version` in `galaxy.yml`
      2. This README's `requirements.yml` example
      3. The `VERSION` in `Makefile`
-  2. Update the [CHANGELOG](https://github.com/ansible-collections/kubernetes.core/blob/main/CHANGELOG.rst):
+  2. Update the [CHANGELOG](CHANGELOG.rst):
      1. Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed.
      2. Make sure there are fragments for all known changes in `changelogs/fragments`.
      3. Run `antsibull-changelog release`.
