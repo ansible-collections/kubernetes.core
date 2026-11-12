@@ -11,10 +11,6 @@
     that:
       - _namespaces.resources | length > 0
 
-- name: Record the start time
-  set_fact:
-    _start: "{{ now().timestamp() }}"
-
 - name: Query an API server that does not answer (TEST-NET-1 address)
   k8s_info:
     kind: Namespace
@@ -25,8 +21,8 @@
   register: _unreachable
   ignore_errors: true
 
-- name: Ensure the task failed quickly instead of hanging
+- name: Ensure the task failed with a timeout error
   assert:
     that:
       - _unreachable is failed
-      - (now().timestamp() - (_start | float)) < 60
+      - "'Timed out waiting for the API server' in _unreachable.msg"

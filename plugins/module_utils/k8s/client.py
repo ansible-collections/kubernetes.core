@@ -15,6 +15,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import (
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    api_connection_error,
 )
 
 try:
@@ -382,8 +383,7 @@ def get_api_client(module=None, **kwargs: Optional[Any]) -> K8SClient:
         msg = "Could not create API client: {0}".format(e)
         raise CoreException(msg) from e
     except urllib3.exceptions.HTTPError as e:
-        msg = "Could not connect to the API server: {0}".format(e)
-        raise CoreException(msg) from e
+        raise api_connection_error(e) from e
 
     dry_run = False
     if module and module.server_side_dry_run:

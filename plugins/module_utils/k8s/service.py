@@ -13,6 +13,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import requires
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    api_connection_error,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     Waiter,
@@ -98,9 +99,7 @@ class K8sService:
                     % (api_version, kind)
                 )
         except HTTPError as e:
-            raise CoreException(
-                "Could not connect to the API server: {0}".format(e)
-            ) from e
+            raise api_connection_error(e) from e
 
     def wait(
         self, resource: Resource, instance: Dict
