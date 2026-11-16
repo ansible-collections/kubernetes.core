@@ -285,7 +285,7 @@ def filter_pods(pods, force, ignore_daemonset, delete_emptydir_data):
 class K8sDrainAnsible(object):
     def __init__(self, module, client):
         self._module = module
-        self._api_instance = core_v1_api.CoreV1Api(client.client)
+        self._api_instance = client.typed_api(core_v1_api.CoreV1Api)
 
         # delete options
         self._drain_options = module.params.get("delete_options", {})

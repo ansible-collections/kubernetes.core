@@ -13,6 +13,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.hashes import (
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.core import requires
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
     CoreException,
+    api_connection_error,
 )
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.waiter import (
     Waiter,
@@ -31,6 +32,12 @@ try:
         ResourceNotFoundError,
         ResourceNotUniqueError,
     )
+except ImportError:
+    # Handled in module setup
+    pass
+
+try:
+    from urllib3.exceptions import HTTPError
 except ImportError:
     # Handled in module setup
     pass
@@ -91,6 +98,8 @@ class K8sService:
                     "Failed to find exact match for %s.%s by [kind, name, singularName, shortNames]"
                     % (api_version, kind)
                 )
+        except HTTPError as e:
+            raise api_connection_error(e) from e
 
     def wait(
         self, resource: Resource, instance: Dict

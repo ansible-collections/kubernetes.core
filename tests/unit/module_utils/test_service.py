@@ -2,6 +2,9 @@ from json import dumps
 from unittest.mock import Mock
 
 import pytest
+from ansible_collections.kubernetes.core.plugins.module_utils.k8s.exceptions import (
+    CoreException,
+)
 from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import (
     K8sService,
     diff_objects,
@@ -9,6 +12,7 @@ from ansible_collections.kubernetes.core.plugins.module_utils.k8s.service import
 )
 from kubernetes.dynamic.exceptions import NotFoundError
 from kubernetes.dynamic.resource import Resource, ResourceInstance
+from urllib3.exceptions import MaxRetryError, ReadTimeoutError
 
 pod_definition = {
     "apiVersion": "v1",
@@ -131,6 +135,24 @@ def test_find_resource():
 
     assert isinstance(resource, Resource)
     assert resource.to_dict().items() <= mock_pod_resource.to_dict().items()
+
+
+def test_find_resource_connection_error():
+    client = Mock()
+    client.resource.side_effect = MaxRetryError(None, "/apis", "connection refused")
+    svc = K8sService(client, Mock())
+
+    with pytest.raises(CoreException, match="Could not connect to the API server"):
+        svc.find_resource("Pod", "v1")
+
+
+def test_find_resource_timeout():
+    client = Mock()
+    client.resource.side_effect = ReadTimeoutError(None, "/apis", "read timed out")
+    svc = K8sService(client, Mock())
+
+    with pytest.raises(CoreException, match="Timed out waiting for the API server"):
+        svc.find_resource("Pod", "v1")
 
 
 def test_service_delete_existing_resource(mock_pod_resource_instance):
