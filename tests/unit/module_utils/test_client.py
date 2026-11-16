@@ -261,7 +261,7 @@ def test_dynamic_client_sets_request_timeout(parent_request):
 
 @mock.patch.object(DynamicClient, "request")
 def test_dynamic_client_keeps_explicit_request_timeout(parent_request):
-    client, _ = _dynamic_client(5.0)
+    client = _dynamic_client(5.0)[0]
 
     client.request("get", "/api/v1/pods", _request_timeout=60)
 
@@ -272,7 +272,7 @@ def test_dynamic_client_keeps_explicit_request_timeout(parent_request):
 
 @mock.patch.object(DynamicClient, "request")
 def test_dynamic_client_skips_watch_requests(parent_request):
-    client, _ = _dynamic_client(5.0)
+    client = _dynamic_client(5.0)[0]
 
     client.request("get", "/api/v1/pods", watch=True)
 
@@ -300,7 +300,7 @@ class _FakeCoreV1Api:
 
 
 def test_typed_api_applies_request_timeout():
-    client, _ = _dynamic_client(5.0)
+    client = _dynamic_client(5.0)[0]
 
     api = client.typed_api(_FakeCoreV1Api)
 
@@ -316,7 +316,7 @@ def test_typed_api_applies_request_timeout():
 
 
 def test_typed_api_without_request_timeout():
-    client, _ = _dynamic_client(None)
+    client = _dynamic_client(None)[0]
 
     api = client.typed_api(_FakeCoreV1Api)
 
