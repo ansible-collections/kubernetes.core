@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - module_utils/helm - detect the Helm version when ``helm version`` prints it without the leading ``v`` (for example ``Version:"3.20.2"``), as some third-party Helm builds do. Previously all helm modules failed with ``Unable to determine Helm version`` (https://github.com/ansible-collections/kubernetes.core/pull/1285).

@@ -208,6 +208,10 @@ def test_module_get_values(_ansible_helm_module, no_values, get_all):
             'version.BuildInfo{Version:"3.10.3", GitCommit:7870ab3ed4135f136eec, GoVersion:"go1.18.9"}',
             "3.10.3",
         ),
+        (
+            'version.BuildInfo{Version:"4.3.2", GitCommit:"8346aaa55e7161f7c547212d0a87f01367976727", GoVersion:"go1.27.4", KubeClientVersion:"v1.37"}',
+            "4.3.2",
+        ),
         ('Client: &version.Version{SemVer:"v3.12.3", ', "3.12.3"),
         ('Client: &version.Version{SemVer:"v3.12.3"', None),
     ],
