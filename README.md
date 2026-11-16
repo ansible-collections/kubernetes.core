@@ -94,6 +94,8 @@ Before using the Kubernetes collection, you need to install it with the Ansible 
 
     ansible-galaxy collection install kubernetes.core
 
+Red Hat customers can install certified content from [Ansible Automation Hub](https://console.redhat.com/ansible/automation-hub). Configure Automation Hub as the primary content source for the Ansible Galaxy CLI by following the [Red Hat configuration guide](https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.4/html/getting_started_with_automation_hub/configure-hub-primary), then install the collection with `ansible-galaxy collection install kubernetes.core`.
+
 You can also include it in a `requirements.yml` file and install it via `ansible-galaxy collection install -r requirements.yml`, using the format:
 
 ```yaml
@@ -105,11 +107,13 @@ collections:
 
 ### Installing the Kubernetes Python Library
 
-Content in this collection requires the [Kubernetes Python client](https://pypi.org/project/kubernetes/) to interact with Kubernetes' APIs. You can install it with:
+Content in this collection requires the [Kubernetes Python client](https://pypi.org/project/kubernetes/) to interact with Kubernetes' APIs. For installs outside an execution environment, install it with:
 
 ```bash
 pip3 install kubernetes
 ```
+
+Execution environments install this dependency when they are built with `ansible-builder`; you do not need to install it separately with `pip3` in that case.
 
 ## Use Cases
 
@@ -245,6 +249,8 @@ This project follows the [Ansible Code of Conduct](https://docs.ansible.com/ansi
 
 ## Support
 
+This collection is maintained by Red Hat Ansible Cloud Content.
+
 As Red Hat Ansible Certified Content, this collection is entitled to support through the Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner. If a support case cannot be opened with Red Hat and the collection has been obtained either from Galaxy or GitHub, there may be community help available on the [Ansible Forum](https://forum.ansible.com/).
 
 > **Note:** The `stable-4` branch (all `4.x.y` releases) is no longer supported. No backports or releases are performed on `stable-4`.
@@ -265,7 +271,7 @@ Releases are automatically built and pushed to Ansible Galaxy for any new tag. B
      1. The `version` in `galaxy.yml`
      2. This README's `requirements.yml` example
      3. The `VERSION` in `Makefile`
-  2. Update the CHANGELOG:
+  2. Update the [CHANGELOG](CHANGELOG.rst):
      1. Make sure you have [`antsibull-changelog`](https://pypi.org/project/antsibull-changelog/) installed.
      2. Make sure there are fragments for all known changes in `changelogs/fragments`.
      3. Run `antsibull-changelog release`.
