@@ -194,7 +194,7 @@ def argspec():
 
 def get_exception_message(exc):
     try:
-        d = json.loads(exc.body.decode("utf8"))
+        d = json.loads(exc.body)
         return d["message"]
     except Exception:
         return exc
