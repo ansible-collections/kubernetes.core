@@ -55,11 +55,22 @@ def generate_hash(resource):
         key = "generateName"
         resource["generateName"] = generate_name
     if resource["kind"] == "ConfigMap":
-        marshalled = marshal(sorted_dict(resource), ["data", "kind", key])
+        # "binaryData" is only taken into account when non-empty, so that the
+        # generated hash for existing ConfigMaps without it is left unchanged.
+        keys = ["data", "kind", key]
+        if resource.get("binaryData"):
+            keys.insert(0, "binaryData")
+        marshalled = marshal(sorted_dict(resource), keys)
         del resource[key]
         return encode(marshalled)
     if resource["kind"] == "Secret":
-        marshalled = marshal(sorted_dict(resource), ["data", "kind", key, "type"])
+        # "stringData" is only taken into account when non-empty, so that the
+        # generated hash for existing Secrets without it is left unchanged.
+        keys = ["data", "kind", key]
+        if resource.get("stringData"):
+            keys.append("stringData")
+        keys.append("type")
+        marshalled = marshal(sorted_dict(resource), keys)
         del resource[key]
         return encode(marshalled)
     raise NotImplementedError

@@ -60,9 +60,99 @@ tests = [
         ),
         expected="tf72c228m4",
     ),
+    dict(
+        # an empty binaryData must not change the hash compared to a
+        # ConfigMap without any binaryData at all
+        resource=dict(
+            kind="ConfigMap",
+            metadata=dict(name="foo"),
+            data=dict(),
+            binaryData=dict(),
+        ),
+        expected="867km9574f",
+    ),
+    dict(
+        resource=dict(
+            kind="ConfigMap",
+            metadata=dict(name="foo"),
+            data=dict(),
+            binaryData=dict(key1="dmFsdWUx"),
+        ),
+        expected="228tffgk4b",
+    ),
+    dict(
+        resource=dict(
+            kind="ConfigMap",
+            metadata=dict(name="foo"),
+            data=dict(),
+            binaryData=dict(key1="dmFsdWUx", key2="dmFsdWUy"),
+        ),
+        expected="kkf4dk7gh2",
+    ),
+    dict(
+        # an empty stringData must not change the hash compared to a
+        # Secret without any stringData at all
+        resource=dict(
+            kind="Secret",
+            metadata=dict(name="foo"),
+            data=dict(),
+            stringData=dict(),
+        ),
+        expected="949tdgdkgg",
+    ),
+    dict(
+        resource=dict(
+            kind="Secret",
+            metadata=dict(name="foo"),
+            data=dict(),
+            stringData=dict(key1="value1"),
+        ),
+        expected="kc6cmgf942",
+    ),
+    dict(
+        resource=dict(
+            kind="Secret",
+            metadata=dict(name="foo"),
+            data=dict(),
+            stringData=dict(key1="value1", key2="value2"),
+        ),
+        expected="hkg957m978",
+    ),
 ]
 
 
 def test_hashes():
     for test in tests:
         assert generate_hash(test["resource"]) == test["expected"]
+
+
+def test_different_binary_data_produce_different_hashes():
+    # https://github.com/ansible-collections/kubernetes.core/issues/666
+    one_file = dict(
+        kind="ConfigMap",
+        metadata=dict(name="test-tgz"),
+        binaryData=dict(**{"test.tgz": "SDRzSUFBQUFBQUFBQQo="}),
+    )
+    two_files = dict(
+        kind="ConfigMap",
+        metadata=dict(name="test-tgz"),
+        binaryData=dict(
+            **{"test.tgz": "SDRzSUFBQUFBQUFBQQo=", "test2.tgz": "SDRzSUFBQUFBQUFBQQo="}
+        ),
+    )
+    assert generate_hash(one_file) != generate_hash(two_files)
+
+
+def test_different_string_data_produce_different_hashes():
+    # https://github.com/ansible-collections/kubernetes.core/issues/666
+    one_key = dict(
+        kind="Secret",
+        metadata=dict(name="foo"),
+        stringData=dict(key1="value1"),
+    )
+    two_keys = dict(
+        kind="Secret",
+        metadata=dict(name="foo"),
+        stringData=dict(key1="value1", key2="value2"),
+    )
+    assert generate_hash(one_key) != generate_hash(two_keys)
