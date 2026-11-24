@@ -199,7 +199,7 @@ def argspec():
 class K8sTaintAnsible:
     def __init__(self, module, client):
         self.module = module
-        self.api_instance = core_v1_api.CoreV1Api(client.client)
+        self.api_instance = client.typed_api(core_v1_api.CoreV1Api)
         self.changed = False
 
     def get_node(self, name):

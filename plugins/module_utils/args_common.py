@@ -82,6 +82,7 @@ AUTH_ARG_SPEC = {
     "persist_config": {"type": "bool"},
     "impersonate_user": {},
     "impersonate_groups": {"type": "list", "elements": "str"},
+    "request_timeout": {"type": "float"},
 }
 
 WAIT_ARG_SPEC = dict(

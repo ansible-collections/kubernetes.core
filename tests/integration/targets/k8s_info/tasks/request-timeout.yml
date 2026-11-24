@@ -1,0 +1,28 @@
+---
+# https://github.com/ansible-collections/kubernetes.core/issues/897
+- name: List namespaces with a request timeout
+  k8s_info:
+    kind: Namespace
+    request_timeout: 30
+  register: _namespaces
+
+- name: Ensure the request succeeded
+  assert:
+    that:
+      - _namespaces.resources | length > 0
+
+- name: Query an API server that does not answer (TEST-NET-1 address)
+  k8s_info:
+    kind: Namespace
+    host: https://192.0.2.1:6443
+    api_key: not-a-token
+    validate_certs: false
+    request_timeout: 2
+  register: _unreachable
+  ignore_errors: true
+
+- name: Ensure the task failed with a timeout error
+  assert:
+    that:
+      - _unreachable is failed
+      - "'Timed out waiting for the API server' in _unreachable.msg"
