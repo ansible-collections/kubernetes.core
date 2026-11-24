@@ -22,10 +22,16 @@ options:
     description:
       - For Deployment, ReplicaSet, Replication Controller, only scale, if the number of existing replicas
         matches. In the case of a Job, update parallelism only if the current parallelism value matches.
+      - A mismatch emits a warning and skips scaling that resource without failing the task solely
+        because of the mismatch.
+      - For a single resource, a mismatch returns C(changed=false).
     type: int
   resource_version:
     description:
       - Only attempt to scale, if the current object version matches.
+      - A mismatch emits a warning and skips scaling that resource without failing the task solely
+        because of the mismatch.
+      - For a single resource, a mismatch returns C(changed=false).
     type: str
   wait:
     description:
