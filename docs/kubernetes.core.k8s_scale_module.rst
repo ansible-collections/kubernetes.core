@@ -172,6 +172,8 @@ Parameters
                 </td>
                 <td>
                         <div>For Deployment, ReplicaSet, Replication Controller, only scale, if the number of existing replicas matches. In the case of a Job, update parallelism only if the current parallelism value matches.</div>
+                        <div>A mismatch emits a warning and skips scaling that resource without failing the task solely because of the mismatch.</div>
+                        <div>For a single resource, a mismatch returns <code>changed=false</code>.</div>
                 </td>
             </tr>
             <tr>
@@ -502,6 +504,8 @@ Parameters
                 </td>
                 <td>
                         <div>Only attempt to scale, if the current object version matches.</div>
+                        <div>A mismatch emits a warning and skips scaling that resource without failing the task solely because of the mismatch.</div>
+                        <div>For a single resource, a mismatch returns <code>changed=false</code>.</div>
                 </td>
             </tr>
             <tr>
