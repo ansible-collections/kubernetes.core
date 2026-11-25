@@ -40,9 +40,8 @@ options:
   state:
     description:
     - Determines if an object should be created, patched, or deleted. When set to C(present), an object will be
-      created, if it does not already exist. If set to C(absent), an existing object will be deleted. If set to
-      C(present), an existing object will be patched, if its attributes differ from those specified using
-      I(resource_definition) or I(src).
+      created if it does not already exist, and an existing object will be patched if its attributes differ from
+      those specified using I(resource_definition) or I(src). If set to C(absent), an existing object will be deleted.
     - C(patched) state is an existing resource that has a given patch applied. If the resource doesn't exist, silently skip it (do not raise an error).
     type: str
     default: present
