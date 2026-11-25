@@ -1,6 +1,6 @@
 ---
-helm_default_archive_name: "helm-{{ helm_version }}-{{ ansible_system | lower }}-amd64.tar.gz"
-helm_binary: "/tmp/helm/{{ ansible_system | lower }}-amd64/helm"
+helm_binary: "helm"
+setup_helm_version_binary_path: "{{ helm_binary }}"
 
 chart_test: "ingress-nginx"
 chart_test_oci: "oci://registry-1.docker.io/bitnamicharts/redis"

@@ -1,0 +1,4 @@
+- name: 'Delete temporary directory'
+  ansible.builtin.file:
+    state: absent
+    path: "{{ helm_install_path }}"

@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - helm - Remove `--plain-http` option from `helm diff upgrade`, as it is not supported by the helm-diff plugin (https://github.com/ansible-collections/kubernetes.core/pull/1232).

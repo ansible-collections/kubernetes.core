@@ -2,3 +2,4 @@
 dependencies:
   - remove_namespace
   - setup_helm_registry
+  - setup_helm_version

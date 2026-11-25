@@ -19,19 +19,19 @@
       ignore_errors: true
 
     - name: Validate wait_for_jobs with helm >= 3.5.0 works
-      assert:
+      ansible.builtin.assert:
         that:
           - install is changed
           - "'--wait' in install.command"
           - "'--wait-for-jobs' in install.command"
-      when: "helm_version is ansible.builtin.version('v3.5.0', '>=')"
+      when: "helm_version | string is ansible.builtin.version('3.5.0', '>=')"
 
     - name: Validate wait_for_jobs with helm < 3.5.0 fails
-      assert:
+      ansible.builtin.assert:
         that:
           - install is failed
           - "'wait_for_jobs requires helm >= 3.5.0' in install.msg"
-      when: "helm_version is ansible.builtin.version('v3.5.0', '<')"
+      when: "helm_version | string is ansible.builtin.version('3.5.0', '<')"
 
     - name: Install chart with wait_for_jobs but without wait
       helm:
@@ -44,7 +44,7 @@
       register: install_no_wait
 
     - name: Validate wait_for_jobs is ignored without wait
-      assert:
+      ansible.builtin.assert:
         that:
           - install_no_wait is changed
           - "'--wait-for-jobs' not in install_no_wait.command"

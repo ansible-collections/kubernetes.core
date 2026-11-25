@@ -16,12 +16,13 @@ tests/integration/cloud-config-*
 .ansible
 
 # Helm charts
-tests/integration/*-chart-*.tgz
+tests/integration/*.tgz
 tests/integration/targets/*/*.tgz
 
 # ansible-test generated file
 tests/integration/inventory
 tests/integration/*-*.yml
+tests/integration/integration_config.yml
 
 # IDE and editor settings
 .vscode/

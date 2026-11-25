@@ -1,6 +1,3 @@
 ---
 - name: Run test for helm_repository module
   ansible.builtin.include_tasks: run_tests.yml
-  loop: "{{ helm_versions }}"
-  loop_control:
-    loop_var: helm_version

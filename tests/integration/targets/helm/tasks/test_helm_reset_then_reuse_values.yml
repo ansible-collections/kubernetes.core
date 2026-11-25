@@ -32,7 +32,7 @@
       register: release_value
 
     - name: Validate that chart values are as expected
-      assert:
+      ansible.builtin.assert:
         that:
           - install is changed
           - '"--reset-then-reuse-values" not in install.command'
@@ -80,7 +80,7 @@
       register: release_value
 
     - name: Validate that chart values are as expected
-      assert:
+      ansible.builtin.assert:
         that:
           - upgrade is changed
           - '"--reset-then-reuse-values" in upgrade.command'
