@@ -228,13 +228,13 @@ EXAMPLES = r"""
   gather_facts: no
   vars:
     kubeconfig: /root/.kube/config
-    namespace: my-namespace
+    k8s_namespace: my-namespace
     my_app: my-app
   tasks:
     - name: Get My App pod info based on label
       kubernetes.core.k8s_info:
         kubeconfig: "{{ kubeconfig }}"
-        namespace: "{{ namespace }}"
+        namespace: "{{ k8s_namespace }}"
         kind: Pod
         label_selectors: app.kubernetes.io/name = "{{ my_app }}"
       register: my_app_pod
@@ -249,7 +249,7 @@ EXAMPLES = r"""
         ansible_connection: kubernetes.core.kubectl
         ansible_kubectl_kubeconfig: "{{ kubeconfig }}"
         ansible_kubectl_pod: "{{ my_app_pod_name }}"
-        ansible_kubectl_namespace: "{{ namespace }}"
+        ansible_kubectl_namespace: "{{ k8s_namespace }}"
 
     - name: Run a command in My App pod
       # be aware that the command is executed as the user that started the container
